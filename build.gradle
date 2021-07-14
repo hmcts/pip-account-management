@@ -213,7 +213,7 @@ mainClassName = 'uk.gov.hmcts.reform.demo.Application'
 
 bootJar {
   getArchiveFileName().set(provider {
-    'spring-boot-template.jar'
+    'pip-account-management.jar'
   })
 
   manifest {
