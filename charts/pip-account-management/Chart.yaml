@@ -1,0 +1,11 @@
+name: PIP Account Management Rules
+apiVersion: v2
+home: https://github.com/hmcts/pip-account-management
+version: 0.0.1
+description: Publishing & Information Account Management
+maintainers:
+  - name: HMCTS PIP Team
+dependencies:
+  - name: java
+    version: 3.5.1
+    repository: '@hmctspublic'

@@ -1,8 +1,8 @@
 java:
+  aadIdentityName: pip
+  ingressHost: pip-account-management.{{ .Values.global.environment }}.platform.hmcts.net
   applicationPort: 4550
-  image: 'hmctspublic.azurecr.io/rpe/spring-boot-template:latest'
-  ingressHost: rpe-spring-boot-template-{{ .Values.global.environment }}.service.core-compute-{{ .Values.global.environment }}.internal
-  aadIdentityName: rpe
+  image: 'hmctspublic.azurecr.io/pip-account-management:latest'
 #  Uncomment once the vault containing the app insights key has been set up
 #  keyVaults:
 #    rpe:
