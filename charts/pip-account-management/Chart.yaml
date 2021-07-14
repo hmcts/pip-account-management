@@ -1,7 +1,7 @@
-name: PIP Account Management Rules
+name: PIP Account Management
 apiVersion: v2
 home: https://github.com/hmcts/pip-account-management
-version: 0.0.1
+version: 0.0.2
 description: Publishing & Information Account Management
 maintainers:
   - name: HMCTS PIP Team
