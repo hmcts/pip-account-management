@@ -1,12 +1,14 @@
 #!groovy
 
+properties([
+  // H allow predefined but random minute see https://en.wikipedia.org/wiki/Cron#Non-standard_characters
+  pipelineTriggers([cron('H 05 * * *')])
+])
+
 @Library("Infrastructure")
 
 def type = "java"
 def product = "pip"
 def component = "account-management"
 
-withPipeline(type, product, component) {
-
-    enableSlackNotifications('#pip-build-notices')
-}
+withNightlyPipeline(type, product, component) {}
