@@ -24,7 +24,8 @@ public class GlobalExceptionHandler {
      * @return The error response, modelled using the ExceptionResponse object.
      */
     @ExceptionHandler(AccountNotFoundException.class)
-    ResponseEntity<ExceptionResponse> handleAccountNotFound(AccountNotFoundException ex, WebRequest request) {
+    public ResponseEntity<ExceptionResponse> handleAccountNotFound(
+        AccountNotFoundException ex, WebRequest request) {
 
         ExceptionResponse exceptionResponse = new ExceptionResponse();
         exceptionResponse.setMessage(ex.getMessage());
