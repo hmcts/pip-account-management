@@ -17,14 +17,15 @@ import java.time.LocalDateTime;
 public class GlobalExceptionHandler {
 
     /**
-     * Template exception handler, that handles a custom PublicationNotFoundException,
+     * Template exception handler, that handles a custom AccountNotFoundException,
      * and returns a 404 in the standard format.
      * @param ex The exception that has been thrown.
      * @param request The request made to the endpoint.
      * @return The error response, modelled using the ExceptionResponse object.
      */
     @ExceptionHandler(AccountNotFoundException.class)
-    ResponseEntity<ExceptionResponse> handlePublicationNotFound(AccountNotFoundException ex, WebRequest request) {
+    public ResponseEntity<ExceptionResponse> handleAccountNotFound(
+        AccountNotFoundException ex, WebRequest request) {
 
         ExceptionResponse exceptionResponse = new ExceptionResponse();
         exceptionResponse.setMessage(ex.getMessage());
