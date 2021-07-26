@@ -6,5 +6,5 @@ ENV APP pip-account-management.jar
 COPY build/libs/$APP /opt/app/
 COPY lib/AI-Agent.xml /opt/app/
 
-EXPOSE 4550
+EXPOSE 6969
 CMD [ "pip-account-management.jar" ]
