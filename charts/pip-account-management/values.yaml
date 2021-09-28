@@ -2,7 +2,7 @@ java:
   aadIdentityName: pip
   ingressHost: pip-account-management.{{ .Values.global.environment }}.platform.hmcts.net
   applicationPort: 6969
-  image: 'hmctspublic.azurecr.io/pip-account-management:latest'
+  image: 'sdshmctspublic.azurecr.io/pip/account-management:latest'
 #  Uncomment once the vault containing the app insights key has been set up
 #  keyVaults:
 #    rpe:
