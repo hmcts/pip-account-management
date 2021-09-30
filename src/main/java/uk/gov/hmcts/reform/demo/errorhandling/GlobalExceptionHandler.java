@@ -4,9 +4,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.context.request.WebRequest;
-import uk.gov.hmcts.reform.demo.errorhandling.exceptions.AccountNotFoundException;
 
+import javax.validation.ConstraintViolationException;
 import java.time.LocalDateTime;
 
 /**
@@ -17,21 +16,20 @@ import java.time.LocalDateTime;
 public class GlobalExceptionHandler {
 
     /**
-     * Template exception handler, that handles a custom AccountNotFoundException,
-     * and returns a 404 in the standard format.
+     * Exception handler that handles validation errors to the controller,
+     * and returns a 400 bad request error code.
      * @param ex The exception that has been thrown.
-     * @param request The request made to the endpoint.
      * @return The error response, modelled using the ExceptionResponse object.
      */
-    @ExceptionHandler(AccountNotFoundException.class)
-    public ResponseEntity<ExceptionResponse> handleAccountNotFound(
-        AccountNotFoundException ex, WebRequest request) {
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ExceptionResponse> handleMethodValidationError(
+        ConstraintViolationException ex) {
 
         ExceptionResponse exceptionResponse = new ExceptionResponse();
         exceptionResponse.setMessage(ex.getMessage());
         exceptionResponse.setTimestamp(LocalDateTime.now());
 
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(exceptionResponse);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exceptionResponse);
     }
 
 }

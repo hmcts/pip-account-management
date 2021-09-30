@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 import static org.springframework.http.ResponseEntity.ok;
 
 /**
- * Default endpoints per application.
+ * The root endpoints for the account management application.
  */
 @RestController
 @Api(tags = "Account Management root API")
@@ -25,6 +25,7 @@ public class RootController {
      */
     @GetMapping("/")
     public ResponseEntity<String> welcome() {
-        return ok("Welcome to spring-boot-template");
+        return ok("Welcome to account-management");
     }
+
 }

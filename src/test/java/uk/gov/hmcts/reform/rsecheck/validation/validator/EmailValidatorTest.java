@@ -1,0 +1,23 @@
+package uk.gov.hmcts.reform.rsecheck.validation.validator;
+
+import org.junit.jupiter.api.Test;
+import uk.gov.hmcts.reform.demo.validation.validator.EmailValidator;
+
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+public class EmailValidatorTest {
+
+    @Test
+    public void testValidEmail() {
+        EmailValidator emailValidator = new EmailValidator();
+        assertTrue(emailValidator.isValid("a@b.com", null));
+    }
+
+    @Test
+    public void testInvalidEmail() {
+        EmailValidator emailValidator = new EmailValidator();
+        assertFalse(emailValidator.isValid("ab.com", null));
+    }
+
+}
