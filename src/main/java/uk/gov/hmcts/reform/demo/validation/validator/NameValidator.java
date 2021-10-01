@@ -1,12 +1,12 @@
 package uk.gov.hmcts.reform.demo.validation.validator;
 
-import io.micrometer.core.instrument.util.StringUtils;
 import uk.gov.hmcts.reform.demo.model.Subscriber;
 import uk.gov.hmcts.reform.demo.validation.annotations.ValidName;
 
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 
+import static io.micrometer.core.instrument.util.StringUtils.isEmpty;
 
 /**
  * This class validates that the name combinations are correct.
@@ -29,17 +29,22 @@ public class NameValidator implements ConstraintValidator<ValidName, Subscriber>
     @Override
     public boolean isValid(Subscriber subscriber, ConstraintValidatorContext context) {
 
-        if (!StringUtils.isEmpty(subscriber.getTitle()) && !StringUtils.isEmpty(subscriber.getFirstName())
-                                                     && !StringUtils.isEmpty(subscriber.getSurname())) {
+        if (!isEmpty(subscriber.getTitle()) && !isEmpty(subscriber.getFirstName())
+                                                     && !isEmpty(subscriber.getSurname())) {
             return true;
         }
 
-        if (StringUtils.isEmpty(subscriber.getTitle()) && !StringUtils.isEmpty(subscriber.getFirstName())
-                                                           && StringUtils.isEmpty(subscriber.getSurname())) {
+        if (isEmpty(subscriber.getTitle()) && !isEmpty(subscriber.getFirstName())
+                                                           && isEmpty(subscriber.getSurname())) {
             return true;
         }
 
-        return !StringUtils.isEmpty(subscriber.getTitle()) && StringUtils.isEmpty(subscriber.getFirstName())
-            && !StringUtils.isEmpty(subscriber.getSurname());
+        if (isEmpty(subscriber.getTitle()) && isEmpty(subscriber.getFirstName())
+            && isEmpty(subscriber.getSurname())) {
+            return true;
+        }
+
+        return !isEmpty(subscriber.getTitle()) && isEmpty(subscriber.getFirstName())
+            && !isEmpty(subscriber.getSurname());
     }
 }

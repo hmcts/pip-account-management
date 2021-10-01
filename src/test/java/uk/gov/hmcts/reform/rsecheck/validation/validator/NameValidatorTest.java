@@ -42,6 +42,15 @@ class NameValidatorTest {
     }
 
     @Test
+    void testValidNone() {
+        NameValidator nameValidator = new NameValidator();
+
+        Subscriber subscriber = new Subscriber();
+
+        assertTrue(nameValidator.isValid(subscriber, null), "No name is marked as valid");
+    }
+
+    @Test
     void testInvalidTitle() {
         NameValidator nameValidator = new NameValidator();
 
@@ -61,13 +70,5 @@ class NameValidatorTest {
         assertFalse(nameValidator.isValid(subscriber, null), "Only surname is marked as invalid");
     }
 
-    @Test
-    void testInvalidNone() {
-        NameValidator nameValidator = new NameValidator();
-
-        Subscriber subscriber = new Subscriber();
-
-        assertFalse(nameValidator.isValid(subscriber, null), "No name is marked as invalid");
-    }
 
 }
