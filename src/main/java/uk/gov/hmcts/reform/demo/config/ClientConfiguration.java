@@ -5,6 +5,9 @@ import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * Configuration class to store properties around configuring the Azure client.
+ */
 @Configuration
 @ConfigurationProperties(prefix = "azure.id")
 @Getter
@@ -17,6 +20,6 @@ public class ClientConfiguration {
 
     private String tenantGuid;
 
-
+    private String tokenProvider;
 
 }
