@@ -12,16 +12,16 @@ import uk.gov.hmcts.reform.demo.model.CreationEnum;
 import uk.gov.hmcts.reform.demo.model.Subscriber;
 import uk.gov.hmcts.reform.demo.service.AccountService;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-public class AccountControllerTest {
+class AccountControllerTest {
 
     @Mock
     private AccountService accountService;
@@ -30,8 +30,8 @@ public class AccountControllerTest {
     private AccountController accountController;
 
     @Test
-    public void createSubscriber() {
-        Map<CreationEnum, List<Subscriber>> subscribersMap = new HashMap<>();
+    void createSubscriber() {
+        Map<CreationEnum, List<Subscriber>> subscribersMap = new ConcurrentHashMap<>();
         subscribersMap.put(CreationEnum.CREATED_ACCOUNTS, List.of(new Subscriber()));
 
         Subscriber subscriber = new Subscriber();
@@ -43,8 +43,8 @@ public class AccountControllerTest {
 
         ResponseEntity<Map<CreationEnum, List<Subscriber>>> response = accountController.createSubscriber(subscribers);
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(subscribersMap, response.getBody());
+        assertEquals(HttpStatus.OK, response.getStatusCode(), "Should return an OK status code");
+        assertEquals(subscribersMap, response.getBody(), "Should return the expected subscribers map");
     }
 
 }

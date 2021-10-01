@@ -8,7 +8,7 @@ import javax.validation.ConstraintValidatorContext;
 /**
  * This class validates that the email is correct.
  *
- * The email must contain an @ symbol
+ * <p>The email must contain an @ symbol</p>
  */
 public class EmailValidator implements ConstraintValidator<ValidEmail, String> {
 

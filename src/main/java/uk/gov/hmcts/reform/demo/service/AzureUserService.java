@@ -12,11 +12,9 @@ import org.springframework.stereotype.Component;
 import uk.gov.hmcts.reform.demo.config.UserConfiguration;
 import uk.gov.hmcts.reform.demo.model.Subscriber;
 
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.Random;
 
 /**
  * A class that wraps any interacts with Azure active directory.

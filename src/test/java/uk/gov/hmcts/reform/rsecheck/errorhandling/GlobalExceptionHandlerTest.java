@@ -8,22 +8,22 @@ import org.springframework.http.ResponseEntity;
 import uk.gov.hmcts.reform.demo.errorhandling.ExceptionResponse;
 import uk.gov.hmcts.reform.demo.errorhandling.GlobalExceptionHandler;
 
+import java.util.Set;
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
-
-import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-public class GlobalExceptionHandlerTest {
+class GlobalExceptionHandlerTest {
 
     @Test
-    public void testConstraintViolationTest() {
+    void testConstraintViolationTest() {
 
         GlobalExceptionHandler globalExceptionHandler = new GlobalExceptionHandler();
 
-        ConstraintViolation<? extends GlobalExceptionHandlerTest> constraintViolation = ConstraintViolationImpl.forBeanValidation(
+        ConstraintViolation<? extends GlobalExceptionHandlerTest> constraintViolation =
+            ConstraintViolationImpl.forBeanValidation(
             "template",
             null,
             null,

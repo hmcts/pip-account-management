@@ -15,12 +15,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-public class AccountServiceTest {
+class AccountServiceTest {
 
     @Mock
     private AzureUserService azureUserService;
@@ -29,7 +31,7 @@ public class AccountServiceTest {
     private AccountService accountService;
 
     @Test
-    public void testSubscriberCreated() {
+    void testSubscriberCreated() {
         Subscriber subscriber = new Subscriber();
         subscriber.setEmail("a@b.com");
 
@@ -43,15 +45,19 @@ public class AccountServiceTest {
         Map<CreationEnum, List<Subscriber>> createdSubscribers =
             accountService.createSubscribers(List.of(subscriber));
 
-        assertTrue(createdSubscribers.containsKey(CreationEnum.CREATED_ACCOUNTS));
+        assertTrue(createdSubscribers.containsKey(CreationEnum.CREATED_ACCOUNTS), "Should contain "
+            + "CREATED_ACCOUNTS key");
         List<Subscriber> subscribers = createdSubscribers.get(CreationEnum.CREATED_ACCOUNTS);
-        assertEquals(subscriber.getEmail(), subscribers.get(0).getEmail());
-        assertEquals("1234", subscriber.getSubscriberObjectId());
-        assertEquals(0, createdSubscribers.get(CreationEnum.ERRORED_ACCOUNTS).size());
+        assertEquals(subscriber.getEmail(), subscribers.get(0).getEmail(), "Subscriber should have "
+            + "expected email");
+        assertEquals("1234", subscriber.getSubscriberObjectId(), "Subscriber should have expected "
+            + "object ID");
+        assertTrue(createdSubscribers.get(CreationEnum.ERRORED_ACCOUNTS).size() == 0, "Map should "
+            + "have no errored accounts");
     }
 
     @Test
-    public void testSubscriberNotCreated() {
+    void testSubscriberNotCreated() {
         Subscriber subscriber = new Subscriber();
         subscriber.setEmail("a@b.com");
 
@@ -61,14 +67,15 @@ public class AccountServiceTest {
         Map<CreationEnum, List<Subscriber>> createdSubscribers =
             accountService.createSubscribers(List.of(subscriber));
 
-        assertTrue(createdSubscribers.containsKey(CreationEnum.ERRORED_ACCOUNTS));
+        assertTrue(createdSubscribers.containsKey(CreationEnum.ERRORED_ACCOUNTS), "Should contain"
+            + "ERRORED_ACCOUNTS key");
         List<Subscriber> subscribers = createdSubscribers.get(CreationEnum.ERRORED_ACCOUNTS);
-        assertEquals(subscriber.getEmail(), subscribers.get(0).getEmail());
-        assertNull(subscriber.getSubscriberObjectId());
-        assertEquals(0, createdSubscribers.get(CreationEnum.CREATED_ACCOUNTS).size());
+        assertEquals(subscriber.getEmail(), subscribers.get(0).getEmail(), "Subscriber should have "
+            + "expected email");
+        assertNull(subscriber.getSubscriberObjectId(), "Subscriber should have no object ID set");
+        assertTrue(createdSubscribers.get(CreationEnum.CREATED_ACCOUNTS).size() == 0, "Map should "
+            + "have no created accounts");
 
     }
-
-
 
 }

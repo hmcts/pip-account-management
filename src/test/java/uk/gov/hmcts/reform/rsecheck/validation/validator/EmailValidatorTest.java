@@ -6,18 +6,19 @@ import uk.gov.hmcts.reform.demo.validation.validator.EmailValidator;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class EmailValidatorTest {
+class EmailValidatorTest {
 
     @Test
-    public void testValidEmail() {
+    void testValidEmail() {
         EmailValidator emailValidator = new EmailValidator();
-        assertTrue(emailValidator.isValid("a@b.com", null));
+        assertTrue(emailValidator.isValid("a@b.com", null), "Email with @ is marked as valid");
     }
 
     @Test
-    public void testInvalidEmail() {
+    void testInvalidEmail() {
         EmailValidator emailValidator = new EmailValidator();
-        assertFalse(emailValidator.isValid("ab.com", null));
+        assertFalse(emailValidator.isValid("ab.com", null), "Email without "
+            + "@ is marked as invalid");
     }
 
 }

@@ -11,10 +11,10 @@ import javax.validation.ConstraintValidatorContext;
 /**
  * This class validates that the name combinations are correct.
  *
- * Valid combinations are:
+ * <p>Valid combinations are:
  *  1) Title, Firstname, Surname
  *  2) Firstname
- *  3) Title, Surname
+ *  3) Title, Surname</p>
  *
  */
 public class NameValidator implements ConstraintValidator<ValidName, Subscriber> {
@@ -32,16 +32,14 @@ public class NameValidator implements ConstraintValidator<ValidName, Subscriber>
         if (!StringUtils.isEmpty(subscriber.getTitle()) && !StringUtils.isEmpty(subscriber.getFirstName())
                                                      && !StringUtils.isEmpty(subscriber.getSurname())) {
             return true;
+        }
 
-        } else if (StringUtils.isEmpty(subscriber.getTitle()) && !StringUtils.isEmpty(subscriber.getFirstName())
+        if (StringUtils.isEmpty(subscriber.getTitle()) && !StringUtils.isEmpty(subscriber.getFirstName())
                                                            && StringUtils.isEmpty(subscriber.getSurname())) {
-            return true;
-
-        } else if (!StringUtils.isEmpty(subscriber.getTitle()) && StringUtils.isEmpty(subscriber.getFirstName())
-                                                            && !StringUtils.isEmpty(subscriber.getSurname())) {
             return true;
         }
 
-        return false;
+        return !StringUtils.isEmpty(subscriber.getTitle()) && StringUtils.isEmpty(subscriber.getFirstName())
+            && !StringUtils.isEmpty(subscriber.getSurname());
     }
 }

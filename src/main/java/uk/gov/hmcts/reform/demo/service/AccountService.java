@@ -6,7 +6,11 @@ import org.springframework.stereotype.Component;
 import uk.gov.hmcts.reform.demo.model.CreationEnum;
 import uk.gov.hmcts.reform.demo.model.Subscriber;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Service layer that deals with the creation of accounts.
@@ -15,19 +19,17 @@ import java.util.*;
 @Component
 public class AccountService {
 
+
     @Autowired
     AzureUserService azureUserService;
 
     /**
      * Method to create new subscribers.
-     * @return Returns a map which contains two lists:
-     * -Errored Subscribers
-     * -Created Subscribers
-     * Created subscribers will have their object ID set.
-     */
+     * @return Returns a map which contains two lists, Errored and Created Subscribers. Created will have object ID set.
+     **/
     public Map<CreationEnum, List<Subscriber>> createSubscribers(List<Subscriber> subscribers) {
 
-        Map<CreationEnum, List<Subscriber>> processedAccounts = new HashMap<>();
+        Map<CreationEnum, List<Subscriber>> processedAccounts = new ConcurrentHashMap<>();
 
         List<Subscriber> createdAccounts = new ArrayList<>();
         List<Subscriber> erroredAccounts = new ArrayList<>();

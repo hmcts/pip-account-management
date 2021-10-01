@@ -7,69 +7,67 @@ import uk.gov.hmcts.reform.demo.validation.validator.NameValidator;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class NameValidatorTest {
+class NameValidatorTest {
 
     @Test
-    public void testValidAllNames() {
-        NameValidator nameValidator = new NameValidator();
-
+    void testValidAllNames() {
         Subscriber subscriber = new Subscriber();
         subscriber.setTitle("Title");
         subscriber.setFirstName("First Name");
         subscriber.setSurname("Surname");
 
-        assertTrue(nameValidator.isValid(subscriber, null));
+        NameValidator nameValidator = new NameValidator();
+        assertTrue(nameValidator.isValid(subscriber, null), "All names present is marked as valid");
     }
 
     @Test
-    public void testValidFirstname() {
+    void testValidFirstname() {
         NameValidator nameValidator = new NameValidator();
 
         Subscriber subscriber = new Subscriber();
         subscriber.setFirstName("First Name");
 
-        assertTrue(nameValidator.isValid(subscriber, null));
+        assertTrue(nameValidator.isValid(subscriber, null), "Only firstname is marked as valid");
     }
 
     @Test
-    public void testValidTitleSurname() {
+    void testValidTitleSurname() {
         NameValidator nameValidator = new NameValidator();
 
         Subscriber subscriber = new Subscriber();
         subscriber.setTitle("Title");
-        subscriber.setSurname("First Name");
+        subscriber.setSurname("Surname");
 
-        assertTrue(nameValidator.isValid(subscriber, null));
+        assertTrue(nameValidator.isValid(subscriber, null), "Title and surname is marked as valid");
     }
 
     @Test
-    public void testInvalidTitle() {
+    void testInvalidTitle() {
         NameValidator nameValidator = new NameValidator();
 
         Subscriber subscriber = new Subscriber();
         subscriber.setTitle("Title");
 
-        assertFalse(nameValidator.isValid(subscriber, null));
+        assertFalse(nameValidator.isValid(subscriber, null), "Only title is marked as invalid");
     }
 
     @Test
-    public void testInvalidSurname() {
+    void testInvalidSurname() {
         NameValidator nameValidator = new NameValidator();
 
         Subscriber subscriber = new Subscriber();
         subscriber.setSurname("Surname");
 
-        assertFalse(nameValidator.isValid(subscriber, null));
+        assertFalse(nameValidator.isValid(subscriber, null), "Only surname is marked as invalid");
     }
 
     @Test
-    public void testInvalidNone() {
+    void testInvalidNone() {
         NameValidator nameValidator = new NameValidator();
 
         Subscriber subscriber = new Subscriber();
 
-        assertFalse(nameValidator.isValid(subscriber, null));
+        assertFalse(nameValidator.isValid(subscriber, null), "No name is marked as invalid");
     }
-
 
 }

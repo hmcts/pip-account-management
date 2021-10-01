@@ -21,12 +21,18 @@ import uk.gov.hmcts.reform.demo.service.AzureUserService;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 
 @ExtendWith(MockitoExtension.class)
-public class AzureUserServiceTest {
+class AzureUserServiceTest {
 
     @Mock
     private UserCollectionRequestBuilder userCollectionRequestBuilder;
@@ -46,10 +52,13 @@ public class AzureUserServiceTest {
     @InjectMocks
     private AzureUserService azureUserService;
 
+    private static final String ID = "1234";
+    private static final String EMAIL = "a@b.com";
+
     @Test
-    public void testValidRequestReturnsUser() {
+    void testValidRequestReturnsUser() {
         User user = new User();
-        user.id = "1234";
+        user.id = ID;
 
         when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
         when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
@@ -58,14 +67,14 @@ public class AzureUserServiceTest {
         Subscriber subscriber = new Subscriber();
         Optional<User> returnedUser = azureUserService.createUser(subscriber);
 
-        assertTrue(returnedUser.isPresent());
-        assertEquals("1234", returnedUser.get().id);
+        assertTrue(returnedUser.isPresent(), "The returned user from the service is present");
+        assertEquals(ID, returnedUser.get().id, "The ID is equal to the expected user ID");
     }
 
     @Test
-    public void testInvalidUserRequest() {
+    void testInvalidUserRequest() {
         User user = new User();
-        user.id = "1234";
+        user.id = ID;
 
         when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
         when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
@@ -74,43 +83,41 @@ public class AzureUserServiceTest {
         Subscriber subscriber = new Subscriber();
         Optional<User> returnedUser = azureUserService.createUser(subscriber);
 
-        assertFalse(returnedUser.isPresent());
+        assertFalse(returnedUser.isPresent(), "No user is returned on an invalid request");
     }
 
     @Test
-    public void testArgumentSetsBaseUserDetails() {
+    void testArgumentSetsBaseUserDetails() {
         User userToReturn = new User();
-        userToReturn.id = "1234";
-
-        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+        userToReturn.id = ID;
 
         when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
         when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
         when(userCollectionRequest.post(any())).thenReturn(userToReturn);
 
         Subscriber subscriber = new Subscriber();
-        subscriber.setEmail("a@b.com");
+        subscriber.setEmail(EMAIL);
         subscriber.setTitle("Title");
         subscriber.setFirstName("First Name");
         subscriber.setSurname("Surname");
         azureUserService.createUser(subscriber);
 
+        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
         verify(userCollectionRequest, times(1)).post(captor.capture());
 
         User user = captor.getValue();
 
-        assertTrue(user.accountEnabled);
-        assertEquals("a@b.com", user.displayName);
-        assertEquals("TitleFirst Name", user.givenName);
-        assertEquals("Surname", user.surname);
+        assertTrue(user.accountEnabled, "Account is marked as enabled");
+        assertEquals(EMAIL, user.displayName, "Display name is set as the email");
+        assertEquals("TitleFirst Name", user.givenName, "Given name is set as the title"
+            + " and firstname");
+        assertEquals("Surname", user.surname, "Lastname is set as the surname");
     }
 
     @Test
-    public void testArgumentIdentityDetails() {
+    void testArgumentIdentityDetails() {
         User userToReturn = new User();
-        userToReturn.id = "1234";
-
-        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+        userToReturn.id = ID;
 
         when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
         when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
@@ -119,28 +126,28 @@ public class AzureUserServiceTest {
         when(userConfiguration.getIdentityIssuer()).thenReturn("IdentityIssuer");
 
         Subscriber subscriber = new Subscriber();
-        subscriber.setEmail("a@b.com");
+        subscriber.setEmail(EMAIL);
         azureUserService.createUser(subscriber);
 
+        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
         verify(userCollectionRequest, times(1)).post(captor.capture());
         User user = captor.getValue();
 
         List<ObjectIdentity> objectIdentityList = user.identities;
-        assertEquals(1, objectIdentityList.size());
+        assertEquals(1, objectIdentityList.size(), "One identity has been returned");
 
         ObjectIdentity objectIdentity = objectIdentityList.get(0);
 
-        assertEquals("SignInType", objectIdentity.signInType);
-        assertEquals("IdentityIssuer", objectIdentity.issuer);
-        assertEquals("a@b.com", objectIdentity.issuerAssignedId);
+        assertEquals("SignInType", objectIdentity.signInType, "The sign in type is set correctly");
+        assertEquals("IdentityIssuer", objectIdentity.issuer, "The identity issuer is set correctly");
+        assertEquals(EMAIL, objectIdentity.issuerAssignedId, "The issuer assigned id is "
+            + "set to the email");
     }
 
     @Test
-    public void testArgumentPasswordDetails() {
+    void testArgumentPasswordDetails() {
         User userToReturn = new User();
-        userToReturn.id = "1234";
-
-        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+        userToReturn.id = ID;
 
         when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
         when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
@@ -148,19 +155,21 @@ public class AzureUserServiceTest {
         when(userConfiguration.getPasswordPolicy()).thenReturn("PasswordPolicy");
 
         Subscriber subscriber = new Subscriber();
-        subscriber.setEmail("a@b.com");
+        subscriber.setEmail(EMAIL);
         azureUserService.createUser(subscriber);
 
+        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
         verify(userCollectionRequest, times(1)).post(captor.capture());
         User user = captor.getValue();
 
         PasswordProfile passwordProfile = user.passwordProfile;
 
-        assertNotNull(passwordProfile);
-        assertNotNull(passwordProfile.password);
-        assertEquals(20, passwordProfile.password.length());
-        assertFalse(passwordProfile.forceChangePasswordNextSignIn);
-        assertEquals("PasswordPolicy", user.passwordPolicies);
+        assertNotNull(passwordProfile, "The password profile is present");
+        assertNotNull(passwordProfile.password, "The password has been set");
+        String password = passwordProfile.password;
+        assertEquals(20, password.length(), "The password has the right complexity");
+        assertFalse(passwordProfile.forceChangePasswordNextSignIn, "The force chain password is set to false");
+        assertEquals("PasswordPolicy", user.passwordPolicies, "The password policy is set correctly");
     }
 
 }

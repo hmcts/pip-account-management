@@ -5,8 +5,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
-import javax.validation.ConstraintViolationException;
 import java.time.LocalDateTime;
+import javax.validation.ConstraintViolationException;
 
 /**
  * Global exception handler, that captures exceptions thrown by the controllers, and encapsulates
