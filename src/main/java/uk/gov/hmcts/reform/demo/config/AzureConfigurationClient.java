@@ -8,12 +8,14 @@ import okhttp3.Request;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 
 import java.util.List;
 
 /**
  * Configuration class used to initialise beans to talk to Azure graph.
  */
+@Profile("!test")
 @Configuration
 public class AzureConfigurationClient {
 

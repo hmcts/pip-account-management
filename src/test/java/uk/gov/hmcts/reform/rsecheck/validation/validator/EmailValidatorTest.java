@@ -15,6 +15,12 @@ class EmailValidatorTest {
     }
 
     @Test
+    void testNoEmail() {
+        EmailValidator emailValidator = new EmailValidator();
+        assertFalse(emailValidator.isValid(null, null), "Null email is marked as invalid");
+    }
+
+    @Test
     void testInvalidEmail() {
         EmailValidator emailValidator = new EmailValidator();
         assertFalse(emailValidator.isValid("ab.com", null), "Email without "
