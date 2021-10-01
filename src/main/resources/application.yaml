@@ -30,4 +30,7 @@ azure:
     identity-issuer: ${IDENTITY_ISSUER}
     password-policy: ${PASSWORD_POLICY}
     signInType: emailAddress
+  table:
+    connectionString: ${CONNECTION_STRING}
+    tableName: ${TABLE_NAME}
 

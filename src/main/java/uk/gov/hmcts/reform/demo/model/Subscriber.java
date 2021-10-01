@@ -16,7 +16,13 @@ public class Subscriber {
      * The is the object ID that is returned from azure.
      */
     @ApiModelProperty(hidden = true)
-    private String subscriberObjectId;
+    private String azureSubscriberId;
+
+    /**
+     * This is the ID for the subscriber in the table store.
+     */
+    @ApiModelProperty(hidden = true)
+    private String tableSubscriberId;
 
     /**
      * The email address for the subscriber.

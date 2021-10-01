@@ -23,6 +23,9 @@ public class AccountService {
     @Autowired
     AzureUserService azureUserService;
 
+    @Autowired
+    AzureTableService azureTableService;
+
     /**
      * Method to create new subscribers.
      * @return Returns a map which contains two lists, Errored and Created Subscribers. Created will have object ID set.
@@ -36,12 +39,20 @@ public class AccountService {
 
         for (Subscriber subscriber : subscribers) {
             Optional<User> optionalUser = azureUserService.createUser(subscriber);
-            if (optionalUser.isPresent()) {
-                subscriber.setSubscriberObjectId(optionalUser.get().id);
-                createdAccounts.add(subscriber);
-            } else {
+            if (optionalUser.isEmpty()) {
                 erroredAccounts.add(subscriber);
+                break;
             }
+            subscriber.setAzureSubscriberId(optionalUser.get().id);
+
+            Optional<String> optionalString = azureTableService.createUser(subscriber);
+            if (optionalString.isEmpty()) {
+                erroredAccounts.add(subscriber);
+                break;
+            }
+
+            subscriber.setTableSubscriberId(optionalString.get());
+            createdAccounts.add(subscriber);
         }
 
         processedAccounts.put(CreationEnum.CREATED_ACCOUNTS, createdAccounts);

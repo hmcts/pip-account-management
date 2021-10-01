@@ -9,6 +9,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.hmcts.reform.demo.model.CreationEnum;
 import uk.gov.hmcts.reform.demo.model.Subscriber;
 import uk.gov.hmcts.reform.demo.service.AccountService;
+import uk.gov.hmcts.reform.demo.service.AzureTableService;
 import uk.gov.hmcts.reform.demo.service.AzureUserService;
 
 import java.util.List;
@@ -27,6 +28,9 @@ class AccountServiceTest {
     @Mock
     private AzureUserService azureUserService;
 
+    @Mock
+    private AzureTableService azureTableService;
+
     @InjectMocks
     private AccountService accountService;
 
@@ -39,8 +43,13 @@ class AccountServiceTest {
         expectedUser.givenName = "Test";
         expectedUser.id = "1234";
 
+        String expectedString = "abcd";
+
         when(azureUserService.createUser(argThat(user -> user.getEmail().equals(subscriber.getEmail()))))
             .thenReturn(Optional.of(expectedUser));
+
+        when(azureTableService.createUser(argThat(user -> user.getEmail().equals(subscriber.getEmail()))))
+            .thenReturn(Optional.of(expectedString));
 
         Map<CreationEnum, List<Subscriber>> createdSubscribers =
             accountService.createSubscribers(List.of(subscriber));
@@ -50,10 +59,42 @@ class AccountServiceTest {
         List<Subscriber> subscribers = createdSubscribers.get(CreationEnum.CREATED_ACCOUNTS);
         assertEquals(subscriber.getEmail(), subscribers.get(0).getEmail(), "Subscriber should have "
             + "expected email");
-        assertEquals("1234", subscriber.getSubscriberObjectId(), "Subscriber should have expected "
+        assertEquals("1234", subscriber.getAzureSubscriberId(), "Subscriber should have azure "
             + "object ID");
+        assertEquals(expectedString, subscriber.getTableSubscriberId(), "Subscriber should have table "
+            + "ID");
         assertTrue(createdSubscribers.get(CreationEnum.ERRORED_ACCOUNTS).size() == 0, "Map should "
             + "have no errored accounts");
+    }
+
+    @Test
+    void testSubscriberPartiallyCreated() {
+        Subscriber subscriber = new Subscriber();
+        subscriber.setEmail("a@b.com");
+
+        User expectedUser = new User();
+        expectedUser.givenName = "Test";
+        expectedUser.id = "1234";
+
+        when(azureUserService.createUser(argThat(user -> user.getEmail().equals(subscriber.getEmail()))))
+            .thenReturn(Optional.of(expectedUser));
+
+        when(azureTableService.createUser(argThat(user -> user.getEmail().equals(subscriber.getEmail()))))
+            .thenReturn(Optional.empty());
+
+        Map<CreationEnum, List<Subscriber>> createdSubscribers =
+            accountService.createSubscribers(List.of(subscriber));
+
+        assertTrue(createdSubscribers.containsKey(CreationEnum.ERRORED_ACCOUNTS), "Should contain"
+            + "ERRORED_ACCOUNTS key");
+        List<Subscriber> subscribers = createdSubscribers.get(CreationEnum.ERRORED_ACCOUNTS);
+        assertEquals(subscriber.getEmail(), subscribers.get(0).getEmail(), "Subscriber should have "
+            + "expected email");
+        assertEquals("1234", subscriber.getAzureSubscriberId(), "Subscriber should have azure "
+            + "object ID");
+        assertNull(subscriber.getTableSubscriberId(), "Subscriber should have no table ID set");
+        assertTrue(createdSubscribers.get(CreationEnum.CREATED_ACCOUNTS).size() == 0, "Map should "
+            + "have no created accounts");
     }
 
     @Test
@@ -72,10 +113,10 @@ class AccountServiceTest {
         List<Subscriber> subscribers = createdSubscribers.get(CreationEnum.ERRORED_ACCOUNTS);
         assertEquals(subscriber.getEmail(), subscribers.get(0).getEmail(), "Subscriber should have "
             + "expected email");
-        assertNull(subscriber.getSubscriberObjectId(), "Subscriber should have no object ID set");
+        assertNull(subscriber.getAzureSubscriberId(), "Subscriber should have no azure ID set");
+        assertNull(subscriber.getTableSubscriberId(), "Subscriber should have no table ID set");
         assertTrue(createdSubscribers.get(CreationEnum.CREATED_ACCOUNTS).size() == 0, "Map should "
             + "have no created accounts");
-
     }
 
 }
