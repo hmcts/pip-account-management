@@ -109,8 +109,7 @@ class AzureUserServiceTest {
 
         assertTrue(user.accountEnabled, "Account is marked as enabled");
         assertEquals(EMAIL, user.displayName, "Display name is set as the email");
-        assertEquals("TitleFirst Name", user.givenName, "Given name is set as the title"
-            + " and firstname");
+        assertEquals("First Name", user.givenName, "Given name is set as the firstname");
         assertEquals("Surname", user.surname, "Lastname is set as the surname");
     }
 

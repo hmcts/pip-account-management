@@ -1,5 +1,8 @@
 package uk.gov.hmcts.reform.demo.config;
 
+import com.azure.core.http.rest.PagedIterable;
+import com.azure.data.tables.TableClient;
+import com.azure.data.tables.models.TableEntity;
 import com.microsoft.graph.http.GraphServiceException;
 import com.microsoft.graph.requests.GraphServiceClient;
 import com.microsoft.graph.requests.UserCollectionRequest;
@@ -27,6 +30,12 @@ public class AzureConfigurationClientTest {
     @Mock
     GraphServiceException graphServiceExceptionMock;
 
+    @Mock
+    TableClient tableClientMock;
+
+    @Mock
+    PagedIterable<TableEntity> tableEntitiesMock;
+
     public AzureConfigurationClientTest() {
         MockitoAnnotations.openMocks(this);
     }
@@ -38,6 +47,11 @@ public class AzureConfigurationClientTest {
     @Bean
     public GraphServiceClient<Request> graphClient() {
         return graphClientMock;
+    }
+
+    @Bean
+    public TableClient tableClient() {
+        return tableClientMock;
     }
 
     @Bean
@@ -53,6 +67,11 @@ public class AzureConfigurationClientTest {
     @Bean
     public GraphServiceException graphServiceException() {
         return graphServiceExceptionMock;
+    }
+
+    @Bean
+    public PagedIterable<TableEntity> tableEntities() {
+        return tableEntitiesMock;
     }
 
 

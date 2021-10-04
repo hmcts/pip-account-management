@@ -51,7 +51,7 @@ public class AzureUserService {
         User user = new User();
         user.accountEnabled = true;
         user.displayName = subscriber.getEmail();
-        user.givenName = subscriber.getTitle() + subscriber.getFirstName();
+        user.givenName = subscriber.getFirstName();
         user.surname = subscriber.getSurname();
 
         ObjectIdentity identity = new ObjectIdentity();

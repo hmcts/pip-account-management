@@ -1,7 +1,6 @@
 package uk.gov.hmcts.reform.demo.service;
 
 import com.azure.data.tables.TableClient;
-import com.azure.data.tables.TableClientBuilder;
 import com.azure.data.tables.models.ListEntitiesOptions;
 import com.azure.data.tables.models.TableEntity;
 import org.springframework.beans.factory.annotation.Autowired;

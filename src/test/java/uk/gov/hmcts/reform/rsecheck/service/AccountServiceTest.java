@@ -34,6 +34,8 @@ class AccountServiceTest {
     @InjectMocks
     private AccountService accountService;
 
+    private static final String ID = "1234";
+
     @Test
     void testSubscriberCreated() {
         Subscriber subscriber = new Subscriber();
@@ -41,7 +43,7 @@ class AccountServiceTest {
 
         User expectedUser = new User();
         expectedUser.givenName = "Test";
-        expectedUser.id = "1234";
+        expectedUser.id = ID;
 
         String expectedString = "abcd";
 
@@ -59,7 +61,7 @@ class AccountServiceTest {
         List<Subscriber> subscribers = createdSubscribers.get(CreationEnum.CREATED_ACCOUNTS);
         assertEquals(subscriber.getEmail(), subscribers.get(0).getEmail(), "Subscriber should have "
             + "expected email");
-        assertEquals("1234", subscriber.getAzureSubscriberId(), "Subscriber should have azure "
+        assertEquals(ID, subscriber.getAzureSubscriberId(), "Subscriber should have azure "
             + "object ID");
         assertEquals(expectedString, subscriber.getTableSubscriberId(), "Subscriber should have table "
             + "ID");
@@ -74,7 +76,7 @@ class AccountServiceTest {
 
         User expectedUser = new User();
         expectedUser.givenName = "Test";
-        expectedUser.id = "1234";
+        expectedUser.id = ID;
 
         when(azureUserService.createUser(argThat(user -> user.getEmail().equals(subscriber.getEmail()))))
             .thenReturn(Optional.of(expectedUser));
