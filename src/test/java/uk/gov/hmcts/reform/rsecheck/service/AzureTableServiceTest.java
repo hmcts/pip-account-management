@@ -9,6 +9,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.hmcts.reform.demo.model.AccountStatus;
 import uk.gov.hmcts.reform.demo.model.Subscriber;
 import uk.gov.hmcts.reform.demo.service.AzureTableService;
 
@@ -81,7 +82,7 @@ class AzureTableServiceTest {
                      "Subscriber contains expected surname");
         assertEquals(EMAIL, tableEntity.getProperty("email").toString(),
                      "Subscriber contains expected email");
-        assertEquals("active", tableEntity.getProperty("status").toString(),
+        assertEquals(AccountStatus.ACTIVE, tableEntity.getProperty("status"),
                      "Subscriber contains expected status");
     }
 

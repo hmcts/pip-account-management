@@ -6,6 +6,7 @@ import com.azure.data.tables.models.TableEntity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import uk.gov.hmcts.reform.demo.config.TableConfiguration;
+import uk.gov.hmcts.reform.demo.model.AccountStatus;
 import uk.gov.hmcts.reform.demo.model.Subscriber;
 
 import java.util.Optional;
@@ -41,7 +42,7 @@ public class AzureTableService {
             .addProperty("firstName", subscriber.getFirstName())
             .addProperty("surname", subscriber.getSurname())
             .addProperty("lastLoggedIn", "")
-            .addProperty("status", "active");
+            .addProperty("status", AccountStatus.ACTIVE);
 
         tableClient.createEntity(tableEntity);
 
