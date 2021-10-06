@@ -24,6 +24,16 @@ class NameValidatorTest {
     }
 
     @Test
+    void testInvalidFirstnameTitle() {
+        Subscriber subscriber = new Subscriber();
+        subscriber.setFirstName(FIRST_NAME);
+        subscriber.setTitle(TITLE);
+
+        NameValidator nameValidator = new NameValidator();
+        assertFalse(nameValidator.isValid(subscriber, null), "Title and firstname is marked as invalid");
+    }
+
+    @Test
     void testInvalidFirstnameSurname() {
         Subscriber subscriber = new Subscriber();
         subscriber.setFirstName(FIRST_NAME);
