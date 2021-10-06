@@ -8,15 +8,29 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class NameValidatorTest {
 
+    private static final String TITLE = "Title";
+    private static final String FIRST_NAME = "First Name";
+    private static final String SURNAME = "Surname";
+
     @Test
     void testValidAllNames() {
         Subscriber subscriber = new Subscriber();
-        subscriber.setTitle("Title");
-        subscriber.setFirstName("First Name");
-        subscriber.setSurname("Surname");
+        subscriber.setTitle(TITLE);
+        subscriber.setFirstName(FIRST_NAME);
+        subscriber.setSurname(SURNAME);
 
         NameValidator nameValidator = new NameValidator();
         assertTrue(nameValidator.isValid(subscriber, null), "All names present is marked as valid");
+    }
+
+    @Test
+    void testInvalidFirstnameSurname() {
+        Subscriber subscriber = new Subscriber();
+        subscriber.setFirstName(FIRST_NAME);
+        subscriber.setSurname(SURNAME);
+
+        NameValidator nameValidator = new NameValidator();
+        assertFalse(nameValidator.isValid(subscriber, null), "Firstname and Surname is marked as invalid");
     }
 
     @Test
@@ -24,7 +38,7 @@ class NameValidatorTest {
         NameValidator nameValidator = new NameValidator();
 
         Subscriber subscriber = new Subscriber();
-        subscriber.setFirstName("First Name");
+        subscriber.setFirstName(FIRST_NAME);
 
         assertTrue(nameValidator.isValid(subscriber, null), "Only firstname is marked as valid");
     }
@@ -34,8 +48,8 @@ class NameValidatorTest {
         NameValidator nameValidator = new NameValidator();
 
         Subscriber subscriber = new Subscriber();
-        subscriber.setTitle("Title");
-        subscriber.setSurname("Surname");
+        subscriber.setTitle(TITLE);
+        subscriber.setSurname(SURNAME);
 
         assertTrue(nameValidator.isValid(subscriber, null), "Title and surname is marked as valid");
     }
@@ -54,7 +68,7 @@ class NameValidatorTest {
         NameValidator nameValidator = new NameValidator();
 
         Subscriber subscriber = new Subscriber();
-        subscriber.setTitle("Title");
+        subscriber.setTitle(TITLE);
 
         assertFalse(nameValidator.isValid(subscriber, null), "Only title is marked as invalid");
     }
@@ -64,7 +78,7 @@ class NameValidatorTest {
         NameValidator nameValidator = new NameValidator();
 
         Subscriber subscriber = new Subscriber();
-        subscriber.setSurname("Surname");
+        subscriber.setSurname(SURNAME);
 
         assertFalse(nameValidator.isValid(subscriber, null), "Only surname is marked as invalid");
     }
