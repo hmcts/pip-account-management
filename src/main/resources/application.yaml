@@ -25,12 +25,12 @@ azure:
     client-id: ${CLIENT_ID}
     client-secret: ${CLIENT_SECRET}
     tenant-guid: ${TENANT_GUID}
-    token-provider: ${TOKEN_PROVIDER}
+    token-provider: "https://graph.microsoft.com/.default"
   user:
-    identity-issuer: ${IDENTITY_ISSUER}
-    password-policy: ${PASSWORD_POLICY}
+    identity-issuer: "pib2csbox.onmicrosoft.com"
+    password-policy: DisablePasswordExpiration
     signInType: emailAddress
   table:
     connectionString: ${CONNECTION_STRING}
-    tableName: ${TABLE_NAME}
+    tableName: "Subscribers"
 
