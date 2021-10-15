@@ -7,10 +7,10 @@ import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class ExceptionResponseTest {
+class ExceptionResponseTest {
 
     @Test
-    public void testCreationOfExceptionResponse() {
+    void testCreationOfExceptionResponse() {
 
         ExceptionResponse exceptionResponse = new ExceptionResponse();
 

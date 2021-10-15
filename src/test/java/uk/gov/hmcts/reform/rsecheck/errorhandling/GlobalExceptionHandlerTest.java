@@ -12,10 +12,10 @@ import uk.gov.hmcts.reform.demo.errorhandling.exceptions.AccountNotFoundExceptio
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-public class GlobalExceptionHandlerTest {
+class GlobalExceptionHandlerTest {
 
     @Test
-    public void testHandleAccountNotFoundMethod() {
+    void testHandleAccountNotFoundMethod() {
 
         GlobalExceptionHandler globalExceptionHandler = new GlobalExceptionHandler();
 
