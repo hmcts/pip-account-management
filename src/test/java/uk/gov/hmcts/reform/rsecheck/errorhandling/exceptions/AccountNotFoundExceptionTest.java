@@ -5,10 +5,10 @@ import uk.gov.hmcts.reform.demo.errorhandling.exceptions.AccountNotFoundExceptio
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class AccountNotFoundExceptionTest {
+class AccountNotFoundExceptionTest {
 
     @Test
-    public void testCreationOfAccountNotFoundException() {
+    void testCreationOfAccountNotFoundException() {
 
         AccountNotFoundException subscriptionNotFoundException
             = new AccountNotFoundException("This is a test message");

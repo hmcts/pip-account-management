@@ -40,5 +40,11 @@ spring:
 #            non_contextual_creation: true
 
 azure:
+  opt:
+    client-id: ${CLIENT_ID:00000000-0000-0000-0000-000000000000}
+    client-secret: ${CLIENT_SECRET}
+    tenant-id: ${TENANT_GUID:00000000-0000-0000-0000-000000000000}
+  storage:
+    connection-string: ${CONNECTION_STRING}
   application-insights:
     instrumentation-key: ${rpe.AppInsightsInstrumentationKey:00000000-0000-0000-0000-000000000000}
