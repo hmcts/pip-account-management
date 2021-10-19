@@ -10,6 +10,7 @@ import okhttp3.Request;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -31,13 +32,16 @@ public class AzureConfigurationClient {
     @Autowired
     TableConfiguration tableConfiguration;
 
+    @Value("azure.opt.client-id")
+    private String clientId;
+
     /**
      * Creates the bean that is used to make requests to azure graph.
      * @return The azure graph client.
      */
     @Bean
     public GraphServiceClient<Request> graphClient() {
-        LOGGER.info(clientConfiguration.getClientId());
+        LOGGER.info(clientId);
         ClientSecretCredential clientSecretCredential = new ClientSecretCredentialBuilder()
             .clientId(clientConfiguration.getClientId())
             .clientSecret(clientConfiguration.getClientSecret())
