@@ -15,7 +15,7 @@ apply plugin: 'org.owasp.dependencycheck'
 apply plugin: 'org.sonarqube'
 
 group = 'uk.gov.hmcts.reform.pip'
-mainClassName = 'uk.gov.hmcts.reform.demo.Application'
+mainClassName = 'uk.gov.hmcts.reform.pip.account.Application'
 version = '0.0.1'
 
 allprojects {
