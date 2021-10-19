@@ -3,6 +3,7 @@ package uk.gov.hmcts.reform.pip.account.management.service;
 import com.azure.data.tables.TableClient;
 import com.azure.data.tables.models.ListEntitiesOptions;
 import com.azure.data.tables.models.TableEntity;
+import com.azure.data.tables.models.TableServiceException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import uk.gov.hmcts.reform.pip.account.management.config.TableConfiguration;
@@ -30,23 +31,26 @@ public class AzureTableService {
      * @return The ID of the subscriber if created.
      */
     public Optional<String> createUser(Subscriber subscriber) {
+        try {
+            if (subscriberExists(tableClient, subscriber.getEmail())) {
+                return Optional.empty();
+            }
 
-        if (subscriberExists(tableClient, subscriber.getEmail())) {
+            String key = UUID.randomUUID().toString();
+            TableEntity tableEntity = new TableEntity(key, key)
+                .addProperty("email", subscriber.getEmail())
+                .addProperty("title", subscriber.getTitle())
+                .addProperty("firstName", subscriber.getFirstName())
+                .addProperty("surname", subscriber.getSurname())
+                .addProperty("lastLoggedIn", "")
+                .addProperty("status", AccountStatus.ACTIVE);
+
+
+            tableClient.createEntity(tableEntity);
+            return Optional.of(key);
+        } catch (TableServiceException e) {
             return Optional.empty();
         }
-
-        String key = UUID.randomUUID().toString();
-        TableEntity tableEntity = new TableEntity(key, key)
-            .addProperty("email", subscriber.getEmail())
-            .addProperty("title", subscriber.getTitle())
-            .addProperty("firstName", subscriber.getFirstName())
-            .addProperty("surname", subscriber.getSurname())
-            .addProperty("lastLoggedIn", "")
-            .addProperty("status", AccountStatus.ACTIVE);
-
-        tableClient.createEntity(tableEntity);
-
-        return Optional.of(key);
     }
 
     private boolean subscriberExists(TableClient tableClient, String email) {

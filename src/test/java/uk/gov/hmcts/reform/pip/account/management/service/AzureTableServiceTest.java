@@ -3,6 +3,7 @@ package uk.gov.hmcts.reform.pip.account.management.service;
 import com.azure.core.http.rest.PagedIterable;
 import com.azure.data.tables.TableClient;
 import com.azure.data.tables.models.TableEntity;
+import com.azure.data.tables.models.TableServiceException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -99,6 +100,24 @@ class AzureTableServiceTest {
         Optional<String> returnedString = azureTableService.createUser(subscriber);
 
         assertFalse(returnedString.isPresent(), "Table ID is not present");
+    }
+
+    @Test
+    void createASubscriberTableServiceException() {
+
+        Subscriber subscriber = new Subscriber();
+        subscriber.setFirstName(FIRST_NAME);
+        subscriber.setSurname(SURNAME);
+        subscriber.setTitle(TITLE);
+        subscriber.setEmail(EMAIL);
+
+        when(tableClient.listEntities(any(), any(), any()))
+            .thenThrow(new TableServiceException("Response", null));
+
+        Optional<String> returnedString = azureTableService.createUser(subscriber);
+
+        assertFalse(returnedString.isPresent(),
+                    "Table ID is not present when azure exception occurs");
     }
 
 }
