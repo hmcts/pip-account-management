@@ -32,7 +32,7 @@ public class AzureConfigurationClient {
     @Autowired
     TableConfiguration tableConfiguration;
 
-    @Value("azure.opt.client-id")
+    @Value("${azure.opt.client-id}")
     private String clientId;
 
     /**
