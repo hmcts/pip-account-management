@@ -7,6 +7,8 @@ import com.azure.identity.ClientSecretCredentialBuilder;
 import com.microsoft.graph.authentication.TokenCredentialAuthProvider;
 import com.microsoft.graph.requests.GraphServiceClient;
 import okhttp3.Request;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,6 +23,8 @@ import java.util.List;
 @Configuration
 public class AzureConfigurationClient {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(AzureConfigurationClient.class);
+
     @Autowired
     ClientConfiguration clientConfiguration;
 
@@ -33,6 +37,7 @@ public class AzureConfigurationClient {
      */
     @Bean
     public GraphServiceClient<Request> graphClient() {
+        LOGGER.info(clientConfiguration.getClientId());
         ClientSecretCredential clientSecretCredential = new ClientSecretCredentialBuilder()
             .clientId(clientConfiguration.getClientId())
             .clientSecret(clientConfiguration.getClientSecret())
