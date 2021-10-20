@@ -24,7 +24,7 @@ azure:
   id:
     client-id: ${CLIENT_ID:00000000-0000-0000-0000-000000000000}
     client-secret: ${CLIENT_SECRET}
-    tenant-id: ${TENANT_GUID:00000000-0000-0000-0000-000000000000}
+    tenant-guid: ${TENANT_GUID:00000000-0000-0000-0000-000000000000}
     token-provider: "https://graph.microsoft.com/.default"
   user:
     identity-issuer: "pib2csbox.onmicrosoft.com"
