@@ -7,6 +7,8 @@ import com.microsoft.graph.models.PasswordProfile;
 import com.microsoft.graph.models.User;
 import com.microsoft.graph.requests.GraphServiceClient;
 import okhttp3.Request;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import uk.gov.hmcts.reform.pip.account.management.config.UserConfiguration;
@@ -21,6 +23,8 @@ import java.util.Optional;
  */
 @Component
 public class AzureUserService {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(AzureUserService.class);
 
     @Autowired
     private GraphServiceClient<Request> graphClient;
@@ -43,6 +47,7 @@ public class AzureUserService {
 
             return Optional.of(createdUser);
         } catch (GraphServiceException e) {
+            LOGGER.error(e.getMessage());
             return Optional.empty();
         }
     }
