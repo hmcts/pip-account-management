@@ -56,5 +56,4 @@ public class AzureConfigurationClient {
             .tableName(tableConfiguration.getTableName())
             .buildClient();
     }
-
 }
