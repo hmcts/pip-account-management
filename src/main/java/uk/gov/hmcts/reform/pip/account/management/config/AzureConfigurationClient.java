@@ -41,7 +41,7 @@ public class AzureConfigurationClient {
      */
     @Bean
     public GraphServiceClient<Request> graphClient() {
-        LOGGER.info(clientId);
+        LOGGER.info(tableConfiguration.getConnectionString());
         ClientSecretCredential clientSecretCredential = new ClientSecretCredentialBuilder()
             .clientId(clientConfiguration.getClientId())
             .clientSecret(clientConfiguration.getClientSecret())
