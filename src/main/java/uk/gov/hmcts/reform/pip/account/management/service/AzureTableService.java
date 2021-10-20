@@ -4,6 +4,8 @@ import com.azure.data.tables.TableClient;
 import com.azure.data.tables.models.ListEntitiesOptions;
 import com.azure.data.tables.models.TableEntity;
 import com.azure.data.tables.models.TableServiceException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import uk.gov.hmcts.reform.pip.account.management.config.TableConfiguration;
@@ -18,6 +20,8 @@ import java.util.UUID;
  */
 @Component
 public class AzureTableService {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(AzureTableService.class);
 
     @Autowired
     TableConfiguration tableConfiguration;
@@ -49,6 +53,7 @@ public class AzureTableService {
             tableClient.createEntity(tableEntity);
             return Optional.of(key);
         } catch (TableServiceException e) {
+            LOGGER.error(e.getMessage());
             return Optional.empty();
         }
     }
