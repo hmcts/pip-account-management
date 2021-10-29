@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import uk.gov.hmcts.reform.pip.account.management.config.UserConfiguration;
+import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.AzureCustomException;
 import uk.gov.hmcts.reform.pip.account.management.model.Subscriber;
 
 import java.util.ArrayList;
@@ -35,20 +36,18 @@ public class AzureUserService {
     /**
      * Creates a new subscriber in the Azure active directory.
      * @param subscriber The subscriber to add in the azure active directory.
-     * @return The created user if it was successful. An empty optional if it was not - it can fail for many reasons,
-     *         one is that the user already exists.
+     * @return The created user if it was successful.
+     * @throws AzureCustomException thrown if theres an error with communicating with Azure.
      */
-    public Optional<User> createUser(Subscriber subscriber) {
+    public User createUser(Subscriber subscriber) throws AzureCustomException {
         try {
             User user = createUserObject(subscriber);
-            User createdUser = graphClient.users()
+            return graphClient.users()
                 .buildRequest()
                 .post(user);
-
-            return Optional.of(createdUser);
         } catch (GraphServiceException e) {
             LOGGER.error(e.getMessage());
-            return Optional.empty();
+            throw new AzureCustomException("Error when persisting subscriber into Azure");
         }
     }
 

@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import uk.gov.hmcts.reform.pip.account.management.config.TableConfiguration;
+import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.AzureCustomException;
 import uk.gov.hmcts.reform.pip.account.management.model.AccountStatus;
 import uk.gov.hmcts.reform.pip.account.management.model.Subscriber;
 
@@ -34,10 +35,10 @@ public class AzureTableService {
      * @param subscriber The subscriber to create.
      * @return The ID of the subscriber if created.
      */
-    public Optional<String> createUser(Subscriber subscriber) {
+    public String createUser(Subscriber subscriber) throws AzureCustomException {
         try {
             if (subscriberExists(tableClient, subscriber.getEmail())) {
-                return Optional.empty();
+                throw new AzureCustomException("A user with this email already exists in the table");
             }
 
             String key = UUID.randomUUID().toString();
@@ -51,10 +52,10 @@ public class AzureTableService {
 
 
             tableClient.createEntity(tableEntity);
-            return Optional.of(key);
+            return key;
         } catch (TableServiceException e) {
             LOGGER.error(e.getMessage());
-            return Optional.empty();
+            throw new AzureCustomException("Error while persisting subscriber into the table service");
         }
     }
 

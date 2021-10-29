@@ -1,6 +1,7 @@
 package uk.gov.hmcts.reform.pip.account.management.model;
 
 import io.swagger.annotations.ApiModelProperty;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import uk.gov.hmcts.reform.pip.account.management.validation.annotations.ValidEmail;
 import uk.gov.hmcts.reform.pip.account.management.validation.annotations.ValidName;
@@ -9,6 +10,7 @@ import uk.gov.hmcts.reform.pip.account.management.validation.annotations.ValidNa
  * Model that represents a subscriber.
  */
 @Data
+@AllArgsConstructor
 @ValidName
 public class Subscriber {
 

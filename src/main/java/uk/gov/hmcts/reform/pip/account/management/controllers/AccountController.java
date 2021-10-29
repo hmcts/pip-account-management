@@ -33,9 +33,10 @@ public class AccountController {
      * @return The ID for the subscriber.
      */
     @PostMapping("/add")
-    public ResponseEntity<Map<CreationEnum, List<Subscriber>>> createSubscriber(
-        @Valid @RequestBody List<Subscriber> subscribers) {
-        Map<CreationEnum, List<Subscriber>> processedSubscribers = accountService.createSubscribers(subscribers);
+    public ResponseEntity<Map<CreationEnum, List<? extends Subscriber>>> createSubscriber(
+        @RequestBody List<Subscriber> subscribers) {
+        Map<CreationEnum, List<? extends Subscriber>> processedSubscribers =
+            accountService.createSubscribers(subscribers);
         return ResponseEntity.ok(processedSubscribers);
     }
 

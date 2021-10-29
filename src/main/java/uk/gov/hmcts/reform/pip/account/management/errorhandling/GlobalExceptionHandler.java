@@ -1,7 +1,9 @@
 package uk.gov.hmcts.reform.pip.account.management.errorhandling;
 
+import com.fasterxml.jackson.databind.JsonMappingException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
@@ -16,17 +18,17 @@ import javax.validation.ConstraintViolationException;
 public class GlobalExceptionHandler {
 
     /**
-     * Exception handler that handles validation errors to the controller,
+     * Exception handler that handles Invalid Json exceptions
      * and returns a 400 bad request error code.
      * @param ex The exception that has been thrown.
      * @return The error response, modelled using the ExceptionResponse object.
      */
-    @ExceptionHandler(ConstraintViolationException.class)
+    @ExceptionHandler(JsonMappingException.class)
     public ResponseEntity<ExceptionResponse> handle(
-        ConstraintViolationException ex) {
+        JsonMappingException ex) {
 
         ExceptionResponse exceptionResponse = new ExceptionResponse();
-        exceptionResponse.setMessage(ex.getMessage());
+        exceptionResponse.setMessage(ex.getOriginalMessage());
         exceptionResponse.setTimestamp(LocalDateTime.now());
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exceptionResponse);

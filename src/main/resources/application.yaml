@@ -15,6 +15,9 @@ management:
 spring:
   config:
     import: "optional:configtree:/mnt/secrets/pip-shared-kv/"
+  jackson:
+    parser:
+      STRICT_DUPLICATE_DETECTION: true
   application:
     name: Account Management
 
