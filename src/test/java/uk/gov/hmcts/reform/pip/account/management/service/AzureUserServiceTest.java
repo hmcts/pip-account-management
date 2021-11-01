@@ -84,7 +84,8 @@ class AzureUserServiceTest {
             azureUserService.createUser(subscriber);
         });
 
-        assertEquals("Error when persisting subscriber into Azure",
+        assertEquals("Error when persisting subscriber into Azure. "
+                         + "Check that the user doesn't already exist in the directory",
                      azureCustomException.getMessage(),
                      "Error message should be present when failing to communicate with the AD service");
     }

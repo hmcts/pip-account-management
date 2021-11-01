@@ -84,7 +84,8 @@ class AccountTest {
     private static final String INVALID_NAME_MESSAGE = "Invalid name provided. You must either provide no name, "
         + "or any of the following variations "
         + "1) Title, Firstname and Surname 2) Firstname 3) Title and Surname";
-    private static final String DIRECTORY_ERROR = "Error when persisting subscriber into Azure";
+    private static final String DIRECTORY_ERROR = "Error when persisting subscriber into Azure. "
+        + "Check that the user doesn't already exist in the directory";
     private static final String DUPLICATE_USER_IN_TABLE = "A user with this email already exists in the table";
     private static final String FAILURE_TO_CREATE_MESSAGE = "Error while persisting subscriber into the table service";
 

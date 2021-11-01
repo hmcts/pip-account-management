@@ -46,7 +46,8 @@ public class AzureUserService {
                 .post(user);
         } catch (GraphServiceException e) {
             LOGGER.error(e.getMessage());
-            throw new AzureCustomException("Error when persisting subscriber into Azure");
+            throw new AzureCustomException("Error when persisting subscriber into Azure. "
+                                               + "Check that the user doesn't already exist in the directory");
         }
     }
 
