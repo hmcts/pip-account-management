@@ -13,6 +13,11 @@ import java.util.List;
 public class ErroredSubscriber extends Subscriber {
 
     /**
+     * This is the error messages for why the subscriber has failed to be created.
+     */
+    private List<String> errorMessages;
+
+    /**
      * Constructor that takes in an existing subscriber and converts it to an errored subscriber.
      * @param subscriber The subscriber to be converted to an errored subscriber.
      */
@@ -24,12 +29,5 @@ public class ErroredSubscriber extends Subscriber {
               subscriber.getFirstName(),
               subscriber.getSurname());
     }
-
-    /**
-     * This is the error messages for why the subscriber has failed to be created.
-     */
-    private List<String> errorMessages;
-
-
 
 }

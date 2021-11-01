@@ -9,6 +9,7 @@
   <rule ref="category/java/bestpractices.xml">
     <exclude name="GuardLogStatement"/>
     <exclude name="JUnitTestContainsTooManyAsserts"/>
+    <exclude name="PreserveStackTrace"/>
   </rule>
   <rule ref="category/java/codestyle.xml">
     <exclude name="AtLeastOneConstructor"/>
@@ -69,7 +70,9 @@
     <exclude name="DataflowAnomalyAnalysis"/>
   </rule>
   <rule ref="category/java/multithreading.xml"/>
-  <rule ref="category/java/performance.xml"/>
+  <rule ref="category/java/performance.xml">
+    <exclude name="AvoidInstantiatingObjectsInLoops"/>
+  </rule>
   <rule ref="category/java/security.xml"/>
 
 </ruleset>

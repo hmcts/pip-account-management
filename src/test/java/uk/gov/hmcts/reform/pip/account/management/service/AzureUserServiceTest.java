@@ -15,20 +15,20 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.hmcts.reform.pip.account.management.config.UserConfiguration;
+import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.AzureCustomException;
 import uk.gov.hmcts.reform.pip.account.management.model.Subscriber;
 
 import java.util.List;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
 
 @ExtendWith(MockitoExtension.class)
 class AzureUserServiceTest {
@@ -55,7 +55,7 @@ class AzureUserServiceTest {
     private static final String EMAIL = "a@b.com";
 
     @Test
-    void testValidRequestReturnsUser() {
+    void testValidRequestReturnsUser() throws AzureCustomException {
         User user = new User();
         user.id = ID;
 
@@ -64,10 +64,9 @@ class AzureUserServiceTest {
         when(userCollectionRequest.post(any())).thenReturn(user);
 
         Subscriber subscriber = new Subscriber();
-        Optional<User> returnedUser = azureUserService.createUser(subscriber);
+        User returnedUser = azureUserService.createUser(subscriber);
 
-        assertTrue(returnedUser.isPresent(), "The returned user from the service is present");
-        assertEquals(ID, returnedUser.get().id, "The ID is equal to the expected user ID");
+        assertEquals(ID, returnedUser.id, "The ID is equal to the expected user ID");
     }
 
     @Test
@@ -80,13 +79,18 @@ class AzureUserServiceTest {
         when(userCollectionRequest.post(any())).thenThrow(graphServiceException);
 
         Subscriber subscriber = new Subscriber();
-        Optional<User> returnedUser = azureUserService.createUser(subscriber);
 
-        assertFalse(returnedUser.isPresent(), "No user is returned on an invalid request");
+        AzureCustomException azureCustomException = assertThrows(AzureCustomException.class, () -> {
+            azureUserService.createUser(subscriber);
+        });
+
+        assertEquals("Error when persisting subscriber into Azure",
+                     azureCustomException.getMessage(),
+                     "Error message should be present when failing to communicate with the AD service");
     }
 
     @Test
-    void testArgumentSetsBaseUserDetails() {
+    void testArgumentSetsBaseUserDetails() throws AzureCustomException {
         User userToReturn = new User();
         userToReturn.id = ID;
 
@@ -113,7 +117,7 @@ class AzureUserServiceTest {
     }
 
     @Test
-    void testArgumentIdentityDetails() {
+    void testArgumentIdentityDetails() throws AzureCustomException {
         User userToReturn = new User();
         userToReturn.id = ID;
 
@@ -143,7 +147,7 @@ class AzureUserServiceTest {
     }
 
     @Test
-    void testArgumentPasswordDetails() {
+    void testArgumentPasswordDetails() throws AzureCustomException {
         User userToReturn = new User();
         userToReturn.id = ID;
 

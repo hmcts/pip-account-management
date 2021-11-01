@@ -8,11 +8,14 @@ import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.ErroredSubscriber;
 import uk.gov.hmcts.reform.pip.account.management.model.Subscriber;
 
-import javax.validation.ConstraintViolation;
-import javax.validation.Validator;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
+import javax.validation.ConstraintViolation;
+import javax.validation.Validator;
 
 /**
  * Service layer that deals with the creation of accounts.
@@ -45,6 +48,7 @@ public class AccountService {
 
             Set<ConstraintViolation<Subscriber>> constraintViolationSet = validator.validate(subscriber);
             if (!constraintViolationSet.isEmpty()) {
+
                 ErroredSubscriber erroredSubscriber = new ErroredSubscriber(subscriber);
                 erroredSubscriber.setErrorMessages(constraintViolationSet
                                                        .stream().map(ConstraintViolation::getMessage)

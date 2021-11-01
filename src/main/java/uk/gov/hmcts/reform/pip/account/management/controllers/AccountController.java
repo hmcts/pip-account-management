@@ -14,7 +14,6 @@ import uk.gov.hmcts.reform.pip.account.management.service.AccountService;
 
 import java.util.List;
 import java.util.Map;
-import javax.validation.Valid;
 
 @RestController
 @Api(tags = "Account Management - API for managing accounts")

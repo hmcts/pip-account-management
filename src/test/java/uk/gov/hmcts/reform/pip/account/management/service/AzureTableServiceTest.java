@@ -10,16 +10,17 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.AzureCustomException;
 import uk.gov.hmcts.reform.pip.account.management.model.AccountStatus;
 import uk.gov.hmcts.reform.pip.account.management.model.Subscriber;
 
-import java.util.Optional;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -42,7 +43,7 @@ class AzureTableServiceTest {
     private static final String EMAIL = "a@b.com";
 
     @Test
-    void createValidSubscriber() {
+    void createValidSubscriber() throws AzureCustomException {
         Subscriber subscriber = new Subscriber();
         subscriber.setFirstName(FIRST_NAME);
         subscriber.setSurname(SURNAME);
@@ -52,13 +53,13 @@ class AzureTableServiceTest {
         when(tableClient.listEntities(any(), any(), any())).thenReturn(tableEntities);
         when(tableEntities.stream()).thenReturn(Stream.empty());
 
-        Optional<String> subscriberId = azureTableService.createUser(subscriber);
+        String subscriberId = azureTableService.createUser(subscriber);
 
-        assertTrue(subscriberId.isPresent(), "Subscriber ID has been generated");
+        assertNotNull(subscriberId, "Subscriber ID has been generated");
     }
 
     @Test
-    void verifyArgumentsPassedToCreate() {
+    void verifyArgumentsPassedToCreate() throws AzureCustomException {
         Subscriber subscriber = new Subscriber();
         subscriber.setFirstName(FIRST_NAME);
         subscriber.setSurname(SURNAME);
@@ -97,9 +98,13 @@ class AzureTableServiceTest {
         when(tableClient.listEntities(any(), any(), any())).thenReturn(tableEntities);
         when(tableEntities.stream()).thenReturn(Stream.of(new TableEntity("a", "b")));
 
-        Optional<String> returnedString = azureTableService.createUser(subscriber);
 
-        assertFalse(returnedString.isPresent(), "Table ID is not present");
+        AzureCustomException azureCustomException = assertThrows(AzureCustomException.class, () -> {
+            azureTableService.createUser(subscriber);
+        });
+
+        assertEquals("A user with this email already exists in the table", azureCustomException.getMessage(),
+                     "Error message should be present for a subscriber that already exists");
     }
 
     @Test
@@ -111,13 +116,18 @@ class AzureTableServiceTest {
         subscriber.setTitle(TITLE);
         subscriber.setEmail(EMAIL);
 
-        when(tableClient.listEntities(any(), any(), any()))
-            .thenThrow(new TableServiceException("Response", null));
+        when(tableClient.listEntities(any(), any(), any())).thenReturn(tableEntities);
+        when(tableEntities.stream()).thenReturn(Stream.empty());
 
-        Optional<String> returnedString = azureTableService.createUser(subscriber);
+        doThrow(new TableServiceException("Response", null)).when(tableClient).createEntity(any());
 
-        assertFalse(returnedString.isPresent(),
-                    "Table ID is not present when azure exception occurs");
+        AzureCustomException azureCustomException = assertThrows(AzureCustomException.class, () -> {
+            azureTableService.createUser(subscriber);
+        });
+
+        assertEquals("Error while persisting subscriber into the table service",
+                     azureCustomException.getMessage(),
+                     "Error message should be present when failing to communicate with the Table Service");
     }
 
 }

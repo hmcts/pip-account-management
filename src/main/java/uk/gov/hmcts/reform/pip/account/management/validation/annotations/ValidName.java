@@ -17,8 +17,8 @@ import javax.validation.Payload;
 @Constraint(validatedBy = NameValidator.class)
 public @interface ValidName {
 
-    String message() default "Invalid name provided. You must either provide no name, " +
-        "or any of the following variations "
+    String message() default "Invalid name provided. You must either provide no name, "
+        + "or any of the following variations "
         + "1) Title, Firstname and Surname 2) Firstname 3) Title and Surname";
 
     Class<?>[] groups() default {};

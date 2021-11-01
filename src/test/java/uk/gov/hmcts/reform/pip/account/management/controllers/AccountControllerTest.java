@@ -30,7 +30,7 @@ class AccountControllerTest {
 
     @Test
     void createSubscriber() {
-        Map<CreationEnum, List<Subscriber>> subscribersMap = new ConcurrentHashMap<>();
+        Map<CreationEnum, List<? extends Subscriber>> subscribersMap = new ConcurrentHashMap<>();
         subscribersMap.put(CreationEnum.CREATED_ACCOUNTS, List.of(new Subscriber()));
 
         Subscriber subscriber = new Subscriber();
@@ -40,7 +40,8 @@ class AccountControllerTest {
 
         when(accountService.createSubscribers(argThat(arg -> arg.equals(subscribers)))).thenReturn(subscribersMap);
 
-        ResponseEntity<Map<CreationEnum, List<Subscriber>>> response = accountController.createSubscriber(subscribers);
+        ResponseEntity<Map<CreationEnum, List<? extends Subscriber>>> response =
+            accountController.createSubscriber(subscribers);
 
         assertEquals(HttpStatus.OK, response.getStatusCode(), "Should return an OK status code");
         assertEquals(subscribersMap, response.getBody(), "Should return the expected subscribers map");

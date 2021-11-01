@@ -17,7 +17,6 @@ import uk.gov.hmcts.reform.pip.account.management.model.Subscriber;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * A class that wraps any interacts with Azure active directory.

@@ -13,7 +13,6 @@ import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.Azure
 import uk.gov.hmcts.reform.pip.account.management.model.AccountStatus;
 import uk.gov.hmcts.reform.pip.account.management.model.Subscriber;
 
-import java.util.Optional;
 import java.util.UUID;
 
 /**
