@@ -1,6 +1,8 @@
 package uk.gov.hmcts.reform.pip.account.management.model;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.List;
@@ -8,6 +10,8 @@ import java.util.List;
 /**
  * Class which represents a Subscriber that has failed to be created.
  */
+@AllArgsConstructor
+@NoArgsConstructor
 @Getter
 @Setter
 public class ErroredSubscriber extends Subscriber {
