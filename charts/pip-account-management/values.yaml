@@ -4,9 +4,9 @@ java:
   applicationPort: 6969
   image: 'sdshmctspublic.azurecr.io/pip/account-management:latest'
   keyVaults:
-    pip-shared-kv:
+    pip-sharedservice-kv:
       excludeEnvironmentSuffix: false
-      resourceGroup: pip-sharedservices-{{ .Values.global.environment }}-rg
+      resourceGroup: pip-sharedservice-{{ .Values.global.environment }}-rg
       usePodIdentity: true
       secrets:
         - name: otp-app-pip-account-management-id
