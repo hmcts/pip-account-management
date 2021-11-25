@@ -124,7 +124,7 @@
     <notes><![CDATA[
    file name: tomcat-embed-core-9.0.53.jar
    ]]></notes>
-   <packageUrl regex="true">^pkg:maven/org\.springframework/tomcat\-embed-core@.*$</packageUrl>
+    <packageUrl regex="true">^pkg:maven/org.apache.tomcat.embed/tomcat-embed-core@9.0.53</packageUrl>
     <cve>CVE-2021-42340</cve>
   </suppress>
 </suppressions>
