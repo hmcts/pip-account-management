@@ -31,9 +31,6 @@ class AccountServiceTest {
     private AzureUserService azureUserService;
 
     @Mock
-    private AzureTableService azureTableService;
-
-    @Mock
     private Validator validator;
 
     @Mock
@@ -59,16 +56,11 @@ class AccountServiceTest {
         expectedUser.givenName = "Test";
         expectedUser.id = ID;
 
-        String expectedString = "abcd";
-
         when(validator.validate(argThat(sub -> ((Subscriber)sub).getEmail().equals(subscriber.getEmail()))))
             .thenReturn(Set.of());
 
         when(azureUserService.createUser(argThat(user -> user.getEmail().equals(subscriber.getEmail()))))
             .thenReturn(expectedUser);
-
-        when(azureTableService.createUser(argThat(user -> user.getEmail().equals(subscriber.getEmail()))))
-            .thenReturn(expectedString);
 
         Map<CreationEnum, List<? extends Subscriber>> createdSubscribers =
             accountService.createSubscribers(List.of(subscriber));
@@ -79,43 +71,8 @@ class AccountServiceTest {
         assertEquals(subscriber.getEmail(), subscribers.get(0).getEmail(), EMAIL_VALIDATION_MESSAGE);
         assertEquals(ID, subscriber.getAzureSubscriberId(), "Subscriber should have azure "
             + "object ID");
-        assertEquals(expectedString, subscriber.getTableSubscriberId(), "Subscriber should have table "
-            + "ID");
         assertEquals(0, createdSubscribers.get(CreationEnum.ERRORED_ACCOUNTS).size(),
                      "Map should have no errored accounts");
-    }
-
-    @Test
-    void testSubscriberPartiallyCreated() throws AzureCustomException {
-        Subscriber subscriber = new Subscriber();
-        subscriber.setEmail(SUBSCRIBER_EMAIL);
-
-        User expectedUser = new User();
-        expectedUser.givenName = "Test";
-        expectedUser.id = ID;
-
-        when(validator.validate(argThat(sub -> ((Subscriber)sub).getEmail().equals(subscriber.getEmail()))))
-            .thenReturn(Set.of());
-
-        when(azureUserService.createUser(argThat(user -> user.getEmail().equals(subscriber.getEmail()))))
-            .thenReturn(expectedUser);
-
-        when(azureTableService.createUser(argThat(user -> user.getEmail().equals(subscriber.getEmail()))))
-            .thenThrow(new AzureCustomException(ERROR_MESSAGE));
-
-        Map<CreationEnum, List<? extends Subscriber>> createdSubscribers =
-            accountService.createSubscribers(List.of(subscriber));
-
-        assertTrue(createdSubscribers.containsKey(CreationEnum.ERRORED_ACCOUNTS), ERRORED_ACCOUNTS_VALIDATION_MESSAGE);
-        List<? extends Subscriber> subscribers = createdSubscribers.get(CreationEnum.ERRORED_ACCOUNTS);
-        assertEquals(subscriber.getEmail(), subscribers.get(0).getEmail(), EMAIL_VALIDATION_MESSAGE);
-        assertEquals("1234", subscriber.getAzureSubscriberId(), "Subscriber should have azure "
-            + "object ID");
-        assertNull(subscriber.getTableSubscriberId(), "Subscriber should have no table ID set");
-        assertEquals(ERROR_MESSAGE, ((ErroredSubscriber)subscribers.get(0)).getErrorMessages().get(0),
-                     "Subscriber should have error message set when failed");
-        assertEquals(0, createdSubscribers.get(CreationEnum.CREATED_ACCOUNTS).size(),
-                     "Map should have no created accounts");
     }
 
     @Test
@@ -136,7 +93,6 @@ class AccountServiceTest {
         List<? extends Subscriber> subscribers = createdSubscribers.get(CreationEnum.ERRORED_ACCOUNTS);
         assertEquals(subscriber.getEmail(), subscribers.get(0).getEmail(), EMAIL_VALIDATION_MESSAGE);
         assertNull(subscriber.getAzureSubscriberId(), "Subscriber should have no azure ID set");
-        assertNull(subscriber.getTableSubscriberId(), "Subscriber should have no table ID set");
         assertEquals(ERROR_MESSAGE, ((ErroredSubscriber)subscribers.get(0)).getErrorMessages().get(0),
                      "Subscriber should have error message set when failed");
         assertEquals(0, createdSubscribers.get(CreationEnum.CREATED_ACCOUNTS).size(),
@@ -160,7 +116,6 @@ class AccountServiceTest {
         List<? extends Subscriber> subscribers = createdSubscribers.get(CreationEnum.ERRORED_ACCOUNTS);
         assertEquals(subscriber.getEmail(), subscribers.get(0).getEmail(), EMAIL_VALIDATION_MESSAGE);
         assertNull(subscriber.getAzureSubscriberId(), "Subscriber should have no azure ID set");
-        assertNull(subscriber.getTableSubscriberId(), "Subscriber should have no table ID set");
 
         assertEquals(VALIDATION_MESSAGE, ((ErroredSubscriber)subscribers.get(0)).getErrorMessages().get(0),
                      "Subscriber should have error message set when validation has failed");
@@ -181,8 +136,6 @@ class AccountServiceTest {
         expectedUser.givenName = "Test";
         expectedUser.id = ID;
 
-        String expectedString = "abcd";
-
         doReturn(Set.of()).when(validator).validate(argThat(sub -> ((Subscriber)sub)
             .getEmail().equals(subscriber.getEmail())));
 
@@ -193,9 +146,6 @@ class AccountServiceTest {
 
         when(azureUserService.createUser(argThat(user -> user.getEmail().equals(subscriber.getEmail()))))
             .thenReturn(expectedUser);
-
-        when(azureTableService.createUser(argThat(user -> user.getEmail().equals(subscriber.getEmail()))))
-            .thenReturn(expectedString);
 
         Map<CreationEnum, List<? extends Subscriber>> createdSubscribers =
             accountService.createSubscribers(List.of(subscriber, erroredSubscriber));
