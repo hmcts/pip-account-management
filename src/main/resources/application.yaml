@@ -36,4 +36,3 @@ azure:
   table:
     connection-string: ${CONNECTION_STRING}
     tableName: "Subscribers"
-
