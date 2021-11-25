@@ -6,7 +6,6 @@ java:
   keyVaults:
     pip-sharedservice-kv:
       resourceGroup: pip-sharedservice-{{ .Values.global.environment }}-rg
-      usePodIdentity: true
       secrets:
         - name: otp-app-pip-account-management-id
           alias: CLIENT_ID
