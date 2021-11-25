@@ -5,7 +5,6 @@ java:
   image: 'sdshmctspublic.azurecr.io/pip/account-management:latest'
   keyVaults:
     pip-sharedservice-kv:
-      excludeEnvironmentSuffix: false
       resourceGroup: pip-sharedservice-{{ .Values.global.environment }}-rg
       usePodIdentity: true
       secrets:
