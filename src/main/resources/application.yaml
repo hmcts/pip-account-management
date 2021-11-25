@@ -33,6 +33,3 @@ azure:
     identity-issuer: "pib2csbox.onmicrosoft.com"
     password-policy: DisablePasswordExpiration
     signInType: emailAddress
-  table:
-    connection-string: ${CONNECTION_STRING}
-    tableName: "Subscribers"

@@ -27,7 +27,6 @@ public class ErroredSubscriber extends Subscriber {
      */
     public ErroredSubscriber(Subscriber subscriber) {
         super(subscriber.getAzureSubscriberId(),
-              subscriber.getTableSubscriberId(),
               subscriber.getEmail(),
               subscriber.getTitle(),
               subscriber.getFirstName(),

@@ -30,9 +30,6 @@ public class AccountService {
     @Autowired
     AzureUserService azureUserService;
 
-    @Autowired
-    AzureTableService azureTableService;
-
     /**
      * Method to create new subscribers.
      * @return Returns a map which contains two lists, Errored and Created Subscribers. Created will have object ID set.
@@ -60,9 +57,6 @@ public class AccountService {
             try {
                 User user = azureUserService.createUser(subscriber);
                 subscriber.setAzureSubscriberId(user.id);
-
-                String rowId = azureTableService.createUser(subscriber);
-                subscriber.setTableSubscriberId(rowId);
 
                 createdAccounts.add(subscriber);
             } catch (AzureCustomException azureCustomException) {
