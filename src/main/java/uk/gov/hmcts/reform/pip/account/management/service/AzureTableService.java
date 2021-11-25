@@ -7,6 +7,7 @@ import com.azure.data.tables.models.TableServiceException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import uk.gov.hmcts.reform.pip.account.management.config.TableConfiguration;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.AzureCustomException;
@@ -29,12 +30,16 @@ public class AzureTableService {
     @Autowired
     TableClient tableClient;
 
+    @Value("${azure.table.connection-string}")
+    private String connectionString;
+
     /**
      * Method to create a subscriber.
      * @param subscriber The subscriber to create.
      * @return The ID of the subscriber if created.
      */
     public String createUser(Subscriber subscriber) throws AzureCustomException {
+        System.out.println("connectionString is here Chris = " + connectionString);
         try {
             if (subscriberExists(tableClient, subscriber.getEmail())) {
                 throw new AzureCustomException("A user with this email already exists in the table");
