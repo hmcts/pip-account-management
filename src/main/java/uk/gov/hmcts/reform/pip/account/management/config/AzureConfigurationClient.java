@@ -1,7 +1,5 @@
 package uk.gov.hmcts.reform.pip.account.management.config;
 
-import com.azure.data.tables.TableClient;
-import com.azure.data.tables.TableClientBuilder;
 import com.azure.identity.ClientSecretCredential;
 import com.azure.identity.ClientSecretCredentialBuilder;
 import com.microsoft.graph.authentication.TokenCredentialAuthProvider;
@@ -24,9 +22,6 @@ public class AzureConfigurationClient {
     @Autowired
     ClientConfiguration clientConfiguration;
 
-    @Autowired
-    TableConfiguration tableConfiguration;
-
     /**
      * Creates the bean that is used to make requests to azure graph.
      * @return The azure graph client.
@@ -47,14 +42,6 @@ public class AzureConfigurationClient {
                 .builder()
                 .authenticationProvider(tokenCredentialAuthProvider)
                 .buildClient();
-    }
-
-    @Bean
-    public TableClient tableClient() {
-        return new TableClientBuilder()
-            .connectionString(tableConfiguration.getConnectionString())
-            .tableName(tableConfiguration.getTableName())
-            .buildClient();
     }
 
 }
