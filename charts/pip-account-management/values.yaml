@@ -13,6 +13,6 @@ java:
           alias: CLIENT_SECRET
         - name: otp-tenant-id
           alias: TENANT_GUID
-        - name: pipsharedservicesa-storageaccount-connection-string
+        - name: pipsssa-storageaccount-connection-string
           alias: CONNECTION_STRING
   environment:
