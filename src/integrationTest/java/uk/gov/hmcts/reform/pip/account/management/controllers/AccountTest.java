@@ -1,9 +1,5 @@
 package uk.gov.hmcts.reform.pip.account.management.controllers;
 
-import com.azure.core.http.rest.PagedIterable;
-import com.azure.data.tables.TableClient;
-import com.azure.data.tables.models.TableEntity;
-import com.azure.data.tables.models.TableServiceException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.graph.http.GraphServiceException;
@@ -34,14 +30,11 @@ import uk.gov.hmcts.reform.pip.account.management.model.Subscriber;
 
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -66,12 +59,6 @@ class AccountTest {
     @Autowired
     GraphServiceException graphServiceException;
 
-    @Autowired
-    TableClient tableClient;
-
-    @Autowired
-    PagedIterable<TableEntity> tableEntities;
-
     private static final String URL = "/account/add";
     private static final String EMAIL = "a@b";
     private static final String FIRST_NAME = "First name";
@@ -86,11 +73,8 @@ class AccountTest {
         + "1) Title, Firstname and Surname 2) Firstname 3) Title and Surname";
     private static final String DIRECTORY_ERROR = "Error when persisting subscriber into Azure. "
         + "Check that the user doesn't already exist in the directory";
-    private static final String DUPLICATE_USER_IN_TABLE = "A user with this email already exists in the table";
-    private static final String FAILURE_TO_CREATE_MESSAGE = "Error while persisting subscriber into the table service";
 
     private static final String TEST_MESSAGE_ID = "Subscriber ID added to subscriber";
-    private static final String TEST_MESSAGE_TABLE_ID = "Table subscriber ID should be populated";
     private static final String TEST_MESSAGE_EMAIL = "Email matches sent subscriber";
     private static final String TEST_MESSAGE_FIRST_NAME = "Firstname matches sent subscriber";
     private static final String TEST_MESSAGE_SURNAME = "Surname matches sent subscriber";
@@ -100,7 +84,7 @@ class AccountTest {
 
     @AfterEach
     public void reset() {
-        Mockito.reset(graphClient, tableClient, userCollectionRequest, userCollectionRequestBuilder);
+        Mockito.reset(graphClient, userCollectionRequest, userCollectionRequestBuilder);
     }
 
     @DisplayName("Should welcome upon root request with 200 response code")
@@ -113,9 +97,6 @@ class AccountTest {
         when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
         when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
         when(userCollectionRequest.post(any())).thenReturn(userToReturn);
-
-        when(tableClient.listEntities(any(), any(), any())).thenReturn(tableEntities);
-        when(tableEntities.stream()).thenReturn(Stream.empty());
 
         Subscriber subscriber = new Subscriber();
         subscriber.setEmail(EMAIL);
@@ -145,7 +126,6 @@ class AccountTest {
         Subscriber returnedSubscriber = subscribers.get(CreationEnum.CREATED_ACCOUNTS).get(0);
 
         assertEquals(ID, returnedSubscriber.getAzureSubscriberId(), TEST_MESSAGE_ID);
-        assertNotNull(returnedSubscriber.getTableSubscriberId(), TEST_MESSAGE_TABLE_ID);
         assertEquals(EMAIL, returnedSubscriber.getEmail(), TEST_MESSAGE_EMAIL);
         assertEquals(FIRST_NAME, returnedSubscriber.getFirstName(), TEST_MESSAGE_FIRST_NAME);
         assertEquals(SURNAME, returnedSubscriber.getSurname(), TEST_MESSAGE_SURNAME);
@@ -185,7 +165,6 @@ class AccountTest {
                                                                      ErroredSubscriber.class);
 
         assertNull(erroredSubscriber.getAzureSubscriberId(), TEST_MESSAGE_ID);
-        assertNull(erroredSubscriber.getTableSubscriberId(), TEST_MESSAGE_TABLE_ID);
         assertEquals("ab", erroredSubscriber.getEmail(), TEST_MESSAGE_EMAIL);
         assertEquals(FIRST_NAME, erroredSubscriber.getFirstName(), TEST_MESSAGE_FIRST_NAME);
         assertEquals(SURNAME, erroredSubscriber.getSurname(), TEST_MESSAGE_SURNAME);
@@ -227,7 +206,6 @@ class AccountTest {
                                                                         ErroredSubscriber.class);
 
         assertNull(erroredSubscriber.getAzureSubscriberId(),  TEST_MESSAGE_ID);
-        assertNull(erroredSubscriber.getTableSubscriberId(), TEST_MESSAGE_TABLE_ID);
         assertNull(erroredSubscriber.getEmail(), "Email has not been sent");
         assertEquals(FIRST_NAME, erroredSubscriber.getFirstName(), TEST_MESSAGE_FIRST_NAME);
         assertEquals(SURNAME, erroredSubscriber.getSurname(), TEST_MESSAGE_SURNAME);
@@ -268,7 +246,6 @@ class AccountTest {
                                                                         ErroredSubscriber.class);
 
         assertNull(erroredSubscriber.getAzureSubscriberId(), TEST_MESSAGE_ID);
-        assertNull(erroredSubscriber.getTableSubscriberId(), TEST_MESSAGE_TABLE_ID);
         assertEquals(EMAIL, erroredSubscriber.getEmail(), TEST_MESSAGE_EMAIL);
         assertEquals(FIRST_NAME, erroredSubscriber.getFirstName(), TEST_MESSAGE_FIRST_NAME);
         assertNull(erroredSubscriber.getSurname(), "Surname has not been sent");
@@ -310,110 +287,12 @@ class AccountTest {
             subscribers.get(CreationEnum.ERRORED_ACCOUNTS).get(0), ErroredSubscriber.class);
 
         assertNull(erroredSubscriber.getAzureSubscriberId(), "Errored account does not have ID");
-        assertNull(erroredSubscriber.getTableSubscriberId(), "Errored account");
         assertEquals(EMAIL, erroredSubscriber.getEmail(), TEST_MESSAGE_EMAIL);
         assertEquals(FIRST_NAME, erroredSubscriber.getFirstName(), TEST_MESSAGE_FIRST_NAME);
         assertEquals(SURNAME, erroredSubscriber.getSurname(), TEST_MESSAGE_SURNAME);
         assertEquals(TITLE, erroredSubscriber.getTitle(), TEST_MESSAGE_TITLE);
         assertEquals(DIRECTORY_ERROR, erroredSubscriber.getErrorMessages().get(0),
                      "Error message matches directory message");
-    }
-
-    @Test
-    void testCreationOfDuplicateSubscriberInTableService() throws Exception {
-        User userToReturn = new User();
-        userToReturn.id = ID;
-
-        when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
-        when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
-        when(userCollectionRequest.post(any())).thenReturn(userToReturn);
-
-        when(tableClient.listEntities(any(), any(), any())).thenReturn(tableEntities);
-        when(tableEntities.stream()).thenReturn(Stream.of(new TableEntity("a", "b")));
-
-        Subscriber subscriber = new Subscriber();
-        subscriber.setEmail(EMAIL);
-        subscriber.setSurname(SURNAME);
-        subscriber.setFirstName(FIRST_NAME);
-        subscriber.setTitle(TITLE);
-
-        ObjectMapper objectMapper = new ObjectMapper();
-
-        MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
-            .post(URL)
-            .content(objectMapper.writeValueAsString(List.of(subscriber)))
-            .contentType(MediaType.APPLICATION_JSON);
-
-        MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isOk()).andReturn();
-
-
-        ConcurrentHashMap<CreationEnum, List<Object>> subscribers =
-            objectMapper.readValue(response.getResponse().getContentAsString(),
-                                   new TypeReference<>() {});
-
-        assertEquals(1, subscribers.get(CreationEnum.ERRORED_ACCOUNTS).size(), "1 errored account returned");
-        assertEquals(0, subscribers.get(CreationEnum.CREATED_ACCOUNTS).size(), "0 created account returned");
-
-        ErroredSubscriber erroredSubscriber = objectMapper.convertValue(
-            subscribers.get(CreationEnum.ERRORED_ACCOUNTS).get(0), ErroredSubscriber.class);
-
-        assertEquals(ID, erroredSubscriber.getAzureSubscriberId(), TEST_MESSAGE_ID);
-        assertNull(erroredSubscriber.getTableSubscriberId(), "Table ID should be null");
-        assertEquals(EMAIL, erroredSubscriber.getEmail(), TEST_MESSAGE_EMAIL);
-        assertEquals(FIRST_NAME, erroredSubscriber.getFirstName(), TEST_MESSAGE_FIRST_NAME);
-        assertEquals(SURNAME, erroredSubscriber.getSurname(), TEST_MESSAGE_SURNAME);
-        assertEquals(TITLE, erroredSubscriber.getTitle(), TEST_MESSAGE_TITLE);
-        assertEquals(DUPLICATE_USER_IN_TABLE, erroredSubscriber.getErrorMessages().get(0),
-                     "Error message matches duplicate user message");
-    }
-
-    @Test
-    void testErrorWhileCommunicatingWithTableService() throws Exception {
-        User userToReturn = new User();
-        userToReturn.id = ID;
-
-        when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
-        when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
-        when(userCollectionRequest.post(any())).thenReturn(userToReturn);
-
-        when(tableClient.listEntities(any(), any(), any())).thenReturn(tableEntities);
-        when(tableEntities.stream()).thenReturn(Stream.empty());
-        doThrow(new TableServiceException("Exception communicating with Azure", null))
-            .when(tableClient).createEntity(any());
-
-        Subscriber subscriber = new Subscriber();
-        subscriber.setEmail(EMAIL);
-        subscriber.setSurname(SURNAME);
-        subscriber.setFirstName(FIRST_NAME);
-        subscriber.setTitle(TITLE);
-
-        ObjectMapper objectMapper = new ObjectMapper();
-
-        MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
-            .post(URL)
-            .content(objectMapper.writeValueAsString(List.of(subscriber)))
-            .contentType(MediaType.APPLICATION_JSON);
-
-        MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isOk()).andReturn();
-
-        ConcurrentHashMap<CreationEnum, List<Object>> subscribers =
-            objectMapper.readValue(response.getResponse().getContentAsString(),
-                                   new TypeReference<>() {});
-
-        assertEquals(1, subscribers.get(CreationEnum.ERRORED_ACCOUNTS).size(), "1 errored account returned");
-        assertEquals(0, subscribers.get(CreationEnum.CREATED_ACCOUNTS).size(), "0 created account returned");
-
-        ErroredSubscriber erroredSubscriber = objectMapper.convertValue(
-            subscribers.get(CreationEnum.ERRORED_ACCOUNTS).get(0), ErroredSubscriber.class);
-
-        assertEquals(ID, erroredSubscriber.getAzureSubscriberId(), TEST_MESSAGE_ID);
-        assertNull(erroredSubscriber.getTableSubscriberId(), "Table ID should be null");
-        assertEquals(EMAIL, erroredSubscriber.getEmail(), TEST_MESSAGE_EMAIL);
-        assertEquals(FIRST_NAME, erroredSubscriber.getFirstName(), TEST_MESSAGE_FIRST_NAME);
-        assertEquals(SURNAME, erroredSubscriber.getSurname(), TEST_MESSAGE_SURNAME);
-        assertEquals(TITLE, erroredSubscriber.getTitle(), TEST_MESSAGE_TITLE);
-        assertEquals(FAILURE_TO_CREATE_MESSAGE, erroredSubscriber.getErrorMessages().get(0),
-                     "Error message matches failure to create message");
     }
 
     @Test
@@ -447,9 +326,6 @@ class AccountTest {
         when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
         when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
         when(userCollectionRequest.post(any())).thenReturn(userToReturn);
-
-        when(tableClient.listEntities(any(), any(), any())).thenReturn(tableEntities);
-        when(tableEntities.stream()).thenReturn(Stream.empty());
 
         Subscriber validSubscriber = new Subscriber();
         validSubscriber.setEmail(EMAIL);
@@ -485,7 +361,6 @@ class AccountTest {
             subscribers.get(CreationEnum.CREATED_ACCOUNTS).get(0), Subscriber.class);
 
         assertEquals(ID, returnedValidSubscriber.getAzureSubscriberId(), TEST_MESSAGE_ID);
-        assertNotNull(returnedValidSubscriber.getTableSubscriberId(), TEST_MESSAGE_TABLE_ID);
         assertEquals(EMAIL, returnedValidSubscriber.getEmail(), TEST_MESSAGE_EMAIL);
         assertEquals(FIRST_NAME, returnedValidSubscriber.getFirstName(), TEST_MESSAGE_FIRST_NAME);
         assertEquals(SURNAME, returnedValidSubscriber.getSurname(), TEST_MESSAGE_SURNAME);
@@ -495,7 +370,6 @@ class AccountTest {
             subscribers.get(CreationEnum.ERRORED_ACCOUNTS).get(0), ErroredSubscriber.class);
 
         assertNull(returnedInvalidSubscriber.getAzureSubscriberId(), "Subscriber ID should be null");
-        assertNull(returnedInvalidSubscriber.getTableSubscriberId(), "Table ID should be null");
         assertEquals("abc.test", returnedInvalidSubscriber.getEmail(), TEST_MESSAGE_EMAIL);
         assertEquals(FIRST_NAME, returnedInvalidSubscriber.getFirstName(), TEST_MESSAGE_FIRST_NAME);
         assertEquals(SURNAME, returnedInvalidSubscriber.getSurname(), TEST_MESSAGE_SURNAME);

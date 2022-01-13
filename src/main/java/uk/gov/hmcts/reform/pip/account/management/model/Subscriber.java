@@ -23,12 +23,6 @@ public class Subscriber {
     private String azureSubscriberId;
 
     /**
-     * This is the ID for the subscriber in the table store.
-     */
-    @ApiModelProperty(hidden = true)
-    private String tableSubscriberId;
-
-    /**
      * The email address for the subscriber.
      */
     @ValidEmail
