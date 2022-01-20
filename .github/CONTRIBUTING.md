@@ -10,7 +10,7 @@ projects, by serving as the initial setup of each API.
 
 ## Before contributing
 
-Any ideas on the user journeys and general service experience you may have **should be first consulted
+Any ideas on the cftUser journeys and general service experience you may have **should be first consulted
 with us by submitting a new issue** to this repository. Ideas are always welcome, but if something is divergent or unrelated
 to what we're trying to achieve we won't be able to accept it. Please keep this in mind as we don't want to waste anybody's time.
 
