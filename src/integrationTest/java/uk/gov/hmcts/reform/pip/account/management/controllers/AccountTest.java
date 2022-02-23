@@ -7,8 +7,10 @@ import com.microsoft.graph.models.User;
 import com.microsoft.graph.requests.GraphServiceClient;
 import com.microsoft.graph.requests.UserCollectionRequest;
 import com.microsoft.graph.requests.UserCollectionRequestBuilder;
+import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
 import okhttp3.Request;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -25,10 +27,15 @@ import uk.gov.hmcts.reform.pip.account.management.Application;
 import uk.gov.hmcts.reform.pip.account.management.config.AzureConfigurationClientTest;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.ExceptionResponse;
 import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
-import uk.gov.hmcts.reform.pip.account.management.model.ErroredSubscriber;
+import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
+import uk.gov.hmcts.reform.pip.account.management.model.Roles;
+import uk.gov.hmcts.reform.pip.account.management.model.UserProvenances;
+import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredSubscriber;
 import uk.gov.hmcts.reform.pip.account.management.model.Subscriber;
 
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -42,6 +49,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 @ActiveProfiles(profiles = "test")
+@AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
 class AccountTest {
 
     @Autowired
@@ -59,11 +67,15 @@ class AccountTest {
     @Autowired
     GraphServiceException graphServiceException;
 
-    private static final String URL = "/account/add";
+    private static final String AZURE_URL = "/account/add";
+    private static final String PI_URL = "/account/add/pi";
     private static final String EMAIL = "a@b";
     private static final String FIRST_NAME = "First name";
     private static final String SURNAME = "Surname";
     private static final String TITLE = "Title";
+    private static final UserProvenances PROVENANCE = UserProvenances.PI_AAD;
+    private static final Roles ROLE = Roles.INTERNAL;
+    private static final String ISSUER_EMAIL = "issuer@email.com";
 
     private static final String ID = "1234";
 
@@ -80,7 +92,12 @@ class AccountTest {
     private static final String TEST_MESSAGE_SURNAME = "Surname matches sent subscriber";
     private static final String TEST_MESSAGE_TITLE = "Title matches sents subscriber";
 
+    private ObjectMapper objectMapper;
 
+    @BeforeEach
+    void setup() {
+        objectMapper = new ObjectMapper();
+    }
 
     @AfterEach
     public void reset() {
@@ -104,10 +121,8 @@ class AccountTest {
         subscriber.setFirstName(FIRST_NAME);
         subscriber.setTitle(TITLE);
 
-        ObjectMapper objectMapper = new ObjectMapper();
-
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
-            .post(URL)
+            .post(AZURE_URL)
             .content(objectMapper.writeValueAsString(List.of(subscriber)))
             .contentType(MediaType.APPLICATION_JSON);
 
@@ -140,11 +155,10 @@ class AccountTest {
         subscriber.setFirstName(FIRST_NAME);
         subscriber.setTitle(TITLE);
 
-        ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.findAndRegisterModules();
 
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
-            .post(URL)
+            .post(AZURE_URL)
             .content(objectMapper.writeValueAsString(List.of(subscriber)))
             .contentType(MediaType.APPLICATION_JSON);
 
@@ -181,11 +195,10 @@ class AccountTest {
         subscriber.setFirstName(FIRST_NAME);
         subscriber.setTitle(TITLE);
 
-        ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.findAndRegisterModules();
 
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
-            .post(URL)
+            .post(AZURE_URL)
             .content(objectMapper.writeValueAsString(List.of(subscriber)))
             .contentType(MediaType.APPLICATION_JSON);
 
@@ -221,11 +234,10 @@ class AccountTest {
         subscriber.setFirstName(FIRST_NAME);
         subscriber.setTitle(TITLE);
 
-        ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.findAndRegisterModules();
 
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
-            .post(URL)
+            .post(AZURE_URL)
             .content(objectMapper.writeValueAsString(List.of(subscriber)))
             .contentType(MediaType.APPLICATION_JSON);
 
@@ -267,10 +279,8 @@ class AccountTest {
         subscriber.setFirstName(FIRST_NAME);
         subscriber.setTitle(TITLE);
 
-        ObjectMapper objectMapper = new ObjectMapper();
-
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
-            .post(URL)
+            .post(AZURE_URL)
             .content(objectMapper.writeValueAsString(List.of(subscriber)))
             .contentType(MediaType.APPLICATION_JSON);
 
@@ -300,14 +310,13 @@ class AccountTest {
         String duplicateKeyString = "[{\"email\": \"a@b.com\", \"email\": \"a@b.com\"}]";
 
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
-            .post(URL)
+            .post(AZURE_URL)
             .content(duplicateKeyString)
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder)
             .andExpect(status().isBadRequest()).andReturn();
 
-        ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.findAndRegisterModules();
 
         ExceptionResponse exceptionResponse =
@@ -339,10 +348,8 @@ class AccountTest {
         invalidSubscriber.setFirstName(FIRST_NAME);
         invalidSubscriber.setTitle(TITLE);
 
-        ObjectMapper objectMapper = new ObjectMapper();
-
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
-            .post(URL)
+            .post(AZURE_URL)
             .content(objectMapper.writeValueAsString(List.of(validSubscriber, invalidSubscriber)))
             .contentType(MediaType.APPLICATION_JSON);
 
@@ -376,6 +383,27 @@ class AccountTest {
         assertEquals(TITLE, returnedInvalidSubscriber.getTitle(), TEST_MESSAGE_TITLE);
         assertEquals(EMAIL_VALIDATION_MESSAGE, returnedInvalidSubscriber.getErrorMessages().get(0),
                      "Error message is displayed for an invalid email");
+    }
+
+    @Test
+    void testCreateSingleUser() throws Exception {
+        PiUser validUser = new PiUser();
+        validUser.setEmail(EMAIL);
+        validUser.setProvenanceUserId(ID);
+        validUser.setUserProvenance(PROVENANCE);
+        validUser.setRoles(ROLE);
+
+        MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
+            .post(PI_URL)
+            .content(objectMapper.writeValueAsString(List.of(validUser)))
+            .header("x-user", ISSUER_EMAIL)
+            .contentType(MediaType.APPLICATION_JSON);
+
+        MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isCreated()).andReturn();
+        ConcurrentHashMap<CreationEnum, List<String>> mappedResponse =
+            objectMapper.convertValue(response.getResponse().getContentAsString(), new TypeReference<>() {});
+
+        assertEquals(1, mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).size(), "1 User should be created");
     }
 
 }

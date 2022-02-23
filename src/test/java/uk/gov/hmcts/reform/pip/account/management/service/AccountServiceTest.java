@@ -6,14 +6,21 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.hmcts.reform.pip.account.management.database.UserRepository;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.AzureCustomException;
 import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
-import uk.gov.hmcts.reform.pip.account.management.model.ErroredSubscriber;
+import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
+import uk.gov.hmcts.reform.pip.account.management.model.Roles;
+import uk.gov.hmcts.reform.pip.account.management.model.UserProvenances;
+import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredPiUser;
+import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredSubscriber;
 import uk.gov.hmcts.reform.pip.account.management.model.Subscriber;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
 
@@ -22,6 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -36,11 +44,14 @@ class AccountServiceTest {
     @Mock
     private ConstraintViolation<Object> constraintViolation;
 
+    @Mock
+    private UserRepository userRepository;
+
     @InjectMocks
     private AccountService accountService;
 
-    private static final String SUBSCRIBER_EMAIL = "a@b.com";
-    private static final String SUBSCRIBER_INVALID_EMAIL = "ab.com";
+    private static final String EMAIL = "a@b.com";
+    private static final String INVALID_EMAIL = "ab.com";
     private static final String ID = "1234";
     private static final String ERROR_MESSAGE = "An error has been found";
     private static final String VALIDATION_MESSAGE = "Validation Message";
@@ -50,7 +61,7 @@ class AccountServiceTest {
     @Test
     void testSubscriberCreated() throws AzureCustomException {
         Subscriber subscriber = new Subscriber();
-        subscriber.setEmail(SUBSCRIBER_EMAIL);
+        subscriber.setEmail(EMAIL);
 
         User expectedUser = new User();
         expectedUser.givenName = "Test";
@@ -78,7 +89,7 @@ class AccountServiceTest {
     @Test
     void testSubscriberNotCreated() throws AzureCustomException {
         Subscriber subscriber = new Subscriber();
-        subscriber.setEmail(SUBSCRIBER_EMAIL);
+        subscriber.setEmail(EMAIL);
 
         when(validator.validate(argThat(sub -> ((Subscriber)sub).getEmail().equals(subscriber.getEmail()))))
             .thenReturn(Set.of());
@@ -102,7 +113,7 @@ class AccountServiceTest {
     @Test
     void testValidationCreatesAnErroredAccount() {
         Subscriber subscriber = new Subscriber();
-        subscriber.setEmail(SUBSCRIBER_EMAIL);
+        subscriber.setEmail(EMAIL);
 
         when(validator.validate(argThat(sub -> ((Subscriber)sub).getEmail().equals(subscriber.getEmail()))))
             .thenReturn(Set.of(constraintViolation));
@@ -127,10 +138,10 @@ class AccountServiceTest {
     @Test
     void creationOfMultipleSubscribers() throws AzureCustomException {
         Subscriber subscriber = new Subscriber();
-        subscriber.setEmail(SUBSCRIBER_EMAIL);
+        subscriber.setEmail(EMAIL);
 
         Subscriber erroredSubscriber = new Subscriber();
-        erroredSubscriber.setEmail(SUBSCRIBER_INVALID_EMAIL);
+        erroredSubscriber.setEmail(INVALID_EMAIL);
 
         User expectedUser = new User();
         expectedUser.givenName = "Test";
@@ -161,6 +172,57 @@ class AccountServiceTest {
         assertEquals(VALIDATION_MESSAGE, ((ErroredSubscriber)erroredSubscribers.get(0)).getErrorMessages().get(0),
                      "Validation message displayed for errored subscriber");
 
+    }
+
+    @Test
+    void testAddUsers() {
+        PiUser user = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, "234", EMAIL, Roles.INTERNAL);
+        Map<CreationEnum, List<?>> expected = new ConcurrentHashMap<>();
+        expected.put(CreationEnum.CREATED_ACCOUNTS, List.of(user.getUserId()));
+        expected.put(CreationEnum.ERRORED_ACCOUNTS, List.of());
+
+        when(validator.validate(user)).thenReturn(Set.of());
+        when(userRepository.save(user)).thenReturn(user);
+
+        assertEquals(expected, accountService.addUsers(List.of(user), EMAIL), "Returned maps should match");
+    }
+
+    @Test
+    void testAddUsersBuildsErrored() {
+        PiUser user = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, "234", INVALID_EMAIL, Roles.INTERNAL);
+        ErroredPiUser erroredUser = new ErroredPiUser(user);
+        erroredUser.setErrorMessages(List.of(VALIDATION_MESSAGE));
+        Map<CreationEnum, List<?>> expected = new ConcurrentHashMap<>();
+        expected.put(CreationEnum.CREATED_ACCOUNTS, List.of());
+        expected.put(CreationEnum.ERRORED_ACCOUNTS, List.of(erroredUser));
+
+        lenient().when(userRepository.save(user)).thenReturn(user);
+        doReturn(Set.of(constraintViolation)).when(validator).validate(user);
+        when(constraintViolation.getMessage()).thenReturn(VALIDATION_MESSAGE);
+
+        assertEquals(expected, accountService.addUsers(List.of(user), EMAIL), "Returned Errored accounts should match");
+    }
+
+    @Test
+    void testAddUsersForBothCreatedAndErrored() {
+        PiUser invalidUser = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, "234", INVALID_EMAIL,
+                                        Roles.INTERNAL);
+        PiUser validUser = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, "234", EMAIL, Roles.INTERNAL);
+        ErroredPiUser erroredUser = new ErroredPiUser(invalidUser);
+        erroredUser.setErrorMessages(List.of(VALIDATION_MESSAGE));
+        Map<CreationEnum, List<?>> expected = new ConcurrentHashMap<>();
+        expected.put(CreationEnum.CREATED_ACCOUNTS, List.of(validUser.getUserId()));
+        expected.put(CreationEnum.ERRORED_ACCOUNTS, List.of(erroredUser));
+
+        lenient().when(userRepository.save(invalidUser)).thenReturn(invalidUser);
+        doReturn(Set.of(constraintViolation)).when(validator).validate(invalidUser);
+        when(constraintViolation.getMessage()).thenReturn(VALIDATION_MESSAGE);
+
+        doReturn(Set.of()).when(validator).validate(validUser);
+        when(userRepository.save(validUser)).thenReturn(validUser);
+
+        assertEquals(expected, accountService.addUsers(List.of(invalidUser, validUser), EMAIL),
+                     "Returned maps should match created and errored");
     }
 
 }
