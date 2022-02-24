@@ -182,7 +182,7 @@ class AccountServiceTest {
 
     @Test
     void testAddUsers() {
-        PiUser user = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, ID, EMAIL, Roles.INTERNAL);
+        PiUser user = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, ID, EMAIL, Roles.INTERNAL_ADMIN_CTSC);
         Map<CreationEnum, List<?>> expected = new ConcurrentHashMap<>();
         expected.put(CreationEnum.CREATED_ACCOUNTS, List.of(user.getUserId()));
         expected.put(CreationEnum.ERRORED_ACCOUNTS, List.of());
@@ -195,7 +195,8 @@ class AccountServiceTest {
 
     @Test
     void testAddUsersBuildsErrored() {
-        PiUser user = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, ID, INVALID_EMAIL, Roles.INTERNAL);
+        PiUser user = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, ID, INVALID_EMAIL,
+                                 Roles.INTERNAL_ADMIN_CTSC);
         ErroredPiUser erroredUser = new ErroredPiUser(user);
         erroredUser.setErrorMessages(List.of(VALIDATION_MESSAGE));
         Map<CreationEnum, List<?>> expected = new ConcurrentHashMap<>();
@@ -212,9 +213,9 @@ class AccountServiceTest {
     @Test
     void testAddUsersForBothCreatedAndErrored() {
         PiUser invalidUser = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, ID, INVALID_EMAIL,
-                                        Roles.INTERNAL
+                                        Roles.INTERNAL_ADMIN_CTSC
         );
-        PiUser validUser = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, ID, EMAIL, Roles.INTERNAL);
+        PiUser validUser = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, ID, EMAIL, Roles.INTERNAL_ADMIN_CTSC);
         ErroredPiUser erroredUser = new ErroredPiUser(invalidUser);
         erroredUser.setErrorMessages(List.of(VALIDATION_MESSAGE));
         Map<CreationEnum, List<?>> expected = new ConcurrentHashMap<>();

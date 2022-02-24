@@ -74,7 +74,7 @@ class AccountTest {
     private static final String SURNAME = "Surname";
     private static final String TITLE = "Title";
     private static final UserProvenances PROVENANCE = UserProvenances.PI_AAD;
-    private static final Roles ROLE = Roles.INTERNAL;
+    private static final Roles ROLE = Roles.INTERNAL_ADMIN_CTSC;
     private static final String ISSUER_EMAIL = "issuer@email.com";
     private static final String ISSUER_HEADER = "x-user";
 
