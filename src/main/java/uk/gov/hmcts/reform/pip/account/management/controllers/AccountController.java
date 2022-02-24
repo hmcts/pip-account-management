@@ -14,8 +14,8 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
-import uk.gov.hmcts.reform.pip.account.management.model.Subscriber;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
+import uk.gov.hmcts.reform.pip.account.management.model.Subscriber;
 import uk.gov.hmcts.reform.pip.account.management.service.AccountService;
 
 import java.util.List;
@@ -49,7 +49,7 @@ public class AccountController {
      * POST endpoint to create a new user in the P&I postgres database.
      *
      * @param issuerEmail The user creating the account.
-     * @param users The list of users to add to the database.
+     * @param users       The list of users to add to the database.
      * @return the uuid of the created and added users with any errored accounts
      */
     @ApiResponses({
@@ -59,7 +59,7 @@ public class AccountController {
     @ApiOperation("Add a user to the P&I postgres database")
     @PostMapping("/add/pi")
     public ResponseEntity<Map<CreationEnum, List<?>>> createUsers(
-        @RequestHeader(value = "x-user") String issuerEmail,
+        @RequestHeader("x-user") String issuerEmail,
         @RequestBody List<PiUser> users) {
         return ResponseEntity.status(HttpStatus.CREATED).body(accountService.addUsers(users, issuerEmail));
     }

@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Type;
 import uk.gov.hmcts.reform.pip.account.management.validation.annotations.ValidEmail;
+
 import java.util.UUID;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -17,7 +18,7 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
 /**
- * Model that represents the User as exists in P&I database domain
+ * Model that represents the User as exists in P&I database domain.
  */
 @Entity
 @Data

@@ -11,10 +11,10 @@ import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.Azure
 import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
 import uk.gov.hmcts.reform.pip.account.management.model.Roles;
+import uk.gov.hmcts.reform.pip.account.management.model.Subscriber;
 import uk.gov.hmcts.reform.pip.account.management.model.UserProvenances;
 import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredPiUser;
 import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredSubscriber;
-import uk.gov.hmcts.reform.pip.account.management.model.Subscriber;
 
 import java.util.List;
 import java.util.Map;
@@ -67,7 +67,7 @@ class AccountServiceTest {
         expectedUser.givenName = "Test";
         expectedUser.id = ID;
 
-        when(validator.validate(argThat(sub -> ((Subscriber)sub).getEmail().equals(subscriber.getEmail()))))
+        when(validator.validate(argThat(sub -> ((Subscriber) sub).getEmail().equals(subscriber.getEmail()))))
             .thenReturn(Set.of());
 
         when(azureUserService.createUser(argThat(user -> user.getEmail().equals(subscriber.getEmail()))))
@@ -83,7 +83,8 @@ class AccountServiceTest {
         assertEquals(ID, subscriber.getAzureSubscriberId(), "Subscriber should have azure "
             + "object ID");
         assertEquals(0, createdSubscribers.get(CreationEnum.ERRORED_ACCOUNTS).size(),
-                     "Map should have no errored accounts");
+                     "Map should have no errored accounts"
+        );
     }
 
     @Test
@@ -91,7 +92,7 @@ class AccountServiceTest {
         Subscriber subscriber = new Subscriber();
         subscriber.setEmail(EMAIL);
 
-        when(validator.validate(argThat(sub -> ((Subscriber)sub).getEmail().equals(subscriber.getEmail()))))
+        when(validator.validate(argThat(sub -> ((Subscriber) sub).getEmail().equals(subscriber.getEmail()))))
             .thenReturn(Set.of());
 
         when(azureUserService.createUser(argThat(user -> user.getEmail().equals(subscriber.getEmail()))))
@@ -104,10 +105,12 @@ class AccountServiceTest {
         List<? extends Subscriber> subscribers = createdSubscribers.get(CreationEnum.ERRORED_ACCOUNTS);
         assertEquals(subscriber.getEmail(), subscribers.get(0).getEmail(), EMAIL_VALIDATION_MESSAGE);
         assertNull(subscriber.getAzureSubscriberId(), "Subscriber should have no azure ID set");
-        assertEquals(ERROR_MESSAGE, ((ErroredSubscriber)subscribers.get(0)).getErrorMessages().get(0),
-                     "Subscriber should have error message set when failed");
+        assertEquals(ERROR_MESSAGE, ((ErroredSubscriber) subscribers.get(0)).getErrorMessages().get(0),
+                     "Subscriber should have error message set when failed"
+        );
         assertEquals(0, createdSubscribers.get(CreationEnum.CREATED_ACCOUNTS).size(),
-                     "Map should have no created accounts");
+                     "Map should have no created accounts"
+        );
     }
 
     @Test
@@ -115,7 +118,7 @@ class AccountServiceTest {
         Subscriber subscriber = new Subscriber();
         subscriber.setEmail(EMAIL);
 
-        when(validator.validate(argThat(sub -> ((Subscriber)sub).getEmail().equals(subscriber.getEmail()))))
+        when(validator.validate(argThat(sub -> ((Subscriber) sub).getEmail().equals(subscriber.getEmail()))))
             .thenReturn(Set.of(constraintViolation));
 
         when(constraintViolation.getMessage()).thenReturn(VALIDATION_MESSAGE);
@@ -128,11 +131,13 @@ class AccountServiceTest {
         assertEquals(subscriber.getEmail(), subscribers.get(0).getEmail(), EMAIL_VALIDATION_MESSAGE);
         assertNull(subscriber.getAzureSubscriberId(), "Subscriber should have no azure ID set");
 
-        assertEquals(VALIDATION_MESSAGE, ((ErroredSubscriber)subscribers.get(0)).getErrorMessages().get(0),
-                     "Subscriber should have error message set when validation has failed");
+        assertEquals(VALIDATION_MESSAGE, ((ErroredSubscriber) subscribers.get(0)).getErrorMessages().get(0),
+                     "Subscriber should have error message set when validation has failed"
+        );
 
         assertEquals(0, createdSubscribers.get(CreationEnum.CREATED_ACCOUNTS).size(),
-                     "Map should have no created accounts");
+                     "Map should have no created accounts"
+        );
     }
 
     @Test
@@ -147,10 +152,10 @@ class AccountServiceTest {
         expectedUser.givenName = "Test";
         expectedUser.id = ID;
 
-        doReturn(Set.of()).when(validator).validate(argThat(sub -> ((Subscriber)sub)
+        doReturn(Set.of()).when(validator).validate(argThat(sub -> ((Subscriber) sub)
             .getEmail().equals(subscriber.getEmail())));
 
-        doReturn(Set.of(constraintViolation)).when(validator).validate(argThat(sub -> ((Subscriber)sub)
+        doReturn(Set.of(constraintViolation)).when(validator).validate(argThat(sub -> ((Subscriber) sub)
             .getEmail().equals(erroredSubscriber.getEmail())));
 
         when(constraintViolation.getMessage()).thenReturn(VALIDATION_MESSAGE);
@@ -169,14 +174,15 @@ class AccountServiceTest {
         assertTrue(createdSubscribers.containsKey(CreationEnum.ERRORED_ACCOUNTS), ERRORED_ACCOUNTS_VALIDATION_MESSAGE);
         List<? extends Subscriber> erroredSubscribers = createdSubscribers.get(CreationEnum.ERRORED_ACCOUNTS);
         assertEquals(erroredSubscriber.getEmail(), erroredSubscribers.get(0).getEmail(), EMAIL_VALIDATION_MESSAGE);
-        assertEquals(VALIDATION_MESSAGE, ((ErroredSubscriber)erroredSubscribers.get(0)).getErrorMessages().get(0),
-                     "Validation message displayed for errored subscriber");
+        assertEquals(VALIDATION_MESSAGE, ((ErroredSubscriber) erroredSubscribers.get(0)).getErrorMessages().get(0),
+                     "Validation message displayed for errored subscriber"
+        );
 
     }
 
     @Test
     void testAddUsers() {
-        PiUser user = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, "234", EMAIL, Roles.INTERNAL);
+        PiUser user = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, ID, EMAIL, Roles.INTERNAL);
         Map<CreationEnum, List<?>> expected = new ConcurrentHashMap<>();
         expected.put(CreationEnum.CREATED_ACCOUNTS, List.of(user.getUserId()));
         expected.put(CreationEnum.ERRORED_ACCOUNTS, List.of());
@@ -189,7 +195,7 @@ class AccountServiceTest {
 
     @Test
     void testAddUsersBuildsErrored() {
-        PiUser user = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, "234", INVALID_EMAIL, Roles.INTERNAL);
+        PiUser user = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, ID, INVALID_EMAIL, Roles.INTERNAL);
         ErroredPiUser erroredUser = new ErroredPiUser(user);
         erroredUser.setErrorMessages(List.of(VALIDATION_MESSAGE));
         Map<CreationEnum, List<?>> expected = new ConcurrentHashMap<>();
@@ -205,9 +211,10 @@ class AccountServiceTest {
 
     @Test
     void testAddUsersForBothCreatedAndErrored() {
-        PiUser invalidUser = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, "234", INVALID_EMAIL,
-                                        Roles.INTERNAL);
-        PiUser validUser = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, "234", EMAIL, Roles.INTERNAL);
+        PiUser invalidUser = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, ID, INVALID_EMAIL,
+                                        Roles.INTERNAL
+        );
+        PiUser validUser = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, ID, EMAIL, Roles.INTERNAL);
         ErroredPiUser erroredUser = new ErroredPiUser(invalidUser);
         erroredUser.setErrorMessages(List.of(VALIDATION_MESSAGE));
         Map<CreationEnum, List<?>> expected = new ConcurrentHashMap<>();
@@ -222,7 +229,8 @@ class AccountServiceTest {
         when(userRepository.save(validUser)).thenReturn(validUser);
 
         assertEquals(expected, accountService.addUsers(List.of(invalidUser, validUser), EMAIL),
-                     "Returned maps should match created and errored");
+                     "Returned maps should match created and errored"
+        );
     }
 
 }

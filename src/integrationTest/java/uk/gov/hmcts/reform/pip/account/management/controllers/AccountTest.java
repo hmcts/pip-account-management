@@ -29,13 +29,11 @@ import uk.gov.hmcts.reform.pip.account.management.errorhandling.ExceptionRespons
 import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
 import uk.gov.hmcts.reform.pip.account.management.model.Roles;
+import uk.gov.hmcts.reform.pip.account.management.model.Subscriber;
 import uk.gov.hmcts.reform.pip.account.management.model.UserProvenances;
 import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredSubscriber;
-import uk.gov.hmcts.reform.pip.account.management.model.Subscriber;
 
 import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -50,6 +48,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles(profiles = "test")
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
+@SuppressWarnings({"PMD.TooManyMethods"})
 class AccountTest {
 
     @Autowired
@@ -70,12 +69,14 @@ class AccountTest {
     private static final String AZURE_URL = "/account/add";
     private static final String PI_URL = "/account/add/pi";
     private static final String EMAIL = "a@b";
+    private static final String INVALID_EMAIL = "ab";
     private static final String FIRST_NAME = "First name";
     private static final String SURNAME = "Surname";
     private static final String TITLE = "Title";
     private static final UserProvenances PROVENANCE = UserProvenances.PI_AAD;
     private static final Roles ROLE = Roles.INTERNAL;
     private static final String ISSUER_EMAIL = "issuer@email.com";
+    private static final String ISSUER_HEADER = "x-user";
 
     private static final String ID = "1234";
 
@@ -93,6 +94,16 @@ class AccountTest {
     private static final String TEST_MESSAGE_TITLE = "Title matches sents subscriber";
 
     private ObjectMapper objectMapper;
+
+    private PiUser createUser(boolean valid) {
+        PiUser user = new PiUser();
+        user.setEmail(valid ? EMAIL : INVALID_EMAIL);
+        user.setProvenanceUserId(ID);
+        user.setUserProvenance(PROVENANCE);
+        user.setRoles(ROLE);
+
+        return user;
+    }
 
     @BeforeEach
     void setup() {
@@ -387,23 +398,96 @@ class AccountTest {
 
     @Test
     void testCreateSingleUser() throws Exception {
-        PiUser validUser = new PiUser();
-        validUser.setEmail(EMAIL);
-        validUser.setProvenanceUserId(ID);
-        validUser.setUserProvenance(PROVENANCE);
-        validUser.setRoles(ROLE);
+        PiUser validUser = createUser(true);
 
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(PI_URL)
             .content(objectMapper.writeValueAsString(List.of(validUser)))
-            .header("x-user", ISSUER_EMAIL)
+            .header(ISSUER_HEADER, ISSUER_EMAIL)
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isCreated()).andReturn();
-        ConcurrentHashMap<CreationEnum, List<String>> mappedResponse =
-            objectMapper.convertValue(response.getResponse().getContentAsString(), new TypeReference<>() {});
+        ConcurrentHashMap<CreationEnum, List<Object>> mappedResponse =
+            objectMapper.readValue(response.getResponse().getContentAsString(),
+                                   new TypeReference<>() {});
 
         assertEquals(1, mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).size(), "1 User should be created");
+    }
+
+    @Test
+    void testCreateMultipleSuccessUsers() throws Exception {
+        PiUser validUser1 = createUser(true);
+        PiUser validUser2 = createUser(true);
+
+        MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
+            .post(PI_URL)
+            .content(objectMapper.writeValueAsString(List.of(validUser1, validUser2)))
+            .header(ISSUER_HEADER, ISSUER_EMAIL)
+            .contentType(MediaType.APPLICATION_JSON);
+
+        MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isCreated()).andReturn();
+        ConcurrentHashMap<CreationEnum, List<Object>> mappedResponse =
+            objectMapper.readValue(response.getResponse().getContentAsString(),
+                                   new TypeReference<>() {});
+
+        assertEquals(2, mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).size(), "2 Users should be created");
+    }
+
+    @Test
+    void testCreateSingleErroredUser() throws Exception {
+        PiUser invalidUser = createUser(false);
+
+        MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
+            .post(PI_URL)
+            .content(objectMapper.writeValueAsString(List.of(invalidUser)))
+            .header(ISSUER_HEADER, ISSUER_EMAIL)
+            .contentType(MediaType.APPLICATION_JSON);
+
+        MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isCreated()).andReturn();
+        ConcurrentHashMap<CreationEnum, List<Object>> mappedResponse =
+            objectMapper.readValue(response.getResponse().getContentAsString(),
+                                   new TypeReference<>() {});
+
+        assertEquals(1, mappedResponse.get(CreationEnum.ERRORED_ACCOUNTS).size(), "1 User should be errored");
+    }
+
+    @Test
+    void testCreateMultipleErroredUsers() throws Exception {
+        PiUser invalidUser1 = createUser(false);
+        PiUser invalidUser2 = createUser(false);
+
+        MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
+            .post(PI_URL)
+            .content(objectMapper.writeValueAsString(List.of(invalidUser1, invalidUser2)))
+            .header(ISSUER_HEADER, ISSUER_EMAIL)
+            .contentType(MediaType.APPLICATION_JSON);
+
+        MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isCreated()).andReturn();
+        ConcurrentHashMap<CreationEnum, List<Object>> mappedResponse =
+            objectMapper.readValue(response.getResponse().getContentAsString(),
+                                   new TypeReference<>() {});
+
+        assertEquals(2, mappedResponse.get(CreationEnum.ERRORED_ACCOUNTS).size(), "2 Users should be errored");
+    }
+
+    @Test
+    void testCreateMultipleUsersCreateAndErrored() throws Exception {
+        PiUser validUser = createUser(true);
+        PiUser invalidUser = createUser(false);
+
+        MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
+            .post(PI_URL)
+            .content(objectMapper.writeValueAsString(List.of(validUser, invalidUser)))
+            .header(ISSUER_HEADER, ISSUER_EMAIL)
+            .contentType(MediaType.APPLICATION_JSON);
+
+        MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isCreated()).andReturn();
+        ConcurrentHashMap<CreationEnum, List<Object>> mappedResponse =
+            objectMapper.readValue(response.getResponse().getContentAsString(),
+                                   new TypeReference<>() {});
+
+        assertEquals(1, mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).size(), "1 User should be created");
+        assertEquals(1, mappedResponse.get(CreationEnum.ERRORED_ACCOUNTS).size(), "1 User should be errored");
     }
 
 }
