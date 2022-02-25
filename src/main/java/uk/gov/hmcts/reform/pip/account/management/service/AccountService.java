@@ -85,6 +85,13 @@ public class AccountService {
         return processedAccounts;
     }
 
+    /**
+     * Method to add users to P&I database, loops through the list and validates the email provided then adds them to
+     * success or failure lists.
+     * @param users the list of users to be added.
+     * @param issuerEmail the email of the admin adding the users for logging purposes.
+     * @return
+     */
     public Map<CreationEnum, List<?>> addUsers(List<PiUser> users, String issuerEmail) {
         List<UUID> createdAccounts = new ArrayList<>();
         List<ErroredPiUser> erroredAccounts = new ArrayList<>();
