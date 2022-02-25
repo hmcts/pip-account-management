@@ -90,7 +90,7 @@ public class AccountService {
      * success or failure lists.
      * @param users the list of users to be added.
      * @param issuerEmail the email of the admin adding the users for logging purposes.
-     * @return
+     * @return Map of Created and Errored accounts, created has UUID's and errored has user objects.
      */
     public Map<CreationEnum, List<?>> addUsers(List<PiUser> users, String issuerEmail) {
         List<UUID> createdAccounts = new ArrayList<>();
