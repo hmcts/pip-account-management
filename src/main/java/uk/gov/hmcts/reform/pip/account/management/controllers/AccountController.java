@@ -17,6 +17,7 @@ import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
 import uk.gov.hmcts.reform.pip.account.management.model.Subscriber;
 import uk.gov.hmcts.reform.pip.account.management.service.AccountService;
+import uk.gov.hmcts.reform.pip.account.management.validation.annotations.ValidEmail;
 
 import java.util.List;
 import java.util.Map;
@@ -59,7 +60,7 @@ public class AccountController {
     @ApiOperation("Add a user to the P&I postgres database")
     @PostMapping("/add/pi")
     public ResponseEntity<Map<CreationEnum, List<?>>> createUsers(
-        @RequestHeader("x-user") String issuerEmail,
+        @RequestHeader("x-issuer-email") @ValidEmail String issuerEmail,
         @RequestBody List<PiUser> users) {
         return ResponseEntity.status(HttpStatus.CREATED).body(accountService.addUsers(users, issuerEmail));
     }

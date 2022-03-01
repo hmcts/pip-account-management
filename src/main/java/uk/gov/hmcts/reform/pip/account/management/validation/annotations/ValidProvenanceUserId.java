@@ -1,6 +1,6 @@
 package uk.gov.hmcts.reform.pip.account.management.validation.annotations;
 
-import uk.gov.hmcts.reform.pip.account.management.validation.validator.EmailValidator;
+import uk.gov.hmcts.reform.pip.account.management.validation.validator.ProvenanceUserIdValidator;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -10,17 +10,16 @@ import javax.validation.Constraint;
 import javax.validation.Payload;
 
 /**
- * Annotation that is used to start the email Validator.
+ * Annotation that is used to start the provenance user id Validator.
  */
-@Target({ElementType.METHOD, ElementType.FIELD, ElementType.PARAMETER})
+@Target({ElementType.METHOD, ElementType.FIELD, ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
-@Constraint(validatedBy = EmailValidator.class)
-public @interface ValidEmail {
+@Constraint(validatedBy = ProvenanceUserIdValidator.class)
+public @interface ValidProvenanceUserId {
 
-    String message() default "Invalid email provided. Email must contain an @ symbol";
+    String message() default "Invalid Provenance User Id provided, already exists.";
 
     Class<?>[] groups() default {};
 
     Class<? extends Payload>[] payload() default {};
-
 }

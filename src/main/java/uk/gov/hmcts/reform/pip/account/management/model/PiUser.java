@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Type;
 import uk.gov.hmcts.reform.pip.account.management.validation.annotations.ValidEmail;
+import uk.gov.hmcts.reform.pip.account.management.validation.annotations.ValidProvenanceUserId;
 
 import java.util.UUID;
 import javax.persistence.Column;
@@ -24,6 +25,7 @@ import javax.validation.constraints.NotNull;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@ValidProvenanceUserId
 public class PiUser {
 
     /**
