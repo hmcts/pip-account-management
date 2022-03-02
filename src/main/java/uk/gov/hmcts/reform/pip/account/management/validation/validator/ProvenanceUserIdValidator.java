@@ -16,8 +16,13 @@ public class ProvenanceUserIdValidator implements ConstraintValidator<ValidProve
 
     @Override
     public boolean isValid(PiUser piUser, ConstraintValidatorContext constraintValidatorContext) {
-        List<PiUser> existingUsers = userRepository.findExistingByProvenanceId(piUser.getProvenanceUserId(),
-                                                                               piUser.getUserProvenance().name());
-        return existingUsers.isEmpty();
+        if (userRepository != null) {
+            List<PiUser> existingUsers = userRepository.findExistingByProvenanceId(
+                piUser.getProvenanceUserId(),
+                piUser.getUserProvenance().name()
+            );
+            return existingUsers.isEmpty();
+        }
+        return true;
     }
 }

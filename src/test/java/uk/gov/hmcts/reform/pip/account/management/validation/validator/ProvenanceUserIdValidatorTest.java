@@ -53,4 +53,11 @@ class ProvenanceUserIdValidatorTest {
         assertFalse(provenanceUserIdValidator.isValid(piUser, null),
                     "Existing users should return false");
     }
+
+    @Test
+    void testNullRepositoryReturnsTrue() {
+        ProvenanceUserIdValidator provenanceUserIdValidator = new ProvenanceUserIdValidator();
+        assertTrue(provenanceUserIdValidator.isValid(piUser, null),
+                   "Should return true");
+    }
 }

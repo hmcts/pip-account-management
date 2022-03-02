@@ -34,6 +34,7 @@ import uk.gov.hmcts.reform.pip.account.management.model.UserProvenances;
 import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredSubscriber;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -95,10 +96,10 @@ class AccountTest {
 
     private ObjectMapper objectMapper;
 
-    private PiUser createUser(boolean valid) {
+    private PiUser createUser(boolean valid, String id) {
         PiUser user = new PiUser();
         user.setEmail(valid ? EMAIL : INVALID_EMAIL);
-        user.setProvenanceUserId(ID);
+        user.setProvenanceUserId(id);
         user.setUserProvenance(PROVENANCE);
         user.setRoles(ROLE);
 
@@ -398,7 +399,7 @@ class AccountTest {
 
     @Test
     void testCreateSingleUser() throws Exception {
-        PiUser validUser = createUser(true);
+        PiUser validUser = createUser(true, UUID.randomUUID().toString());
 
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(PI_URL)
@@ -416,8 +417,8 @@ class AccountTest {
 
     @Test
     void testCreateMultipleSuccessUsers() throws Exception {
-        PiUser validUser1 = createUser(true);
-        PiUser validUser2 = createUser(true);
+        PiUser validUser1 = createUser(true, UUID.randomUUID().toString());
+        PiUser validUser2 = createUser(true, UUID.randomUUID().toString());
 
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(PI_URL)
@@ -435,7 +436,7 @@ class AccountTest {
 
     @Test
     void testCreateSingleErroredUser() throws Exception {
-        PiUser invalidUser = createUser(false);
+        PiUser invalidUser = createUser(false, UUID.randomUUID().toString());
 
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(PI_URL)
@@ -453,8 +454,8 @@ class AccountTest {
 
     @Test
     void testCreateMultipleErroredUsers() throws Exception {
-        PiUser invalidUser1 = createUser(false);
-        PiUser invalidUser2 = createUser(false);
+        PiUser invalidUser1 = createUser(false, UUID.randomUUID().toString());
+        PiUser invalidUser2 = createUser(false, UUID.randomUUID().toString());
 
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(PI_URL)
@@ -472,8 +473,8 @@ class AccountTest {
 
     @Test
     void testCreateMultipleUsersCreateAndErrored() throws Exception {
-        PiUser validUser = createUser(true);
-        PiUser invalidUser = createUser(false);
+        PiUser validUser = createUser(true, UUID.randomUUID().toString());
+        PiUser invalidUser = createUser(false, UUID.randomUUID().toString());
 
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(PI_URL)
