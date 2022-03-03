@@ -1,26 +1,35 @@
 package uk.gov.hmcts.reform.pip.account.management.service;
 
 import com.microsoft.graph.models.User;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import uk.gov.hmcts.reform.pip.account.management.database.UserRepository;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.AzureCustomException;
 import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
-import uk.gov.hmcts.reform.pip.account.management.model.ErroredSubscriber;
+import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
 import uk.gov.hmcts.reform.pip.account.management.model.Subscriber;
+import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredPiUser;
+import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredSubscriber;
+import uk.gov.hmcts.reform.pip.model.enums.UserActions;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
 
+import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
+
 /**
  * Service layer that deals with the creation of accounts.
- * The storage mechanism (e.g Azure) is seperated into a seperate class.
+ * The storage mechanism (e.g Azure) is seperated into a separate class.
  */
+@Slf4j
 @Component
 public class AccountService {
 
@@ -29,6 +38,9 @@ public class AccountService {
 
     @Autowired
     AzureUserService azureUserService;
+
+    @Autowired
+    UserRepository userRepository;
 
     /**
      * Method to create new subscribers.
@@ -70,6 +82,40 @@ public class AccountService {
         processedAccounts.put(CreationEnum.CREATED_ACCOUNTS, createdAccounts);
         processedAccounts.put(CreationEnum.ERRORED_ACCOUNTS, erroredAccounts);
 
+        return processedAccounts;
+    }
+
+    /**
+     * Method to add users to P&I database, loops through the list and validates the email provided then adds them to
+     * success or failure lists.
+     * @param users the list of users to be added.
+     * @param issuerEmail the email of the admin adding the users for logging purposes.
+     * @return Map of Created and Errored accounts, created has UUID's and errored has user objects.
+     */
+    public Map<CreationEnum, List<?>> addUsers(List<PiUser> users, String issuerEmail) {
+        List<UUID> createdAccounts = new ArrayList<>();
+        List<ErroredPiUser> erroredAccounts = new ArrayList<>();
+
+        for (PiUser user : users) {
+            Set<ConstraintViolation<PiUser>> constraintViolationSet = validator.validate(user);
+            if (!constraintViolationSet.isEmpty()) {
+                ErroredPiUser erroredUser = new ErroredPiUser(user);
+                erroredUser.setErrorMessages(constraintViolationSet
+                                                 .stream().map(ConstraintViolation::getMessage)
+                                                 .collect(Collectors.toList()));
+                erroredAccounts.add(erroredUser);
+                continue;
+            }
+
+            PiUser addedUser = userRepository.save(user);
+            createdAccounts.add(addedUser.getUserId());
+
+            log.info(writeLog(issuerEmail, UserActions.CREATE_ACCOUNT, addedUser.getEmail()));
+        }
+
+        Map<CreationEnum, List<?>> processedAccounts = new ConcurrentHashMap<>();
+        processedAccounts.put(CreationEnum.CREATED_ACCOUNTS, createdAccounts);
+        processedAccounts.put(CreationEnum.ERRORED_ACCOUNTS, erroredAccounts);
         return processedAccounts;
     }
 
