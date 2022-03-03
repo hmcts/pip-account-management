@@ -12,10 +12,10 @@ class GlobalExceptionHandlerTest {
 
     private static final String ERROR_MESSAGE = "Exception Message";
 
+    private final GlobalExceptionHandler globalExceptionHandler = new GlobalExceptionHandler();
+
     @Test
     void testJsonMappingException() {
-
-        GlobalExceptionHandler globalExceptionHandler = new GlobalExceptionHandler();
 
         JsonMappingException jsonMappingException = new JsonMappingException(null, ERROR_MESSAGE);
         ResponseEntity<ExceptionResponse> responseEntity =
@@ -26,4 +26,5 @@ class GlobalExceptionHandlerTest {
         assertEquals(ERROR_MESSAGE, responseEntity.getBody().getMessage(),
                      "The message should match the message passed in");
     }
+
 }

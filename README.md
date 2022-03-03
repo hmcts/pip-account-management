@@ -212,6 +212,11 @@ the request and a body of a list of users to add to the database following the [
 `userId` as this is created by the service.
 
 
+`/account/provenance/{userProvenance}/{provenanceUserId}` - used to get the [P&I User](#piuser) from the pi_user
+table by matching the user provenance and the provenanceUserId. eg a user from `PI_AAD` with the `provenanceUserId`
+of `123` would be returned if both attributes matched.
+
+
 
 ## Models
 
