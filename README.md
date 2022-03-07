@@ -217,7 +217,6 @@ table by matching the user provenance and the provenanceUserId. eg a user from `
 of `123` would be returned if both attributes matched.
 
 
-
 ## Models
 
 ### PiUser
