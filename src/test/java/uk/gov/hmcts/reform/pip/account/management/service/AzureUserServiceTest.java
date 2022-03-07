@@ -8,22 +8,25 @@ import com.microsoft.graph.models.User;
 import com.microsoft.graph.requests.GraphServiceClient;
 import com.microsoft.graph.requests.UserCollectionRequest;
 import com.microsoft.graph.requests.UserCollectionRequestBuilder;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.hmcts.reform.pip.account.management.config.ClientConfiguration;
 import uk.gov.hmcts.reform.pip.account.management.config.UserConfiguration;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.AzureCustomException;
-import uk.gov.hmcts.reform.pip.account.management.model.Subscriber;
+import uk.gov.hmcts.reform.pip.account.management.model.AzureAccount;
+import uk.gov.hmcts.reform.pip.account.management.model.Roles;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
@@ -46,6 +49,9 @@ class AzureUserServiceTest {
     private UserConfiguration userConfiguration;
 
     @Mock
+    private ClientConfiguration clientConfiguration;
+
+    @Mock
     private GraphServiceClient<Request> graphClient;
 
     @InjectMocks
@@ -53,18 +59,25 @@ class AzureUserServiceTest {
 
     private static final String ID = "1234";
     private static final String EMAIL = "a@b.com";
+    private static final String EXTENSION_ID = "1234-1234";
+
+    @BeforeEach
+    public void setup() {
+        when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
+        when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
+        when(clientConfiguration.getExtensionId()).thenReturn(EXTENSION_ID);
+    }
 
     @Test
     void testValidRequestReturnsUser() throws AzureCustomException {
         User user = new User();
         user.id = ID;
 
-        when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
-        when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
         when(userCollectionRequest.post(any())).thenReturn(user);
 
-        Subscriber subscriber = new Subscriber();
-        User returnedUser = azureUserService.createUser(subscriber);
+        AzureAccount azureAccount = new AzureAccount();
+        azureAccount.setRole(Roles.INTERNAL_ADMIN_CTSC);
+        User returnedUser = azureUserService.createUser(azureAccount);
 
         assertEquals(ID, returnedUser.id, "The ID is equal to the expected user ID");
     }
@@ -74,17 +87,16 @@ class AzureUserServiceTest {
         User user = new User();
         user.id = ID;
 
-        when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
-        when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
         when(userCollectionRequest.post(any())).thenThrow(graphServiceException);
 
-        Subscriber subscriber = new Subscriber();
+        AzureAccount azureAccount = new AzureAccount();
+        azureAccount.setRole(Roles.INTERNAL_ADMIN_CTSC);
 
         AzureCustomException azureCustomException = assertThrows(AzureCustomException.class, () -> {
-            azureUserService.createUser(subscriber);
+            azureUserService.createUser(azureAccount);
         });
 
-        assertEquals("Error when persisting subscriber into Azure. "
+        assertEquals("Error when persisting account into Azure. "
                          + "Check that the user doesn't already exist in the directory",
                      azureCustomException.getMessage(),
                      "Error message should be present when failing to communicate with the AD service");
@@ -95,26 +107,28 @@ class AzureUserServiceTest {
         User userToReturn = new User();
         userToReturn.id = ID;
 
-        when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
-        when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
         when(userCollectionRequest.post(any())).thenReturn(userToReturn);
 
-        Subscriber subscriber = new Subscriber();
-        subscriber.setEmail(EMAIL);
-        subscriber.setTitle("Title");
-        subscriber.setFirstName("First Name");
-        subscriber.setSurname("Surname");
-        azureUserService.createUser(subscriber);
+        AzureAccount azureAccount = new AzureAccount();
+        azureAccount.setEmail(EMAIL);
+        azureAccount.setFirstName("First Name");
+        azureAccount.setSurname("Surname");
+        azureAccount.setRole(Roles.INTERNAL_ADMIN_CTSC);
+        azureUserService.createUser(azureAccount);
 
         ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
         verify(userCollectionRequest, times(1)).post(captor.capture());
 
         User user = captor.getValue();
 
-        assertTrue(user.accountEnabled, "Account is marked as enabled");
+        assertTrue(user.accountEnabled, "AzureAccount is marked as enabled");
         assertEquals(EMAIL, user.displayName, "Display name is set as the email");
         assertEquals("First Name", user.givenName, "Given name is set as the firstname");
         assertEquals("Surname", user.surname, "Lastname is set as the surname");
+        assertEquals(Roles.INTERNAL_ADMIN_CTSC.toString(),
+                     user.additionalDataManager().get("extension_" + 12341234 + "_UserRole").getAsString(),
+                     "User role has not been returned as expected"
+        );
     }
 
     @Test
@@ -122,15 +136,14 @@ class AzureUserServiceTest {
         User userToReturn = new User();
         userToReturn.id = ID;
 
-        when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
-        when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
         when(userCollectionRequest.post(any())).thenReturn(userToReturn);
         when(userConfiguration.getSignInType()).thenReturn("SignInType");
         when(userConfiguration.getIdentityIssuer()).thenReturn("IdentityIssuer");
 
-        Subscriber subscriber = new Subscriber();
-        subscriber.setEmail(EMAIL);
-        azureUserService.createUser(subscriber);
+        AzureAccount azureAccount = new AzureAccount();
+        azureAccount.setEmail(EMAIL);
+        azureAccount.setRole(Roles.INTERNAL_ADMIN_CTSC);
+        azureUserService.createUser(azureAccount);
 
         ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
         verify(userCollectionRequest, times(1)).post(captor.capture());
@@ -152,14 +165,12 @@ class AzureUserServiceTest {
         User userToReturn = new User();
         userToReturn.id = ID;
 
-        when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
-        when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
         when(userCollectionRequest.post(any())).thenReturn(userToReturn);
-        when(userConfiguration.getPasswordPolicy()).thenReturn("PasswordPolicy");
 
-        Subscriber subscriber = new Subscriber();
-        subscriber.setEmail(EMAIL);
-        azureUserService.createUser(subscriber);
+        AzureAccount azureAccount = new AzureAccount();
+        azureAccount.setEmail(EMAIL);
+        azureAccount.setRole(Roles.INTERNAL_ADMIN_CTSC);
+        azureUserService.createUser(azureAccount);
 
         ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
         verify(userCollectionRequest, times(1)).post(captor.capture());
@@ -171,8 +182,7 @@ class AzureUserServiceTest {
         assertNotNull(passwordProfile.password, "The password has been set");
         String password = passwordProfile.password;
         assertEquals(20, password.length(), "The password has the right complexity");
-        assertFalse(passwordProfile.forceChangePasswordNextSignIn, "The force chain password is set to false");
-        assertEquals("PasswordPolicy", user.passwordPolicies, "The password policy is set correctly");
+        assertTrue(passwordProfile.forceChangePasswordNextSignIn, "The force chain password is set to false");
     }
 
 }

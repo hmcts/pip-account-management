@@ -22,4 +22,6 @@ public class ClientConfiguration {
 
     private String tokenProvider;
 
+    private String extensionId;
+
 }

@@ -19,7 +19,7 @@ spring:
     parser:
       STRICT_DUPLICATE_DETECTION: true
   application:
-    name: Account Management
+    name: AzureAccount Management
   datasource:
     driver-class-name: org.postgresql.Driver
 
@@ -48,8 +48,8 @@ azure:
     client-id: ${CLIENT_ID:00000000-0000-0000-0000-000000000000}
     client-secret: ${CLIENT_SECRET}
     tenant-guid: ${TENANT_GUID:00000000-0000-0000-0000-000000000000}
+    extension-id: ${EXTENSION_ID}
     token-provider: "https://graph.microsoft.com/.default"
   user:
     identity-issuer: "pib2csbox.onmicrosoft.com"
-    password-policy: DisablePasswordExpiration
     signInType: emailAddress

@@ -13,9 +13,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import uk.gov.hmcts.reform.pip.account.management.model.AzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
-import uk.gov.hmcts.reform.pip.account.management.model.Subscriber;
 import uk.gov.hmcts.reform.pip.account.management.service.AccountService;
 import uk.gov.hmcts.reform.pip.account.management.validation.annotations.ValidEmail;
 
@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@Api(tags = "Account Management - API for managing accounts")
+@Api(tags = "AzureAccount Management - API for managing accounts")
 @RequestMapping("/account")
 @Validated
 public class AccountController {
@@ -32,18 +32,18 @@ public class AccountController {
     private AccountService accountService;
 
     /**
-     * POST endpoint to create a new subscriber account.
+     * POST endpoint to create a new azure account.
      * This will also trigger any welcome emails.
      *
-     * @param subscribers The subscribers to add.
-     * @return The ID for the subscriber.
+     * @param azureAccounts The accounts to add.
+     * @return A list containing details of any created and errored azureAccounts.
      */
-    @PostMapping("/add")
-    public ResponseEntity<Map<CreationEnum, List<? extends Subscriber>>> createSubscriber(
-        @RequestBody List<Subscriber> subscribers) {
-        Map<CreationEnum, List<? extends Subscriber>> processedSubscribers =
-            accountService.createSubscribers(subscribers);
-        return ResponseEntity.ok(processedSubscribers);
+    @PostMapping("/add/azure")
+    public ResponseEntity<Map<CreationEnum, List<? extends AzureAccount>>> createAzureAccount(
+        @RequestBody List<AzureAccount> azureAccounts) {
+        Map<CreationEnum, List<? extends AzureAccount>> processedAccounts =
+            accountService.addAzureAccounts(azureAccounts);
+        return ResponseEntity.ok(processedAccounts);
     }
 
     /**

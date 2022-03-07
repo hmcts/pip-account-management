@@ -205,9 +205,9 @@ Here are some other functionalities it provides:
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details
 
 ## API
-Account management exposes various endpoints that aid in managing accounts within the P&I service.
+Account management exposes various endpoints that aid in managing azureAccounts within the P&I service.
 
-`/account/add/pi` - used to add a user to the P&I user database. Takes in a header of the email of the admin issuing
+`/azureAccount/add/pi` - used to add a user to the P&I user database. Takes in a header of the email of the admin issuing
 the request and a body of a list of users to add to the database following the [P&I User model](#piuser) without the
 `userId` as this is created by the service.
 

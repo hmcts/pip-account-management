@@ -29,7 +29,7 @@ public class SwaggerConfiguration {
 
     private ApiInfo apiInfo() {
         return new ApiInfoBuilder()
-            .title("P&I Account Management Service")
+            .title("P&I AzureAccount Management Service")
             .description(
                 "Use this service to manage internal, admin and external users, granting permissions to view "
                     + "information that is not available for general consumption "

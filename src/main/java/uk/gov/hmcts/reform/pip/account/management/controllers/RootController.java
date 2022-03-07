@@ -11,7 +11,7 @@ import static org.springframework.http.ResponseEntity.ok;
  * The root endpoints for the account management application.
  */
 @RestController
-@Api(tags = "Account Management root API")
+@Api(tags = "AzureAccount Management root API")
 public class RootController {
 
     /**
