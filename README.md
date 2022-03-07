@@ -216,7 +216,6 @@ the request and a body of a list of users to add to the database following the [
 table by matching the user provenance and the provenanceUserId. eg a user from `PI_AAD` with the `provenanceUserId`
 of `123` would be returned if both attributes matched.
 
-
 ## Models
 
 ### PiUser
