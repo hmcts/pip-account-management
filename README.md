@@ -222,11 +222,11 @@ the request and a body of a list of users to add to the database following the [
 
 ```json
 {
-  "userId": "111111-aaaa-1111-ssss-11111111",
-  "userProvenance": "PI_AAD",
-  "provenanceUserId": "222222-vvvv-11111-ssss-11111111",
-  "email": "example@email.com",
-  "roles": "INTERNAL_ADMIN_LOCAL"
+  "azureAccountId": "111111-aaaa-1111-ssss-11111111",
+  "email": "a@b.com",
+  "firstName": "Firstname",
+  "surname": "Surname",
+  "role": "INTERNAL_ADMIN_LOCAL"
 }
 ```
 
