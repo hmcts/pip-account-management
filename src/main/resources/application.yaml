@@ -19,7 +19,7 @@ spring:
     parser:
       STRICT_DUPLICATE_DETECTION: true
   application:
-    name: AzureAccount Management
+    name: Account Management
   datasource:
     driver-class-name: org.postgresql.Driver
 

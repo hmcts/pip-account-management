@@ -26,7 +26,6 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
@@ -34,6 +33,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
+@SuppressWarnings("PMD.LawOfDemeter")
 class AzureUserServiceTest {
 
     @Mock
@@ -125,8 +125,10 @@ class AzureUserServiceTest {
         assertEquals(EMAIL, user.displayName, "Display name is set as the email");
         assertEquals("First Name", user.givenName, "Given name is set as the firstname");
         assertEquals("Surname", user.surname, "Lastname is set as the surname");
-        assertEquals(Roles.INTERNAL_ADMIN_CTSC.toString(),
-                     user.additionalDataManager().get("extension_" + 12341234 + "_UserRole").getAsString(),
+        assertEquals(Roles.INTERNAL_ADMIN_CTSC.name(),
+                     user.additionalDataManager().get("extension_"
+                                                      + EXTENSION_ID.replace("-", "")
+                                                          + "_UserRole").getAsString(),
                      "User role has not been returned as expected"
         );
     }

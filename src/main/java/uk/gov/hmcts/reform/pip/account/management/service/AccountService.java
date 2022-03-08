@@ -44,9 +44,14 @@ public class AccountService {
 
     /**
      * Method to create new accounts in azure.
+     *
+     * @param azureAccounts The accounts to be created.
+     * @param issuerEmail The email of the user who created the accounts.
+     *
      * @return Returns a map which contains two lists, Errored and Created accounts. Created will have object ID set.
      **/
-    public Map<CreationEnum, List<? extends AzureAccount>> addAzureAccounts(List<AzureAccount> azureAccounts) {
+    public Map<CreationEnum, List<? extends AzureAccount>> addAzureAccounts(
+        List<AzureAccount> azureAccounts, String issuerEmail) {
 
         Map<CreationEnum, List<? extends AzureAccount>> processedAccounts = new ConcurrentHashMap<>();
 
@@ -60,10 +65,7 @@ public class AccountService {
 
                 ErroredAzureAccount erroredSubscriber = new ErroredAzureAccount(azureAccount);
                 erroredSubscriber.setErrorMessages(constraintViolationSet
-                                                       .stream().map(constraint ->
-                                                                         constraint.getPropertyPath()
-                                                                             + ": "
-                                                                             + constraint.getMessage())
+                             .stream().map(constraint -> constraint.getPropertyPath() + ": " + constraint.getMessage())
                                                        .collect(Collectors.toList()));
                 erroredAccounts.add(erroredSubscriber);
                 continue;
@@ -72,8 +74,9 @@ public class AccountService {
             try {
                 User user = azureUserService.createUser(azureAccount);
                 azureAccount.setAzureAccountId(user.id);
-
                 createdAzureAccounts.add(azureAccount);
+
+                log.info(writeLog(issuerEmail, UserActions.CREATE_ACCOUNT, azureAccount.getEmail()));
             } catch (AzureCustomException azureCustomException) {
                 ErroredAzureAccount erroredSubscriber = new ErroredAzureAccount(azureAccount);
                 erroredSubscriber.setErrorMessages(List.of(azureCustomException.getMessage()));

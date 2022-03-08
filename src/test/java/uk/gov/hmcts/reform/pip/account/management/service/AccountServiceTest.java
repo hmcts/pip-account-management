@@ -54,6 +54,7 @@ class AccountServiceTest {
     @InjectMocks
     private AccountService accountService;
 
+    private static final String ISSUER_EMAIL = "b@c.com";
     private static final String EMAIL = "a@b.com";
     private static final String INVALID_EMAIL = "ab.com";
     private static final String ID = "1234";
@@ -79,7 +80,7 @@ class AccountServiceTest {
             .thenReturn(expectedUser);
 
         Map<CreationEnum, List<? extends AzureAccount>> createdAccounts =
-            accountService.addAzureAccounts(List.of(azureAccount));
+            accountService.addAzureAccounts(List.of(azureAccount), ISSUER_EMAIL);
 
         assertTrue(createdAccounts.containsKey(CreationEnum.CREATED_ACCOUNTS), "Should contain "
             + "CREATED_ACCOUNTS key");
@@ -104,7 +105,7 @@ class AccountServiceTest {
             .thenThrow(new AzureCustomException(ERROR_MESSAGE));
 
         Map<CreationEnum, List<? extends AzureAccount>> createdAccounts =
-            accountService.addAzureAccounts(List.of(azureAccount));
+            accountService.addAzureAccounts(List.of(azureAccount), ISSUER_EMAIL);
 
         assertTrue(createdAccounts.containsKey(CreationEnum.ERRORED_ACCOUNTS), ERRORED_ACCOUNTS_VALIDATION_MESSAGE);
         List<? extends AzureAccount> accounts = createdAccounts.get(CreationEnum.ERRORED_ACCOUNTS);
@@ -131,14 +132,15 @@ class AccountServiceTest {
         when(path.toString()).thenReturn(EMAIL_PATH);
 
         Map<CreationEnum, List<? extends AzureAccount>> createdAccounts =
-            accountService.addAzureAccounts(List.of(azureAccount));
+            accountService.addAzureAccounts(List.of(azureAccount), ISSUER_EMAIL);
 
         assertTrue(createdAccounts.containsKey(CreationEnum.ERRORED_ACCOUNTS), ERRORED_ACCOUNTS_VALIDATION_MESSAGE);
         List<? extends AzureAccount> accounts = createdAccounts.get(CreationEnum.ERRORED_ACCOUNTS);
         assertEquals(azureAccount.getEmail(), accounts.get(0).getEmail(), EMAIL_VALIDATION_MESSAGE);
         assertNull(azureAccount.getAzureAccountId(), "Account should have no azure ID set");
 
-        assertEquals(EMAIL_PATH + ": " + VALIDATION_MESSAGE, ((ErroredAzureAccount) accounts.get(0)).getErrorMessages().get(0),
+        assertEquals(EMAIL_PATH + ": " + VALIDATION_MESSAGE,
+                     ((ErroredAzureAccount) accounts.get(0)).getErrorMessages().get(0),
                      "Account should have error message set when validation has failed"
         );
 
@@ -173,7 +175,7 @@ class AccountServiceTest {
             .thenReturn(expectedUser);
 
         Map<CreationEnum, List<? extends AzureAccount>> createdAccounts =
-            accountService.addAzureAccounts(List.of(azureAccount, erroredAzureAccount));
+            accountService.addAzureAccounts(List.of(azureAccount, erroredAzureAccount), ISSUER_EMAIL);
 
         assertTrue(createdAccounts.containsKey(CreationEnum.CREATED_ACCOUNTS), "Should contain "
             + "CREATED_ACCOUNTS key");
@@ -183,7 +185,8 @@ class AccountServiceTest {
         assertTrue(createdAccounts.containsKey(CreationEnum.ERRORED_ACCOUNTS), ERRORED_ACCOUNTS_VALIDATION_MESSAGE);
         List<? extends AzureAccount> erroredSubscribers = createdAccounts.get(CreationEnum.ERRORED_ACCOUNTS);
         assertEquals(erroredAzureAccount.getEmail(), erroredSubscribers.get(0).getEmail(), EMAIL_VALIDATION_MESSAGE);
-        assertEquals(EMAIL_PATH + ": " + VALIDATION_MESSAGE, ((ErroredAzureAccount) erroredSubscribers.get(0)).getErrorMessages().get(0),
+        assertEquals(EMAIL_PATH + ": " + VALIDATION_MESSAGE,
+                     ((ErroredAzureAccount) erroredSubscribers.get(0)).getErrorMessages().get(0),
                      "Validation message displayed for errored azureAccount"
         );
 

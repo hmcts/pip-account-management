@@ -50,7 +50,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles(profiles = "test")
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
 @SuppressWarnings({"PMD.TooManyMethods"})
-class AzureAccountTest {
+class AccountTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -80,7 +80,8 @@ class AzureAccountTest {
 
     private static final String ID = "1234";
 
-    private static final String EMAIL_VALIDATION_MESSAGE = "email: Invalid email provided. Email must contain an @ symbol";
+    private static final String EMAIL_VALIDATION_MESSAGE = "email: Invalid email provided. "
+        + "Email must contain an @ symbol";
     private static final String INVALID_FIRST_NAME_MESSAGE = "firstName: must not be empty";
     private static final String INVALID_SURNAME_MESSAGE = "surname: must not be empty";
     private static final String INVALID_ROLE_MESSAGE = "role: must not be null";
@@ -92,6 +93,8 @@ class AzureAccountTest {
     private static final String TEST_MESSAGE_FIRST_NAME = "Firstname matches sent account";
     private static final String TEST_MESSAGE_SURNAME = "Surname matches sent account";
     private static final String TEST_MESSAGE_ROLE = "Role matches sent account";
+    private static final String ZERO_CREATED_ACCOUNTS = "0 created accounts should be returned";
+    private static final String SINGLE_ERRORED_ACCOUNT = "1 errored account should be returned";
 
     private ObjectMapper objectMapper;
 
@@ -135,6 +138,7 @@ class AzureAccountTest {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(AZURE_URL)
             .content(objectMapper.writeValueAsString(List.of(azureAccount)))
+            .header(ISSUER_HEADER, ISSUER_EMAIL)
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isOk()).andReturn();
@@ -145,9 +149,9 @@ class AzureAccountTest {
                                    new TypeReference<>() {});
 
         assertEquals(0, accounts.get(CreationEnum.ERRORED_ACCOUNTS).size(),
-                     "No errored azureAccount should be returned");
+                     "No errored account should be returned");
         assertEquals(1, accounts.get(CreationEnum.CREATED_ACCOUNTS).size(),
-                     "1 Created azureAccount should be returned");
+                     "1 Created account should be returned");
 
         AzureAccount returnedAzureAccount = accounts.get(CreationEnum.CREATED_ACCOUNTS).get(0);
 
@@ -171,6 +175,7 @@ class AzureAccountTest {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(AZURE_URL)
             .content(objectMapper.writeValueAsString(List.of(azureAccount)))
+            .header(ISSUER_HEADER, ISSUER_EMAIL)
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder)
@@ -181,9 +186,9 @@ class AzureAccountTest {
                                    new TypeReference<>() {});
 
         assertEquals(1, accounts.get(CreationEnum.ERRORED_ACCOUNTS).size(),
-                     "1 errored azureAccount should be returned");
+                     SINGLE_ERRORED_ACCOUNT);
         assertEquals(0, accounts.get(CreationEnum.CREATED_ACCOUNTS).size(),
-                     "0 created accounts should be returned");
+                     ZERO_CREATED_ACCOUNTS);
 
         List<Object> accountList = accounts.get(CreationEnum.ERRORED_ACCOUNTS);
         ErroredAzureAccount erroredAccount = objectMapper.convertValue(accountList.get(0),
@@ -211,6 +216,7 @@ class AzureAccountTest {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(AZURE_URL)
             .content(objectMapper.writeValueAsString(List.of(azureAccount)))
+            .header(ISSUER_HEADER, ISSUER_EMAIL)
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder)
@@ -221,9 +227,9 @@ class AzureAccountTest {
                                    new TypeReference<>() {});
 
         assertEquals(1, accounts.get(CreationEnum.ERRORED_ACCOUNTS).size(),
-                     "1 errored azureAccount should be returned");
+                     SINGLE_ERRORED_ACCOUNT);
         assertEquals(0, accounts.get(CreationEnum.CREATED_ACCOUNTS).size(),
-                     "0 created accounts should be returned");
+                     ZERO_CREATED_ACCOUNTS);
 
         List<Object> accountList = accounts.get(CreationEnum.ERRORED_ACCOUNTS);
         ErroredAzureAccount erroredAccount = objectMapper.convertValue(accountList.get(0),
@@ -250,6 +256,7 @@ class AzureAccountTest {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(AZURE_URL)
             .content(objectMapper.writeValueAsString(List.of(azureAccount)))
+            .header(ISSUER_HEADER, ISSUER_EMAIL)
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder)
@@ -260,9 +267,9 @@ class AzureAccountTest {
                                    new TypeReference<>() {});
 
         assertEquals(1, accounts.get(CreationEnum.ERRORED_ACCOUNTS).size(),
-                     "1 errored azureAccount should be returned");
+                     SINGLE_ERRORED_ACCOUNT);
         assertEquals(0, accounts.get(CreationEnum.CREATED_ACCOUNTS).size(),
-                     "0 created accounts should be returned");
+                     ZERO_CREATED_ACCOUNTS);
 
         List<Object> accountList = accounts.get(CreationEnum.ERRORED_ACCOUNTS);
         ErroredAzureAccount erroredAccount = objectMapper.convertValue(accountList.get(0),
@@ -289,6 +296,7 @@ class AzureAccountTest {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(AZURE_URL)
             .content(objectMapper.writeValueAsString(List.of(azureAccount)))
+            .header(ISSUER_HEADER, ISSUER_EMAIL)
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder)
@@ -299,9 +307,9 @@ class AzureAccountTest {
                                    new TypeReference<>() {});
 
         assertEquals(1, accounts.get(CreationEnum.ERRORED_ACCOUNTS).size(),
-                     "1 errored azureAccount should be returned");
+                     SINGLE_ERRORED_ACCOUNT);
         assertEquals(0, accounts.get(CreationEnum.CREATED_ACCOUNTS).size(),
-                     "0 created accounts should be returned");
+                     ZERO_CREATED_ACCOUNTS);
 
         List<Object> accountList = accounts.get(CreationEnum.ERRORED_ACCOUNTS);
         ErroredAzureAccount erroredAccount = objectMapper.convertValue(
@@ -329,6 +337,7 @@ class AzureAccountTest {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(AZURE_URL)
             .content(objectMapper.writeValueAsString(List.of(azureAccount)))
+            .header(ISSUER_HEADER, ISSUER_EMAIL)
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder)
@@ -339,9 +348,9 @@ class AzureAccountTest {
                                    new TypeReference<>() {});
 
         assertEquals(1, accounts.get(CreationEnum.ERRORED_ACCOUNTS).size(),
-                     "1 errored azureAccount should be returned");
+                     SINGLE_ERRORED_ACCOUNT);
         assertEquals(0, accounts.get(CreationEnum.CREATED_ACCOUNTS).size(),
-                     "0 created accounts should be returned");
+                     ZERO_CREATED_ACCOUNTS);
 
         List<Object> acccountList = accounts.get(CreationEnum.ERRORED_ACCOUNTS);
         ErroredAzureAccount erroredAccount = objectMapper.convertValue(acccountList.get(0),
@@ -372,6 +381,7 @@ class AzureAccountTest {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(AZURE_URL)
             .content(objectMapper.writeValueAsString(List.of(azureAccount)))
+            .header(ISSUER_HEADER, ISSUER_EMAIL)
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isOk()).andReturn();
@@ -380,8 +390,8 @@ class AzureAccountTest {
             objectMapper.readValue(response.getResponse().getContentAsString(),
                                    new TypeReference<>() {});
 
-        assertEquals(1, accounts.get(CreationEnum.ERRORED_ACCOUNTS).size(), "1 errored azureAccount returned");
-        assertEquals(0, accounts.get(CreationEnum.CREATED_ACCOUNTS).size(), "0 created azureAccount returned");
+        assertEquals(1, accounts.get(CreationEnum.ERRORED_ACCOUNTS).size(), "1 errored account returned");
+        assertEquals(0, accounts.get(CreationEnum.CREATED_ACCOUNTS).size(), "0 created account returned");
 
         ErroredAzureAccount erroredAccount = objectMapper.convertValue(
             accounts.get(CreationEnum.ERRORED_ACCOUNTS).get(0), ErroredAzureAccount.class);
@@ -402,6 +412,7 @@ class AzureAccountTest {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(AZURE_URL)
             .content(duplicateKeyString)
+            .header(ISSUER_HEADER, ISSUER_EMAIL)
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder)
@@ -441,6 +452,7 @@ class AzureAccountTest {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(AZURE_URL)
             .content(objectMapper.writeValueAsString(List.of(validAzureAccount, invalidAzureAccount)))
+            .header(ISSUER_HEADER, ISSUER_EMAIL)
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isOk()).andReturn();

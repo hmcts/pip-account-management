@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@Api(tags = "AzureAccount Management - API for managing accounts")
+@Api(tags = "Account Management - API for managing accounts")
 @RequestMapping("/account")
 @Validated
 public class AccountController {
@@ -35,14 +35,16 @@ public class AccountController {
      * POST endpoint to create a new azure account.
      * This will also trigger any welcome emails.
      *
+     * @param issuerEmail The user creating the accounts.
      * @param azureAccounts The accounts to add.
      * @return A list containing details of any created and errored azureAccounts.
      */
     @PostMapping("/add/azure")
     public ResponseEntity<Map<CreationEnum, List<? extends AzureAccount>>> createAzureAccount(
+        @RequestHeader("x-issuer-email") @ValidEmail String issuerEmail,
         @RequestBody List<AzureAccount> azureAccounts) {
         Map<CreationEnum, List<? extends AzureAccount>> processedAccounts =
-            accountService.addAzureAccounts(azureAccounts);
+            accountService.addAzureAccounts(azureAccounts, issuerEmail);
         return ResponseEntity.ok(processedAccounts);
     }
 

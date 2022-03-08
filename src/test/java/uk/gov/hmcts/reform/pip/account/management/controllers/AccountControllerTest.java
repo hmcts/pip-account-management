@@ -18,10 +18,11 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class AzureAccountControllerTest {
+class AccountControllerTest {
 
     @Mock
     private AccountService accountService;
@@ -39,10 +40,11 @@ class AzureAccountControllerTest {
 
         List<AzureAccount> azureAccounts = List.of(azureAccount);
 
-        when(accountService.addAzureAccounts(argThat(arg -> arg.equals(azureAccounts)))).thenReturn(accountsMap);
+        when(accountService.addAzureAccounts(argThat(arg -> arg.equals(azureAccounts)),
+                                             eq("b@c.com"))).thenReturn(accountsMap);
 
         ResponseEntity<Map<CreationEnum, List<? extends AzureAccount>>> response =
-            accountController.createAzureAccount(azureAccounts);
+            accountController.createAzureAccount("b@c.com", azureAccounts);
 
         assertEquals(HttpStatus.OK, response.getStatusCode(), "Should return an OK status code");
         assertEquals(accountsMap, response.getBody(), "Should return the expected azureAccounts map");

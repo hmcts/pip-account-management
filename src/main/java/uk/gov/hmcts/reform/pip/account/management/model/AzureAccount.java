@@ -10,7 +10,7 @@ import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 
 /**
- * Model that represents a Azure AzureAccount.
+ * Model that represents an Azure Account.
  */
 @Data
 @AllArgsConstructor
