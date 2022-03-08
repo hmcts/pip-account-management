@@ -1,6 +1,7 @@
 package uk.gov.hmcts.reform.pip.account.management.service;
 
 import com.microsoft.graph.models.User;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -64,15 +65,26 @@ class AccountServiceTest {
     private static final String EMAIL_VALIDATION_MESSAGE = "AzureAccount should have expected email";
     private static final String ERRORED_ACCOUNTS_VALIDATION_MESSAGE = "Should contain ERRORED_ACCOUNTS key";
 
-    @Test
-    void testAccountCreated() throws AzureCustomException {
-        AzureAccount azureAccount = new AzureAccount();
+    private AzureAccount azureAccount;
+    private User expectedUser;
+
+    @BeforeEach
+    void beforeEach() {
+        azureAccount = new AzureAccount();
         azureAccount.setEmail(EMAIL);
 
-        User expectedUser = new User();
+        expectedUser = new User();
         expectedUser.givenName = "Test";
         expectedUser.id = ID;
 
+        lenient().when(constraintViolation.getMessage()).thenReturn(VALIDATION_MESSAGE);
+        lenient().when(constraintViolation.getPropertyPath()).thenReturn(path);
+        lenient().when(path.toString()).thenReturn(EMAIL_PATH);
+    }
+
+
+    @Test
+    void testAccountCreated() throws AzureCustomException {
         when(validator.validate(argThat(sub -> ((AzureAccount) sub).getEmail().equals(azureAccount.getEmail()))))
             .thenReturn(Set.of());
 
@@ -95,9 +107,6 @@ class AccountServiceTest {
 
     @Test
     void testAccountNotCreated() throws AzureCustomException {
-        AzureAccount azureAccount = new AzureAccount();
-        azureAccount.setEmail(EMAIL);
-
         when(validator.validate(argThat(sub -> ((AzureAccount) sub).getEmail().equals(azureAccount.getEmail()))))
             .thenReturn(Set.of());
 
@@ -121,15 +130,8 @@ class AccountServiceTest {
 
     @Test
     void testValidationCreatesAnErroredAccount() {
-        AzureAccount azureAccount = new AzureAccount();
-        azureAccount.setEmail(EMAIL);
-
         when(validator.validate(argThat(sub -> ((AzureAccount) sub).getEmail().equals(azureAccount.getEmail()))))
             .thenReturn(Set.of(constraintViolation));
-
-        when(constraintViolation.getMessage()).thenReturn(VALIDATION_MESSAGE);
-        when(constraintViolation.getPropertyPath()).thenReturn(path);
-        when(path.toString()).thenReturn(EMAIL_PATH);
 
         Map<CreationEnum, List<? extends AzureAccount>> createdAccounts =
             accountService.addAzureAccounts(List.of(azureAccount), ISSUER_EMAIL);
@@ -151,25 +153,14 @@ class AccountServiceTest {
 
     @Test
     void creationOfMultipleAccounts() throws AzureCustomException {
-        AzureAccount azureAccount = new AzureAccount();
-        azureAccount.setEmail(EMAIL);
-
         AzureAccount erroredAzureAccount = new AzureAccount();
         erroredAzureAccount.setEmail(INVALID_EMAIL);
-
-        User expectedUser = new User();
-        expectedUser.givenName = "Test";
-        expectedUser.id = ID;
 
         doReturn(Set.of()).when(validator).validate(argThat(sub -> ((AzureAccount) sub)
             .getEmail().equals(azureAccount.getEmail())));
 
         doReturn(Set.of(constraintViolation)).when(validator).validate(argThat(sub -> ((AzureAccount) sub)
             .getEmail().equals(erroredAzureAccount.getEmail())));
-
-        when(constraintViolation.getMessage()).thenReturn(VALIDATION_MESSAGE);
-        when(constraintViolation.getPropertyPath()).thenReturn(path);
-        when(path.toString()).thenReturn(EMAIL_PATH);
 
         when(azureUserService.createUser(argThat(user -> user.getEmail().equals(azureAccount.getEmail()))))
             .thenReturn(expectedUser);
@@ -217,7 +208,6 @@ class AccountServiceTest {
 
         lenient().when(userRepository.save(user)).thenReturn(user);
         doReturn(Set.of(constraintViolation)).when(validator).validate(user);
-        when(constraintViolation.getMessage()).thenReturn(VALIDATION_MESSAGE);
 
         assertEquals(expected, accountService.addUsers(List.of(user), EMAIL), "Returned Errored accounts should match");
     }
@@ -236,7 +226,6 @@ class AccountServiceTest {
 
         lenient().when(userRepository.save(invalidUser)).thenReturn(invalidUser);
         doReturn(Set.of(constraintViolation)).when(validator).validate(invalidUser);
-        when(constraintViolation.getMessage()).thenReturn(VALIDATION_MESSAGE);
 
         doReturn(Set.of()).when(validator).validate(validUser);
         when(userRepository.save(validUser)).thenReturn(validUser);
