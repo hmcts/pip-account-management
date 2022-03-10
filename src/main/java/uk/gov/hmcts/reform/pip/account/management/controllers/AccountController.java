@@ -19,6 +19,7 @@ import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.ListType;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
 import uk.gov.hmcts.reform.pip.account.management.model.Subscriber;
+import uk.gov.hmcts.reform.pip.account.management.model.UserProvenances;
 import uk.gov.hmcts.reform.pip.account.management.service.AccountService;
 import uk.gov.hmcts.reform.pip.account.management.validation.annotations.ValidEmail;
 
@@ -70,9 +71,21 @@ public class AccountController {
     }
 
     @ApiResponses({
+        @ApiResponse(code = 200, message = "{PiUser}"),
+        @ApiResponse(code = 404, message = "No user found with the provenance user Id: {provenanceUserId}")
+    })
+    @ApiOperation("Get a user based on their provenance user Id and provenance")
+    @GetMapping("/provenance/{userProvenance}/{provenanceUserId}")
+    public ResponseEntity<PiUser> getUserByProvenanceId(@PathVariable UserProvenances userProvenance,
+                                                        @PathVariable String provenanceUserId) {
+        return ResponseEntity.ok(accountService.findUserByProvenanceId(userProvenance, provenanceUserId));
+    }
+
+    @ApiResponses({
         @ApiResponse(code = 200, message = "User has access to provided publication"),
-        @ApiResponse(code = 403, message = "User is not permitted to see provided publication"),
-        @ApiResponse(code = 404, message = "User not found"),
+        @ApiResponse(code = 403,
+            message = "User: {userId} does not have sufficient permission to view list type: {listType}"),
+        @ApiResponse(code = 404, message = "No user found with the userId: {userId}"),
     })
     @ApiOperation("Check if a user can see a classified publication through list type and their provenance")
     @GetMapping("/isAuthorised/{userId}/{listType}")
