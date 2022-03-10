@@ -8,6 +8,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.hmcts.reform.pip.account.management.database.UserRepository;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.AzureCustomException;
+import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.UserNotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
 import uk.gov.hmcts.reform.pip.account.management.model.Roles;
@@ -26,6 +27,7 @@ import javax.validation.Validator;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.doReturn;
@@ -57,6 +59,7 @@ class AccountServiceTest {
     private static final String VALIDATION_MESSAGE = "Validation Message";
     private static final String EMAIL_VALIDATION_MESSAGE = "Subscriber should have expected email";
     private static final String ERRORED_ACCOUNTS_VALIDATION_MESSAGE = "Should contain ERRORED_ACCOUNTS key";
+    private static final String TEST = "Test";
 
     @Test
     void testSubscriberCreated() throws AzureCustomException {
@@ -232,6 +235,23 @@ class AccountServiceTest {
         assertEquals(expected, accountService.addUsers(List.of(invalidUser, validUser), EMAIL),
                      "Returned maps should match created and errored"
         );
+    }
+
+    @Test
+    void testFindUserByProvenanceId() {
+        PiUser user = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, ID, EMAIL, Roles.INTERNAL_ADMIN_CTSC);
+        when(userRepository.findExistingByProvenanceId(user.getProvenanceUserId(), user.getUserProvenance().name()))
+            .thenReturn(List.of(user));
+        assertEquals(user, accountService.findUserByProvenanceId(user.getUserProvenance(), user.getProvenanceUserId()),
+                     "Should return found user");
+    }
+
+    @Test
+    void testFindUserByProvenanceIdThrows() {
+        when(userRepository.findExistingByProvenanceId(TEST, "CRIME_IDAM")).thenReturn(List.of());
+        UserNotFoundException ex = assertThrows(UserNotFoundException.class, () ->
+            accountService.findUserByProvenanceId(UserProvenances.CRIME_IDAM, TEST));
+        assertEquals("No user found with the provenanceUserId: Test", ex.getMessage(), "Messages should match");
     }
 
 }
