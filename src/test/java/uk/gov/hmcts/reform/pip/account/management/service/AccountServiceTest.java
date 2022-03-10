@@ -1,6 +1,7 @@
 package uk.gov.hmcts.reform.pip.account.management.service;
 
 import com.microsoft.graph.models.User;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -9,6 +10,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.hmcts.reform.pip.account.management.database.UserRepository;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.AzureCustomException;
 import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
+import uk.gov.hmcts.reform.pip.account.management.model.ListType;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
 import uk.gov.hmcts.reform.pip.account.management.model.Roles;
 import uk.gov.hmcts.reform.pip.account.management.model.Subscriber;
@@ -18,6 +20,7 @@ import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredSubscribe
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -57,6 +60,17 @@ class AccountServiceTest {
     private static final String VALIDATION_MESSAGE = "Validation Message";
     private static final String EMAIL_VALIDATION_MESSAGE = "Subscriber should have expected email";
     private static final String ERRORED_ACCOUNTS_VALIDATION_MESSAGE = "Should contain ERRORED_ACCOUNTS key";
+    private static final UUID VALID_USER_ID = UUID.randomUUID();
+
+    private final PiUser piUser = new PiUser();
+
+    @BeforeEach
+    void setup() {
+        piUser.setUserId(VALID_USER_ID);
+        piUser.setUserProvenance(UserProvenances.PI_AAD);
+        piUser.setProvenanceUserId(ID);
+        when(userRepository.findByUserId(VALID_USER_ID)).thenReturn(Optional.of(piUser));
+    }
 
     @Test
     void testSubscriberCreated() throws AzureCustomException {
@@ -233,5 +247,13 @@ class AccountServiceTest {
                      "Returned maps should match created and errored"
         );
     }
+
+    @Test
+    void testIsUserAuthorisedForPublicationReturnsTrue() {
+        assertTrue(accountService.isUserAuthorisedForPublication(VALID_USER_ID, ListType.SJP_PRESS_LIST),
+                   "User from PI_AAD should return true for allowed list type");
+    }
+    //TODO write the other tests for the null list type value, user with diff prov, and try merge 1051 asap to get
+    // the error handling from it
 
 }

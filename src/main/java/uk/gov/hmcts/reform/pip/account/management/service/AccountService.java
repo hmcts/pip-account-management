@@ -6,9 +6,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import uk.gov.hmcts.reform.pip.account.management.database.UserRepository;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.AzureCustomException;
+import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.ForbiddenPermissionsException;
+import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.UserNotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
+import uk.gov.hmcts.reform.pip.account.management.model.ListType;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
 import uk.gov.hmcts.reform.pip.account.management.model.Subscriber;
+import uk.gov.hmcts.reform.pip.account.management.model.UserProvenances;
 import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredPiUser;
 import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredSubscriber;
 import uk.gov.hmcts.reform.pip.model.enums.UserActions;
@@ -16,6 +20,7 @@ import uk.gov.hmcts.reform.pip.model.enums.UserActions;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -32,6 +37,9 @@ import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
 @Slf4j
 @Component
 public class AccountService {
+
+    private static final String FORBIDDEN_MESSAGE =
+        "User: %s does not have sufficient permission to view list type: %s";
 
     @Autowired
     Validator validator;
@@ -117,6 +125,33 @@ public class AccountService {
         processedAccounts.put(CreationEnum.CREATED_ACCOUNTS, createdAccounts);
         processedAccounts.put(CreationEnum.ERRORED_ACCOUNTS, erroredAccounts);
         return processedAccounts;
+    }
+
+    public boolean isUserAuthorisedForPublication(UUID userId, ListType listType) {
+        PiUser userToCheck = checkUserReturned(userRepository.findByUserId(userId), userId);
+        if (checkAuthorisation(userToCheck.getUserProvenance(), listType)) {
+            return true;
+        }
+        throw new ForbiddenPermissionsException(String.format(FORBIDDEN_MESSAGE, userId, listType));
+
+    }
+
+    private PiUser checkUserReturned(Optional<PiUser> user, UUID userID) {
+        if (user.isEmpty()) {
+            throw new UserNotFoundException("userId", userID.toString());
+        }
+        return user.get();
+    }
+
+    private boolean checkAuthorisation(UserProvenances userProvenance, ListType listType) {
+        if (!isGenericListType(listType)) {
+            return listType.allowedProvenance.equals(userProvenance);
+        }
+        return true;
+    }
+
+    private boolean isGenericListType(ListType listType) {
+        return listType.allowedProvenance == null;
     }
 
 }
