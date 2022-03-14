@@ -22,6 +22,7 @@ class GlobalExceptionHandlerTest {
     private static final String ERROR_MESSAGE = "Exception Message";
     private static final String NOT_NULL_MESSAGE = "Exception body should not be null";
     private static final String EXCEPTION_BODY_NOT_MATCH = "Exception body doesn't match test message";
+    public static final String RESPONSE_SHOULD_CONTAIN_A_BODY = "Response should contain a body";
 
     private final GlobalExceptionHandler globalExceptionHandler = new GlobalExceptionHandler();
 
@@ -33,7 +34,7 @@ class GlobalExceptionHandlerTest {
             globalExceptionHandler.handle(jsonMappingException);
 
         assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode(), "Status code should be bad request");
-        assertNotNull(responseEntity.getBody(), "Response should contain a body");
+        assertNotNull(responseEntity.getBody(), RESPONSE_SHOULD_CONTAIN_A_BODY);
         assertEquals(ERROR_MESSAGE, responseEntity.getBody().getMessage(),
                      EXCEPTION_BODY_NOT_MATCH);
     }
@@ -46,7 +47,7 @@ class GlobalExceptionHandlerTest {
         ResponseEntity<ExceptionResponse> responseEntity = globalExceptionHandler.handle(missingRequestHeaderException);
 
         assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode(), "Status code should be bad request");
-        assertNotNull(responseEntity.getBody(), "Response should contain a body");
+        assertNotNull(responseEntity.getBody(), RESPONSE_SHOULD_CONTAIN_A_BODY);
         assertEquals("Required request header 'test' for method parameter type String is not present",
                      responseEntity.getBody().getMessage(), EXCEPTION_BODY_NOT_MATCH);
     }
@@ -70,7 +71,7 @@ class GlobalExceptionHandlerTest {
         ResponseEntity<ExceptionResponse> responseEntity = globalExceptionHandler.handle(notFoundException);
 
         assertEquals(HttpStatus.NOT_FOUND, responseEntity.getStatusCode(), "Status code should be not found");
-        assertNotNull(responseEntity.getBody(), "Response should contain a body");
+        assertNotNull(responseEntity.getBody(), RESPONSE_SHOULD_CONTAIN_A_BODY);
         assertEquals(ERROR_MESSAGE,
                      responseEntity.getBody().getMessage(), EXCEPTION_BODY_NOT_MATCH);
     }
@@ -81,7 +82,7 @@ class GlobalExceptionHandlerTest {
         ResponseEntity<ExceptionResponse> responseEntity = globalExceptionHandler.handle(forbiddenPermissionsException);
 
         assertEquals(HttpStatus.FORBIDDEN, responseEntity.getStatusCode(), "Status code should be not found");
-        assertNotNull(responseEntity.getBody(), "Response should contain a body");
+        assertNotNull(responseEntity.getBody(), RESPONSE_SHOULD_CONTAIN_A_BODY);
         assertEquals(ERROR_MESSAGE,
                      responseEntity.getBody().getMessage(), EXCEPTION_BODY_NOT_MATCH);
     }

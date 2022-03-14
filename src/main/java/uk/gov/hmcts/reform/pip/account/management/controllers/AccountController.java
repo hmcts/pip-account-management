@@ -89,7 +89,7 @@ public class AccountController {
     })
     @ApiOperation("Check if a user can see a classified publication through list type and their provenance")
     @GetMapping("/isAuthorised/{userId}/{listType}")
-    public ResponseEntity<Boolean> isUserAuthorised(@PathVariable UUID userId, @PathVariable ListType listType) {
+    public ResponseEntity<Boolean> checkUserAuthorised(@PathVariable UUID userId, @PathVariable ListType listType) {
         return ResponseEntity.ok(accountService.isUserAuthorisedForPublication(userId, listType));
     }
 }

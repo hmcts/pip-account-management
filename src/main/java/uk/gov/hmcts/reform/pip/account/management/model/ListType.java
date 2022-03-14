@@ -1,5 +1,6 @@
 package uk.gov.hmcts.reform.pip.account.management.model;
 
+@SuppressWarnings("PMD.NullAssignment")
 public enum ListType {
     SJP_PUBLIC_LIST,
     SJP_PRESS_LIST(UserProvenances.PI_AAD),

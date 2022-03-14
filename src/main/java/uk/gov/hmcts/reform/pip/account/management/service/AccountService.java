@@ -36,6 +36,7 @@ import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
  */
 @Slf4j
 @Component
+@SuppressWarnings("PMD.LawOfDemeter")
 public class AccountService {
 
     private static final String FORBIDDEN_MESSAGE =

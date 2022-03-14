@@ -21,7 +21,6 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.when;
@@ -82,12 +81,12 @@ class AccountControllerTest {
         when(accountService.isUserAuthorisedForPublication(any(), any())).thenReturn(true);
         assertEquals(
             HttpStatus.OK,
-            accountController.isUserAuthorised(UUID.randomUUID(), ListType.MAGS_PUBLIC_LIST).getStatusCode(),
+            accountController.checkUserAuthorised(UUID.randomUUID(), ListType.MAGS_PUBLIC_LIST).getStatusCode(),
             STATUS_CODE_MATCH
         );
         assertEquals(
             true,
-            accountController.isUserAuthorised(UUID.randomUUID(), ListType.MAGS_PUBLIC_LIST).getBody(),
+            accountController.checkUserAuthorised(UUID.randomUUID(), ListType.MAGS_PUBLIC_LIST).getBody(),
             "Should return boolean value"
         );
     }
