@@ -23,7 +23,7 @@ The template is a working application with a minimal setup. It contains:
  * Helm chart using chart-java.
 
 The application exposes health endpoint (http://localhost:6969/health) and metrics endpoint
-(http://localhost:6969/metrics).
+(http://localhost:6969/metrics). 
 
 ## Plugins
 
