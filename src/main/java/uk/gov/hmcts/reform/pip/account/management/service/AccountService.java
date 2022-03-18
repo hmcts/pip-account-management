@@ -78,6 +78,7 @@ public class AccountService {
 
                 log.info(writeLog(issuerEmail, UserActions.CREATE_ACCOUNT, azureAccount.getEmail()));
             } catch (AzureCustomException azureCustomException) {
+                log.error(writeLog(issuerEmail, UserActions.CREATE_ACCOUNT, azureAccount.getEmail()));
                 ErroredAzureAccount erroredSubscriber = new ErroredAzureAccount(azureAccount);
                 erroredSubscriber.setErrorMessages(List.of(azureCustomException.getMessage()));
                 erroredAccounts.add(erroredSubscriber);

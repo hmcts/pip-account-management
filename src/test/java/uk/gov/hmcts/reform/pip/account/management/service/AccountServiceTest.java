@@ -82,7 +82,6 @@ class AccountServiceTest {
         lenient().when(path.toString()).thenReturn(EMAIL_PATH);
     }
 
-
     @Test
     void testAccountCreated() throws AzureCustomException {
         when(validator.validate(argThat(sub -> ((AzureAccount) sub).getEmail().equals(azureAccount.getEmail()))))

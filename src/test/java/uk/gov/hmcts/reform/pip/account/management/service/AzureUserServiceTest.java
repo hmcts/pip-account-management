@@ -61,8 +61,13 @@ class AzureUserServiceTest {
     private static final String EMAIL = "a@b.com";
     private static final String EXTENSION_ID = "1234-1234";
 
+    AzureAccount azureAccount;
+
     @BeforeEach
     public void setup() {
+        azureAccount = new AzureAccount();
+        azureAccount.setRole(Roles.INTERNAL_ADMIN_CTSC);
+
         when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
         when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
         when(clientConfiguration.getExtensionId()).thenReturn(EXTENSION_ID);
@@ -75,8 +80,6 @@ class AzureUserServiceTest {
 
         when(userCollectionRequest.post(any())).thenReturn(user);
 
-        AzureAccount azureAccount = new AzureAccount();
-        azureAccount.setRole(Roles.INTERNAL_ADMIN_CTSC);
         User returnedUser = azureUserService.createUser(azureAccount);
 
         assertEquals(ID, returnedUser.id, "The ID is equal to the expected user ID");
@@ -88,9 +91,6 @@ class AzureUserServiceTest {
         user.id = ID;
 
         when(userCollectionRequest.post(any())).thenThrow(graphServiceException);
-
-        AzureAccount azureAccount = new AzureAccount();
-        azureAccount.setRole(Roles.INTERNAL_ADMIN_CTSC);
 
         AzureCustomException azureCustomException = assertThrows(AzureCustomException.class, () -> {
             azureUserService.createUser(azureAccount);
@@ -109,11 +109,9 @@ class AzureUserServiceTest {
 
         when(userCollectionRequest.post(any())).thenReturn(userToReturn);
 
-        AzureAccount azureAccount = new AzureAccount();
         azureAccount.setEmail(EMAIL);
         azureAccount.setFirstName("First Name");
         azureAccount.setSurname("Surname");
-        azureAccount.setRole(Roles.INTERNAL_ADMIN_CTSC);
         azureUserService.createUser(azureAccount);
 
         ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
@@ -142,9 +140,7 @@ class AzureUserServiceTest {
         when(userConfiguration.getSignInType()).thenReturn("SignInType");
         when(userConfiguration.getIdentityIssuer()).thenReturn("IdentityIssuer");
 
-        AzureAccount azureAccount = new AzureAccount();
         azureAccount.setEmail(EMAIL);
-        azureAccount.setRole(Roles.INTERNAL_ADMIN_CTSC);
         azureUserService.createUser(azureAccount);
 
         ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
@@ -169,9 +165,7 @@ class AzureUserServiceTest {
 
         when(userCollectionRequest.post(any())).thenReturn(userToReturn);
 
-        AzureAccount azureAccount = new AzureAccount();
         azureAccount.setEmail(EMAIL);
-        azureAccount.setRole(Roles.INTERNAL_ADMIN_CTSC);
         azureUserService.createUser(azureAccount);
 
         ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);

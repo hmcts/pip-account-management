@@ -43,9 +43,7 @@ public class AccountController {
     public ResponseEntity<Map<CreationEnum, List<? extends AzureAccount>>> createAzureAccount(
         @RequestHeader("x-issuer-email") @ValidEmail String issuerEmail,
         @RequestBody List<AzureAccount> azureAccounts) {
-        Map<CreationEnum, List<? extends AzureAccount>> processedAccounts =
-            accountService.addAzureAccounts(azureAccounts, issuerEmail);
-        return ResponseEntity.ok(processedAccounts);
+        return ResponseEntity.ok(accountService.addAzureAccounts(azureAccounts, issuerEmail));
     }
 
     /**
