@@ -1,9 +1,10 @@
-package uk.gov.hmcts.reform.pip.account.management.model;
+package uk.gov.hmcts.reform.pip.account.management.model.errored;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import uk.gov.hmcts.reform.pip.account.management.model.Subscriber;
 
 import java.util.List;
 
