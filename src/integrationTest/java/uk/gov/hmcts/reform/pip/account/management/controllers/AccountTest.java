@@ -69,6 +69,7 @@ class AccountTest {
 
     private static final String AZURE_URL = "/account/add/azure";
     private static final String PI_URL = "/account/add/pi";
+    private static final String GET_PROVENANCE_USER_URL = "/account/provenance/";
     private static final String EMAIL = "a@b";
     private static final String INVALID_EMAIL = "ab";
     private static final String FIRST_NAME = "First name";
@@ -87,7 +88,6 @@ class AccountTest {
     private static final String INVALID_ROLE_MESSAGE = "role: must not be null";
     private static final String DIRECTORY_ERROR = "Error when persisting account into Azure. "
         + "Check that the user doesn't already exist in the directory";
-
     private static final String TEST_MESSAGE_ID = "AzureAccount ID added to account";
     private static final String TEST_MESSAGE_EMAIL = "Email matches sent account";
     private static final String TEST_MESSAGE_FIRST_NAME = "Firstname matches sent account";
@@ -95,6 +95,12 @@ class AccountTest {
     private static final String TEST_MESSAGE_ROLE = "Role matches sent account";
     private static final String ZERO_CREATED_ACCOUNTS = "0 created accounts should be returned";
     private static final String SINGLE_ERRORED_ACCOUNT = "1 errored account should be returned";
+    private static final String TEST_MESSAGE_ID = "Subscriber ID added to subscriber";
+    private static final String TEST_MESSAGE_EMAIL = "Email matches sent subscriber";
+    private static final String TEST_MESSAGE_FIRST_NAME = "Firstname matches sent subscriber";
+    private static final String TEST_MESSAGE_SURNAME = "Surname matches sent subscriber";
+    private static final String TEST_MESSAGE_TITLE = "Title matches sents subscriber";
+    private static final String ERROR_RESPONSE_USER_PROVENANCE = "No user found with the provenanceUserId: 1234";
 
     private ObjectMapper objectMapper;
 
@@ -579,6 +585,42 @@ class AccountTest {
 
         assertEquals(1, mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).size(), "1 User should be created");
         assertEquals(1, mappedResponse.get(CreationEnum.ERRORED_ACCOUNTS).size(), "1 User should be errored");
+    }
+
+    @Test
+    void testGetUserByProvenanceIdReturnsUser() throws Exception {
+        PiUser validUser = createUser(true, UUID.randomUUID().toString());
+
+        MockHttpServletRequestBuilder setupRequest = MockMvcRequestBuilders
+            .post(PI_URL)
+            .content(objectMapper.writeValueAsString(List.of(validUser)))
+            .header(ISSUER_HEADER, ISSUER_EMAIL)
+            .contentType(MediaType.APPLICATION_JSON);
+
+        mockMvc.perform(setupRequest).andExpect(status().isCreated());
+
+        MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
+            .get(String.format("%s/%s/%s", GET_PROVENANCE_USER_URL, validUser.getUserProvenance(),
+                               validUser.getProvenanceUserId()))
+            .contentType(MediaType.APPLICATION_JSON);
+
+        MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isOk()).andReturn();
+        PiUser returnedUser = objectMapper.readValue(response.getResponse().getContentAsString(),
+                                                     PiUser.class);
+        assertEquals(validUser.getProvenanceUserId(), returnedUser.getProvenanceUserId(), "Users should match");
+    }
+
+    @Test
+    void testGetUserByProvenanceIdReturnsNotFound() throws Exception {
+        MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
+            .get(String.format("%s/%s/%s", GET_PROVENANCE_USER_URL, UserProvenances.CFT_IDAM, ID))
+            .contentType(MediaType.APPLICATION_JSON);
+
+        MvcResult response =
+            mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isNotFound()).andReturn();
+        assertEquals(404, response.getResponse().getStatus(), "Status codes should match");
+        assertTrue(response.getResponse().getContentAsString().contains(ERROR_RESPONSE_USER_PROVENANCE),
+                   "Should contain error message");
     }
 
 }

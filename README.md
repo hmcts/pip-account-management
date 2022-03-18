@@ -17,7 +17,7 @@ The template is a working application with a minimal setup. It contains:
  * docker setup
  * swagger configuration for api documentation ([see how to publish your api documentation to shared repository](https://github.com/hmcts/reform-api-docs#publish-swagger-docs))
  * code quality tools already set up
- * integration with Travis CI
+ * integration with Travis CI.
  * Hystrix circuit breaker enabled
  * MIT license and contribution information
  * Helm chart using chart-java.
@@ -218,7 +218,10 @@ the request and a body of a list of users to add to the database following the [
 
 ## Models
 
-### Account
+
+`/account/provenance/{userProvenance}/{provenanceUserId}` - used to get the [P&I User](#piuser) from the pi_user
+table by matching the user provenance and the provenanceUserId. eg a user from `PI_AAD` with the `provenanceUserId`
+of `123` would be returned if both attributes matched.
 
 ```json
 {
