@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.RestController;
 import uk.gov.hmcts.reform.pip.account.management.model.AzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
-import uk.gov.hmcts.reform.pip.account.management.model.Subscriber;
 import uk.gov.hmcts.reform.pip.account.management.model.UserProvenances;
 import uk.gov.hmcts.reform.pip.account.management.service.AccountService;
 import uk.gov.hmcts.reform.pip.account.management.validation.annotations.ValidEmail;

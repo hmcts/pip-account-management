@@ -11,7 +11,6 @@ import uk.gov.hmcts.reform.pip.account.management.model.AzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
 import uk.gov.hmcts.reform.pip.account.management.model.Roles;
-import uk.gov.hmcts.reform.pip.account.management.model.Subscriber;
 import uk.gov.hmcts.reform.pip.account.management.model.UserProvenances;
 import uk.gov.hmcts.reform.pip.account.management.service.AccountService;
 
@@ -43,9 +42,6 @@ class AccountControllerTest {
 
         AzureAccount azureAccount = new AzureAccount();
         azureAccount.setEmail("a@b.com");
-        Subscriber subscriber = new Subscriber();
-        subscriber.setEmail(EMAIL);
-
         List<AzureAccount> azureAccounts = List.of(azureAccount);
 
         when(accountService.addAzureAccounts(argThat(arg -> arg.equals(azureAccounts)),
@@ -55,7 +51,7 @@ class AccountControllerTest {
             accountController.createAzureAccount("b@c.com", azureAccounts);
 
         assertEquals(HttpStatus.OK, response.getStatusCode(), STATUS_CODE_MATCH);
-        assertEquals(subscribersMap, response.getBody(), "Should return the expected subscribers map");
+        assertEquals(accountsMap, response.getBody(), "Should return the expected subscribers map");
     }
 
     @Test

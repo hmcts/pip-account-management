@@ -6,15 +6,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import uk.gov.hmcts.reform.pip.account.management.database.UserRepository;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.AzureCustomException;
+import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.UserNotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.model.AzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
-import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredAzureAccount;
-import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.UserNotFoundException;
-import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
-import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
-import uk.gov.hmcts.reform.pip.account.management.model.Subscriber;
 import uk.gov.hmcts.reform.pip.account.management.model.UserProvenances;
+import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredAzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredPiUser;
 import uk.gov.hmcts.reform.pip.model.enums.UserActions;
 

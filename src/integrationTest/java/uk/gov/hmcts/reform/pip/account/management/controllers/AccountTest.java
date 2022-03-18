@@ -95,11 +95,6 @@ class AccountTest {
     private static final String TEST_MESSAGE_ROLE = "Role matches sent account";
     private static final String ZERO_CREATED_ACCOUNTS = "0 created accounts should be returned";
     private static final String SINGLE_ERRORED_ACCOUNT = "1 errored account should be returned";
-    private static final String TEST_MESSAGE_ID = "Subscriber ID added to subscriber";
-    private static final String TEST_MESSAGE_EMAIL = "Email matches sent subscriber";
-    private static final String TEST_MESSAGE_FIRST_NAME = "Firstname matches sent subscriber";
-    private static final String TEST_MESSAGE_SURNAME = "Surname matches sent subscriber";
-    private static final String TEST_MESSAGE_TITLE = "Title matches sents subscriber";
     private static final String ERROR_RESPONSE_USER_PROVENANCE = "No user found with the provenanceUserId: 1234";
 
     private ObjectMapper objectMapper;
