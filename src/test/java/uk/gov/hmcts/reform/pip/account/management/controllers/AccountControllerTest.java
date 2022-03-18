@@ -10,6 +10,8 @@ import org.springframework.http.ResponseEntity;
 import uk.gov.hmcts.reform.pip.account.management.model.AzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
+import uk.gov.hmcts.reform.pip.account.management.model.Roles;
+import uk.gov.hmcts.reform.pip.account.management.model.UserProvenances;
 import uk.gov.hmcts.reform.pip.account.management.service.AccountService;
 
 import java.util.List;
@@ -24,6 +26,9 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class AccountControllerTest {
 
+    private static final String EMAIL = "a@b.com";
+    private static final String STATUS_CODE_MATCH = "Status code responses should match";
+
     @Mock
     private AccountService accountService;
 
@@ -36,7 +41,7 @@ class AccountControllerTest {
         accountsMap.put(CreationEnum.CREATED_ACCOUNTS, List.of(new AzureAccount()));
 
         AzureAccount azureAccount = new AzureAccount();
-        azureAccount.setEmail("a@b.com");
+        azureAccount.setEmail(EMAIL);
 
         List<AzureAccount> azureAccounts = List.of(azureAccount);
 
@@ -46,7 +51,7 @@ class AccountControllerTest {
         ResponseEntity<Map<CreationEnum, List<? extends AzureAccount>>> response =
             accountController.createAzureAccount("b@c.com", azureAccounts);
 
-        assertEquals(HttpStatus.OK, response.getStatusCode(), "Should return an OK status code");
+        assertEquals(HttpStatus.OK, response.getStatusCode(), STATUS_CODE_MATCH);
         assertEquals(accountsMap, response.getBody(), "Should return the expected azureAccounts map");
     }
 
@@ -56,7 +61,7 @@ class AccountControllerTest {
         usersMap.put(CreationEnum.CREATED_ACCOUNTS, List.of(new PiUser()));
 
         PiUser user = new PiUser();
-        user.setEmail("a@b.com");
+        user.setEmail(EMAIL);
 
         List<PiUser> users = List.of(user);
 
@@ -65,8 +70,28 @@ class AccountControllerTest {
         ResponseEntity<Map<CreationEnum, List<?>>> response = accountController.createUsers("test", users);
 
         assertEquals(HttpStatus.CREATED, response.getStatusCode(),
-                     "Should return created status");
+                     STATUS_CODE_MATCH);
         assertEquals(usersMap, response.getBody(), "Should return the expected user map");
+    }
+
+    @Test
+    void testGetUserByProvenanceId() {
+        PiUser user = new PiUser();
+        user.setProvenanceUserId("123");
+        user.setUserProvenance(UserProvenances.PI_AAD);
+        user.setEmail(EMAIL);
+        user.setRoles(Roles.INTERNAL_ADMIN_CTSC);
+
+        when(accountService.findUserByProvenanceId(user.getUserProvenance(), user.getProvenanceUserId()))
+            .thenReturn(user);
+
+        assertEquals(user,
+                     accountController.getUserByProvenanceId(user.getUserProvenance(), user.getProvenanceUserId())
+                         .getBody(), "Should return found user");
+
+        assertEquals(HttpStatus.OK, accountController.getUserByProvenanceId(user.getUserProvenance(),
+                                                                            user.getProvenanceUserId()).getStatusCode(),
+                     STATUS_CODE_MATCH);
     }
 
 }
