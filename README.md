@@ -257,4 +257,3 @@ an enum for the different roles available to P&I.
 `INTERNAL_ADMIN_CTSC` - admin privileges for CTSC
 
 `INTERNAL_ADMIN_LOCAL` - admin privileges for local courts
-
