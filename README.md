@@ -17,7 +17,7 @@ The template is a working application with a minimal setup. It contains:
  * docker setup
  * swagger configuration for api documentation ([see how to publish your api documentation to shared repository](https://github.com/hmcts/reform-api-docs#publish-swagger-docs))
  * code quality tools already set up
- * integration with Travis CI
+ * integration with Travis CI.
  * Hystrix circuit breaker enabled
  * MIT license and contribution information
  * Helm chart using chart-java.
@@ -203,4 +203,43 @@ Here are some other functionalities it provides:
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details
+
+## API
+Account management exposes various endpoints that aid in managing accounts within the P&I service.
+
+`/account/add/pi` - used to add a user to the P&I user database. Takes in a header of the email of the admin issuing
+the request and a body of a list of users to add to the database following the [P&I User model](#piuser) without the
+`userId` as this is created by the service.
+
+
+`/account/provenance/{userProvenance}/{provenanceUserId}` - used to get the [P&I User](#piuser) from the pi_user
+table by matching the user provenance and the provenanceUserId. eg a user from `PI_AAD` with the `provenanceUserId`
+of `123` would be returned if both attributes matched.
+
+## Models
+
+### PiUser
+
+```json
+{
+  "userId": "111111-aaaa-1111-ssss-11111111",
+  "userProvenance": "PI_AAD",
+  "provenanceUserId": "222222-vvvv-11111-ssss-11111111",
+  "email": "example@email.com",
+  "roles": "INTERNAL_ADMIN_LOCAL"
+}
+```
+
+### Roles
+an enum for the different roles available to P&I.
+
+`VERIFIED` - will be media users within P&I
+
+`INTERNAL_SUPER_ADMIN_CTSC` - super admin privileges for CTSC
+
+`INTERNAL_SUPER_ADMIN_LOCAL` - super admin privileges for local courts
+
+`INTERNAL_ADMIN_CTSC` - admin privileges for CTSC
+
+`INTERNAL_ADMIN_LOCAL` - admin privileges for local courts
 

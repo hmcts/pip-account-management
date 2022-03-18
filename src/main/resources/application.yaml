@@ -20,6 +20,33 @@ spring:
       STRICT_DUPLICATE_DETECTION: true
   application:
     name: Account Management
+  datasource:
+    driver-class-name: org.postgresql.Driver
+
+    url: jdbc:postgresql://${DB_NAME}.postgres.database.azure.com:${DB_PORT}/postgres
+    username: ${DB_USER}
+    password: ${DB_PASS}
+    properties:
+      charSet: UTF-8
+    hikari:
+      minimumIdle: 2
+      maximumPoolSize: 10
+      idleTimeout: 10000
+      poolName: ConnectionPool
+      maxLifetime: 7200000
+      connectionTimeout: 30000
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQL81Dialect
+        jdbc:
+          lob:
+            non_contextual_creation: true
+    database: POSTGRESQL
+    generate-ddl: 'true'
+    hibernate:
+      # this ensures the db persists after spring boot connection drops.
+      ddl-auto: update
 
 azure:
   application-insights:
