@@ -173,11 +173,13 @@ dependencies {
   implementation group: 'org.springframework.boot', name: 'spring-boot-starter-validation'
   implementation group: 'com.github.hmcts', name: 'pip-data-models', version: '1.0'
   implementation 'org.postgresql:postgresql'
+  implementation 'org.springframework.boot:spring-boot-starter-webflux'
   implementation 'org.springframework.boot:spring-boot-starter-validation'
   implementation 'org.springframework.boot:spring-boot-starter-jdbc'
   implementation 'org.springframework.boot:spring-boot-starter-data-jpa:2.5.5'
   implementation group: 'org.apache.tomcat.embed', name: 'tomcat-embed-core', version: '9.0.58'
   implementation group: 'org.apache.tomcat.embed', name: 'tomcat-embed-websocket', version: '9.0.58'
+  implementation("com.squareup.okhttp3:okhttp:4.9.3")
 
   // Include the sdk as a dependency
   implementation 'com.microsoft.graph:microsoft-graph:5.8.0'
@@ -191,7 +193,9 @@ dependencies {
 
   testImplementation(platform('org.junit:junit-bom:5.8.1'))
   testImplementation group: 'org.springframework.boot', name: 'spring-boot-starter-test'
+  testImplementation("com.squareup.okhttp3:mockwebserver:4.9.3")
 
+  testImplementation group: 'io.github.hakky54', name: 'logcaptor', version: '2.7.8'
   testImplementation "io.zonky.test:embedded-database-spring-test:2.1.1"
 
   integrationTestImplementation sourceSets.main.runtimeClasspath

@@ -29,6 +29,7 @@ import javax.validation.Validator;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.lenient;
@@ -51,6 +52,9 @@ class AccountServiceTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private NotifyEmailService notifyEmailService;
 
     @InjectMocks
     private AccountService accountService;
@@ -90,6 +94,8 @@ class AccountServiceTest {
 
         when(azureUserService.createUser(argThat(user -> user.getEmail().equals(azureAccount.getEmail()))))
             .thenReturn(expectedUser);
+
+        when(notifyEmailService.sendNotificationEmail(any())).thenReturn("test");
 
         Map<CreationEnum, List<? extends AzureAccount>> createdAccounts =
             accountService.addAzureAccounts(List.of(azureAccount), ISSUER_EMAIL);
