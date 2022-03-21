@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import uk.gov.hmcts.reform.pip.account.management.Application;
+import uk.gov.hmcts.reform.pip.account.management.config.AzureConfigurationClientTest;
 
 import java.io.IOException;
 
@@ -18,7 +19,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @ExtendWith(MockitoExtension.class)
-@SpringBootTest(classes = {Application.class})
+@SpringBootTest(classes = {AzureConfigurationClientTest.class, Application.class})
+@ActiveProfiles("test")
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
 class NotifyEmailServiceTest {
 
