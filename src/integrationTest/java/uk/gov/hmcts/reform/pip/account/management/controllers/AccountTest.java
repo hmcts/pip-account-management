@@ -68,6 +68,7 @@ class AccountTest {
     @Autowired
     GraphServiceException graphServiceException;
 
+    private static final String ROOT_URL = "/account";
     private static final String AZURE_URL = "/account/add/azure";
     private static final String PI_URL = "/account/add/pi";
     private static final String GET_PROVENANCE_USER_URL = "/account/provenance/";
