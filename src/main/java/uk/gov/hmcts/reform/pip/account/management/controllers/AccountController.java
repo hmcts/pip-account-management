@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import uk.gov.hmcts.reform.pip.account.management.model.AzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
+import uk.gov.hmcts.reform.pip.account.management.model.ListType;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
 import uk.gov.hmcts.reform.pip.account.management.model.UserProvenances;
 import uk.gov.hmcts.reform.pip.account.management.service.AccountService;
@@ -24,6 +25,7 @@ import uk.gov.hmcts.reform.pip.account.management.validation.annotations.ValidEm
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @Api(tags = "Account Management - API for managing accounts")
@@ -79,4 +81,15 @@ public class AccountController {
         return ResponseEntity.ok(accountService.findUserByProvenanceId(userProvenance, provenanceUserId));
     }
 
+    @ApiResponses({
+        @ApiResponse(code = 200, message = "User has access to provided publication"),
+        @ApiResponse(code = 403,
+            message = "User: {userId} does not have sufficient permission to view list type: {listType}"),
+        @ApiResponse(code = 404, message = "No user found with the userId: {userId}"),
+    })
+    @ApiOperation("Check if a user can see a classified publication through list type and their provenance")
+    @GetMapping("/isAuthorised/{userId}/{listType}")
+    public ResponseEntity<Boolean> checkUserAuthorised(@PathVariable UUID userId, @PathVariable ListType listType) {
+        return ResponseEntity.ok(accountService.isUserAuthorisedForPublication(userId, listType));
+    }
 }

@@ -9,9 +9,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.hmcts.reform.pip.account.management.database.UserRepository;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.AzureCustomException;
+import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.ForbiddenPermissionsException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.UserNotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.model.AzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
+import uk.gov.hmcts.reform.pip.account.management.model.ListType;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
 import uk.gov.hmcts.reform.pip.account.management.model.Roles;
 import uk.gov.hmcts.reform.pip.account.management.model.UserProvenances;
@@ -20,6 +22,7 @@ import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredPiUser;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -37,6 +40,7 @@ import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
+@SuppressWarnings("PMD.TooManyMethods")
 class AccountServiceTest {
 
     @Mock
@@ -67,9 +71,30 @@ class AccountServiceTest {
     private static final String EMAIL_VALIDATION_MESSAGE = "AzureAccount should have expected email";
     private static final String ERRORED_ACCOUNTS_VALIDATION_MESSAGE = "Should contain ERRORED_ACCOUNTS key";
     private static final String TEST = "Test";
+    private static final String MESSAGES_MATCH = "Messages should match";
+
+    private static final UUID VALID_USER_ID = UUID.randomUUID();
+    private static final UUID VALID_USER_ID_IDAM = UUID.randomUUID();
+
+    private final PiUser piUser = new PiUser();
+    private final PiUser piUserIdam = new PiUser();
 
     private AzureAccount azureAccount;
     private User expectedUser;
+
+    @BeforeEach
+    void setup() {
+        piUser.setUserId(VALID_USER_ID);
+        piUser.setUserProvenance(UserProvenances.PI_AAD);
+        piUser.setProvenanceUserId(ID);
+
+        piUserIdam.setUserId(VALID_USER_ID_IDAM);
+        piUserIdam.setUserProvenance(UserProvenances.CFT_IDAM);
+        piUserIdam.setProvenanceUserId(ID);
+
+        lenient().when(userRepository.findByUserId(VALID_USER_ID)).thenReturn(Optional.of(piUser));
+        lenient().when(userRepository.findByUserId(VALID_USER_ID_IDAM)).thenReturn(Optional.of(piUserIdam));
+    }
 
     @BeforeEach
     void beforeEach() {
@@ -251,7 +276,38 @@ class AccountServiceTest {
         when(userRepository.findExistingByProvenanceId(TEST, "CRIME_IDAM")).thenReturn(List.of());
         UserNotFoundException ex = assertThrows(UserNotFoundException.class, () ->
             accountService.findUserByProvenanceId(UserProvenances.CRIME_IDAM, TEST));
-        assertEquals("No user found with the provenanceUserId: Test", ex.getMessage(), "Messages should match");
+        assertEquals("No user found with the provenanceUserId: Test", ex.getMessage(), MESSAGES_MATCH);
     }
 
+    @Test
+    void testIsUserAuthorisedForPublicationReturnsTrue() {
+        assertTrue(accountService.isUserAuthorisedForPublication(VALID_USER_ID, ListType.SJP_PRESS_LIST),
+                   "User from PI_AAD should return true for allowed list type");
+    }
+
+    @Test
+    void testIsUserAuthorisedForPublicationPublicListType() {
+        assertTrue(accountService.isUserAuthorisedForPublication(VALID_USER_ID_IDAM, ListType.CIVIL_DAILY_CAUSE_LIST),
+                   "Should return true regardless of user provenance if list type has no restrictions");
+    }
+
+    @Test
+    void testIsUserAuthorisedInvalidUser() {
+        UUID invalidId = UUID.randomUUID();
+        when(userRepository.findByUserId(invalidId)).thenReturn(Optional.empty());
+        UserNotFoundException ex = assertThrows(UserNotFoundException.class, () ->
+            accountService.isUserAuthorisedForPublication(invalidId, ListType.CIVIL_DAILY_CAUSE_LIST));
+        assertEquals("No user found with the userId: " + invalidId, ex.getMessage(), MESSAGES_MATCH);
+    }
+
+    @Test
+    void testIsUserAuthorisedNotAuthorised() {
+        ForbiddenPermissionsException ex = assertThrows(ForbiddenPermissionsException.class, () ->
+            accountService.isUserAuthorisedForPublication(VALID_USER_ID_IDAM, ListType.SJP_PRESS_LIST),
+                                                        "Should throw forbidden if user is not "
+                                                             + "allowed to see list type");
+        assertEquals(String.format("User: %s does not have sufficient permission to view list type: %s",
+                                   VALID_USER_ID_IDAM, ListType.SJP_PRESS_LIST), ex.getMessage(),
+                     MESSAGES_MATCH);
+    }
 }

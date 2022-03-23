@@ -28,6 +28,7 @@ import uk.gov.hmcts.reform.pip.account.management.config.AzureConfigurationClien
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.ExceptionResponse;
 import uk.gov.hmcts.reform.pip.account.management.model.AzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
+import uk.gov.hmcts.reform.pip.account.management.model.ListType;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
 import uk.gov.hmcts.reform.pip.account.management.model.Roles;
 import uk.gov.hmcts.reform.pip.account.management.model.UserProvenances;
@@ -67,9 +68,10 @@ class AccountTest {
     @Autowired
     GraphServiceException graphServiceException;
 
-    private static final String AZURE_URL = "/account/add/azure";
-    private static final String PI_URL = "/account/add/pi";
-    private static final String GET_PROVENANCE_USER_URL = "/account/provenance/";
+    private static final String ROOT_URL = "/account";
+    private static final String AZURE_URL = ROOT_URL + "/add/azure";
+    private static final String PI_URL = ROOT_URL + "/add/pi";
+    private static final String GET_PROVENANCE_USER_URL = ROOT_URL + "/provenance/";
     private static final String EMAIL = "a@b";
     private static final String INVALID_EMAIL = "ab";
     private static final String FIRST_NAME = "First name";
@@ -97,8 +99,12 @@ class AccountTest {
     private static final String ZERO_CREATED_ACCOUNTS = "0 created accounts should be returned";
     private static final String SINGLE_ERRORED_ACCOUNT = "1 errored account should be returned";
     private static final String ERROR_RESPONSE_USER_PROVENANCE = "No user found with the provenanceUserId: 1234";
+    private static final String ERROR_RESPONSE_FORBIDDEN =
+        "User: %s does not have sufficient permission to view list type: %s";
 
     private ObjectMapper objectMapper;
+
+    private PiUser validUser;
 
     private PiUser createUser(boolean valid, String id) {
         PiUser user = new PiUser();
@@ -113,6 +119,7 @@ class AccountTest {
     @BeforeEach
     void setup() {
         objectMapper = new ObjectMapper();
+        validUser = createUser(true, UUID.randomUUID().toString());
     }
 
     @AfterEach
@@ -491,8 +498,6 @@ class AccountTest {
 
     @Test
     void testCreateSingleUser() throws Exception {
-        PiUser validUser = createUser(true, UUID.randomUUID().toString());
-
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(PI_URL)
             .content(objectMapper.writeValueAsString(List.of(validUser)))
@@ -565,7 +570,6 @@ class AccountTest {
 
     @Test
     void testCreateMultipleUsersCreateAndErrored() throws Exception {
-        PiUser validUser = createUser(true, UUID.randomUUID().toString());
         PiUser invalidUser = createUser(false, UUID.randomUUID().toString());
 
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
@@ -585,8 +589,6 @@ class AccountTest {
 
     @Test
     void testGetUserByProvenanceIdReturnsUser() throws Exception {
-        PiUser validUser = createUser(true, UUID.randomUUID().toString());
-
         MockHttpServletRequestBuilder setupRequest = MockMvcRequestBuilders
             .post(PI_URL)
             .content(objectMapper.writeValueAsString(List.of(validUser)))
@@ -617,6 +619,54 @@ class AccountTest {
         assertEquals(404, response.getResponse().getStatus(), "Status codes should match");
         assertTrue(response.getResponse().getContentAsString().contains(ERROR_RESPONSE_USER_PROVENANCE),
                    "Should contain error message");
+    }
+
+    @Test
+    void testIsUserAuthenticatedReturnsSuccessful() throws Exception {
+        MockHttpServletRequestBuilder setupRequest = MockMvcRequestBuilders
+            .post(PI_URL)
+            .content(objectMapper.writeValueAsString(List.of(validUser)))
+            .header(ISSUER_HEADER, ISSUER_EMAIL)
+            .contentType(MediaType.APPLICATION_JSON);
+
+        MvcResult userResponse = mockMvc.perform(setupRequest).andExpect(status().isCreated()).andReturn();
+        ConcurrentHashMap<CreationEnum, List<Object>> mappedResponse =
+            objectMapper.readValue(userResponse.getResponse().getContentAsString(),
+                                   new TypeReference<>() {});
+        String createdUserId = mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).get(0).toString();
+
+
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+            .get(String.format("%s/isAuthorised/%s/%s", ROOT_URL, createdUserId, ListType.SJP_PRESS_LIST));
+
+        MvcResult response = mockMvc.perform(request).andExpect(status().isOk()).andReturn();
+
+        assertEquals("true", response.getResponse().getContentAsString(), "Should return true");
+    }
+
+    @Test
+    void testIsUserAuthenticatedReturnsForbidden() throws Exception {
+        validUser.setUserProvenance(UserProvenances.CFT_IDAM);
+        MockHttpServletRequestBuilder setupRequest = MockMvcRequestBuilders
+            .post(PI_URL)
+            .content(objectMapper.writeValueAsString(List.of(validUser)))
+            .header(ISSUER_HEADER, ISSUER_EMAIL)
+            .contentType(MediaType.APPLICATION_JSON);
+
+        MvcResult userResponse = mockMvc.perform(setupRequest).andExpect(status().isCreated()).andReturn();
+        ConcurrentHashMap<CreationEnum, List<Object>> mappedResponse =
+            objectMapper.readValue(userResponse.getResponse().getContentAsString(),
+                                   new TypeReference<>() {});
+        String createdUserId = mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).get(0).toString();
+
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+            .get(String.format("%s/isAuthorised/%s/%s", ROOT_URL, createdUserId, ListType.SJP_PRESS_LIST));
+
+        MvcResult response = mockMvc.perform(request).andExpect(status().isForbidden()).andReturn();
+
+        assertTrue(response.getResponse().getContentAsString()
+                       .contains(String.format(ERROR_RESPONSE_FORBIDDEN, createdUserId, ListType.SJP_PRESS_LIST)),
+                   "Should return forbidden message");
     }
 
 }
