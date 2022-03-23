@@ -45,7 +45,7 @@ public class AccountService {
     UserRepository userRepository;
 
     @Autowired
-    NotifyEmailService notifyEmailService;
+    PublicationService publicationService;
 
     /**
      * Method to create new accounts in azure.
@@ -80,7 +80,9 @@ public class AccountService {
                 User user = azureUserService.createUser(azureAccount);
                 azureAccount.setAzureAccountId(user.id);
                 createdAzureAccounts.add(azureAccount);
-                log.info(notifyEmailService.sendNotificationEmail(azureAccount.getEmail()));
+                log.info(publicationService.sendNotificationEmail(azureAccount.getEmail(),
+                                                                  azureAccount.getFirstName(),
+                                                                  azureAccount.getSurname()));
 
                 log.info(writeLog(issuerEmail, UserActions.CREATE_ACCOUNT, azureAccount.getEmail()));
             } catch (AzureCustomException azureCustomException) {

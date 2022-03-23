@@ -14,19 +14,21 @@ import java.net.URISyntaxException;
 
 @Slf4j
 @Component
-public class NotifyEmailService {
+public class PublicationService {
     @Value("${service-to-service.publication-services}")
     private String url;
 
 
-    public String sendNotificationEmail(String emailData) {
+    public String sendNotificationEmail(String emailData, String forename, String surname) {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("email", emailData);
+        jsonObject.put("forename", forename);
+        jsonObject.put("surname", surname);
         jsonObject.put("isExisting", false);
         WebClient webClient = WebClient.create();
         log.info("Attempting to send email to " + url);
         try {
-            String returnValue = webClient.post().uri(new URI(url + "/notify/welcome-email"))
+            String returnValue = webClient.post().uri(new URI(url + "/notify/aad-welcome-email"))
                 .body(BodyInserters.fromValue(jsonObject)).retrieve()
                 .bodyToMono(String.class).block();
             log.info(String.format("Email trigger for %s sent to Publication-Services", emailData));

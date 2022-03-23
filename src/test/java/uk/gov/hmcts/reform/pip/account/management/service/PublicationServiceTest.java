@@ -22,14 +22,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @SpringBootTest(classes = {AzureConfigurationClientTest.class, Application.class})
 @ActiveProfiles("test")
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
-class NotifyEmailServiceTest {
+class PublicationServiceTest {
 
     private static MockWebServer mockPublicationServicesEndpoint;
 
     @Autowired
-    NotifyEmailService notifyEmailService;
+    PublicationService publicationService;
 
-    LogCaptor logCaptor = LogCaptor.forClass(NotifyEmailService.class);
+    LogCaptor logCaptor = LogCaptor.forClass(PublicationService.class);
 
 
     @Test
@@ -38,17 +38,24 @@ class NotifyEmailServiceTest {
         mockPublicationServicesEndpoint.start(8081);
         mockPublicationServicesEndpoint.enqueue(new MockResponse().setBody("test email sent"));
 
-        assertEquals("test email sent", notifyEmailService.sendNotificationEmail("test@example.com"), "No trigger "
-            + "sent");
+        assertEquals("test email sent", publicationService.sendNotificationEmail("test@example.com",
+                                                                                 "forename", "surname"
+        ), "No trigger sent");
         mockPublicationServicesEndpoint.shutdown();
-        assertTrue(logCaptor.getInfoLogs().get(1).contains(String.format("Email trigger for %s sent to "
-            + "Publication-Services", "test@example.com")), "No trigger sent");
+        assertTrue(logCaptor.getInfoLogs().get(1).contains(String.format(
+            "Email trigger for %s sent to "
+                + "Publication-Services",
+            "test@example.com"
+        )), "No trigger sent");
     }
 
     @Test
     void testFailedEmailSend() {
         assertEquals("Email request failed to send: test@example.com",
-                     notifyEmailService.sendNotificationEmail("test@example.com"), "trigger sent in error");
+                     publicationService.sendNotificationEmail("test@example.com", "forename", "surname"), "trigger "
+                         + "sent "
+                         + "in error"
+        );
         assertTrue(logCaptor.getErrorLogs().get(0).contains("Request failed with error message:"), "Error logs not "
             + "being captured.");
     }

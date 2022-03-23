@@ -56,7 +56,7 @@ class AccountServiceTest {
     private UserRepository userRepository;
 
     @Mock
-    private NotifyEmailService notifyEmailService;
+    private PublicationService publicationService;
 
     @InjectMocks
     private AccountService accountService;
@@ -98,7 +98,7 @@ class AccountServiceTest {
         when(azureUserService.createUser(argThat(user -> user.getEmail().equals(azureAccount.getEmail()))))
             .thenReturn(expectedUser);
 
-        when(notifyEmailService.sendNotificationEmail(any())).thenReturn("test");
+        when(publicationService.sendNotificationEmail(any(), any(), any())).thenReturn("test");
 
         Map<CreationEnum, List<? extends AzureAccount>> createdAccounts =
             accountService.addAzureAccounts(List.of(azureAccount), ISSUER_EMAIL);
