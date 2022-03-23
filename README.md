@@ -213,15 +213,17 @@ of users to add to Azure following the [Account model](#Account) without the `az
 is created by azure.
 
 `/account/add/pi` - used to add a user to the P&I user database. Takes in a header of the email of the admin issuing
+
 the request and a body of a list of users to add to the database following the [P&I User model](#piuser) without the
 `userId` as this is created by the service.
 
 ## Models
 
 
-`/account/provenance/{userProvenance}/{provenanceUserId}` - used to get the [P&I User](#piuser) from the pi_user
+- GET `/account/provenance/{userProvenance}/{provenanceUserId}` - used to get the [P&I User](#piuser) from the pi_user
 table by matching the user provenance and the provenanceUserId. eg a user from `PI_AAD` with the `provenanceUserId`
 of `123` would be returned if both attributes matched.
+
 
 ```json
 {
@@ -232,6 +234,13 @@ of `123` would be returned if both attributes matched.
   "role": "INTERNAL_ADMIN_LOCAL"
 }
 ```
+
+- GET `/account/isAuthorised/{userId}/{listType}` - used to check if the user provided has sufficient permissions to
+  view the specified list type based on mapping from user provenances to allowed list types in
+[List type enum](src/main/java/uk/gov/hmcts/reform/pip/account/management/model/ListType.java).
+
+
+## Models
 
 ### PiUser
 
