@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.ForbiddenPermissionsException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.NotFoundException;
 
 import java.time.LocalDateTime;
@@ -55,12 +56,21 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exceptionResponse);
     }
 
+    @ExceptionHandler(ForbiddenPermissionsException.class)
+    public ResponseEntity<ExceptionResponse> handle(ForbiddenPermissionsException ex) {
+
+        ExceptionResponse exceptionResponse = new ExceptionResponse();
+        exceptionResponse.setMessage(ex.getMessage());
+        exceptionResponse.setTimestamp(LocalDateTime.now());
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(exceptionResponse);
+    }
+
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<ExceptionResponse> handle(NotFoundException ex) {
         ExceptionResponse exceptionResponse = new ExceptionResponse();
         exceptionResponse.setMessage(ex.getMessage());
         exceptionResponse.setTimestamp(LocalDateTime.now());
-
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(exceptionResponse);
     }
 
