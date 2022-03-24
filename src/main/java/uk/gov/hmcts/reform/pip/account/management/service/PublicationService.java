@@ -12,27 +12,37 @@ import org.springframework.web.reactive.function.client.WebClientException;
 import java.net.URI;
 import java.net.URISyntaxException;
 
+
+
 @Slf4j
 @Component
+/**
+ * Service to communicate with publication-services microservice and send appropriate emails via govnotify on the
+ * creation of a new administrator account.
+ */
 public class PublicationService {
+
     @Value("${service-to-service.publication-services}")
     private String url;
 
-
+    /**
+     * Method which sends a request to the publication-services microservice which will send an email to the user
+     * upon creation of a new admin account.
+     * @param emailData - email address
+     * @param forename - forename
+     * @param surname - surname
+     * @return string for logging success or failure
+     */
     public String sendNotificationEmail(String emailData, String forename, String surname) {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("email", emailData);
         jsonObject.put("forename", forename);
         jsonObject.put("surname", surname);
-        jsonObject.put("isExisting", false);
         WebClient webClient = WebClient.create();
-        log.info("Attempting to send email to " + url);
         try {
-            String returnValue = webClient.post().uri(new URI(url + "/notify/aad-welcome-email"))
+            return webClient.post().uri(new URI(url + "/notify/created/admin"))
                 .body(BodyInserters.fromValue(jsonObject)).retrieve()
                 .bodyToMono(String.class).block();
-            log.info(String.format("Email trigger for %s sent to Publication-Services", emailData));
-            return returnValue;
 
         } catch (WebClientException | URISyntaxException ex) {
             log.error(String.format("Request failed with error message: %s", ex.getMessage()));

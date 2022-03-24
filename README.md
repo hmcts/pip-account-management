@@ -207,23 +207,24 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## API
 Account management exposes various endpoints that aid in managing accounts within the P&I service.
 
-`/account/add/azure` - used to add an account into the azure AAD. Takes in users name, email and role, and attempts to
+- POST `/account/add/azure` - used to add an account into the azure AAD. Takes in users name, email and role, and attempts to
 persist this into azure.  Takes in a header of the email of the admin issuing the request and a body of a list
 of users to add to Azure following the [Account model](#Account) without the `azureAccountId` as this
 is created by azure.
 
-`/account/add/pi` - used to add a user to the P&I user database. Takes in a header of the email of the admin issuing
-
+- POST `/account/add/pi` - used to add a user to the P&I user database. Takes in a header of the email of the admin issuing
 the request and a body of a list of users to add to the database following the [P&I User model](#piuser) without the
 `userId` as this is created by the service.
 
-## Models
-
-
 - GET `/account/provenance/{userProvenance}/{provenanceUserId}` - used to get the [P&I User](#piuser) from the pi_user
-table by matching the user provenance and the provenanceUserId. eg a user from `PI_AAD` with the `provenanceUserId`
-of `123` would be returned if both attributes matched.
+  table by matching the user provenance and the provenanceUserId. eg a user from `PI_AAD` with the `provenanceUserId`
+  of `123` would be returned if both attributes matched.
 
+- GET `/account/isAuthorised/{userId}/{listType}` - used to check if the user provided has sufficient permissions to
+  view the specified list type based on mapping from user provenances to allowed list types in
+  [List type enum](src/main/java/uk/gov/hmcts/reform/pip/account/management/model/ListType.java).
+
+## Models
 
 ```json
 {
@@ -234,11 +235,6 @@ of `123` would be returned if both attributes matched.
   "role": "INTERNAL_ADMIN_LOCAL"
 }
 ```
-
-- GET `/account/isAuthorised/{userId}/{listType}` - used to check if the user provided has sufficient permissions to
-  view the specified list type based on mapping from user provenances to allowed list types in
-[List type enum](src/main/java/uk/gov/hmcts/reform/pip/account/management/model/ListType.java).
-
 
 ## Models
 

@@ -12,6 +12,7 @@ import uk.gov.hmcts.reform.pip.account.management.model.AzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.ListType;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
+import uk.gov.hmcts.reform.pip.account.management.model.Roles;
 import uk.gov.hmcts.reform.pip.account.management.model.UserProvenances;
 import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredAzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredPiUser;
@@ -91,7 +92,11 @@ public class AccountService {
                                                                   azureAccount.getFirstName(),
                                                                   azureAccount.getSurname()));
 
-                log.info(writeLog(issuerEmail, UserActions.CREATE_ACCOUNT, azureAccount.getEmail()));
+                //todo add appropriate email logic for new media users ala admin approach below:
+                if (azureAccount.getRole() != Roles.VERIFIED) {
+                    log.info(writeLog(issuerEmail, UserActions.CREATE_ACCOUNT, azureAccount.getEmail()));
+                }
+
             } catch (AzureCustomException azureCustomException) {
                 ErroredAzureAccount erroredSubscriber = new ErroredAzureAccount(azureAccount);
                 erroredSubscriber.setErrorMessages(List.of(azureCustomException.getMessage()));

@@ -42,11 +42,6 @@ class PublicationServiceTest {
                                                                                  "forename", "surname"
         ), "No trigger sent");
         mockPublicationServicesEndpoint.shutdown();
-        assertTrue(logCaptor.getInfoLogs().get(1).contains(String.format(
-            "Email trigger for %s sent to "
-                + "Publication-Services",
-            "test@example.com"
-        )), "No trigger sent");
     }
 
     @Test
