@@ -54,7 +54,7 @@ public class AzureUserService {
     private User createUserObject(AzureAccount azureAccount) {
         User user = new User();
         user.accountEnabled = true;
-        user.displayName = azureAccount.getEmail();
+        user.displayName = azureAccount.getFirstName() + " " + azureAccount.getSurname();
         user.givenName = azureAccount.getFirstName();
         user.surname = azureAccount.getSurname();
         user.additionalDataManager().put(

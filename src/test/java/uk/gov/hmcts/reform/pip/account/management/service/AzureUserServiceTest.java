@@ -59,6 +59,8 @@ class AzureUserServiceTest {
 
     private static final String ID = "1234";
     private static final String EMAIL = "a@b.com";
+    private static final String FIRST_NAME = "First Name";
+    private static final String SURNAME = "Surname";
     private static final String EXTENSION_ID = "1234-1234";
 
     AzureAccount azureAccount;
@@ -110,8 +112,8 @@ class AzureUserServiceTest {
         when(userCollectionRequest.post(any())).thenReturn(userToReturn);
 
         azureAccount.setEmail(EMAIL);
-        azureAccount.setFirstName("First Name");
-        azureAccount.setSurname("Surname");
+        azureAccount.setFirstName(FIRST_NAME);
+        azureAccount.setSurname(SURNAME);
         azureUserService.createUser(azureAccount);
 
         ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
@@ -120,9 +122,10 @@ class AzureUserServiceTest {
         User user = captor.getValue();
 
         assertTrue(user.accountEnabled, "AzureAccount is marked as enabled");
-        assertEquals(EMAIL, user.displayName, "Display name is set as the email");
-        assertEquals("First Name", user.givenName, "Given name is set as the firstname");
-        assertEquals("Surname", user.surname, "Lastname is set as the surname");
+        assertEquals(FIRST_NAME + " " + SURNAME, user.displayName,
+                     "Display name is set as the first name + surname");
+        assertEquals(FIRST_NAME, user.givenName, "Given name is set as the firstname");
+        assertEquals(SURNAME, user.surname, "Lastname is set as the surname");
         assertEquals(Roles.INTERNAL_ADMIN_CTSC.name(),
                      user.additionalDataManager().get("extension_"
                                                       + EXTENSION_ID.replace("-", "")
