@@ -7,11 +7,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import uk.gov.hmcts.reform.pip.account.management.model.AzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.ListType;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
 import uk.gov.hmcts.reform.pip.account.management.model.Roles;
-import uk.gov.hmcts.reform.pip.account.management.model.Subscriber;
 import uk.gov.hmcts.reform.pip.account.management.model.UserProvenances;
 import uk.gov.hmcts.reform.pip.account.management.service.AccountService;
 
@@ -23,6 +23,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -38,22 +39,23 @@ class AccountControllerTest {
     private AccountController accountController;
 
     @Test
-    void createSubscriber() {
-        Map<CreationEnum, List<? extends Subscriber>> subscribersMap = new ConcurrentHashMap<>();
-        subscribersMap.put(CreationEnum.CREATED_ACCOUNTS, List.of(new Subscriber()));
+    void createAzureAccount() {
+        Map<CreationEnum, List<? extends AzureAccount>> accountsMap = new ConcurrentHashMap<>();
+        accountsMap.put(CreationEnum.CREATED_ACCOUNTS, List.of(new AzureAccount()));
 
-        Subscriber subscriber = new Subscriber();
-        subscriber.setEmail(EMAIL);
+        AzureAccount azureAccount = new AzureAccount();
+        azureAccount.setEmail(EMAIL);
 
-        List<Subscriber> subscribers = List.of(subscriber);
+        List<AzureAccount> azureAccounts = List.of(azureAccount);
 
-        when(accountService.createSubscribers(argThat(arg -> arg.equals(subscribers)))).thenReturn(subscribersMap);
+        when(accountService.addAzureAccounts(argThat(arg -> arg.equals(azureAccounts)),
+                                             eq("b@c.com"))).thenReturn(accountsMap);
 
-        ResponseEntity<Map<CreationEnum, List<? extends Subscriber>>> response =
-            accountController.createSubscriber(subscribers);
+        ResponseEntity<Map<CreationEnum, List<? extends AzureAccount>>> response =
+            accountController.createAzureAccount("b@c.com", azureAccounts);
 
         assertEquals(HttpStatus.OK, response.getStatusCode(), STATUS_CODE_MATCH);
-        assertEquals(subscribersMap, response.getBody(), "Should return the expected subscribers map");
+        assertEquals(accountsMap, response.getBody(), "Should return the expected azureAccounts map");
     }
 
     @Test

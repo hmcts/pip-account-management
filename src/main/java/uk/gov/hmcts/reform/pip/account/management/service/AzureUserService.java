@@ -1,5 +1,6 @@
 package uk.gov.hmcts.reform.pip.account.management.service;
 
+import com.google.gson.JsonPrimitive;
 import com.microsoft.applicationinsights.web.dependencies.apachecommons.lang3.RandomStringUtils;
 import com.microsoft.graph.http.GraphServiceException;
 import com.microsoft.graph.models.ObjectIdentity;
@@ -7,13 +8,12 @@ import com.microsoft.graph.models.PasswordProfile;
 import com.microsoft.graph.models.User;
 import com.microsoft.graph.requests.GraphServiceClient;
 import okhttp3.Request;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import uk.gov.hmcts.reform.pip.account.management.config.ClientConfiguration;
 import uk.gov.hmcts.reform.pip.account.management.config.UserConfiguration;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.AzureCustomException;
-import uk.gov.hmcts.reform.pip.account.management.model.Subscriber;
+import uk.gov.hmcts.reform.pip.account.management.model.AzureAccount;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,44 +24,47 @@ import java.util.List;
 @Component
 public class AzureUserService {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(AzureUserService.class);
-
     @Autowired
     private GraphServiceClient<Request> graphClient;
 
     @Autowired
     private UserConfiguration userConfiguration;
 
+    @Autowired
+    private ClientConfiguration clientConfiguration;
+
     /**
-     * Creates a new subscriber in the Azure active directory.
-     * @param subscriber The subscriber to add in the azure active directory.
+     * Creates a new azureAccount in the Azure active directory.
+     * @param azureAccount The azureAccount to add in the azure active directory.
      * @return The created user if it was successful.
      * @throws AzureCustomException thrown if theres an error with communicating with Azure.
      */
-    public User createUser(Subscriber subscriber) throws AzureCustomException {
+    public User createUser(AzureAccount azureAccount) throws AzureCustomException {
         try {
-            User user = createUserObject(subscriber);
+            User user = createUserObject(azureAccount);
             return graphClient.users()
                 .buildRequest()
                 .post(user);
         } catch (GraphServiceException e) {
-            LOGGER.error(e.getMessage());
-            throw new AzureCustomException("Error when persisting subscriber into Azure. "
+            throw new AzureCustomException("Error when persisting account into Azure. "
                                                + "Check that the user doesn't already exist in the directory");
         }
     }
 
-    private User createUserObject(Subscriber subscriber) {
+    private User createUserObject(AzureAccount azureAccount) {
         User user = new User();
         user.accountEnabled = true;
-        user.displayName = subscriber.getEmail();
-        user.givenName = subscriber.getFirstName();
-        user.surname = subscriber.getSurname();
+        user.displayName = azureAccount.getFirstName() + " " + azureAccount.getSurname();
+        user.givenName = azureAccount.getFirstName();
+        user.surname = azureAccount.getSurname();
+        user.additionalDataManager().put(
+            "extension_" + clientConfiguration.getExtensionId().replace("-", "") + "_UserRole",
+            new JsonPrimitive(azureAccount.getRole().toString()));
 
         ObjectIdentity identity = new ObjectIdentity();
         identity.signInType = userConfiguration.getSignInType();
         identity.issuer = userConfiguration.getIdentityIssuer();
-        identity.issuerAssignedId = subscriber.getEmail();
+        identity.issuerAssignedId = azureAccount.getEmail();
 
         List<ObjectIdentity> identitiesList = new ArrayList<>();
         identitiesList.add(identity);
@@ -69,10 +72,8 @@ public class AzureUserService {
         PasswordProfile passwordProfile = new PasswordProfile();
 
         passwordProfile.password = RandomStringUtils.randomAscii(20);
-        passwordProfile.forceChangePasswordNextSignIn = false;
+        passwordProfile.forceChangePasswordNextSignIn = true;
         user.passwordProfile = passwordProfile;
-        user.passwordPolicies = userConfiguration.getPasswordPolicy();
-
         user.identities = identitiesList;
 
         return user;

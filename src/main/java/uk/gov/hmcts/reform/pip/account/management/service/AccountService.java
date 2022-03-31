@@ -8,13 +8,13 @@ import uk.gov.hmcts.reform.pip.account.management.database.UserRepository;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.AzureCustomException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.ForbiddenPermissionsException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.UserNotFoundException;
+import uk.gov.hmcts.reform.pip.account.management.model.AzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.ListType;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
-import uk.gov.hmcts.reform.pip.account.management.model.Subscriber;
 import uk.gov.hmcts.reform.pip.account.management.model.UserProvenances;
+import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredAzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredPiUser;
-import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredSubscriber;
 import uk.gov.hmcts.reform.pip.model.enums.UserActions;
 
 import java.util.ArrayList;
@@ -52,43 +52,50 @@ public class AccountService {
     UserRepository userRepository;
 
     /**
-     * Method to create new subscribers.
-     * @return Returns a map which contains two lists, Errored and Created Subscribers. Created will have object ID set.
+     * Method to create new accounts in azure.
+     *
+     * @param azureAccounts The accounts to be created.
+     * @param issuerEmail The email of the user who created the accounts.
+     *
+     * @return Returns a map which contains two lists, Errored and Created accounts. Created will have object ID set.
      **/
-    public Map<CreationEnum, List<? extends Subscriber>> createSubscribers(List<Subscriber> subscribers) {
+    public Map<CreationEnum, List<? extends AzureAccount>> addAzureAccounts(
+        List<AzureAccount> azureAccounts, String issuerEmail) {
 
-        Map<CreationEnum, List<? extends Subscriber>> processedAccounts = new ConcurrentHashMap<>();
+        Map<CreationEnum, List<? extends AzureAccount>> processedAccounts = new ConcurrentHashMap<>();
 
-        List<Subscriber> createdAccounts = new ArrayList<>();
-        List<ErroredSubscriber> erroredAccounts = new ArrayList<>();
+        List<AzureAccount> createdAzureAccounts = new ArrayList<>();
+        List<ErroredAzureAccount> erroredAccounts = new ArrayList<>();
 
-        for (Subscriber subscriber : subscribers) {
+        for (AzureAccount azureAccount : azureAccounts) {
 
-            Set<ConstraintViolation<Subscriber>> constraintViolationSet = validator.validate(subscriber);
+            Set<ConstraintViolation<AzureAccount>> constraintViolationSet = validator.validate(azureAccount);
             if (!constraintViolationSet.isEmpty()) {
 
-                ErroredSubscriber erroredSubscriber = new ErroredSubscriber(subscriber);
+                ErroredAzureAccount erroredSubscriber = new ErroredAzureAccount(azureAccount);
                 erroredSubscriber.setErrorMessages(constraintViolationSet
-                                                       .stream().map(ConstraintViolation::getMessage)
+                             .stream().map(constraint -> constraint.getPropertyPath() + ": " + constraint.getMessage())
                                                        .collect(Collectors.toList()));
                 erroredAccounts.add(erroredSubscriber);
                 continue;
             }
 
             try {
-                User user = azureUserService.createUser(subscriber);
-                subscriber.setAzureSubscriberId(user.id);
+                User user = azureUserService.createUser(azureAccount);
+                azureAccount.setAzureAccountId(user.id);
+                createdAzureAccounts.add(azureAccount);
 
-                createdAccounts.add(subscriber);
+                log.info(writeLog(issuerEmail, UserActions.CREATE_ACCOUNT, azureAccount.getEmail()));
             } catch (AzureCustomException azureCustomException) {
-                ErroredSubscriber erroredSubscriber = new ErroredSubscriber(subscriber);
+                log.error(writeLog(issuerEmail, UserActions.CREATE_ACCOUNT, azureAccount.getEmail()));
+                ErroredAzureAccount erroredSubscriber = new ErroredAzureAccount(azureAccount);
                 erroredSubscriber.setErrorMessages(List.of(azureCustomException.getMessage()));
                 erroredAccounts.add(erroredSubscriber);
             }
 
         }
 
-        processedAccounts.put(CreationEnum.CREATED_ACCOUNTS, createdAccounts);
+        processedAccounts.put(CreationEnum.CREATED_ACCOUNTS, createdAzureAccounts);
         processedAccounts.put(CreationEnum.ERRORED_ACCOUNTS, erroredAccounts);
 
         return processedAccounts;

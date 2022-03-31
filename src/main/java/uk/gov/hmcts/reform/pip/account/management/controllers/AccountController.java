@@ -15,10 +15,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import uk.gov.hmcts.reform.pip.account.management.model.AzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.ListType;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
-import uk.gov.hmcts.reform.pip.account.management.model.Subscriber;
 import uk.gov.hmcts.reform.pip.account.management.model.UserProvenances;
 import uk.gov.hmcts.reform.pip.account.management.service.AccountService;
 import uk.gov.hmcts.reform.pip.account.management.validation.annotations.ValidEmail;
@@ -37,18 +37,18 @@ public class AccountController {
     private AccountService accountService;
 
     /**
-     * POST endpoint to create a new subscriber account.
+     * POST endpoint to create a new azure account.
      * This will also trigger any welcome emails.
      *
-     * @param subscribers The subscribers to add.
-     * @return The ID for the subscriber.
+     * @param issuerEmail The user creating the accounts.
+     * @param azureAccounts The accounts to add.
+     * @return A list containing details of any created and errored azureAccounts.
      */
-    @PostMapping("/add")
-    public ResponseEntity<Map<CreationEnum, List<? extends Subscriber>>> createSubscriber(
-        @RequestBody List<Subscriber> subscribers) {
-        Map<CreationEnum, List<? extends Subscriber>> processedSubscribers =
-            accountService.createSubscribers(subscribers);
-        return ResponseEntity.ok(processedSubscribers);
+    @PostMapping("/add/azure")
+    public ResponseEntity<Map<CreationEnum, List<? extends AzureAccount>>> createAzureAccount(
+        @RequestHeader("x-issuer-email") @ValidEmail String issuerEmail,
+        @RequestBody List<AzureAccount> azureAccounts) {
+        return ResponseEntity.ok(accountService.addAzureAccounts(azureAccounts, issuerEmail));
     }
 
     /**
