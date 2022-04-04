@@ -25,4 +25,3 @@ java:
           alias: DB_USER
         - name: account-management-POSTGRES-HOST
           alias: DB_HOST
-  environment:
