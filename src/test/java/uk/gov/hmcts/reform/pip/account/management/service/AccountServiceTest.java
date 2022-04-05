@@ -106,7 +106,6 @@ class AccountServiceTest {
 
         lenient().when(userRepository.findByUserId(VALID_USER_ID)).thenReturn(Optional.of(piUser));
         lenient().when(userRepository.findByUserId(VALID_USER_ID_IDAM)).thenReturn(Optional.of(piUserIdam));
-
         lenient().when(constraintViolation.getMessage()).thenReturn(VALIDATION_MESSAGE);
         lenient().when(constraintViolation.getPropertyPath()).thenReturn(path);
         lenient().when(path.toString()).thenReturn(EMAIL_PATH);

@@ -209,7 +209,7 @@ Account management exposes various endpoints that aid in managing accounts withi
 
 - POST `/account/add/azure` - used to add an account into the azure AAD. Takes in users name, email and role, and attempts to
 persist this into azure.  Takes in a header of the email of the admin issuing the request and a body of a list
-of users to add to Azure following the [Account model](#Account) without the `azureAccountId` as this
+of users to add to Azure following the [Account model](#Account) without the azureAccountId as this
 is created by azure.
 
 - POST `/account/add/pi` - used to add a user to the P&I user database. Takes in a header of the email of the admin issuing
@@ -226,18 +226,6 @@ the request and a body of a list of users to add to the database following the [
 
 ## Models
 
-```json
-{
-  "azureAccountId": "111111-aaaa-1111-ssss-11111111",
-  "email": "a@b.com",
-  "firstName": "Firstname",
-  "surname": "Surname",
-  "role": "INTERNAL_ADMIN_LOCAL"
-}
-```
-
-## Models
-
 ### PiUser
 
 ```json
@@ -247,6 +235,17 @@ the request and a body of a list of users to add to the database following the [
   "provenanceUserId": "222222-vvvv-11111-ssss-11111111",
   "email": "example@email.com",
   "roles": "INTERNAL_ADMIN_LOCAL"
+}
+```
+### Account
+
+```json
+{
+  "azureAccountId": "111111-aaaa-1111-ssss-11111111",
+  "email": "a@b.com",
+  "firstName": "Firstname",
+  "surname": "Surname",
+  "role": "INTERNAL_ADMIN_LOCAL"
 }
 ```
 

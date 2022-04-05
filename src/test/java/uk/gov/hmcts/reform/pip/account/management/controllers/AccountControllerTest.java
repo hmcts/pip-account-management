@@ -44,7 +44,8 @@ class AccountControllerTest {
         accountsMap.put(CreationEnum.CREATED_ACCOUNTS, List.of(new AzureAccount()));
 
         AzureAccount azureAccount = new AzureAccount();
-        azureAccount.setEmail("a@b.com");
+        azureAccount.setEmail(EMAIL);
+
         List<AzureAccount> azureAccounts = List.of(azureAccount);
 
         when(accountService.addAzureAccounts(argThat(arg -> arg.equals(azureAccounts)),
@@ -54,7 +55,7 @@ class AccountControllerTest {
             accountController.createAzureAccount("b@c.com", azureAccounts);
 
         assertEquals(HttpStatus.OK, response.getStatusCode(), STATUS_CODE_MATCH);
-        assertEquals(accountsMap, response.getBody(), "Should return the expected subscribers map");
+        assertEquals(accountsMap, response.getBody(), "Should return the expected azureAccounts map");
     }
 
     @Test

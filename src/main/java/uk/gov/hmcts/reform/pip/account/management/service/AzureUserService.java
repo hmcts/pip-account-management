@@ -8,8 +8,6 @@ import com.microsoft.graph.models.PasswordProfile;
 import com.microsoft.graph.models.User;
 import com.microsoft.graph.requests.GraphServiceClient;
 import okhttp3.Request;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import uk.gov.hmcts.reform.pip.account.management.config.ClientConfiguration;
@@ -25,8 +23,6 @@ import java.util.List;
  */
 @Component
 public class AzureUserService {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(AzureUserService.class);
 
     @Autowired
     private GraphServiceClient<Request> graphClient;
@@ -50,7 +46,6 @@ public class AzureUserService {
                 .buildRequest()
                 .post(user);
         } catch (GraphServiceException e) {
-            LOGGER.error(e.getMessage());
             throw new AzureCustomException("Error when persisting account into Azure. "
                                                + "Check that the user doesn't already exist in the directory");
         }
@@ -59,7 +54,7 @@ public class AzureUserService {
     private User createUserObject(AzureAccount azureAccount) {
         User user = new User();
         user.accountEnabled = true;
-        user.displayName = azureAccount.getEmail();
+        user.displayName = azureAccount.getFirstName() + " " + azureAccount.getSurname();
         user.givenName = azureAccount.getFirstName();
         user.surname = azureAccount.getSurname();
         user.additionalDataManager().put(

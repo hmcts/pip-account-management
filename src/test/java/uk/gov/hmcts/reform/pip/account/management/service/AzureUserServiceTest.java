@@ -59,10 +59,17 @@ class AzureUserServiceTest {
 
     private static final String ID = "1234";
     private static final String EMAIL = "a@b.com";
+    private static final String FIRST_NAME = "First Name";
+    private static final String SURNAME = "Surname";
     private static final String EXTENSION_ID = "1234-1234";
+
+    AzureAccount azureAccount;
 
     @BeforeEach
     public void setup() {
+        azureAccount = new AzureAccount();
+        azureAccount.setRole(Roles.INTERNAL_ADMIN_CTSC);
+
         when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
         when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
         when(clientConfiguration.getExtensionId()).thenReturn(EXTENSION_ID);
@@ -75,8 +82,6 @@ class AzureUserServiceTest {
 
         when(userCollectionRequest.post(any())).thenReturn(user);
 
-        AzureAccount azureAccount = new AzureAccount();
-        azureAccount.setRole(Roles.INTERNAL_ADMIN_CTSC);
         User returnedUser = azureUserService.createUser(azureAccount);
 
         assertEquals(ID, returnedUser.id, "The ID is equal to the expected user ID");
@@ -88,9 +93,6 @@ class AzureUserServiceTest {
         user.id = ID;
 
         when(userCollectionRequest.post(any())).thenThrow(graphServiceException);
-
-        AzureAccount azureAccount = new AzureAccount();
-        azureAccount.setRole(Roles.INTERNAL_ADMIN_CTSC);
 
         AzureCustomException azureCustomException = assertThrows(AzureCustomException.class, () -> {
             azureUserService.createUser(azureAccount);
@@ -109,11 +111,9 @@ class AzureUserServiceTest {
 
         when(userCollectionRequest.post(any())).thenReturn(userToReturn);
 
-        AzureAccount azureAccount = new AzureAccount();
         azureAccount.setEmail(EMAIL);
-        azureAccount.setFirstName("First Name");
-        azureAccount.setSurname("Surname");
-        azureAccount.setRole(Roles.INTERNAL_ADMIN_CTSC);
+        azureAccount.setFirstName(FIRST_NAME);
+        azureAccount.setSurname(SURNAME);
         azureUserService.createUser(azureAccount);
 
         ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
@@ -122,9 +122,10 @@ class AzureUserServiceTest {
         User user = captor.getValue();
 
         assertTrue(user.accountEnabled, "AzureAccount is marked as enabled");
-        assertEquals(EMAIL, user.displayName, "Display name is set as the email");
-        assertEquals("First Name", user.givenName, "Given name is set as the firstname");
-        assertEquals("Surname", user.surname, "Lastname is set as the surname");
+        assertEquals(FIRST_NAME + " " + SURNAME, user.displayName,
+                     "Display name is set as the first name + surname");
+        assertEquals(FIRST_NAME, user.givenName, "Given name is set as the firstname");
+        assertEquals(SURNAME, user.surname, "Lastname is set as the surname");
         assertEquals(Roles.INTERNAL_ADMIN_CTSC.name(),
                      user.additionalDataManager().get("extension_"
                                                       + EXTENSION_ID.replace("-", "")
@@ -142,9 +143,7 @@ class AzureUserServiceTest {
         when(userConfiguration.getSignInType()).thenReturn("SignInType");
         when(userConfiguration.getIdentityIssuer()).thenReturn("IdentityIssuer");
 
-        AzureAccount azureAccount = new AzureAccount();
         azureAccount.setEmail(EMAIL);
-        azureAccount.setRole(Roles.INTERNAL_ADMIN_CTSC);
         azureUserService.createUser(azureAccount);
 
         ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
@@ -169,9 +168,7 @@ class AzureUserServiceTest {
 
         when(userCollectionRequest.post(any())).thenReturn(userToReturn);
 
-        AzureAccount azureAccount = new AzureAccount();
         azureAccount.setEmail(EMAIL);
-        azureAccount.setRole(Roles.INTERNAL_ADMIN_CTSC);
         azureUserService.createUser(azureAccount);
 
         ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
