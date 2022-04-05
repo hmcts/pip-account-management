@@ -12,7 +12,6 @@ import uk.gov.hmcts.reform.pip.account.management.model.AzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.ListType;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
-import uk.gov.hmcts.reform.pip.account.management.model.Roles;
 import uk.gov.hmcts.reform.pip.account.management.model.UserProvenances;
 import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredAzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredPiUser;
@@ -88,14 +87,9 @@ public class AccountService {
                 User user = azureUserService.createUser(azureAccount);
                 azureAccount.setAzureAccountId(user.id);
                 createdAzureAccounts.add(azureAccount);
-                log.info(publicationService.sendNotificationEmail(azureAccount.getEmail(),
-                                                                  azureAccount.getFirstName(),
-                                                                  azureAccount.getSurname()));
 
-                //todo add appropriate email logic for new media users ala admin approach below:
-                if (azureAccount.getRole() != Roles.VERIFIED) {
-                    log.info(writeLog(issuerEmail, UserActions.CREATE_ACCOUNT, azureAccount.getEmail()));
-                }
+                log.info(writeLog(issuerEmail, UserActions.CREATE_ACCOUNT, azureAccount.getEmail()));
+                handleAccountCreationEmail(azureAccount);
 
             } catch (AzureCustomException azureCustomException) {
                 ErroredAzureAccount erroredSubscriber = new ErroredAzureAccount(azureAccount);
@@ -207,6 +201,22 @@ public class AccountService {
             return returnedUser.get(0);
         }
         throw new UserNotFoundException("provenanceUserId", provenanceUserId);
+    }
+
+    private void handleAccountCreationEmail(AzureAccount createdAccount) {
+        switch (createdAccount.getRole()) {
+            case INTERNAL_ADMIN_CTSC:
+            case INTERNAL_ADMIN_LOCAL:
+            case INTERNAL_SUPER_ADMIN_CTSC:
+            case INTERNAL_SUPER_ADMIN_LOCAL:
+                log.info(publicationService.sendNotificationEmail(createdAccount.getEmail(),
+                                                                  createdAccount.getFirstName(),
+                                                                  createdAccount.getSurname()));
+                break;
+
+            default:
+                break;
+        }
     }
 
 }

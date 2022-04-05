@@ -28,14 +28,14 @@ public class PublicationService {
     /**
      * Method which sends a request to the publication-services microservice which will send an email to the user
      * upon creation of a new admin account.
-     * @param emailData - email address
+     * @param emailAddress - email address
      * @param forename - forename
      * @param surname - surname
      * @return string for logging success or failure
      */
-    public String sendNotificationEmail(String emailData, String forename, String surname) {
+    public String sendNotificationEmail(String emailAddress, String forename, String surname) {
         JSONObject jsonObject = new JSONObject();
-        jsonObject.put("email", emailData);
+        jsonObject.put("email", emailAddress);
         jsonObject.put("forename", forename);
         jsonObject.put("surname", surname);
         WebClient webClient = WebClient.create();
@@ -46,7 +46,7 @@ public class PublicationService {
 
         } catch (WebClientException | URISyntaxException ex) {
             log.error(String.format("Request failed with error message: %s", ex.getMessage()));
-            return "Email request failed to send: " + emailData;
+            return "Email request failed to send: " + emailAddress;
         }
     }
 }

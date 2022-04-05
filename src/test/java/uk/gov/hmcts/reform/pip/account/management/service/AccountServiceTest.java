@@ -1,6 +1,7 @@
 package uk.gov.hmcts.reform.pip.account.management.service;
 
 import com.microsoft.graph.models.User;
+import nl.altindag.log.LogCaptor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -95,24 +96,21 @@ class AccountServiceTest {
         piUserIdam.setUserProvenance(UserProvenances.CFT_IDAM);
         piUserIdam.setProvenanceUserId(ID);
 
-        lenient().when(userRepository.findByUserId(VALID_USER_ID)).thenReturn(Optional.of(piUser));
-        lenient().when(userRepository.findByUserId(VALID_USER_ID_IDAM)).thenReturn(Optional.of(piUserIdam));
-    }
-
-    @BeforeEach
-    void beforeEach() {
         azureAccount = new AzureAccount();
         azureAccount.setEmail(EMAIL);
+        azureAccount.setRole(Roles.INTERNAL_ADMIN_CTSC);
 
         expectedUser = new User();
-        expectedUser.givenName = "Test";
+        expectedUser.givenName = TEST;
         expectedUser.id = ID;
+
+        lenient().when(userRepository.findByUserId(VALID_USER_ID)).thenReturn(Optional.of(piUser));
+        lenient().when(userRepository.findByUserId(VALID_USER_ID_IDAM)).thenReturn(Optional.of(piUserIdam));
 
         lenient().when(constraintViolation.getMessage()).thenReturn(VALIDATION_MESSAGE);
         lenient().when(constraintViolation.getPropertyPath()).thenReturn(path);
         lenient().when(path.toString()).thenReturn(EMAIL_PATH);
     }
-
 
     @Test
     void testAccountCreated() throws AzureCustomException {
@@ -122,7 +120,7 @@ class AccountServiceTest {
         when(azureUserService.createUser(argThat(user -> user.getEmail().equals(azureAccount.getEmail()))))
             .thenReturn(expectedUser);
 
-        when(publicationService.sendNotificationEmail(any(), any(), any())).thenReturn("test");
+        when(publicationService.sendNotificationEmail(any(), any(), any())).thenReturn(TEST);
 
         Map<CreationEnum, List<? extends AzureAccount>> createdAccounts =
             accountService.addAzureAccounts(List.of(azureAccount), ISSUER_EMAIL);
@@ -326,5 +324,31 @@ class AccountServiceTest {
                      ), ex.getMessage(),
                      MESSAGES_MATCH
         );
+    }
+
+    @Test
+    void testAzureAdminAccountCreatedTriggersEmail() throws AzureCustomException {
+        when(validator.validate(argThat(sub -> ((AzureAccount) sub).getEmail().equals(azureAccount.getEmail()))))
+            .thenReturn(Set.of());
+        when(azureUserService.createUser(azureAccount)).thenReturn(expectedUser);
+        when(publicationService.sendNotificationEmail(any(), any(), any())).thenReturn(TEST);
+
+        try (LogCaptor logCaptor = LogCaptor.forClass(AccountService.class)) {
+            accountService.addAzureAccounts(List.of(azureAccount), ISSUER_EMAIL);
+            assertEquals(TEST, logCaptor.getInfoLogs().get(1), "Should trigger admin email");
+        }
+    }
+
+    @Test
+    void testAzureAdminAccountFailedDoesntTriggerEmail() throws AzureCustomException {
+        when(validator.validate(argThat(sub -> ((AzureAccount) sub).getEmail().equals(azureAccount.getEmail()))))
+            .thenReturn(Set.of());
+        when(azureUserService.createUser(azureAccount)).thenThrow(new AzureCustomException(TEST));
+
+        try (LogCaptor logCaptor = LogCaptor.forClass(AccountService.class)) {
+            accountService.addAzureAccounts(List.of(azureAccount), ISSUER_EMAIL);
+            assertEquals(0, logCaptor.getInfoLogs().size(),
+                         "Should not log if failed creating account");
+        }
     }
 }

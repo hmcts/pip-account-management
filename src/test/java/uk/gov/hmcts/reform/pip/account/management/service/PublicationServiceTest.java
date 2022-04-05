@@ -47,12 +47,11 @@ class PublicationServiceTest {
     @Test
     void testFailedEmailSend() {
         assertEquals("Email request failed to send: test@example.com",
-                     publicationService.sendNotificationEmail("test@example.com", "forename", "surname"), "trigger "
-                         + "sent "
-                         + "in error"
+                     publicationService.sendNotificationEmail("test@example.com", "forename", "surname"),
+                     "trigger sent in error"
         );
-        assertTrue(logCaptor.getErrorLogs().get(0).contains("Request failed with error message:"), "Error logs not "
-            + "being captured.");
+        assertTrue(logCaptor.getErrorLogs().get(0).contains("Request failed with error message:"),
+                   "Error logs not being captured.");
     }
 }
 
