@@ -17,7 +17,6 @@ static LinkedHashMap<String, Object> secret(String secretName, String envVar) {
 }
 
 
-def branchesToSync = ['demo', 'perftest', 'ithc']
 
 withPipeline(type, product, component) {
  
