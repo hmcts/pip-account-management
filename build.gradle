@@ -196,7 +196,7 @@ dependencies {
   testImplementation group: 'com.squareup.okhttp3', name: 'mockwebserver', version: '4.9.3'
 
   testImplementation group: 'io.github.hakky54', name: 'logcaptor', version: '2.7.8'
-  implementation group: 'io.zonky.test', name: 'embedded-database-spring-test', version: '2.1.1'
+  testImplementation group: 'io.zonky.test', name: 'embedded-database-spring-test', version: '2.1.1'
 
 
   integrationTestImplementation sourceSets.main.runtimeClasspath
