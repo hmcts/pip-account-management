@@ -3,6 +3,7 @@ package uk.gov.hmcts.reform.pip.account.management.service;
 
 import lombok.extern.slf4j.Slf4j;
 import net.minidev.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.BodyInserters;
@@ -25,6 +26,9 @@ public class PublicationService {
     @Value("${service-to-service.publication-services}")
     private String url;
 
+    @Autowired
+    WebClient webClient;
+
     /**
      * Method which sends a request to the publication-services microservice which will send an email to the user
      * upon creation of a new admin account.
@@ -38,7 +42,6 @@ public class PublicationService {
         jsonObject.put("email", emailAddress);
         jsonObject.put("forename", forename);
         jsonObject.put("surname", surname);
-        WebClient webClient = WebClient.create();
         try {
             return webClient.post().uri(new URI(url + "/notify/created/admin"))
                 .body(BodyInserters.fromValue(jsonObject)).retrieve()
