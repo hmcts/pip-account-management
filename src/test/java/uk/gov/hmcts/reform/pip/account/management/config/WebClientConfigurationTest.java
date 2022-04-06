@@ -12,12 +12,10 @@ class WebClientConfigurationTest {
     @Test
     void testWebClientIsInitialised() {
         WebClientConfig webClientConfig = new WebClientConfig();
-
         assertTrue(
             webClientConfig.toString().contains("uk.gov.hmcts.reform.pip.account.management.config"
                                                     + ".WebClientConfig"),
-            "hello"
+            "WebClient has not been initialised"
         );
-
     }
 }
