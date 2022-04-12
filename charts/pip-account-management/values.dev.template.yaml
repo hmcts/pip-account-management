@@ -10,6 +10,5 @@ java:
     DB_PORT: "5432"
   disableKeyVaults: true
   postgresql:
-
     enabled: true
     
