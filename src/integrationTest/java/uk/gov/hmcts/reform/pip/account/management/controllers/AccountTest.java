@@ -17,7 +17,9 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -43,6 +45,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(classes = {AzureConfigurationClientTest.class, Application.class},
@@ -50,7 +53,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles(profiles = "test")
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
-@SuppressWarnings({"PMD.TooManyMethods"})
+@WithMockUser(username = "admin", authorities = { "APPROLE_api.request.admin" })
+@SuppressWarnings({"PMD.TooManyMethods", "PMD.LawOfDemeter", "PMD.ExcessiveImports"})
 class AccountTest {
 
     @Autowired
@@ -101,6 +105,7 @@ class AccountTest {
     private static final String ERROR_RESPONSE_USER_PROVENANCE = "No user found with the provenanceUserId: 1234";
     private static final String ERROR_RESPONSE_FORBIDDEN =
         "User: %s does not have sufficient permission to view list type: %s";
+    private static final String FORBIDDEN_STATUS_CODE = "Status code does not match forbidden";
 
     private ObjectMapper objectMapper;
 
@@ -148,6 +153,7 @@ class AccountTest {
             .post(AZURE_URL)
             .content(objectMapper.writeValueAsString(List.of(azureAccount)))
             .header(ISSUER_HEADER, ISSUER_EMAIL)
+            .with(csrf())
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isOk()).andReturn();
@@ -185,6 +191,7 @@ class AccountTest {
             .post(AZURE_URL)
             .content(objectMapper.writeValueAsString(List.of(azureAccount)))
             .header(ISSUER_HEADER, ISSUER_EMAIL)
+            .with(csrf())
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder)
@@ -226,6 +233,7 @@ class AccountTest {
             .post(AZURE_URL)
             .content(objectMapper.writeValueAsString(List.of(azureAccount)))
             .header(ISSUER_HEADER, ISSUER_EMAIL)
+            .with(csrf())
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder)
@@ -266,6 +274,7 @@ class AccountTest {
             .post(AZURE_URL)
             .content(objectMapper.writeValueAsString(List.of(azureAccount)))
             .header(ISSUER_HEADER, ISSUER_EMAIL)
+            .with(csrf())
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder)
@@ -306,6 +315,7 @@ class AccountTest {
             .post(AZURE_URL)
             .content(objectMapper.writeValueAsString(List.of(azureAccount)))
             .header(ISSUER_HEADER, ISSUER_EMAIL)
+            .with(csrf())
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder)
@@ -347,6 +357,7 @@ class AccountTest {
             .post(AZURE_URL)
             .content(objectMapper.writeValueAsString(List.of(azureAccount)))
             .header(ISSUER_HEADER, ISSUER_EMAIL)
+            .with(csrf())
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder)
@@ -391,6 +402,7 @@ class AccountTest {
             .post(AZURE_URL)
             .content(objectMapper.writeValueAsString(List.of(azureAccount)))
             .header(ISSUER_HEADER, ISSUER_EMAIL)
+            .with(csrf())
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isOk()).andReturn();
@@ -422,6 +434,7 @@ class AccountTest {
             .post(AZURE_URL)
             .content(duplicateKeyString)
             .header(ISSUER_HEADER, ISSUER_EMAIL)
+            .with(csrf())
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder)
@@ -462,6 +475,7 @@ class AccountTest {
             .post(AZURE_URL)
             .content(objectMapper.writeValueAsString(List.of(validAzureAccount, invalidAzureAccount)))
             .header(ISSUER_HEADER, ISSUER_EMAIL)
+            .with(csrf())
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isOk()).andReturn();
@@ -502,6 +516,7 @@ class AccountTest {
             .post(PI_URL)
             .content(objectMapper.writeValueAsString(List.of(validUser)))
             .header(ISSUER_HEADER, ISSUER_EMAIL)
+            .with(csrf())
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isCreated()).andReturn();
@@ -521,6 +536,7 @@ class AccountTest {
             .post(PI_URL)
             .content(objectMapper.writeValueAsString(List.of(validUser1, validUser2)))
             .header(ISSUER_HEADER, ISSUER_EMAIL)
+            .with(csrf())
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isCreated()).andReturn();
@@ -539,6 +555,7 @@ class AccountTest {
             .post(PI_URL)
             .content(objectMapper.writeValueAsString(List.of(invalidUser)))
             .header(ISSUER_HEADER, ISSUER_EMAIL)
+            .with(csrf())
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isCreated()).andReturn();
@@ -558,6 +575,7 @@ class AccountTest {
             .post(PI_URL)
             .content(objectMapper.writeValueAsString(List.of(invalidUser1, invalidUser2)))
             .header(ISSUER_HEADER, ISSUER_EMAIL)
+            .with(csrf())
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isCreated()).andReturn();
@@ -576,6 +594,7 @@ class AccountTest {
             .post(PI_URL)
             .content(objectMapper.writeValueAsString(List.of(validUser, invalidUser)))
             .header(ISSUER_HEADER, ISSUER_EMAIL)
+            .with(csrf())
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isCreated()).andReturn();
@@ -593,6 +612,7 @@ class AccountTest {
             .post(PI_URL)
             .content(objectMapper.writeValueAsString(List.of(validUser)))
             .header(ISSUER_HEADER, ISSUER_EMAIL)
+            .with(csrf())
             .contentType(MediaType.APPLICATION_JSON);
 
         mockMvc.perform(setupRequest).andExpect(status().isCreated());
@@ -612,6 +632,7 @@ class AccountTest {
     void testGetUserByProvenanceIdReturnsNotFound() throws Exception {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .get(String.format("%s/%s/%s", GET_PROVENANCE_USER_URL, UserProvenances.CFT_IDAM, ID))
+            .with(csrf())
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response =
@@ -627,6 +648,7 @@ class AccountTest {
             .post(PI_URL)
             .content(objectMapper.writeValueAsString(List.of(validUser)))
             .header(ISSUER_HEADER, ISSUER_EMAIL)
+            .with(csrf())
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult userResponse = mockMvc.perform(setupRequest).andExpect(status().isCreated()).andReturn();
@@ -651,6 +673,7 @@ class AccountTest {
             .post(PI_URL)
             .content(objectMapper.writeValueAsString(List.of(validUser)))
             .header(ISSUER_HEADER, ISSUER_EMAIL)
+            .with(csrf())
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult userResponse = mockMvc.perform(setupRequest).andExpect(status().isCreated()).andReturn();
@@ -667,6 +690,67 @@ class AccountTest {
         assertTrue(response.getResponse().getContentAsString()
                        .contains(String.format(ERROR_RESPONSE_FORBIDDEN, createdUserId, ListType.SJP_PRESS_LIST)),
                    "Should return forbidden message");
+    }
+
+    @Test
+    @WithMockUser(username = "unauthorized_account", authorities = { "APPROLE_unknown.account" })
+    void testUnauthorizedCreateAccount() throws Exception {
+        MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
+            .post(AZURE_URL)
+            .content("[]")
+            .header(ISSUER_HEADER, ISSUER_EMAIL)
+            .with(csrf())
+            .contentType(MediaType.APPLICATION_JSON);
+
+        MvcResult mvcResult =
+            mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isForbidden()).andReturn();
+
+        assertEquals(HttpStatus.FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
+                     FORBIDDEN_STATUS_CODE);
+    }
+
+    @Test
+    @WithMockUser(username = "unauthroized_user", authorities = { "APPROLE_unknown.user" })
+    void testUnauthorizedCreateUser() throws Exception {
+        MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
+            .post(PI_URL)
+            .content("[]")
+            .header(ISSUER_HEADER, ISSUER_EMAIL)
+            .with(csrf())
+            .contentType(MediaType.APPLICATION_JSON);
+
+        MvcResult mvcResult =
+            mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isForbidden()).andReturn();
+
+        assertEquals(HttpStatus.FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
+                     FORBIDDEN_STATUS_CODE);
+    }
+
+    @Test
+    @WithMockUser(username = "unauthorized_provenance", authorities = { "APPROLE_unknown.provenance" })
+    void testUnauthorizedGetUserByProvenance() throws Exception {
+        MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
+            .get(String.format("%s/%s/%s", GET_PROVENANCE_USER_URL, UserProvenances.CFT_IDAM, ID))
+            .with(csrf())
+            .contentType(MediaType.APPLICATION_JSON);
+
+        MvcResult mvcResult =
+            mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isForbidden()).andReturn();
+
+        assertEquals(HttpStatus.FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
+                     FORBIDDEN_STATUS_CODE);
+    }
+
+    @Test
+    @WithMockUser(username = "unauthorized_isAuthorized", authorities = { "APPROLE_unknown.authorized" })
+    void testUnauthorizedGetUserIsAuthorized() throws Exception {
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+            .get(String.format("%s/isAuthorised/%s/%s", ROOT_URL, UUID.randomUUID(), ListType.SJP_PRESS_LIST));
+
+        MvcResult mvcResult = mockMvc.perform(request).andExpect(status().isForbidden()).andReturn();
+
+        assertEquals(HttpStatus.FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
+                     FORBIDDEN_STATUS_CODE);
     }
 
 }
