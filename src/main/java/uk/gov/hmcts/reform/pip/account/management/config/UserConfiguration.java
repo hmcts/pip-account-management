@@ -16,8 +16,6 @@ public class UserConfiguration {
 
     private String identityIssuer;
 
-    private String passwordPolicy;
-
     private String signInType;
 
 }

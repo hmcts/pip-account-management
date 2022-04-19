@@ -19,4 +19,6 @@ module "database" {
 
   key_vault_rg   = "genesis-rg"
   key_vault_name = "dtssharedservices${var.env}kv"
-} 
+
+}
+

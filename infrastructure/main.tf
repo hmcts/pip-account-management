@@ -17,4 +17,5 @@ data "azurerm_subnet" "iaas" {
 data "azurerm_key_vault" "kv" {
   name                = local.key_vault_name
   resource_group_name = local.resource_group_name
-} 
+}
+

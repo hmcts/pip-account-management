@@ -15,15 +15,17 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import uk.gov.hmcts.reform.pip.account.management.model.AzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
+import uk.gov.hmcts.reform.pip.account.management.model.ListType;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
-import uk.gov.hmcts.reform.pip.account.management.model.Subscriber;
 import uk.gov.hmcts.reform.pip.account.management.model.UserProvenances;
 import uk.gov.hmcts.reform.pip.account.management.service.AccountService;
 import uk.gov.hmcts.reform.pip.account.management.validation.annotations.ValidEmail;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @Api(tags = "Account Management - API for managing accounts")
@@ -35,18 +37,18 @@ public class AccountController {
     private AccountService accountService;
 
     /**
-     * POST endpoint to create a new subscriber account.
+     * POST endpoint to create a new azure account.
      * This will also trigger any welcome emails.
      *
-     * @param subscribers The subscribers to add.
-     * @return The ID for the subscriber.
+     * @param issuerEmail The user creating the accounts.
+     * @param azureAccounts The accounts to add.
+     * @return A list containing details of any created and errored azureAccounts.
      */
-    @PostMapping("/add")
-    public ResponseEntity<Map<CreationEnum, List<? extends Subscriber>>> createSubscriber(
-        @RequestBody List<Subscriber> subscribers) {
-        Map<CreationEnum, List<? extends Subscriber>> processedSubscribers =
-            accountService.createSubscribers(subscribers);
-        return ResponseEntity.ok(processedSubscribers);
+    @PostMapping("/add/azure")
+    public ResponseEntity<Map<CreationEnum, List<? extends AzureAccount>>> createAzureAccount(
+        @RequestHeader("x-issuer-email") @ValidEmail String issuerEmail,
+        @RequestBody List<AzureAccount> azureAccounts) {
+        return ResponseEntity.ok(accountService.addAzureAccounts(azureAccounts, issuerEmail));
     }
 
     /**
@@ -79,4 +81,15 @@ public class AccountController {
         return ResponseEntity.ok(accountService.findUserByProvenanceId(userProvenance, provenanceUserId));
     }
 
+    @ApiResponses({
+        @ApiResponse(code = 200, message = "User has access to provided publication"),
+        @ApiResponse(code = 403,
+            message = "User: {userId} does not have sufficient permission to view list type: {listType}"),
+        @ApiResponse(code = 404, message = "No user found with the userId: {userId}"),
+    })
+    @ApiOperation("Check if a user can see a classified publication through list type and their provenance")
+    @GetMapping("/isAuthorised/{userId}/{listType}")
+    public ResponseEntity<Boolean> checkUserAuthorised(@PathVariable UUID userId, @PathVariable ListType listType) {
+        return ResponseEntity.ok(accountService.isUserAuthorisedForPublication(userId, listType));
+    }
 }

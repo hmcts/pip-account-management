@@ -26,12 +26,13 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import uk.gov.hmcts.reform.pip.account.management.Application;
 import uk.gov.hmcts.reform.pip.account.management.config.AzureConfigurationClientTest;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.ExceptionResponse;
+import uk.gov.hmcts.reform.pip.account.management.model.AzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
+import uk.gov.hmcts.reform.pip.account.management.model.ListType;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
 import uk.gov.hmcts.reform.pip.account.management.model.Roles;
-import uk.gov.hmcts.reform.pip.account.management.model.Subscriber;
 import uk.gov.hmcts.reform.pip.account.management.model.UserProvenances;
-import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredSubscriber;
+import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredAzureAccount;
 
 import java.util.List;
 import java.util.UUID;
@@ -67,14 +68,14 @@ class AccountTest {
     @Autowired
     GraphServiceException graphServiceException;
 
-    private static final String AZURE_URL = "/account/add";
-    private static final String PI_URL = "/account/add/pi";
-    private static final String GET_PROVENANCE_USER_URL = "/account/provenance/";
+    private static final String ROOT_URL = "/account";
+    private static final String AZURE_URL = ROOT_URL + "/add/azure";
+    private static final String PI_URL = ROOT_URL + "/add/pi";
+    private static final String GET_PROVENANCE_USER_URL = ROOT_URL + "/provenance/";
     private static final String EMAIL = "a@b";
     private static final String INVALID_EMAIL = "ab";
     private static final String FIRST_NAME = "First name";
     private static final String SURNAME = "Surname";
-    private static final String TITLE = "Title";
     private static final UserProvenances PROVENANCE = UserProvenances.PI_AAD;
     private static final Roles ROLE = Roles.INTERNAL_ADMIN_CTSC;
     private static final String ISSUER_EMAIL = "issuer@email.com";
@@ -82,21 +83,28 @@ class AccountTest {
 
     private static final String ID = "1234";
 
-    private static final String EMAIL_VALIDATION_MESSAGE = "Invalid email provided. Email must contain an @ symbol";
-    private static final String INVALID_NAME_MESSAGE = "Invalid name provided. You must either provide no name, "
-        + "or any of the following variations "
-        + "1) Title, Firstname and Surname 2) Firstname 3) Title and Surname";
-    private static final String DIRECTORY_ERROR = "Error when persisting subscriber into Azure. "
+    private static final String EMAIL_VALIDATION_MESSAGE = "email: Invalid email provided. "
+        + "Email must contain an @ symbol";
+    private static final String INVALID_FIRST_NAME_MESSAGE = "firstName: must not be empty";
+    private static final String INVALID_SURNAME_MESSAGE = "surname: must not be empty";
+    private static final String INVALID_ROLE_MESSAGE = "role: must not be null";
+    private static final String DIRECTORY_ERROR = "Error when persisting account into Azure. "
         + "Check that the user doesn't already exist in the directory";
 
-    private static final String TEST_MESSAGE_ID = "Subscriber ID added to subscriber";
-    private static final String TEST_MESSAGE_EMAIL = "Email matches sent subscriber";
-    private static final String TEST_MESSAGE_FIRST_NAME = "Firstname matches sent subscriber";
-    private static final String TEST_MESSAGE_SURNAME = "Surname matches sent subscriber";
-    private static final String TEST_MESSAGE_TITLE = "Title matches sents subscriber";
+    private static final String TEST_MESSAGE_ID = "AzureAccount ID added to account";
+    private static final String TEST_MESSAGE_EMAIL = "Email matches sent account";
+    private static final String TEST_MESSAGE_FIRST_NAME = "Firstname matches sent account";
+    private static final String TEST_MESSAGE_SURNAME = "Surname matches sent account";
+    private static final String TEST_MESSAGE_ROLE = "Role matches sent account";
+    private static final String ZERO_CREATED_ACCOUNTS = "0 created accounts should be returned";
+    private static final String SINGLE_ERRORED_ACCOUNT = "1 errored account should be returned";
     private static final String ERROR_RESPONSE_USER_PROVENANCE = "No user found with the provenanceUserId: 1234";
+    private static final String ERROR_RESPONSE_FORBIDDEN =
+        "User: %s does not have sufficient permission to view list type: %s";
 
     private ObjectMapper objectMapper;
+
+    private PiUser validUser;
 
     private PiUser createUser(boolean valid, String id) {
         PiUser user = new PiUser();
@@ -111,6 +119,7 @@ class AccountTest {
     @BeforeEach
     void setup() {
         objectMapper = new ObjectMapper();
+        validUser = createUser(true, UUID.randomUUID().toString());
     }
 
     @AfterEach
@@ -120,7 +129,7 @@ class AccountTest {
 
     @DisplayName("Should welcome upon root request with 200 response code")
     @Test
-    void creationOfValidSubscriber() throws Exception {
+    void creationOfValidAccount() throws Exception {
 
         User userToReturn = new User();
         userToReturn.id = ID;
@@ -129,193 +138,279 @@ class AccountTest {
         when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
         when(userCollectionRequest.post(any())).thenReturn(userToReturn);
 
-        Subscriber subscriber = new Subscriber();
-        subscriber.setEmail(EMAIL);
-        subscriber.setSurname(SURNAME);
-        subscriber.setFirstName(FIRST_NAME);
-        subscriber.setTitle(TITLE);
+        AzureAccount azureAccount = new AzureAccount();
+        azureAccount.setEmail(EMAIL);
+        azureAccount.setSurname(SURNAME);
+        azureAccount.setFirstName(FIRST_NAME);
+        azureAccount.setRole(Roles.INTERNAL_ADMIN_CTSC);
 
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(AZURE_URL)
-            .content(objectMapper.writeValueAsString(List.of(subscriber)))
+            .content(objectMapper.writeValueAsString(List.of(azureAccount)))
+            .header(ISSUER_HEADER, ISSUER_EMAIL)
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isOk()).andReturn();
 
 
-        ConcurrentHashMap<CreationEnum, List<Subscriber>> subscribers =
+        ConcurrentHashMap<CreationEnum, List<AzureAccount>> accounts =
             objectMapper.readValue(response.getResponse().getContentAsString(),
                                    new TypeReference<>() {});
 
-        assertEquals(0, subscribers.get(CreationEnum.ERRORED_ACCOUNTS).size(),
+        assertEquals(0, accounts.get(CreationEnum.ERRORED_ACCOUNTS).size(),
                      "No errored account should be returned");
-        assertEquals(1, subscribers.get(CreationEnum.CREATED_ACCOUNTS).size(),
+        assertEquals(1, accounts.get(CreationEnum.CREATED_ACCOUNTS).size(),
                      "1 Created account should be returned");
 
-        Subscriber returnedSubscriber = subscribers.get(CreationEnum.CREATED_ACCOUNTS).get(0);
+        AzureAccount returnedAzureAccount = accounts.get(CreationEnum.CREATED_ACCOUNTS).get(0);
 
-        assertEquals(ID, returnedSubscriber.getAzureSubscriberId(), TEST_MESSAGE_ID);
-        assertEquals(EMAIL, returnedSubscriber.getEmail(), TEST_MESSAGE_EMAIL);
-        assertEquals(FIRST_NAME, returnedSubscriber.getFirstName(), TEST_MESSAGE_FIRST_NAME);
-        assertEquals(SURNAME, returnedSubscriber.getSurname(), TEST_MESSAGE_SURNAME);
-        assertEquals(TITLE, returnedSubscriber.getTitle(), TEST_MESSAGE_TITLE);
+        assertEquals(ID, returnedAzureAccount.getAzureAccountId(), TEST_MESSAGE_ID);
+        assertEquals(EMAIL, returnedAzureAccount.getEmail(), TEST_MESSAGE_EMAIL);
+        assertEquals(FIRST_NAME, returnedAzureAccount.getFirstName(), TEST_MESSAGE_FIRST_NAME);
+        assertEquals(SURNAME, returnedAzureAccount.getSurname(), TEST_MESSAGE_SURNAME);
+        assertEquals(Roles.INTERNAL_ADMIN_CTSC, returnedAzureAccount.getRole(), TEST_MESSAGE_ROLE);
     }
 
     @Test
-    void testCreationOfInvalidEmailSubscriber() throws Exception {
-        Subscriber subscriber = new Subscriber();
-        subscriber.setEmail("ab");
-        subscriber.setSurname(SURNAME);
-        subscriber.setFirstName(FIRST_NAME);
-        subscriber.setTitle(TITLE);
+    void testCreationOfInvalidEmailAccount() throws Exception {
+        AzureAccount azureAccount = new AzureAccount();
+        azureAccount.setEmail("ab");
+        azureAccount.setSurname(SURNAME);
+        azureAccount.setFirstName(FIRST_NAME);
+        azureAccount.setRole(Roles.INTERNAL_ADMIN_CTSC);
 
         objectMapper.findAndRegisterModules();
 
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(AZURE_URL)
-            .content(objectMapper.writeValueAsString(List.of(subscriber)))
+            .content(objectMapper.writeValueAsString(List.of(azureAccount)))
+            .header(ISSUER_HEADER, ISSUER_EMAIL)
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder)
             .andExpect(status().isOk()).andReturn();
 
-        ConcurrentHashMap<CreationEnum, List<Object>> subscribers =
+        ConcurrentHashMap<CreationEnum, List<Object>> accounts =
             objectMapper.readValue(response.getResponse().getContentAsString(),
                                    new TypeReference<>() {});
 
-        assertEquals(1, subscribers.get(CreationEnum.ERRORED_ACCOUNTS).size(),
-                     "1 errored account should be returned");
-        assertEquals(0, subscribers.get(CreationEnum.CREATED_ACCOUNTS).size(),
-                     "0 created accounts should be returned");
+        assertEquals(1, accounts.get(CreationEnum.ERRORED_ACCOUNTS).size(),
+                     SINGLE_ERRORED_ACCOUNT);
+        assertEquals(0, accounts.get(CreationEnum.CREATED_ACCOUNTS).size(),
+                     ZERO_CREATED_ACCOUNTS);
 
-        List<Object> subscribersList = subscribers.get(CreationEnum.ERRORED_ACCOUNTS);
-        ErroredSubscriber erroredSubscriber = objectMapper.convertValue(subscribersList.get(0),
-                                                                     ErroredSubscriber.class);
+        List<Object> accountList = accounts.get(CreationEnum.ERRORED_ACCOUNTS);
+        ErroredAzureAccount erroredAccount = objectMapper.convertValue(accountList.get(0),
+                                                                          ErroredAzureAccount.class);
 
-        assertNull(erroredSubscriber.getAzureSubscriberId(), TEST_MESSAGE_ID);
-        assertEquals("ab", erroredSubscriber.getEmail(), TEST_MESSAGE_EMAIL);
-        assertEquals(FIRST_NAME, erroredSubscriber.getFirstName(), TEST_MESSAGE_FIRST_NAME);
-        assertEquals(SURNAME, erroredSubscriber.getSurname(), TEST_MESSAGE_SURNAME);
-        assertEquals(TITLE, erroredSubscriber.getTitle(), TEST_MESSAGE_TITLE);
-        assertEquals(EMAIL_VALIDATION_MESSAGE, erroredSubscriber.getErrorMessages().get(0),
+        assertNull(erroredAccount.getAzureAccountId(), TEST_MESSAGE_ID);
+        assertEquals("ab", erroredAccount.getEmail(), TEST_MESSAGE_EMAIL);
+        assertEquals(FIRST_NAME, erroredAccount.getFirstName(), TEST_MESSAGE_FIRST_NAME);
+        assertEquals(SURNAME, erroredAccount.getSurname(), TEST_MESSAGE_SURNAME);
+        assertEquals(Roles.INTERNAL_ADMIN_CTSC, erroredAccount.getRole(), TEST_MESSAGE_ROLE);
+        assertEquals(EMAIL_VALIDATION_MESSAGE, erroredAccount.getErrorMessages().get(0),
                    "Error message is displayed for an invalid email");
 
     }
 
     @Test
-    void testCreationOfNoEmailSubscriber() throws Exception {
-        Subscriber subscriber = new Subscriber();
-        subscriber.setSurname(SURNAME);
-        subscriber.setFirstName(FIRST_NAME);
-        subscriber.setTitle(TITLE);
+    void testCreationOfNoEmailAccount() throws Exception {
+        AzureAccount azureAccount = new AzureAccount();
+        azureAccount.setSurname(SURNAME);
+        azureAccount.setFirstName(FIRST_NAME);
+        azureAccount.setRole(Roles.INTERNAL_ADMIN_CTSC);
 
         objectMapper.findAndRegisterModules();
 
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(AZURE_URL)
-            .content(objectMapper.writeValueAsString(List.of(subscriber)))
+            .content(objectMapper.writeValueAsString(List.of(azureAccount)))
+            .header(ISSUER_HEADER, ISSUER_EMAIL)
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder)
             .andExpect(status().isOk()).andReturn();
 
-        ConcurrentHashMap<CreationEnum, List<Object>> subscribers =
+        ConcurrentHashMap<CreationEnum, List<Object>> accounts =
             objectMapper.readValue(response.getResponse().getContentAsString(),
                                    new TypeReference<>() {});
 
-        assertEquals(1, subscribers.get(CreationEnum.ERRORED_ACCOUNTS).size(),
-                     "1 errored account should be returned");
-        assertEquals(0, subscribers.get(CreationEnum.CREATED_ACCOUNTS).size(),
-                     "0 created accounts should be returned");
+        assertEquals(1, accounts.get(CreationEnum.ERRORED_ACCOUNTS).size(),
+                     SINGLE_ERRORED_ACCOUNT);
+        assertEquals(0, accounts.get(CreationEnum.CREATED_ACCOUNTS).size(),
+                     ZERO_CREATED_ACCOUNTS);
 
-        List<Object> subscribersList = subscribers.get(CreationEnum.ERRORED_ACCOUNTS);
-        ErroredSubscriber erroredSubscriber = objectMapper.convertValue(subscribersList.get(0),
-                                                                        ErroredSubscriber.class);
+        List<Object> accountList = accounts.get(CreationEnum.ERRORED_ACCOUNTS);
+        ErroredAzureAccount erroredAccount = objectMapper.convertValue(accountList.get(0),
+                                                                          ErroredAzureAccount.class);
 
-        assertNull(erroredSubscriber.getAzureSubscriberId(),  TEST_MESSAGE_ID);
-        assertNull(erroredSubscriber.getEmail(), "Email has not been sent");
-        assertEquals(FIRST_NAME, erroredSubscriber.getFirstName(), TEST_MESSAGE_FIRST_NAME);
-        assertEquals(SURNAME, erroredSubscriber.getSurname(), TEST_MESSAGE_SURNAME);
-        assertEquals(TITLE, erroredSubscriber.getTitle(), TEST_MESSAGE_TITLE);
-        assertEquals(EMAIL_VALIDATION_MESSAGE, erroredSubscriber.getErrorMessages().get(0),
+        assertNull(erroredAccount.getAzureAccountId(),  TEST_MESSAGE_ID);
+        assertNull(erroredAccount.getEmail(), "Email has not been sent");
+        assertEquals(FIRST_NAME, erroredAccount.getFirstName(), TEST_MESSAGE_FIRST_NAME);
+        assertEquals(SURNAME, erroredAccount.getSurname(), TEST_MESSAGE_SURNAME);
+        assertEquals(Roles.INTERNAL_ADMIN_CTSC, erroredAccount.getRole(), TEST_MESSAGE_ROLE);
+        assertEquals(EMAIL_VALIDATION_MESSAGE, erroredAccount.getErrorMessages().get(0),
                      "Error message is displayed for an invalid email");
     }
 
     @Test
-    void testCreationOfInvalidNameSubscriber() throws Exception {
-        Subscriber subscriber = new Subscriber();
-        subscriber.setEmail(EMAIL);
-        subscriber.setFirstName(FIRST_NAME);
-        subscriber.setTitle(TITLE);
+    void testCreationOfNoFirstnameAccount() throws Exception {
+        AzureAccount azureAccount = new AzureAccount();
+        azureAccount.setEmail(EMAIL);
+        azureAccount.setSurname(SURNAME);
+        azureAccount.setRole(Roles.INTERNAL_ADMIN_CTSC);
 
         objectMapper.findAndRegisterModules();
 
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(AZURE_URL)
-            .content(objectMapper.writeValueAsString(List.of(subscriber)))
+            .content(objectMapper.writeValueAsString(List.of(azureAccount)))
+            .header(ISSUER_HEADER, ISSUER_EMAIL)
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder)
             .andExpect(status().isOk()).andReturn();
 
-        ConcurrentHashMap<CreationEnum, List<Object>> subscribers =
+        ConcurrentHashMap<CreationEnum, List<Object>> accounts =
             objectMapper.readValue(response.getResponse().getContentAsString(),
                                    new TypeReference<>() {});
 
-        assertEquals(1, subscribers.get(CreationEnum.ERRORED_ACCOUNTS).size(),
-                     "1 errored account should be returned");
-        assertEquals(0, subscribers.get(CreationEnum.CREATED_ACCOUNTS).size(),
-                     "0 created accounts should be returned");
+        assertEquals(1, accounts.get(CreationEnum.ERRORED_ACCOUNTS).size(),
+                     SINGLE_ERRORED_ACCOUNT);
+        assertEquals(0, accounts.get(CreationEnum.CREATED_ACCOUNTS).size(),
+                     ZERO_CREATED_ACCOUNTS);
 
-        List<Object> subscribersList = subscribers.get(CreationEnum.ERRORED_ACCOUNTS);
-        ErroredSubscriber erroredSubscriber = objectMapper.convertValue(subscribersList.get(0),
-                                                                        ErroredSubscriber.class);
+        List<Object> accountList = accounts.get(CreationEnum.ERRORED_ACCOUNTS);
+        ErroredAzureAccount erroredAccount = objectMapper.convertValue(accountList.get(0),
+                                                                          ErroredAzureAccount.class);
 
-        assertNull(erroredSubscriber.getAzureSubscriberId(), TEST_MESSAGE_ID);
-        assertEquals(EMAIL, erroredSubscriber.getEmail(), TEST_MESSAGE_EMAIL);
-        assertEquals(FIRST_NAME, erroredSubscriber.getFirstName(), TEST_MESSAGE_FIRST_NAME);
-        assertNull(erroredSubscriber.getSurname(), "Surname has not been sent");
-        assertEquals(TITLE, erroredSubscriber.getTitle(), TEST_MESSAGE_TITLE);
-        assertEquals(INVALID_NAME_MESSAGE, erroredSubscriber.getErrorMessages().get(0),
+        assertNull(erroredAccount.getAzureAccountId(), TEST_MESSAGE_ID);
+        assertEquals(EMAIL, erroredAccount.getEmail(), TEST_MESSAGE_EMAIL);
+        assertNull(erroredAccount.getFirstName(), "Firstname has not been sent");
+        assertEquals(SURNAME, erroredAccount.getSurname(), TEST_MESSAGE_SURNAME);
+        assertEquals(Roles.INTERNAL_ADMIN_CTSC, erroredAccount.getRole(), TEST_MESSAGE_ROLE);
+        assertEquals(INVALID_FIRST_NAME_MESSAGE, erroredAccount.getErrorMessages().get(0),
                      "Error message is displayed for an invalid name");
     }
 
     @Test
-    void testCreationOfDuplicateSubscriber() throws Exception {
+    void testCreationOfNoSurnameAccount() throws Exception {
+        AzureAccount azureAccount = new AzureAccount();
+        azureAccount.setEmail(EMAIL);
+        azureAccount.setFirstName(FIRST_NAME);
+        azureAccount.setRole(Roles.INTERNAL_ADMIN_CTSC);
+
+        objectMapper.findAndRegisterModules();
+
+        MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
+            .post(AZURE_URL)
+            .content(objectMapper.writeValueAsString(List.of(azureAccount)))
+            .header(ISSUER_HEADER, ISSUER_EMAIL)
+            .contentType(MediaType.APPLICATION_JSON);
+
+        MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder)
+            .andExpect(status().isOk()).andReturn();
+
+        ConcurrentHashMap<CreationEnum, List<Object>> accounts =
+            objectMapper.readValue(response.getResponse().getContentAsString(),
+                                   new TypeReference<>() {});
+
+        assertEquals(1, accounts.get(CreationEnum.ERRORED_ACCOUNTS).size(),
+                     SINGLE_ERRORED_ACCOUNT);
+        assertEquals(0, accounts.get(CreationEnum.CREATED_ACCOUNTS).size(),
+                     ZERO_CREATED_ACCOUNTS);
+
+        List<Object> accountList = accounts.get(CreationEnum.ERRORED_ACCOUNTS);
+        ErroredAzureAccount erroredAccount = objectMapper.convertValue(
+            accountList.get(0),
+            ErroredAzureAccount.class);
+
+        assertNull(erroredAccount.getAzureAccountId(), TEST_MESSAGE_ID);
+        assertEquals(EMAIL, erroredAccount.getEmail(), TEST_MESSAGE_EMAIL);
+        assertEquals(FIRST_NAME, erroredAccount.getFirstName(), TEST_MESSAGE_FIRST_NAME);
+        assertNull(erroredAccount.getSurname(), "Surname has been sent");
+        assertEquals(Roles.INTERNAL_ADMIN_CTSC, erroredAccount.getRole(), TEST_MESSAGE_ROLE);
+        assertEquals(INVALID_SURNAME_MESSAGE, erroredAccount.getErrorMessages().get(0),
+                     "Error message is displayed for an invalid name");
+    }
+
+    @Test
+    void testCreationOfNoRoleAccount() throws Exception {
+        AzureAccount azureAccount = new AzureAccount();
+        azureAccount.setEmail(EMAIL);
+        azureAccount.setFirstName(FIRST_NAME);
+        azureAccount.setSurname(SURNAME);
+
+        objectMapper.findAndRegisterModules();
+
+        MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
+            .post(AZURE_URL)
+            .content(objectMapper.writeValueAsString(List.of(azureAccount)))
+            .header(ISSUER_HEADER, ISSUER_EMAIL)
+            .contentType(MediaType.APPLICATION_JSON);
+
+        MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder)
+            .andExpect(status().isOk()).andReturn();
+
+        ConcurrentHashMap<CreationEnum, List<Object>> accounts =
+            objectMapper.readValue(response.getResponse().getContentAsString(),
+                                   new TypeReference<>() {});
+
+        assertEquals(1, accounts.get(CreationEnum.ERRORED_ACCOUNTS).size(),
+                     SINGLE_ERRORED_ACCOUNT);
+        assertEquals(0, accounts.get(CreationEnum.CREATED_ACCOUNTS).size(),
+                     ZERO_CREATED_ACCOUNTS);
+
+        List<Object> acccountList = accounts.get(CreationEnum.ERRORED_ACCOUNTS);
+        ErroredAzureAccount erroredAccount = objectMapper.convertValue(acccountList.get(0),
+                                                                          ErroredAzureAccount.class);
+
+        assertNull(erroredAccount.getAzureAccountId(), TEST_MESSAGE_ID);
+        assertEquals(EMAIL, erroredAccount.getEmail(), TEST_MESSAGE_EMAIL);
+        assertEquals(FIRST_NAME, erroredAccount.getFirstName(), TEST_MESSAGE_FIRST_NAME);
+        assertEquals(SURNAME, erroredAccount.getSurname(), TEST_MESSAGE_SURNAME);
+        assertNull(erroredAccount.getRole(), "Role is not null");
+        assertEquals(INVALID_ROLE_MESSAGE, erroredAccount.getErrorMessages().get(0),
+                     "Error message is displayed for an invalid name");
+    }
+
+    @Test
+    void testCreationOfDuplicateAccount() throws Exception {
 
         when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
         when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
         when(userCollectionRequest.post(any())).thenThrow(graphServiceException);
 
-        Subscriber subscriber = new Subscriber();
-        subscriber.setEmail(EMAIL);
-        subscriber.setSurname(SURNAME);
-        subscriber.setFirstName(FIRST_NAME);
-        subscriber.setTitle(TITLE);
+        AzureAccount azureAccount = new AzureAccount();
+        azureAccount.setEmail(EMAIL);
+        azureAccount.setSurname(SURNAME);
+        azureAccount.setFirstName(FIRST_NAME);
+        azureAccount.setRole(Roles.INTERNAL_ADMIN_CTSC);
 
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(AZURE_URL)
-            .content(objectMapper.writeValueAsString(List.of(subscriber)))
+            .content(objectMapper.writeValueAsString(List.of(azureAccount)))
+            .header(ISSUER_HEADER, ISSUER_EMAIL)
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isOk()).andReturn();
 
-        ConcurrentHashMap<CreationEnum, List<Object>> subscribers =
+        ConcurrentHashMap<CreationEnum, List<Object>> accounts =
             objectMapper.readValue(response.getResponse().getContentAsString(),
                                    new TypeReference<>() {});
 
-        assertEquals(1, subscribers.get(CreationEnum.ERRORED_ACCOUNTS).size(), "1 errored account returned");
-        assertEquals(0, subscribers.get(CreationEnum.CREATED_ACCOUNTS).size(), "0 created account returned");
+        assertEquals(1, accounts.get(CreationEnum.ERRORED_ACCOUNTS).size(), "1 errored account returned");
+        assertEquals(0, accounts.get(CreationEnum.CREATED_ACCOUNTS).size(), "0 created account returned");
 
-        ErroredSubscriber erroredSubscriber = objectMapper.convertValue(
-            subscribers.get(CreationEnum.ERRORED_ACCOUNTS).get(0), ErroredSubscriber.class);
+        ErroredAzureAccount erroredAccount = objectMapper.convertValue(
+            accounts.get(CreationEnum.ERRORED_ACCOUNTS).get(0), ErroredAzureAccount.class);
 
-        assertNull(erroredSubscriber.getAzureSubscriberId(), "Errored account does not have ID");
-        assertEquals(EMAIL, erroredSubscriber.getEmail(), TEST_MESSAGE_EMAIL);
-        assertEquals(FIRST_NAME, erroredSubscriber.getFirstName(), TEST_MESSAGE_FIRST_NAME);
-        assertEquals(SURNAME, erroredSubscriber.getSurname(), TEST_MESSAGE_SURNAME);
-        assertEquals(TITLE, erroredSubscriber.getTitle(), TEST_MESSAGE_TITLE);
-        assertEquals(DIRECTORY_ERROR, erroredSubscriber.getErrorMessages().get(0),
+        assertNull(erroredAccount.getAzureAccountId(), "Errored azureAccount does not have ID");
+        assertEquals(EMAIL, erroredAccount.getEmail(), TEST_MESSAGE_EMAIL);
+        assertEquals(FIRST_NAME, erroredAccount.getFirstName(), TEST_MESSAGE_FIRST_NAME);
+        assertEquals(SURNAME, erroredAccount.getSurname(), TEST_MESSAGE_SURNAME);
+        assertEquals(Roles.INTERNAL_ADMIN_CTSC, erroredAccount.getRole(), TEST_MESSAGE_ROLE);
+        assertEquals(DIRECTORY_ERROR, erroredAccount.getErrorMessages().get(0),
                      "Error message matches directory message");
     }
 
@@ -326,6 +421,7 @@ class AccountTest {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(AZURE_URL)
             .content(duplicateKeyString)
+            .header(ISSUER_HEADER, ISSUER_EMAIL)
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder)
@@ -350,59 +446,58 @@ class AccountTest {
         when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
         when(userCollectionRequest.post(any())).thenReturn(userToReturn);
 
-        Subscriber validSubscriber = new Subscriber();
-        validSubscriber.setEmail(EMAIL);
-        validSubscriber.setSurname(SURNAME);
-        validSubscriber.setFirstName(FIRST_NAME);
-        validSubscriber.setTitle(TITLE);
+        AzureAccount validAzureAccount = new AzureAccount();
+        validAzureAccount.setEmail(EMAIL);
+        validAzureAccount.setSurname(SURNAME);
+        validAzureAccount.setFirstName(FIRST_NAME);
+        validAzureAccount.setRole(Roles.INTERNAL_ADMIN_CTSC);
 
-        Subscriber invalidSubscriber = new Subscriber();
-        invalidSubscriber.setEmail("abc.test");
-        invalidSubscriber.setSurname(SURNAME);
-        invalidSubscriber.setFirstName(FIRST_NAME);
-        invalidSubscriber.setTitle(TITLE);
+        AzureAccount invalidAzureAccount = new AzureAccount();
+        invalidAzureAccount.setEmail("abc.test");
+        invalidAzureAccount.setSurname(SURNAME);
+        invalidAzureAccount.setFirstName(FIRST_NAME);
+        invalidAzureAccount.setRole(Roles.INTERNAL_ADMIN_CTSC);
 
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(AZURE_URL)
-            .content(objectMapper.writeValueAsString(List.of(validSubscriber, invalidSubscriber)))
+            .content(objectMapper.writeValueAsString(List.of(validAzureAccount, invalidAzureAccount)))
+            .header(ISSUER_HEADER, ISSUER_EMAIL)
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isOk()).andReturn();
 
-        ConcurrentHashMap<CreationEnum, List<Object>> subscribers =
+        ConcurrentHashMap<CreationEnum, List<Object>> accounts =
             objectMapper.readValue(response.getResponse().getContentAsString(),
                                    new TypeReference<>() {});
 
-        assertEquals(1, subscribers.get(CreationEnum.ERRORED_ACCOUNTS).size(),
+        assertEquals(1, accounts.get(CreationEnum.ERRORED_ACCOUNTS).size(),
                      "1 Errored account should be returned");
-        assertEquals(1, subscribers.get(CreationEnum.CREATED_ACCOUNTS).size(),
+        assertEquals(1, accounts.get(CreationEnum.CREATED_ACCOUNTS).size(),
                      "1 Created account should be returned");
 
-        Subscriber returnedValidSubscriber = objectMapper.convertValue(
-            subscribers.get(CreationEnum.CREATED_ACCOUNTS).get(0), Subscriber.class);
+        AzureAccount returnedValidAzureAccount = objectMapper.convertValue(
+            accounts.get(CreationEnum.CREATED_ACCOUNTS).get(0), AzureAccount.class);
 
-        assertEquals(ID, returnedValidSubscriber.getAzureSubscriberId(), TEST_MESSAGE_ID);
-        assertEquals(EMAIL, returnedValidSubscriber.getEmail(), TEST_MESSAGE_EMAIL);
-        assertEquals(FIRST_NAME, returnedValidSubscriber.getFirstName(), TEST_MESSAGE_FIRST_NAME);
-        assertEquals(SURNAME, returnedValidSubscriber.getSurname(), TEST_MESSAGE_SURNAME);
-        assertEquals(TITLE, returnedValidSubscriber.getTitle(), TEST_MESSAGE_TITLE);
+        assertEquals(ID, returnedValidAzureAccount.getAzureAccountId(), TEST_MESSAGE_ID);
+        assertEquals(EMAIL, returnedValidAzureAccount.getEmail(), TEST_MESSAGE_EMAIL);
+        assertEquals(FIRST_NAME, returnedValidAzureAccount.getFirstName(), TEST_MESSAGE_FIRST_NAME);
+        assertEquals(SURNAME, returnedValidAzureAccount.getSurname(), TEST_MESSAGE_SURNAME);
+        assertEquals(Roles.INTERNAL_ADMIN_CTSC, returnedValidAzureAccount.getRole(), TEST_MESSAGE_ROLE);
 
-        ErroredSubscriber returnedInvalidSubscriber = objectMapper.convertValue(
-            subscribers.get(CreationEnum.ERRORED_ACCOUNTS).get(0), ErroredSubscriber.class);
+        ErroredAzureAccount returnedInvalidAccount = objectMapper.convertValue(
+            accounts.get(CreationEnum.ERRORED_ACCOUNTS).get(0), ErroredAzureAccount.class);
 
-        assertNull(returnedInvalidSubscriber.getAzureSubscriberId(), "Subscriber ID should be null");
-        assertEquals("abc.test", returnedInvalidSubscriber.getEmail(), TEST_MESSAGE_EMAIL);
-        assertEquals(FIRST_NAME, returnedInvalidSubscriber.getFirstName(), TEST_MESSAGE_FIRST_NAME);
-        assertEquals(SURNAME, returnedInvalidSubscriber.getSurname(), TEST_MESSAGE_SURNAME);
-        assertEquals(TITLE, returnedInvalidSubscriber.getTitle(), TEST_MESSAGE_TITLE);
-        assertEquals(EMAIL_VALIDATION_MESSAGE, returnedInvalidSubscriber.getErrorMessages().get(0),
+        assertNull(returnedInvalidAccount.getAzureAccountId(), "AzureAccount ID should be null");
+        assertEquals("abc.test", returnedInvalidAccount.getEmail(), TEST_MESSAGE_EMAIL);
+        assertEquals(FIRST_NAME, returnedInvalidAccount.getFirstName(), TEST_MESSAGE_FIRST_NAME);
+        assertEquals(SURNAME, returnedInvalidAccount.getSurname(), TEST_MESSAGE_SURNAME);
+        assertEquals(Roles.INTERNAL_ADMIN_CTSC, returnedInvalidAccount.getRole(), TEST_MESSAGE_ROLE);
+        assertEquals(EMAIL_VALIDATION_MESSAGE, returnedInvalidAccount.getErrorMessages().get(0),
                      "Error message is displayed for an invalid email");
     }
 
     @Test
     void testCreateSingleUser() throws Exception {
-        PiUser validUser = createUser(true, UUID.randomUUID().toString());
-
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(PI_URL)
             .content(objectMapper.writeValueAsString(List.of(validUser)))
@@ -475,7 +570,6 @@ class AccountTest {
 
     @Test
     void testCreateMultipleUsersCreateAndErrored() throws Exception {
-        PiUser validUser = createUser(true, UUID.randomUUID().toString());
         PiUser invalidUser = createUser(false, UUID.randomUUID().toString());
 
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
@@ -495,8 +589,6 @@ class AccountTest {
 
     @Test
     void testGetUserByProvenanceIdReturnsUser() throws Exception {
-        PiUser validUser = createUser(true, UUID.randomUUID().toString());
-
         MockHttpServletRequestBuilder setupRequest = MockMvcRequestBuilders
             .post(PI_URL)
             .content(objectMapper.writeValueAsString(List.of(validUser)))
@@ -527,6 +619,54 @@ class AccountTest {
         assertEquals(404, response.getResponse().getStatus(), "Status codes should match");
         assertTrue(response.getResponse().getContentAsString().contains(ERROR_RESPONSE_USER_PROVENANCE),
                    "Should contain error message");
+    }
+
+    @Test
+    void testIsUserAuthenticatedReturnsSuccessful() throws Exception {
+        MockHttpServletRequestBuilder setupRequest = MockMvcRequestBuilders
+            .post(PI_URL)
+            .content(objectMapper.writeValueAsString(List.of(validUser)))
+            .header(ISSUER_HEADER, ISSUER_EMAIL)
+            .contentType(MediaType.APPLICATION_JSON);
+
+        MvcResult userResponse = mockMvc.perform(setupRequest).andExpect(status().isCreated()).andReturn();
+        ConcurrentHashMap<CreationEnum, List<Object>> mappedResponse =
+            objectMapper.readValue(userResponse.getResponse().getContentAsString(),
+                                   new TypeReference<>() {});
+        String createdUserId = mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).get(0).toString();
+
+
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+            .get(String.format("%s/isAuthorised/%s/%s", ROOT_URL, createdUserId, ListType.SJP_PRESS_LIST));
+
+        MvcResult response = mockMvc.perform(request).andExpect(status().isOk()).andReturn();
+
+        assertEquals("true", response.getResponse().getContentAsString(), "Should return true");
+    }
+
+    @Test
+    void testIsUserAuthenticatedReturnsForbidden() throws Exception {
+        validUser.setUserProvenance(UserProvenances.CFT_IDAM);
+        MockHttpServletRequestBuilder setupRequest = MockMvcRequestBuilders
+            .post(PI_URL)
+            .content(objectMapper.writeValueAsString(List.of(validUser)))
+            .header(ISSUER_HEADER, ISSUER_EMAIL)
+            .contentType(MediaType.APPLICATION_JSON);
+
+        MvcResult userResponse = mockMvc.perform(setupRequest).andExpect(status().isCreated()).andReturn();
+        ConcurrentHashMap<CreationEnum, List<Object>> mappedResponse =
+            objectMapper.readValue(userResponse.getResponse().getContentAsString(),
+                                   new TypeReference<>() {});
+        String createdUserId = mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).get(0).toString();
+
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+            .get(String.format("%s/isAuthorised/%s/%s", ROOT_URL, createdUserId, ListType.SJP_PRESS_LIST));
+
+        MvcResult response = mockMvc.perform(request).andExpect(status().isForbidden()).andReturn();
+
+        assertTrue(response.getResponse().getContentAsString()
+                       .contains(String.format(ERROR_RESPONSE_FORBIDDEN, createdUserId, ListType.SJP_PRESS_LIST)),
+                   "Should return forbidden message");
     }
 
 }

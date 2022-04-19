@@ -20,8 +20,8 @@ public class ErroredPiUser extends PiUser {
     private List<String> errorMessages;
 
     /**
-     * Constructor that takes in an existing subscriber and converts it to an errored subscriber.
-     * @param user The subscriber to be converted to an errored subscriber.
+     * Constructor that takes in an existing user and converts it to an errored user.
+     * @param user The user to be converted to an errored user.
      */
     public ErroredPiUser(PiUser user) {
         super(user.getUserId(),
