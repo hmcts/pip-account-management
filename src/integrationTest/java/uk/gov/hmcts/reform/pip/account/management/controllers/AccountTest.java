@@ -45,7 +45,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(classes = {AzureConfigurationClientTest.class, Application.class},
@@ -153,7 +152,6 @@ class AccountTest {
             .post(AZURE_URL)
             .content(objectMapper.writeValueAsString(List.of(azureAccount)))
             .header(ISSUER_HEADER, ISSUER_EMAIL)
-            .with(csrf())
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isOk()).andReturn();
@@ -191,7 +189,6 @@ class AccountTest {
             .post(AZURE_URL)
             .content(objectMapper.writeValueAsString(List.of(azureAccount)))
             .header(ISSUER_HEADER, ISSUER_EMAIL)
-            .with(csrf())
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder)
@@ -233,7 +230,6 @@ class AccountTest {
             .post(AZURE_URL)
             .content(objectMapper.writeValueAsString(List.of(azureAccount)))
             .header(ISSUER_HEADER, ISSUER_EMAIL)
-            .with(csrf())
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder)
@@ -274,7 +270,6 @@ class AccountTest {
             .post(AZURE_URL)
             .content(objectMapper.writeValueAsString(List.of(azureAccount)))
             .header(ISSUER_HEADER, ISSUER_EMAIL)
-            .with(csrf())
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder)
@@ -315,7 +310,6 @@ class AccountTest {
             .post(AZURE_URL)
             .content(objectMapper.writeValueAsString(List.of(azureAccount)))
             .header(ISSUER_HEADER, ISSUER_EMAIL)
-            .with(csrf())
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder)
@@ -357,7 +351,6 @@ class AccountTest {
             .post(AZURE_URL)
             .content(objectMapper.writeValueAsString(List.of(azureAccount)))
             .header(ISSUER_HEADER, ISSUER_EMAIL)
-            .with(csrf())
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder)
@@ -402,7 +395,6 @@ class AccountTest {
             .post(AZURE_URL)
             .content(objectMapper.writeValueAsString(List.of(azureAccount)))
             .header(ISSUER_HEADER, ISSUER_EMAIL)
-            .with(csrf())
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isOk()).andReturn();
@@ -434,7 +426,6 @@ class AccountTest {
             .post(AZURE_URL)
             .content(duplicateKeyString)
             .header(ISSUER_HEADER, ISSUER_EMAIL)
-            .with(csrf())
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder)
@@ -475,7 +466,6 @@ class AccountTest {
             .post(AZURE_URL)
             .content(objectMapper.writeValueAsString(List.of(validAzureAccount, invalidAzureAccount)))
             .header(ISSUER_HEADER, ISSUER_EMAIL)
-            .with(csrf())
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isOk()).andReturn();
@@ -516,7 +506,6 @@ class AccountTest {
             .post(PI_URL)
             .content(objectMapper.writeValueAsString(List.of(validUser)))
             .header(ISSUER_HEADER, ISSUER_EMAIL)
-            .with(csrf())
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isCreated()).andReturn();
@@ -536,7 +525,6 @@ class AccountTest {
             .post(PI_URL)
             .content(objectMapper.writeValueAsString(List.of(validUser1, validUser2)))
             .header(ISSUER_HEADER, ISSUER_EMAIL)
-            .with(csrf())
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isCreated()).andReturn();
@@ -555,7 +543,6 @@ class AccountTest {
             .post(PI_URL)
             .content(objectMapper.writeValueAsString(List.of(invalidUser)))
             .header(ISSUER_HEADER, ISSUER_EMAIL)
-            .with(csrf())
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isCreated()).andReturn();
@@ -575,7 +562,6 @@ class AccountTest {
             .post(PI_URL)
             .content(objectMapper.writeValueAsString(List.of(invalidUser1, invalidUser2)))
             .header(ISSUER_HEADER, ISSUER_EMAIL)
-            .with(csrf())
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isCreated()).andReturn();
@@ -594,7 +580,6 @@ class AccountTest {
             .post(PI_URL)
             .content(objectMapper.writeValueAsString(List.of(validUser, invalidUser)))
             .header(ISSUER_HEADER, ISSUER_EMAIL)
-            .with(csrf())
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isCreated()).andReturn();
@@ -612,7 +597,6 @@ class AccountTest {
             .post(PI_URL)
             .content(objectMapper.writeValueAsString(List.of(validUser)))
             .header(ISSUER_HEADER, ISSUER_EMAIL)
-            .with(csrf())
             .contentType(MediaType.APPLICATION_JSON);
 
         mockMvc.perform(setupRequest).andExpect(status().isCreated());
@@ -632,7 +616,6 @@ class AccountTest {
     void testGetUserByProvenanceIdReturnsNotFound() throws Exception {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .get(String.format("%s/%s/%s", GET_PROVENANCE_USER_URL, UserProvenances.CFT_IDAM, ID))
-            .with(csrf())
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response =
@@ -648,7 +631,6 @@ class AccountTest {
             .post(PI_URL)
             .content(objectMapper.writeValueAsString(List.of(validUser)))
             .header(ISSUER_HEADER, ISSUER_EMAIL)
-            .with(csrf())
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult userResponse = mockMvc.perform(setupRequest).andExpect(status().isCreated()).andReturn();
@@ -673,7 +655,6 @@ class AccountTest {
             .post(PI_URL)
             .content(objectMapper.writeValueAsString(List.of(validUser)))
             .header(ISSUER_HEADER, ISSUER_EMAIL)
-            .with(csrf())
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult userResponse = mockMvc.perform(setupRequest).andExpect(status().isCreated()).andReturn();
@@ -699,7 +680,6 @@ class AccountTest {
             .post(AZURE_URL)
             .content("[]")
             .header(ISSUER_HEADER, ISSUER_EMAIL)
-            .with(csrf())
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult mvcResult =
@@ -716,7 +696,6 @@ class AccountTest {
             .post(PI_URL)
             .content("[]")
             .header(ISSUER_HEADER, ISSUER_EMAIL)
-            .with(csrf())
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult mvcResult =
@@ -731,7 +710,6 @@ class AccountTest {
     void testUnauthorizedGetUserByProvenance() throws Exception {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .get(String.format("%s/%s/%s", GET_PROVENANCE_USER_URL, UserProvenances.CFT_IDAM, ID))
-            .with(csrf())
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult mvcResult =
