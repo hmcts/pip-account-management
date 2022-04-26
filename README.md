@@ -1,7 +1,5 @@
 # Publication & Information Account Management Microservice
 
-[![Build Status](https://travis-ci.org/hmcts/spring-boot-template.svg?branch=master)](https://travis-ci.org/hmcts/spring-boot-template)
-
 ## Purpose
 
 The purpose of this template is to speed up the creation of new Spring applications within HMCTS
@@ -16,7 +14,7 @@ The template is a working application with a minimal setup. It contains:
  * common plugins and libraries
  * docker setup
  * swagger configuration for api documentation ([see how to publish your api documentation to shared repository](https://github.com/hmcts/reform-api-docs#publish-swagger-docs))
- * code quality tools already set up
+ * code quality tools already set up.
  * integration with Travis CI.
  * Hystrix circuit breaker enabled
  * MIT license and contribution information.

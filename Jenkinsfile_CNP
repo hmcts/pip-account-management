@@ -15,10 +15,11 @@ static LinkedHashMap<String, Object> secret(String secretName, String envVar) {
     envVariable: envVar
   ]
 }
-def branchesToSync = ['demo', 'perftest', 'ithc']
+
+
 
 withPipeline(type, product, component) {
-    syncBranchesWithMaster(branchesToSync)
+ 
 
     enableSlackNotifications('#pip-build-notices')
     enableAksStagingDeployment()
