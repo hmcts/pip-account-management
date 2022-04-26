@@ -17,7 +17,7 @@ The template is a working application with a minimal setup. It contains:
  * code quality tools already set up.
  * integration with Travis CI.
  * Hystrix circuit breaker enabled
- * MIT license and contribution information
+ * MIT license and contribution information.
  * Helm chart using chart-java.
 
 The application exposes health endpoint (http://localhost:6969/health) and metrics endpoint
@@ -210,18 +210,17 @@ persist this into azure.  Takes in a header of the email of the admin issuing th
 of users to add to Azure following the [Account model](#Account) without the azureAccountId as this
 is created by azure.
 
-- POST `/account/add/pi` - used to add a user to the P&I user database. Takes in a header of the email of the admin
-issuing the request and a body of a list of users to add to the database following the [P&I User model](#piuser) without the
+- POST `/account/add/pi` - used to add a user to the P&I user database. Takes in a header of the email of the admin issuing
+the request and a body of a list of users to add to the database following the [P&I User model](#piuser) without the
 `userId` as this is created by the service.
 
 - GET `/account/provenance/{userProvenance}/{provenanceUserId}` - used to get the [P&I User](#piuser) from the pi_user
-table by matching the user provenance and the provenanceUserId. eg a user from `PI_AAD` with the `provenanceUserId`
-of `123` would be returned if both attributes matched.
+  table by matching the user provenance and the provenanceUserId. eg a user from `PI_AAD` with the `provenanceUserId`
+  of `123` would be returned if both attributes matched.
 
 - GET `/account/isAuthorised/{userId}/{listType}` - used to check if the user provided has sufficient permissions to
   view the specified list type based on mapping from user provenances to allowed list types in
-[List type enum](src/main/java/uk/gov/hmcts/reform/pip/account/management/model/ListType.java).
-
+  [List type enum](src/main/java/uk/gov/hmcts/reform/pip/account/management/model/ListType.java).
 
 ## Models
 

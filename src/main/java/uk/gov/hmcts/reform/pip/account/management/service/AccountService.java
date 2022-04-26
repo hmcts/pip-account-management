@@ -51,6 +51,9 @@ public class AccountService {
     @Autowired
     UserRepository userRepository;
 
+    @Autowired
+    PublicationService publicationService;
+
     /**
      * Method to create new accounts in azure.
      *
@@ -86,6 +89,8 @@ public class AccountService {
                 createdAzureAccounts.add(azureAccount);
 
                 log.info(writeLog(issuerEmail, UserActions.CREATE_ACCOUNT, azureAccount.getEmail()));
+                handleAccountCreationEmail(azureAccount);
+
             } catch (AzureCustomException azureCustomException) {
                 log.error(writeLog(issuerEmail, UserActions.CREATE_ACCOUNT, azureAccount.getEmail()));
                 ErroredAzureAccount erroredSubscriber = new ErroredAzureAccount(azureAccount);
@@ -197,6 +202,22 @@ public class AccountService {
             return returnedUser.get(0);
         }
         throw new UserNotFoundException("provenanceUserId", provenanceUserId);
+    }
+
+    private void handleAccountCreationEmail(AzureAccount createdAccount) {
+        switch (createdAccount.getRole()) {
+            case INTERNAL_ADMIN_CTSC:
+            case INTERNAL_ADMIN_LOCAL:
+            case INTERNAL_SUPER_ADMIN_CTSC:
+            case INTERNAL_SUPER_ADMIN_LOCAL:
+                log.info(publicationService.sendNotificationEmail(createdAccount.getEmail(),
+                                                                  createdAccount.getFirstName(),
+                                                                  createdAccount.getSurname()));
+                break;
+
+            default:
+                break;
+        }
     }
 
 }
