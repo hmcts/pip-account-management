@@ -93,7 +93,6 @@ class AccountTest {
     private static final String INVALID_ROLE_MESSAGE = "role: must not be null";
     private static final String DIRECTORY_ERROR = "Error when persisting account into Azure. "
         + "Check that the user doesn't already exist in the directory";
-
     private static final String TEST_MESSAGE_ID = "AzureAccount ID added to account";
     private static final String TEST_MESSAGE_EMAIL = "Email matches sent account";
     private static final String TEST_MESSAGE_FIRST_NAME = "Firstname matches sent account";

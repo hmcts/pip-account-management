@@ -1,6 +1,7 @@
 package uk.gov.hmcts.reform.pip.account.management.service;
 
 import com.microsoft.graph.models.User;
+import nl.altindag.log.LogCaptor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -34,6 +35,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.lenient;
@@ -58,6 +60,9 @@ class AccountServiceTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private PublicationService publicationService;
+
     @InjectMocks
     private AccountService accountService;
 
@@ -78,7 +83,6 @@ class AccountServiceTest {
 
     private final PiUser piUser = new PiUser();
     private final PiUser piUserIdam = new PiUser();
-
     private AzureAccount azureAccount;
     private User expectedUser;
 
@@ -92,19 +96,16 @@ class AccountServiceTest {
         piUserIdam.setUserProvenance(UserProvenances.CFT_IDAM);
         piUserIdam.setProvenanceUserId(ID);
 
-        lenient().when(userRepository.findByUserId(VALID_USER_ID)).thenReturn(Optional.of(piUser));
-        lenient().when(userRepository.findByUserId(VALID_USER_ID_IDAM)).thenReturn(Optional.of(piUserIdam));
-    }
-
-    @BeforeEach
-    void beforeEach() {
         azureAccount = new AzureAccount();
         azureAccount.setEmail(EMAIL);
+        azureAccount.setRole(Roles.INTERNAL_ADMIN_CTSC);
 
         expectedUser = new User();
-        expectedUser.givenName = "Test";
+        expectedUser.givenName = TEST;
         expectedUser.id = ID;
 
+        lenient().when(userRepository.findByUserId(VALID_USER_ID)).thenReturn(Optional.of(piUser));
+        lenient().when(userRepository.findByUserId(VALID_USER_ID_IDAM)).thenReturn(Optional.of(piUserIdam));
         lenient().when(constraintViolation.getMessage()).thenReturn(VALIDATION_MESSAGE);
         lenient().when(constraintViolation.getPropertyPath()).thenReturn(path);
         lenient().when(path.toString()).thenReturn(EMAIL_PATH);
@@ -117,6 +118,8 @@ class AccountServiceTest {
 
         when(azureUserService.createUser(argThat(user -> user.getEmail().equals(azureAccount.getEmail()))))
             .thenReturn(expectedUser);
+
+        when(publicationService.sendNotificationEmail(any(), any(), any())).thenReturn(TEST);
 
         Map<CreationEnum, List<? extends AzureAccount>> createdAccounts =
             accountService.addAzureAccounts(List.of(azureAccount), ISSUER_EMAIL);
@@ -168,9 +171,10 @@ class AccountServiceTest {
         assertEquals(azureAccount.getEmail(), accounts.get(0).getEmail(), EMAIL_VALIDATION_MESSAGE);
         assertNull(azureAccount.getAzureAccountId(), "Account should have no azure ID set");
 
-        assertEquals(EMAIL_PATH + ": " + VALIDATION_MESSAGE,
-                     ((ErroredAzureAccount) accounts.get(0)).getErrorMessages().get(0),
-                     "Account should have error message set when validation has failed"
+        assertEquals(
+            EMAIL_PATH + ": " + VALIDATION_MESSAGE,
+            ((ErroredAzureAccount) accounts.get(0)).getErrorMessages().get(0),
+            "Account should have error message set when validation has failed"
         );
 
         assertEquals(0, createdAccounts.get(CreationEnum.CREATED_ACCOUNTS).size(),
@@ -203,9 +207,10 @@ class AccountServiceTest {
         assertTrue(createdAccounts.containsKey(CreationEnum.ERRORED_ACCOUNTS), ERRORED_ACCOUNTS_VALIDATION_MESSAGE);
         List<? extends AzureAccount> erroredSubscribers = createdAccounts.get(CreationEnum.ERRORED_ACCOUNTS);
         assertEquals(erroredAzureAccount.getEmail(), erroredSubscribers.get(0).getEmail(), EMAIL_VALIDATION_MESSAGE);
-        assertEquals(EMAIL_PATH + ": " + VALIDATION_MESSAGE,
-                     ((ErroredAzureAccount) erroredSubscribers.get(0)).getErrorMessages().get(0),
-                     "Validation message displayed for errored azureAccount"
+        assertEquals(
+            EMAIL_PATH + ": " + VALIDATION_MESSAGE,
+            ((ErroredAzureAccount) erroredSubscribers.get(0)).getErrorMessages().get(0),
+            "Validation message displayed for errored azureAccount"
         );
 
     }
@@ -226,7 +231,8 @@ class AccountServiceTest {
     @Test
     void testAddUsersBuildsErrored() {
         PiUser user = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, ID, INVALID_EMAIL,
-                                 Roles.INTERNAL_ADMIN_CTSC);
+                                 Roles.INTERNAL_ADMIN_CTSC
+        );
         ErroredPiUser erroredUser = new ErroredPiUser(user);
         erroredUser.setErrorMessages(List.of(VALIDATION_MESSAGE));
         Map<CreationEnum, List<?>> expected = new ConcurrentHashMap<>();
@@ -268,7 +274,8 @@ class AccountServiceTest {
         when(userRepository.findExistingByProvenanceId(user.getProvenanceUserId(), user.getUserProvenance().name()))
             .thenReturn(List.of(user));
         assertEquals(user, accountService.findUserByProvenanceId(user.getUserProvenance(), user.getProvenanceUserId()),
-                     "Should return found user");
+                     "Should return found user"
+        );
     }
 
     @Test
@@ -281,14 +288,18 @@ class AccountServiceTest {
 
     @Test
     void testIsUserAuthorisedForPublicationReturnsTrue() {
-        assertTrue(accountService.isUserAuthorisedForPublication(VALID_USER_ID, ListType.SJP_PRESS_LIST),
-                   "User from PI_AAD should return true for allowed list type");
+        assertTrue(
+            accountService.isUserAuthorisedForPublication(VALID_USER_ID, ListType.SJP_PRESS_LIST),
+            "User from PI_AAD should return true for allowed list type"
+        );
     }
 
     @Test
     void testIsUserAuthorisedForPublicationPublicListType() {
-        assertTrue(accountService.isUserAuthorisedForPublication(VALID_USER_ID_IDAM, ListType.CIVIL_DAILY_CAUSE_LIST),
-                   "Should return true regardless of user provenance if list type has no restrictions");
+        assertTrue(
+            accountService.isUserAuthorisedForPublication(VALID_USER_ID_IDAM, ListType.CIVIL_DAILY_CAUSE_LIST),
+            "Should return true regardless of user provenance if list type has no restrictions"
+        );
     }
 
     @Test
@@ -304,10 +315,39 @@ class AccountServiceTest {
     void testIsUserAuthorisedNotAuthorised() {
         ForbiddenPermissionsException ex = assertThrows(ForbiddenPermissionsException.class, () ->
             accountService.isUserAuthorisedForPublication(VALID_USER_ID_IDAM, ListType.SJP_PRESS_LIST),
-                                                        "Should throw forbidden if user is not "
-                                                             + "allowed to see list type");
+            "Should throw forbidden if user is not "
+            + "allowed to see list type"
+        );
         assertEquals(String.format("User: %s does not have sufficient permission to view list type: %s",
-                                   VALID_USER_ID_IDAM, ListType.SJP_PRESS_LIST), ex.getMessage(),
-                     MESSAGES_MATCH);
+                                   VALID_USER_ID_IDAM, ListType.SJP_PRESS_LIST
+                     ), ex.getMessage(),
+                     MESSAGES_MATCH
+        );
+    }
+
+    @Test
+    void testAzureAdminAccountCreatedTriggersEmail() throws AzureCustomException {
+        when(validator.validate(argThat(sub -> ((AzureAccount) sub).getEmail().equals(azureAccount.getEmail()))))
+            .thenReturn(Set.of());
+        when(azureUserService.createUser(azureAccount)).thenReturn(expectedUser);
+        when(publicationService.sendNotificationEmail(any(), any(), any())).thenReturn(TEST);
+
+        try (LogCaptor logCaptor = LogCaptor.forClass(AccountService.class)) {
+            accountService.addAzureAccounts(List.of(azureAccount), ISSUER_EMAIL);
+            assertEquals(TEST, logCaptor.getInfoLogs().get(1), "Should trigger admin email");
+        }
+    }
+
+    @Test
+    void testAzureAdminAccountFailedDoesntTriggerEmail() throws AzureCustomException {
+        when(validator.validate(argThat(sub -> ((AzureAccount) sub).getEmail().equals(azureAccount.getEmail()))))
+            .thenReturn(Set.of());
+        when(azureUserService.createUser(azureAccount)).thenThrow(new AzureCustomException(TEST));
+
+        try (LogCaptor logCaptor = LogCaptor.forClass(AccountService.class)) {
+            accountService.addAzureAccounts(List.of(azureAccount), ISSUER_EMAIL);
+            assertEquals(0, logCaptor.getInfoLogs().size(),
+                         "Should not log if failed creating account");
+        }
     }
 }

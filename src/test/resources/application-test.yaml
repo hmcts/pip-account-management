@@ -1,0 +1,2 @@
+service-to-service:
+  publication-services: localhost:8081
