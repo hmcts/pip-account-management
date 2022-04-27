@@ -27,9 +27,9 @@ java:
           alias: DB_USER
         - name: account-management-POSTGRES-HOST
           alias: DB_HOST
-        - name: app-pip-account-management-stg-id
+        - name: app-pip-account-management-id
           alias: CLIENT_ID
         - name: app-tenant-id
           alias: TENANT_ID
-        - name: app-pip-account-management-stg-api-id
+        - name: app-pip-account-management-scope
           alias: APP_URI
