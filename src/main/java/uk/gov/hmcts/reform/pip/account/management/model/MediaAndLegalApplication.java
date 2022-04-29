@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 /**
- * Class representing a media or orphaned legal professionals
+ * Class representing a media or orphaned legal professional application for AAD access.
  */
 @Entity
 @Data
