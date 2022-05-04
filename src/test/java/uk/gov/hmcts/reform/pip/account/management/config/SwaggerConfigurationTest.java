@@ -20,6 +20,6 @@ class SwaggerConfigurationTest {
         assertNotNull(docket, "Docker has been created");
 
         DocumentationType documentationType = docket.getDocumentationType();
-        assertEquals(DocumentationType.SWAGGER_2, documentationType, "Documentation type is OK");
+        assertEquals(DocumentationType.OAS_30, documentationType, "Documentation type is OK");
     }
 }
