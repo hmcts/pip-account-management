@@ -4,15 +4,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.UUID;
-
 import uk.gov.hmcts.reform.pip.account.management.database.AzureBlobService;
 import uk.gov.hmcts.reform.pip.account.management.database.MediaLegalApplicationRepository;
 import uk.gov.hmcts.reform.pip.account.management.model.MediaAndLegalApplication;
 import uk.gov.hmcts.reform.pip.account.management.model.MediaLegalApplicationStatus;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
 
 @Service
 public class MediaLegalApplicationService {
@@ -31,7 +30,7 @@ public class MediaLegalApplicationService {
     }
 
     /**
-     * Get a list of all the applications
+     * Get a list of all the applications.
      *
      * @return A list of all applications
      */
@@ -40,7 +39,7 @@ public class MediaLegalApplicationService {
     }
 
     /**
-     * Get a list of applications by the status
+     * Get a list of applications by the status.
      *
      * @param status The MediaLegalApplicationStatus enum to retrieve applications by
      * @return A list of all applications with the relevant status
@@ -50,7 +49,7 @@ public class MediaLegalApplicationService {
     }
 
     /**
-     * Create an application and store the image in the blob store, saving the blob url in the entity
+     * Create an application and store the image in the blob store, saving the blob url in the entity.
      *
      * @param application The application entity to save to the database
      * @param file The file to upload to the blob store
@@ -68,43 +67,32 @@ public class MediaLegalApplicationService {
     }
 
     /**
-     * Update an application by fetching the application entity to ensure only correct data is overwritten
+     * Update an application by fetching the application.
      *
-     * @param application The application to update
-     * @param file The file to update in the blob store if sent
+     * @param id The id of the application to update
+     * @param status The status to update the application with
      * @return The updated application
      */
-    public MediaAndLegalApplication updateApplication(MediaAndLegalApplication application, MultipartFile file) {
-        MediaAndLegalApplication applicationToUpdate = mediaLegalApplicationRepository.getById(application.getId());
-
-        applicationToUpdate.setFullName(StringUtils.trimAllWhitespace(application.getFullName()));
-        applicationToUpdate.setEmployer(application.getEmployer());
-        applicationToUpdate.setStatusDate(now);
-        applicationToUpdate.setEmail(application.getEmail());
-        applicationToUpdate.setStatus(application.getStatus());
-
-        if(file != null) {
-            String blobUrl = azureBlobService.uploadFile(getUuidFromUrl(application.getImage()), file);
-            applicationToUpdate.setImage(blobUrl);
-        }
+    public MediaAndLegalApplication updateApplication(UUID id, MediaLegalApplicationStatus status) {
+        MediaAndLegalApplication applicationToUpdate = mediaLegalApplicationRepository.getById(id);
+        applicationToUpdate.setStatus(status);
 
         return mediaLegalApplicationRepository.save(applicationToUpdate);
     }
 
     /**
-     * Delete an application by fetching the application entity to ensure the correct blob will be deleted
+     * Delete an application by fetching the application entity to ensure the correct blob will be deleted.
      *
-     * @param application The application to delete
+     * @param id The id of the application to delete
      */
-    public void deleteApplication(MediaAndLegalApplication application) {
-        // Get the application to ensure we have correct blob url for deleting
-        MediaAndLegalApplication fetchedApplication = mediaLegalApplicationRepository.getById(application.getId());
+    public void deleteApplication(UUID id) {
+        MediaAndLegalApplication fetchedApplication = mediaLegalApplicationRepository.getById(id);
         azureBlobService.deleteBlob(getUuidFromUrl(fetchedApplication.getImage()));
-        mediaLegalApplicationRepository.delete(application);
+        mediaLegalApplicationRepository.delete(fetchedApplication);
     }
 
     /**
-     * Pass in the stored url and get the UUID from it
+     * Pass in the stored url and get the UUID from it.
      *
      * @param payloadUrl The url to get the UUID from
      * @return the UUID of the blob

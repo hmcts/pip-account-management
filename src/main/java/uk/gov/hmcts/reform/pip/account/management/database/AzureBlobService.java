@@ -1,18 +1,19 @@
 package uk.gov.hmcts.reform.pip.account.management.database;
 
-import java.io.IOException;
-
 import com.azure.storage.blob.BlobClient;
 import com.azure.storage.blob.BlobContainerClient;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
-
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.FileException;
 
+import java.io.IOException;
+
+/**
+ * Class with handles the interaction with the Azure Blob Service.
+ */
 @Component
 public class AzureBlobService {
 
