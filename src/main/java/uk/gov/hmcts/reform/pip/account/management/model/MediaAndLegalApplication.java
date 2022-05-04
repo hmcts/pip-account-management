@@ -3,6 +3,7 @@ package uk.gov.hmcts.reform.pip.account.management.model;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
 import org.hibernate.annotations.Type;
 
 import javax.persistence.Column;
@@ -16,7 +17,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 /**
- * Class representing a media or orphaned legal professional application for AAD access.
+ * Model that represents a media or orphaned legal professional application for AAD access.
  */
 @Entity
 @Data
@@ -24,18 +25,19 @@ import java.util.UUID;
 @NoArgsConstructor
 public class MediaAndLegalApplication {
 
-
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(columnDefinition = "uuid", insertable = false, updatable = false, nullable = false)
     @Type(type = "org.hibernate.type.PostgresUUIDType")
     private UUID id;
 
+    private String fullName;
+
+    private String email;
+
     private String employer;
 
-    private String concatenatedFullName;
-
-    private String emailAddress;
+    private String image;
 
     private LocalDateTime requestDate;
 
@@ -43,5 +45,4 @@ public class MediaAndLegalApplication {
     private MediaLegalApplicationStatus status;
 
     private LocalDateTime statusDate;
-
 }
