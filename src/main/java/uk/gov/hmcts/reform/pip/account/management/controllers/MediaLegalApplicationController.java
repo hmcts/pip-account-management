@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import uk.gov.hmcts.reform.pip.account.management.model.MediaAndLegalApplication;
+import uk.gov.hmcts.reform.pip.account.management.model.MediaAndLegalApplicationDto;
 import uk.gov.hmcts.reform.pip.account.management.model.MediaLegalApplicationStatus;
 import uk.gov.hmcts.reform.pip.account.management.service.MediaLegalApplicationService;
 
@@ -71,9 +72,9 @@ public class MediaLegalApplicationController {
     @ApiOperation("Create a new application")
     @PostMapping(produces = APPLICATION_JSON_VALUE, consumes = MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<MediaAndLegalApplication> createApplication(
-        @ModelAttribute("application") MediaAndLegalApplication application,
+        @ModelAttribute("application") MediaAndLegalApplicationDto application,
         @RequestPart("file") MultipartFile file) {
-        return ResponseEntity.ok(mediaLegalApplicationService.createApplication(application, file));
+        return ResponseEntity.ok(mediaLegalApplicationService.createApplication(application.toEntity(), file));
     }
 
     @ApiResponses({

@@ -17,6 +17,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import uk.gov.hmcts.reform.pip.account.management.Application;
 import uk.gov.hmcts.reform.pip.account.management.config.AzureConfigurationClientTest;
 import uk.gov.hmcts.reform.pip.account.management.model.MediaAndLegalApplication;
+import uk.gov.hmcts.reform.pip.account.management.model.MediaAndLegalApplicationDto;
 import uk.gov.hmcts.reform.pip.account.management.model.MediaLegalApplicationStatus;
 
 import java.io.InputStream;
@@ -72,11 +73,11 @@ class MediaLegalApplicationTest {
     }
 
     private MediaAndLegalApplication createApplication() throws Exception {
-        MediaAndLegalApplication mediaAndLegalApplication = new MediaAndLegalApplication();
-        mediaAndLegalApplication.setFullName(FULL_NAME);
-        mediaAndLegalApplication.setEmail(EMAIL);
-        mediaAndLegalApplication.setEmployer(EMPLOYER);
-        mediaAndLegalApplication.setStatus(STATUS);
+        MediaAndLegalApplicationDto applicationDto = new MediaAndLegalApplicationDto();
+        applicationDto.setFullName(FULL_NAME);
+        applicationDto.setEmail(EMAIL);
+        applicationDto.setEmployer(EMPLOYER);
+        applicationDto.setStatus(STATUS);
 
         try (InputStream imageInputStream = Thread.currentThread().getContextClassLoader()
             .getResourceAsStream("files/test-image.png")) {
@@ -89,7 +90,7 @@ class MediaLegalApplicationTest {
 
             MvcResult mvcResult = mockMvc.perform(multipart(ROOT_URL)
                                                   .file(imageFile)
-                                                  .flashAttr("application", mediaAndLegalApplication)
+                                                  .flashAttr("application", applicationDto)
                                                   .contentType(MediaType.MULTIPART_FORM_DATA_VALUE))
                                                   .andExpect(status().isOk()).andReturn();
 

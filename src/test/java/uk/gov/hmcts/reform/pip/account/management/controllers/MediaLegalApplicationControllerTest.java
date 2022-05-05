@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 import uk.gov.hmcts.reform.pip.account.management.model.MediaAndLegalApplication;
+import uk.gov.hmcts.reform.pip.account.management.model.MediaAndLegalApplicationDto;
 import uk.gov.hmcts.reform.pip.account.management.model.MediaLegalApplicationStatus;
 import uk.gov.hmcts.reform.pip.account.management.service.MediaLegalApplicationService;
 
@@ -64,19 +65,24 @@ class MediaLegalApplicationControllerTest {
 
     @Test
     void testCreateApplication() {
+        MediaAndLegalApplicationDto applicationDto = new MediaAndLegalApplicationDto();
+        applicationDto.setFullName("Test user");
+        applicationDto.setEmail("test@email.com");
+        applicationDto.setEmployer("Test employer");
+        applicationDto.setStatus(MediaLegalApplicationStatus.PENDING);
+
         MediaAndLegalApplication application = createApplication(MediaLegalApplicationStatus.PENDING);
 
-        when(mediaLegalApplicationService.createApplication(application, FILE)).thenReturn(application);
+        when(mediaLegalApplicationService.createApplication(applicationDto.toEntity(), FILE)).thenReturn(application);
 
         ResponseEntity<MediaAndLegalApplication> response =
-            mediaLegalApplicationController.createApplication(application, FILE);
+            mediaLegalApplicationController.createApplication(applicationDto, FILE);
 
         assertEquals(HttpStatus.OK, response.getStatusCode(), STATUS_CODE_MATCH);
 
         assertEquals(application, response.getBody(), "Should return the expected application");
     }
 
-    // Test updateApplication
     @Test
     void testUpdateApplication() {
         MediaAndLegalApplication application = createApplication(MediaLegalApplicationStatus.APPROVED);
