@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -23,6 +24,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
+import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
 
 @RestController
 @Api(tags = "Account Management - API for managing media & orphaned legal professional applications")
@@ -56,13 +58,21 @@ public class MediaLegalApplicationController {
     }
 
     @ApiResponses({
+        @ApiResponse(code = 200, message = "{MediaAndLegalApplication}")
+    })
+    @GetMapping(value = "/application/{id}", produces = APPLICATION_JSON_VALUE)
+    public ResponseEntity<MediaAndLegalApplication> getApplicationById(@PathVariable UUID id) {
+        return ResponseEntity.ok(mediaLegalApplicationService.getApplicationById(id));
+    }
+
+    @ApiResponses({
         @ApiResponse(code = 200, message = "{MediaAndLegalApplication}"),
     })
     @ApiOperation("Create a new application")
-    @PostMapping(produces = APPLICATION_JSON_VALUE)
+    @PostMapping(produces = APPLICATION_JSON_VALUE, consumes = MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<MediaAndLegalApplication> createApplication(
-        MediaAndLegalApplication application,
-        @RequestPart MultipartFile file) {
+        @ModelAttribute("application") MediaAndLegalApplication application,
+        @RequestPart("file") MultipartFile file) {
         return ResponseEntity.ok(mediaLegalApplicationService.createApplication(application, file));
     }
 

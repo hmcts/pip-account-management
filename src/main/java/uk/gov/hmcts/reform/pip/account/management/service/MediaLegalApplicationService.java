@@ -48,6 +48,10 @@ public class MediaLegalApplicationService {
         return mediaLegalApplicationRepository.findByStatus(status.toString());
     }
 
+    public MediaAndLegalApplication getApplicationById(UUID id) {
+        return mediaLegalApplicationRepository.getById(id);
+    }
+
     /**
      * Create an application and store the image in the blob store, saving the blob url in the entity.
      *
@@ -76,6 +80,7 @@ public class MediaLegalApplicationService {
     public MediaAndLegalApplication updateApplication(UUID id, MediaLegalApplicationStatus status) {
         MediaAndLegalApplication applicationToUpdate = mediaLegalApplicationRepository.getById(id);
         applicationToUpdate.setStatus(status);
+        applicationToUpdate.setStatusDate(now);
 
         return mediaLegalApplicationRepository.save(applicationToUpdate);
     }
