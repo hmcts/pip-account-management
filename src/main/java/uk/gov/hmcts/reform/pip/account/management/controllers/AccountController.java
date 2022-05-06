@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import uk.gov.hmcts.reform.pip.account.management.authentication.roles.IsAdmin;
 import uk.gov.hmcts.reform.pip.account.management.model.AzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.ListType;
@@ -31,6 +32,7 @@ import java.util.UUID;
 @Api(tags = "Account Management - API for managing accounts")
 @RequestMapping("/account")
 @Validated
+@IsAdmin
 public class AccountController {
 
     @Autowired
@@ -44,6 +46,10 @@ public class AccountController {
      * @param azureAccounts The accounts to add.
      * @return A list containing details of any created and errored azureAccounts.
      */
+    @ApiResponses({
+        @ApiResponse(code = 200, message = "{AzureAccount}"),
+        @ApiResponse(code = 403, message = "User has not been authorized"),
+    })
     @PostMapping("/add/azure")
     public ResponseEntity<Map<CreationEnum, List<? extends AzureAccount>>> createAzureAccount(
         @RequestHeader("x-issuer-email") @ValidEmail String issuerEmail,
@@ -60,7 +66,8 @@ public class AccountController {
      */
     @ApiResponses({
         @ApiResponse(code = 201,
-            message = "CREATED_ACCOUNTS: [{Created User UUID's}]")
+            message = "CREATED_ACCOUNTS: [{Created User UUID's}]"),
+        @ApiResponse(code = 403, message = "User has not been authorized"),
     })
     @ApiOperation("Add a user to the P&I postgres database")
     @PostMapping("/add/pi")
@@ -72,6 +79,7 @@ public class AccountController {
 
     @ApiResponses({
         @ApiResponse(code = 200, message = "{PiUser}"),
+        @ApiResponse(code = 403, message = "User has not been authorized"),
         @ApiResponse(code = 404, message = "No user found with the provenance user Id: {provenanceUserId}")
     })
     @ApiOperation("Get a user based on their provenance user Id and provenance")

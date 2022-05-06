@@ -17,7 +17,9 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -50,7 +52,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles(profiles = "test")
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
-@SuppressWarnings({"PMD.TooManyMethods"})
+@WithMockUser(username = "admin", authorities = { "APPROLE_api.request.admin" })
+@SuppressWarnings({"PMD.TooManyMethods", "PMD.LawOfDemeter", "PMD.ExcessiveImports"})
 class AccountTest {
 
     @Autowired
@@ -100,6 +103,7 @@ class AccountTest {
     private static final String ERROR_RESPONSE_USER_PROVENANCE = "No user found with the provenanceUserId: 1234";
     private static final String ERROR_RESPONSE_FORBIDDEN =
         "User: %s does not have sufficient permission to view list type: %s";
+    private static final String FORBIDDEN_STATUS_CODE = "Status code does not match forbidden";
 
     private ObjectMapper objectMapper;
 
@@ -666,6 +670,64 @@ class AccountTest {
         assertTrue(response.getResponse().getContentAsString()
                        .contains(String.format(ERROR_RESPONSE_FORBIDDEN, createdUserId, ListType.SJP_PRESS_LIST)),
                    "Should return forbidden message");
+    }
+
+    @Test
+    @WithMockUser(username = "unauthorized_account", authorities = { "APPROLE_unknown.account" })
+    void testUnauthorizedCreateAccount() throws Exception {
+        MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
+            .post(AZURE_URL)
+            .content("[]")
+            .header(ISSUER_HEADER, ISSUER_EMAIL)
+            .contentType(MediaType.APPLICATION_JSON);
+
+        MvcResult mvcResult =
+            mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isForbidden()).andReturn();
+
+        assertEquals(HttpStatus.FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
+                     FORBIDDEN_STATUS_CODE);
+    }
+
+    @Test
+    @WithMockUser(username = "unauthroized_user", authorities = { "APPROLE_unknown.user" })
+    void testUnauthorizedCreateUser() throws Exception {
+        MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
+            .post(PI_URL)
+            .content("[]")
+            .header(ISSUER_HEADER, ISSUER_EMAIL)
+            .contentType(MediaType.APPLICATION_JSON);
+
+        MvcResult mvcResult =
+            mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isForbidden()).andReturn();
+
+        assertEquals(HttpStatus.FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
+                     FORBIDDEN_STATUS_CODE);
+    }
+
+    @Test
+    @WithMockUser(username = "unauthorized_provenance", authorities = { "APPROLE_unknown.provenance" })
+    void testUnauthorizedGetUserByProvenance() throws Exception {
+        MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
+            .get(String.format("%s/%s/%s", GET_PROVENANCE_USER_URL, UserProvenances.CFT_IDAM, ID))
+            .contentType(MediaType.APPLICATION_JSON);
+
+        MvcResult mvcResult =
+            mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isForbidden()).andReturn();
+
+        assertEquals(HttpStatus.FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
+                     FORBIDDEN_STATUS_CODE);
+    }
+
+    @Test
+    @WithMockUser(username = "unauthorized_isAuthorized", authorities = { "APPROLE_unknown.authorized" })
+    void testUnauthorizedGetUserIsAuthorized() throws Exception {
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+            .get(String.format("%s/isAuthorised/%s/%s", ROOT_URL, UUID.randomUUID(), ListType.SJP_PRESS_LIST));
+
+        MvcResult mvcResult = mockMvc.perform(request).andExpect(status().isForbidden()).andReturn();
+
+        assertEquals(HttpStatus.FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
+                     FORBIDDEN_STATUS_CODE);
     }
 
 }
