@@ -27,43 +27,44 @@ public class AzureBlobService {
     }
 
     /**
-     * Uploads the file in the Azure blob service.
+     * Uploads the image in the Azure blob service.
      *
-     * @param payloadId The identifier of the payload
+     * @param imageId The identifier of the image
      * @param file  The file to upload
-     * @return The URL where the file was uploaded.
+     * @return The id linked to the uploaded image
      */
-    public String uploadFile(String payloadId, MultipartFile file) {
-        BlobClient blobClient = blobContainerClient.getBlobClient(payloadId);
+    public String uploadFile(String imageId, MultipartFile file) {
+        BlobClient blobClient = blobContainerClient.getBlobClient(imageId);
 
         try {
             blobClient.upload(file.getInputStream(), file.getSize(), true);
         } catch (IOException e) {
             throw new FileException("Could not parse provided file, please check support file types and try again");
         }
-        return blobContainerClient.getBlobContainerUrl() + "/" + payloadId;
+        return imageId;
     }
 
     /**
-     * Gets the data held within a blob from the blob service.
+     * Get the file from the blobstore by the imageId.
      *
-     * @param payloadId the identifier of the payload
-     * @return the data contained within the blob in String format.
+     * @param imageId The id of the file to retrieve
+     * @return The file from the blob store
      */
-    public String getBlobData(String payloadId) {
-        BlobClient blobClient = blobContainerClient.getBlobClient(payloadId);
-        return blobClient.downloadContent().toString();
-    }
-
-    public Resource getBlobFile(String payloadId) {
-        BlobClient blobClient = blobContainerClient.getBlobClient(payloadId);
+    public Resource getBlobFile(String imageId) {
+        BlobClient blobClient = blobContainerClient.getBlobClient(imageId);
         byte[] data = blobClient.downloadContent().toBytes();
         return new ByteArrayResource(data);
     }
 
-    public String deleteBlob(String payloadId) {
-        BlobClient blobClient = blobContainerClient.getBlobClient(payloadId);
+    /**
+     * Delete a blob from the blob store by the imageId.
+     *
+     * @param imageId The id of the blob to delete
+     * @return A confirmation message of the blob deletion
+     */
+    public String deleteBlob(String imageId) {
+        BlobClient blobClient = blobContainerClient.getBlobClient(imageId);
         blobClient.delete();
-        return String.format(DELETE_MESSAGE, payloadId);
+        return String.format(DELETE_MESSAGE, imageId);
     }
 }

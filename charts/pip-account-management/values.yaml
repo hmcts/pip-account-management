@@ -33,3 +33,5 @@ java:
           alias: TENANT_ID
         - name: app-pip-account-management-scope
           alias: APP_URI
+        - name: connection-string
+          alias: CONNECTION_STRING

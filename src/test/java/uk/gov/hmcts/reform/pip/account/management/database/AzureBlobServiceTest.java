@@ -21,7 +21,6 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class AzureBlobServiceTest {
-    private static final String CONTAINER_URL = "https://localhost";
     private static final MultipartFile FILE = new MockMultipartFile("test", (byte[]) null);
     private static final String BLOB_NAME = UUID.randomUUID().toString();
 
@@ -43,23 +42,11 @@ class AzureBlobServiceTest {
 
     @Test
     void testCreationOfNewBlobViaFile() {
-        when(blobContainerClient.getBlobContainerUrl()).thenReturn(CONTAINER_URL);
+        String blobId = azureBlobService.uploadFile(BLOB_NAME, FILE);
 
-        String blobUrl = azureBlobService.uploadFile(BLOB_NAME, FILE);
-
-        assertEquals(CONTAINER_URL + "/" + BLOB_NAME, blobUrl, "Payload URL does not"
+        assertEquals(BLOB_NAME, blobId, "Image id does not"
             + "contain the correct value");
     }
-
-    @Test
-    void testGetBlobData() {
-        when(blobClient.downloadContent()).thenReturn(BinaryData.fromString("TestString"));
-
-        String blobData = azureBlobService.getBlobData(BLOB_NAME);
-
-        assertEquals("TestString", blobData, "Wrong string detected");
-    }
-
 
     @Test
     void testGetBlobFile() {

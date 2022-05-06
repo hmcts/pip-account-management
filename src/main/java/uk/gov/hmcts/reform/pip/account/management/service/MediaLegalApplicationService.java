@@ -1,6 +1,7 @@
 package uk.gov.hmcts.reform.pip.account.management.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
@@ -45,11 +46,15 @@ public class MediaLegalApplicationService {
      * @return A list of all applications with the relevant status
      */
     public List<MediaAndLegalApplication> getApplicationsByStatus(MediaLegalApplicationStatus status) {
-        return mediaLegalApplicationRepository.findByStatus(status.toString());
+        return mediaLegalApplicationRepository.findByStatus(status);
     }
 
     public MediaAndLegalApplication getApplicationById(UUID id) {
-        return mediaLegalApplicationRepository.getById(id);
+        return mediaLegalApplicationRepository.findById(id).get();
+    }
+
+    public Resource getImageById(String imageId) {
+        return azureBlobService.getBlobFile(imageId);
     }
 
     /**
@@ -60,12 +65,12 @@ public class MediaLegalApplicationService {
      * @return The newly created application
      */
     public MediaAndLegalApplication createApplication(MediaAndLegalApplication application, MultipartFile file) {
-        String blobUrl = azureBlobService.uploadFile(UUID.randomUUID().toString(), file);
+        String imageId = azureBlobService.uploadFile(UUID.randomUUID().toString(), file);
 
         application.setFullName(StringUtils.trimAllWhitespace(application.getFullName()));
         application.setRequestDate(now);
         application.setStatusDate(now);
-        application.setImage(blobUrl);
+        application.setImage(imageId);
 
         return mediaLegalApplicationRepository.save(application);
     }
@@ -92,17 +97,7 @@ public class MediaLegalApplicationService {
      */
     public void deleteApplication(UUID id) {
         MediaAndLegalApplication fetchedApplication = mediaLegalApplicationRepository.getById(id);
-        azureBlobService.deleteBlob(getUuidFromUrl(fetchedApplication.getImage()));
+        azureBlobService.deleteBlob(fetchedApplication.getImage());
         mediaLegalApplicationRepository.delete(fetchedApplication);
-    }
-
-    /**
-     * Pass in the stored url and get the UUID from it.
-     *
-     * @param payloadUrl The url to get the UUID from
-     * @return the UUID of the blob
-     */
-    private String getUuidFromUrl(String payloadUrl) {
-        return payloadUrl.substring(payloadUrl.lastIndexOf('/') + 1);
     }
 }

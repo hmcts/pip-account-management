@@ -11,6 +11,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -39,6 +40,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles(profiles = "test")
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
+@WithMockUser(username = "admin", authorities = { "APPROLE_api.request.admin" })
 class MediaLegalApplicationTest {
 
     @Autowired
@@ -55,6 +57,7 @@ class MediaLegalApplicationTest {
     private static final String GET_STATUS_URL = ROOT_URL + "/{status}";
     private static final String PUT_URL = ROOT_URL + "/{id}/{status}";
     private static final String DELETE_URL = ROOT_URL + "/{id}";
+    private static final String GET_BY_ID_URL = ROOT_URL + "/application/{id}";
 
 
     private ObjectMapper objectMapper;
@@ -137,6 +140,24 @@ class MediaLegalApplicationTest {
         assertEquals(application.getStatus(), applicationList.get(0).getStatus(), "Statuses do not match");
         assertNotNull(applicationList.get(0).getImage(), "Image url is null");
 
+    }
+
+    @Test
+    void testGetApplicationById() throws Exception {
+        MediaAndLegalApplication application = createApplication();
+
+        MvcResult mvcResult = mockMvc.perform(get(GET_BY_ID_URL, application.getId()))
+            .andExpect(status().isOk())
+            .andReturn();
+
+        MediaAndLegalApplication returnedApplication = objectMapper.readValue(mvcResult.getResponse()
+                                                                                  .getContentAsString(),
+                                                                              MediaAndLegalApplication.class);
+
+
+        assertEquals(application.getEmail(), returnedApplication.getEmail(), "Emails do not match");
+        assertEquals(FORMATTED_FULL_NAME, returnedApplication.getFullName(), "Full name hasn't been formatted");
+        assertEquals(application.getStatus(), returnedApplication.getStatus(), "Statuses do not match");
     }
 
     @Test
