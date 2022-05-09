@@ -1,5 +1,6 @@
 package uk.gov.hmcts.reform.pip.account.management.service;
 
+import com.azure.storage.blob.models.BlobStorageException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -108,9 +109,6 @@ class MediaLegalApplicationServiceTest {
 
     @Test
     void testGetImageById() {
-        when(mediaLegalApplicationRepository.findByImage(BLOB_UUID)).thenReturn(Optional.ofNullable(
-            mediaAndLegalApplicationExampleWithImageUrl));
-
         when(azureBlobService.getBlobFile(BLOB_UUID)).thenReturn(FILE.getResource());
 
         Resource returnedResource = mediaLegalApplicationService.getImageById(BLOB_UUID);
@@ -120,6 +118,8 @@ class MediaLegalApplicationServiceTest {
 
     @Test
     void testGetImageByIdNotFound() {
+        when(azureBlobService.getBlobFile(BLOB_UUID)).thenThrow(BlobStorageException.class);
+
         NotFoundException notFoundException = assertThrows(NotFoundException.class, () ->
             mediaLegalApplicationService.getImageById(BLOB_UUID), NOT_FOUND_EXCEPTION_THROWN_MESSAGE
         );

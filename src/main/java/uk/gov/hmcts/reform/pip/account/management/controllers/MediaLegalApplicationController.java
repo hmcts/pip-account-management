@@ -70,7 +70,7 @@ public class MediaLegalApplicationController {
     @ApiResponses({
         @ApiResponse(code = 200, message = "{MediaAndLegalApplication}"),
         @ApiResponse(code = 403, message = NOT_AUTHORIZED_MESSAGE),
-        @ApiResponse(code = 404, message = "Application could not be found"),
+        @ApiResponse(code = 404, message = "No media application found with id: {id}"),
     })
     @GetMapping(value = "/{id}", produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<MediaAndLegalApplication> getApplicationById(@PathVariable UUID id) {
@@ -78,9 +78,9 @@ public class MediaLegalApplicationController {
     }
 
     @ApiResponses({
-        @ApiResponse(code = 200, message = "File returned"),
+        @ApiResponse(code = 200, message = "Image with id: {id} is returned"),
         @ApiResponse(code = 403, message = NOT_AUTHORIZED_MESSAGE),
-        @ApiResponse(code = 404, message = "File could not be found"),
+        @ApiResponse(code = 404, message = "No image found with id: {id}"),
     })
     @GetMapping("/image/{id}")
     public ResponseEntity<Resource> getImageById(@PathVariable String id) {
@@ -104,7 +104,7 @@ public class MediaLegalApplicationController {
     @ApiResponses({
         @ApiResponse(code = 200, message = "{MediaAndLegalApplication}"),
         @ApiResponse(code = 403, message = NOT_AUTHORIZED_MESSAGE),
-        @ApiResponse(code = 404, message = "Application to update could not be found"),
+        @ApiResponse(code = 404, message = "No media application found with id: {id}"),
     })
     @ApiOperation("Update an existing application")
     @PutMapping("/{id}/{status}")
@@ -117,7 +117,7 @@ public class MediaLegalApplicationController {
     @ApiResponses({
         @ApiResponse(code = 200, message = "Application deleted"),
         @ApiResponse(code = 403, message = NOT_AUTHORIZED_MESSAGE),
-        @ApiResponse(code = 404, message = "Application to delete could not be found"),
+        @ApiResponse(code = 404, message = "No media application found with id: {id}"),
     })
     @ApiOperation("Delete an application")
     @DeleteMapping("/{id}")
