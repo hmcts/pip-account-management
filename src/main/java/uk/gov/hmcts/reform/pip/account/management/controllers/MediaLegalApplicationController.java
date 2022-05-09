@@ -6,6 +6,7 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -32,6 +33,7 @@ import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
 
 @RestController
 @Api(tags = "Account Management - API for managing media & orphaned legal professional applications")
+@IsAdmin
 @RequestMapping("/application")
 public class MediaLegalApplicationController {
 
@@ -44,7 +46,6 @@ public class MediaLegalApplicationController {
         this.mediaLegalApplicationService = mediaLegalApplicationService;
     }
 
-    @IsAdmin
     @ApiResponses({
         @ApiResponse(code = 200, message = "List<{MediaAndLegalApplication}>"),
         @ApiResponse(code = 403, message = NOT_AUTHORIZED_MESSAGE),
@@ -55,42 +56,42 @@ public class MediaLegalApplicationController {
         return ResponseEntity.ok(mediaLegalApplicationService.getApplications());
     }
 
-    @IsAdmin
     @ApiResponses({
         @ApiResponse(code = 200, message = "List<{MediaAndLegalApplication}>"),
         @ApiResponse(code = 403, message = NOT_AUTHORIZED_MESSAGE),
     })
     @ApiOperation("Get all application by the status")
-    @GetMapping(value = "/{status}", produces = APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/status/{status}", produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<List<MediaAndLegalApplication>> getApplicationsByStatus(
         @PathVariable MediaLegalApplicationStatus status) {
         return ResponseEntity.ok(mediaLegalApplicationService.getApplicationsByStatus(status));
     }
 
-    @IsAdmin
     @ApiResponses({
         @ApiResponse(code = 200, message = "{MediaAndLegalApplication}"),
         @ApiResponse(code = 403, message = NOT_AUTHORIZED_MESSAGE),
+        @ApiResponse(code = 404, message = "Application could not be found"),
     })
-    @GetMapping(value = "/application/{id}", produces = APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/{id}", produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<MediaAndLegalApplication> getApplicationById(@PathVariable UUID id) {
         return ResponseEntity.ok(mediaLegalApplicationService.getApplicationById(id));
     }
 
-    @IsAdmin
     @ApiResponses({
         @ApiResponse(code = 200, message = "File returned"),
         @ApiResponse(code = 403, message = NOT_AUTHORIZED_MESSAGE),
+        @ApiResponse(code = 404, message = "File could not be found"),
     })
-    @GetMapping(value = "/image/{id}", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    @GetMapping("/image/{id}")
     public ResponseEntity<Resource> getImageById(@PathVariable String id) {
-        Resource file = mediaLegalApplicationService.getImageById(id);
-
-        return ResponseEntity.ok().body(file);
+        return ResponseEntity.ok()
+            .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_OCTET_STREAM_VALUE)
+            .body(mediaLegalApplicationService.getImageById(id));
     }
 
     @ApiResponses({
         @ApiResponse(code = 200, message = "{MediaAndLegalApplication}"),
+        @ApiResponse(code = 403, message = NOT_AUTHORIZED_MESSAGE),
     })
     @ApiOperation("Create a new application")
     @PostMapping(produces = APPLICATION_JSON_VALUE, consumes = MULTIPART_FORM_DATA_VALUE)
@@ -100,10 +101,10 @@ public class MediaLegalApplicationController {
         return ResponseEntity.ok(mediaLegalApplicationService.createApplication(application.toEntity(), file));
     }
 
-    @IsAdmin
     @ApiResponses({
         @ApiResponse(code = 200, message = "{MediaAndLegalApplication}"),
         @ApiResponse(code = 403, message = NOT_AUTHORIZED_MESSAGE),
+        @ApiResponse(code = 404, message = "Application to update could not be found"),
     })
     @ApiOperation("Update an existing application")
     @PutMapping("/{id}/{status}")
@@ -113,10 +114,10 @@ public class MediaLegalApplicationController {
             mediaLegalApplicationService.updateApplication(id, status));
     }
 
-    @IsAdmin
     @ApiResponses({
         @ApiResponse(code = 200, message = "Application deleted"),
         @ApiResponse(code = 403, message = NOT_AUTHORIZED_MESSAGE),
+        @ApiResponse(code = 404, message = "Application to delete could not be found"),
     })
     @ApiOperation("Delete an application")
     @DeleteMapping("/{id}")

@@ -39,6 +39,8 @@ public class MediaAndLegalApplication {
 
     private String image;
 
+    private String imageName;
+
     private LocalDateTime requestDate;
 
     @Enumerated(EnumType.STRING)

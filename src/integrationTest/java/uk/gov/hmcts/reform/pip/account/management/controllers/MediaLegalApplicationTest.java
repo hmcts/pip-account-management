@@ -24,9 +24,11 @@ import uk.gov.hmcts.reform.pip.account.management.model.MediaLegalApplicationSta
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -51,14 +53,12 @@ class MediaLegalApplicationTest {
 
     @Autowired
     private MockMvc mockMvc;
-
-
+    
     private static final String ROOT_URL = "/application";
-    private static final String GET_STATUS_URL = ROOT_URL + "/{status}";
+    private static final String GET_STATUS_URL = ROOT_URL + "/status/{status}";
     private static final String PUT_URL = ROOT_URL + "/{id}/{status}";
     private static final String DELETE_URL = ROOT_URL + "/{id}";
-    private static final String GET_BY_ID_URL = ROOT_URL + "/application/{id}";
-
+    private static final String GET_BY_ID_URL = ROOT_URL + "/{id}";
 
     private ObjectMapper objectMapper;
     private static final String FULL_NAME = "Test user";
@@ -68,6 +68,9 @@ class MediaLegalApplicationTest {
     private static final String BLOB_IMAGE_URL = "https://localhost";
     private static final MediaLegalApplicationStatus STATUS = MediaLegalApplicationStatus.PENDING;
     private static final MediaLegalApplicationStatus UPDATED_STATUS = MediaLegalApplicationStatus.APPROVED;
+    private static final UUID TEST_ID = UUID.randomUUID();
+
+    private static final String NOT_FOUND_ERROR = "Returned ID does not match the expected ID";
 
     @BeforeEach
     void setup() {
@@ -85,7 +88,8 @@ class MediaLegalApplicationTest {
         try (InputStream imageInputStream = Thread.currentThread().getContextClassLoader()
             .getResourceAsStream("files/test-image.png")) {
 
-            MockMultipartFile imageFile = new MockMultipartFile("file", imageInputStream);
+            MockMultipartFile imageFile = new MockMultipartFile("file", "test-image.png",
+                                                                "", imageInputStream);
 
 
             when(blobContainerClient.getBlobClient(any())).thenReturn(blobClient);
@@ -161,6 +165,15 @@ class MediaLegalApplicationTest {
     }
 
     @Test
+    void testGetApplicationByIdNotFound() throws Exception {
+        MvcResult mvcResult = mockMvc.perform(get(GET_BY_ID_URL, TEST_ID))
+            .andExpect(status().isNotFound())
+            .andReturn();
+
+        assertTrue(mvcResult.getResponse().getContentAsString().contains(String.valueOf(TEST_ID)), NOT_FOUND_ERROR);
+    }
+
+    @Test
     void testUpdateApplication() throws Exception {
         MediaAndLegalApplication application = createApplication();
 
@@ -179,6 +192,15 @@ class MediaLegalApplicationTest {
     }
 
     @Test
+    void testUpdateApplicationNotFound() throws Exception {
+        MvcResult mvcResult = mockMvc.perform(put(PUT_URL, TEST_ID, STATUS))
+            .andExpect(status().isNotFound())
+            .andReturn();
+
+        assertTrue(mvcResult.getResponse().getContentAsString().contains(String.valueOf(TEST_ID)), NOT_FOUND_ERROR);
+    }
+
+    @Test
     void testDeleteApplication() throws Exception {
         MediaAndLegalApplication application = createApplication();
 
@@ -188,5 +210,15 @@ class MediaLegalApplicationTest {
 
         assertEquals("Application deleted", mvcResult.getResponse().getContentAsString(),
                      "Application was not deleted");
+    }
+
+    @Test
+    void testDeleteApplicationNotFound() throws Exception {
+
+        MvcResult mvcResult = mockMvc.perform(delete(DELETE_URL, TEST_ID))
+            .andExpect(status().isNotFound())
+            .andReturn();
+
+        assertTrue(mvcResult.getResponse().getContentAsString().contains(String.valueOf(TEST_ID)), NOT_FOUND_ERROR);
     }
 }

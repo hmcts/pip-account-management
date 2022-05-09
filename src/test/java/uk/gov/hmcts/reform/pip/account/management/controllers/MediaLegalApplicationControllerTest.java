@@ -7,7 +7,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import uk.gov.hmcts.reform.pip.account.management.helper.MediaLegalApplicationHelper;
 import uk.gov.hmcts.reform.pip.account.management.model.MediaAndLegalApplication;
 import uk.gov.hmcts.reform.pip.account.management.model.MediaAndLegalApplicationDto;
 import uk.gov.hmcts.reform.pip.account.management.model.MediaLegalApplicationStatus;
@@ -17,9 +16,15 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
+import static uk.gov.hmcts.reform.pip.account.management.helper.MediaLegalApplicationHelper.FILE;
+import static uk.gov.hmcts.reform.pip.account.management.helper.MediaLegalApplicationHelper.STATUS;
+import static uk.gov.hmcts.reform.pip.account.management.helper.MediaLegalApplicationHelper.TEST_ID;
+import static uk.gov.hmcts.reform.pip.account.management.helper.MediaLegalApplicationHelper.createApplication;
+import static uk.gov.hmcts.reform.pip.account.management.helper.MediaLegalApplicationHelper.createApplicationList;
 
 @ExtendWith(MockitoExtension.class)
 class MediaLegalApplicationControllerTest {
+
     @Mock
     private MediaLegalApplicationService mediaLegalApplicationService;
 
@@ -28,11 +33,9 @@ class MediaLegalApplicationControllerTest {
 
     private static final String STATUS_CODE_MATCH = "Status code responses should match";
 
-    private final MediaLegalApplicationHelper helper = new MediaLegalApplicationHelper();
-
     @Test
     void testGetApplications() {
-        List<MediaAndLegalApplication> applicationList = helper.createApplicationList(5);
+        List<MediaAndLegalApplication> applicationList = createApplicationList(5);
 
         when(mediaLegalApplicationService.getApplications()).thenReturn(applicationList);
 
@@ -45,7 +48,7 @@ class MediaLegalApplicationControllerTest {
 
     @Test
     void testGetApplicationsByStatus() {
-        List<MediaAndLegalApplication> applicationList = helper.createApplicationList(5);
+        List<MediaAndLegalApplication> applicationList = createApplicationList(5);
 
         when(mediaLegalApplicationService.getApplicationsByStatus(
             MediaLegalApplicationStatus.PENDING)).thenReturn(applicationList);
@@ -60,14 +63,14 @@ class MediaLegalApplicationControllerTest {
 
     @Test
     void testGetApplicationById() {
-        MediaAndLegalApplication application = helper.createApplication(MediaLegalApplicationHelper.STATUS);
+        MediaAndLegalApplication application = createApplication(STATUS);
 
-        when(mediaLegalApplicationService.getApplicationById(helper.TEST_ID)).thenReturn(application);
+        when(mediaLegalApplicationService.getApplicationById(TEST_ID)).thenReturn(application);
 
-        assertEquals(HttpStatus.OK, mediaLegalApplicationController.getApplicationById(helper.TEST_ID)
+        assertEquals(HttpStatus.OK, mediaLegalApplicationController.getApplicationById(TEST_ID)
             .getStatusCode(), STATUS_CODE_MATCH);
 
-        assertEquals(application, mediaLegalApplicationController.getApplicationById(helper.TEST_ID).getBody(),
+        assertEquals(application, mediaLegalApplicationController.getApplicationById(TEST_ID).getBody(),
                      "Should return the correct application");
     }
 
@@ -79,13 +82,13 @@ class MediaLegalApplicationControllerTest {
         applicationDto.setEmployer("Test employer");
         applicationDto.setStatus(MediaLegalApplicationStatus.PENDING);
 
-        MediaAndLegalApplication application = helper.createApplication(MediaLegalApplicationStatus.PENDING);
+        MediaAndLegalApplication application = createApplication(MediaLegalApplicationStatus.PENDING);
 
-        when(mediaLegalApplicationService.createApplication(applicationDto.toEntity(), helper.FILE))
+        when(mediaLegalApplicationService.createApplication(applicationDto.toEntity(), FILE))
             .thenReturn(application);
 
         ResponseEntity<MediaAndLegalApplication> response =
-            mediaLegalApplicationController.createApplication(applicationDto, helper.FILE);
+            mediaLegalApplicationController.createApplication(applicationDto, FILE);
 
         assertEquals(HttpStatus.OK, response.getStatusCode(), STATUS_CODE_MATCH);
 
@@ -94,13 +97,13 @@ class MediaLegalApplicationControllerTest {
 
     @Test
     void testUpdateApplication() {
-        MediaAndLegalApplication application = helper.createApplication(MediaLegalApplicationStatus.APPROVED);
+        MediaAndLegalApplication application = createApplication(MediaLegalApplicationStatus.APPROVED);
 
-        when(mediaLegalApplicationService.updateApplication(helper.TEST_ID, MediaLegalApplicationStatus.APPROVED))
+        when(mediaLegalApplicationService.updateApplication(TEST_ID, MediaLegalApplicationStatus.APPROVED))
             .thenReturn(application);
 
         ResponseEntity<MediaAndLegalApplication> response = mediaLegalApplicationController
-            .updateApplication(helper.TEST_ID, MediaLegalApplicationStatus.APPROVED);
+            .updateApplication(TEST_ID, MediaLegalApplicationStatus.APPROVED);
 
         assertEquals(HttpStatus.OK, response.getStatusCode(), STATUS_CODE_MATCH);
 
@@ -109,7 +112,7 @@ class MediaLegalApplicationControllerTest {
 
     @Test
     void testDeleteApplication() {
-        ResponseEntity<String> response = mediaLegalApplicationController.deleteApplication(helper.TEST_ID);
+        ResponseEntity<String> response = mediaLegalApplicationController.deleteApplication(TEST_ID);
 
         assertEquals(HttpStatus.OK, response.getStatusCode(), STATUS_CODE_MATCH);
 

@@ -12,7 +12,7 @@ import java.util.UUID;
 /**
  * Helper class for the MediaAndLegalApplication tests.
  */
-public class MediaLegalApplicationHelper {
+public final class MediaLegalApplicationHelper {
 
     public static final MultipartFile FILE = new MockMultipartFile("test", (byte[]) null);
     public static final UUID TEST_ID = UUID.randomUUID();
@@ -21,7 +21,11 @@ public class MediaLegalApplicationHelper {
     private static final String EMPLOYER = "Test employer";
     public static final MediaLegalApplicationStatus STATUS = MediaLegalApplicationStatus.PENDING;
 
-    public MediaAndLegalApplication createApplication(MediaLegalApplicationStatus status) {
+    private MediaLegalApplicationHelper() {
+        // Default constructor
+    }
+
+    public static MediaAndLegalApplication createApplication(MediaLegalApplicationStatus status) {
         MediaAndLegalApplication application = new MediaAndLegalApplication();
         application.setId(TEST_ID);
         application.setFullName(FULL_NAME);
@@ -32,7 +36,7 @@ public class MediaLegalApplicationHelper {
         return application;
     }
 
-    public List<MediaAndLegalApplication> createApplicationList(int numOfApplications) {
+    public static List<MediaAndLegalApplication> createApplicationList(int numOfApplications) {
         List<MediaAndLegalApplication> applicationList = new ArrayList<>();
 
         for (int i = 0; i < numOfApplications; i++) {

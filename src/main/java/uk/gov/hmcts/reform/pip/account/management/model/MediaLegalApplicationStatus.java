@@ -7,6 +7,5 @@ package uk.gov.hmcts.reform.pip.account.management.model;
 public enum MediaLegalApplicationStatus {
     PENDING,
     REJECTED,
-    APPROVED,
-    COMPLETED
+    APPROVED
 }

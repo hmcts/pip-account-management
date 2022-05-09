@@ -7,11 +7,13 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 import uk.gov.hmcts.reform.pip.account.management.database.AzureBlobService;
 import uk.gov.hmcts.reform.pip.account.management.database.MediaLegalApplicationRepository;
+import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.NotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.model.MediaAndLegalApplication;
 import uk.gov.hmcts.reform.pip.account.management.model.MediaLegalApplicationStatus;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -49,12 +51,37 @@ public class MediaLegalApplicationService {
         return mediaLegalApplicationRepository.findByStatus(status);
     }
 
+    /**
+     * Get an application by the application id.
+     *
+     * @param id The id of the application
+     * @return The application if it exists
+     */
     public MediaAndLegalApplication getApplicationById(UUID id) {
-        return mediaLegalApplicationRepository.findById(id).get();
+        Optional<MediaAndLegalApplication> returnedApplication = mediaLegalApplicationRepository.findById(id);
+        if (returnedApplication.isEmpty()) {
+            throw new NotFoundException(String.format("Application with id %s could not be found", id));
+        }
+
+        return returnedApplication.get();
     }
 
+    /**
+     * Get an image from the blob store by the image id.
+     *
+     * @param imageId The id of the image to retrieve
+     * @return The file if found
+     */
     public Resource getImageById(String imageId) {
-        return azureBlobService.getBlobFile(imageId);
+        Optional<MediaAndLegalApplication> returnedApplication = mediaLegalApplicationRepository.findByImage(imageId);
+
+        if (returnedApplication.isEmpty() || !returnedApplication.get().getImage().equals(imageId)) {
+            throw new NotFoundException(String.format("Application with image id %s could not be found", imageId));
+        }
+
+        MediaAndLegalApplication application = returnedApplication.get();
+
+        return azureBlobService.getBlobFile(application.getImage());
     }
 
     /**
@@ -71,6 +98,7 @@ public class MediaLegalApplicationService {
         application.setRequestDate(now);
         application.setStatusDate(now);
         application.setImage(imageId);
+        application.setImageName(file.getOriginalFilename());
 
         return mediaLegalApplicationRepository.save(application);
     }
@@ -83,7 +111,13 @@ public class MediaLegalApplicationService {
      * @return The updated application
      */
     public MediaAndLegalApplication updateApplication(UUID id, MediaLegalApplicationStatus status) {
-        MediaAndLegalApplication applicationToUpdate = mediaLegalApplicationRepository.getById(id);
+        Optional<MediaAndLegalApplication> returnedApplication = mediaLegalApplicationRepository.findById(id);
+
+        if (returnedApplication.isEmpty()) {
+            throw new NotFoundException(String.format("Application with id %s could not be found", id));
+        }
+
+        MediaAndLegalApplication applicationToUpdate = returnedApplication.get();
         applicationToUpdate.setStatus(status);
         applicationToUpdate.setStatusDate(now);
 
@@ -96,8 +130,15 @@ public class MediaLegalApplicationService {
      * @param id The id of the application to delete
      */
     public void deleteApplication(UUID id) {
-        MediaAndLegalApplication fetchedApplication = mediaLegalApplicationRepository.getById(id);
-        azureBlobService.deleteBlob(fetchedApplication.getImage());
-        mediaLegalApplicationRepository.delete(fetchedApplication);
+        Optional<MediaAndLegalApplication> returnedApplication = mediaLegalApplicationRepository.findById(id);
+
+        if (returnedApplication.isEmpty()) {
+            throw new NotFoundException(String.format("Application with id %s could not be found", id));
+        }
+
+        MediaAndLegalApplication applicationToDelete = returnedApplication.get();
+
+        azureBlobService.deleteBlob(applicationToDelete.getImage());
+        mediaLegalApplicationRepository.delete(applicationToDelete);
     }
 }
