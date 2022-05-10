@@ -33,5 +33,3 @@ java:
           alias: TENANT_ID
         - name: app-pip-account-management-scope
           alias: APP_URI
-        - name: shared-storageaccount-connection-string
-          alias: CONNECTION_STRING
