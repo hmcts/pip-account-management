@@ -11,7 +11,7 @@ simply use this one as a starting point and build on top of it.
 The template is a working application with a minimal setup. It contains:
  * application skeleton
  * setup script to prepare project
- * common plugins and libraries
+ * common plugins and libraries.
  * docker setup
  * swagger configuration for api documentation ([see how to publish your api documentation to shared repository](https://github.com/hmcts/reform-api-docs#publish-swagger-docs))
  * code quality tools already set up.
