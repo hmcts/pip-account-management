@@ -89,7 +89,6 @@ class AccountTest {
     private static final String EMAIL_VALIDATION_MESSAGE = "email: Invalid email provided. "
         + "Email must contain an @ symbol";
     private static final String INVALID_FIRST_NAME_MESSAGE = "firstName: must not be empty";
-    private static final String INVALID_SURNAME_MESSAGE = "surname: must not be empty";
     private static final String INVALID_ROLE_MESSAGE = "role: must not be null";
     private static final String DIRECTORY_ERROR = "Error when persisting account into Azure. "
         + "Check that the user doesn't already exist in the directory";
