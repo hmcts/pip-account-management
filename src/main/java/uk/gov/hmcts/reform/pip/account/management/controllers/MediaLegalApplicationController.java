@@ -32,7 +32,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
 
 @RestController
-@Api(tags = "Account Management - API for managing media & orphaned legal professional applications")
+@Api(tags = "Account Management - API for managing media applications")
 @IsAdmin
 @RequestMapping("/application")
 public class MediaLegalApplicationController {
