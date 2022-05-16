@@ -70,5 +70,5 @@ azure:
     extension-id: ${EXTENSION_ID:00000000-0000-0000-0000-000000000000}
     token-provider: "https://graph.microsoft.com/.default"
   user:
-    identity-issuer: "pib2csbox.onmicrosoft.com"
+    identity-issuer: "hmctspipnonprod.onmicrosoft.com"
     signInType: emailAddress
