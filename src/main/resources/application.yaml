@@ -72,3 +72,6 @@ azure:
   user:
     identity-issuer: "hmctspipnonprod.onmicrosoft.com"
     signInType: emailAddress
+  blob:
+    connection-string: ${CONNECTION_STRING}
+    container-name: files

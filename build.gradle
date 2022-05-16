@@ -193,6 +193,9 @@ dependencies {
   implementation group: 'com.github.hmcts.java-logging', name: 'logging', version: reformLoggingVersion
   implementation group: 'com.github.hmcts.java-logging', name: 'logging-appinsights', version: reformLoggingVersion
 
+  // Include Azure storage blob for storing application images
+  implementation group: 'com.azure', name: 'azure-storage-blob', version: '12.14.2'
+
   testImplementation(platform('org.junit:junit-bom:5.8.2'))
   testImplementation group: 'org.springframework.boot', name: 'spring-boot-starter-test'
   testImplementation group: 'org.springframework.security', name: 'spring-security-test'
@@ -220,6 +223,11 @@ bootJar {
 
 // Gradle 7.x issue, workaround from: https://github.com/gradle/gradle/issues/17236#issuecomment-894768083
 rootProject.tasks.named("processSmokeTestResources") {
+  duplicatesStrategy = 'include'
+}
+
+// Gradle 7.x issue, workaround from: https://github.com/gradle/gradle/issues/17236#issuecomment-894768083
+rootProject.tasks.named("processIntegrationTestResources") {
   duplicatesStrategy = 'include'
 }
 
