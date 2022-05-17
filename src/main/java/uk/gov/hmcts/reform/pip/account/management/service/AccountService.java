@@ -17,12 +17,7 @@ import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredAzureAcco
 import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredPiUser;
 import uk.gov.hmcts.reform.pip.model.enums.UserActions;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import javax.validation.ConstraintViolation;
@@ -202,6 +197,20 @@ public class AccountService {
             return returnedUser.get(0);
         }
         throw new UserNotFoundException("provenanceUserId", provenanceUserId);
+    }
+
+    public Map<String, String> findUserEmailsByIds(List<String> userIdsList) {
+
+
+        Map<String, String> emailMap = new HashMap<>();
+
+        for(String userId : userIdsList) {
+           PiUser returnedUser = userRepository.findByUserId(UUID.fromString(userId)).get();
+
+            emailMap.put(returnedUser.getUserId().toString(), returnedUser.getEmail());
+        }
+
+        return emailMap;
     }
 
     private void handleAccountCreationEmail(AzureAccount createdAccount) {
