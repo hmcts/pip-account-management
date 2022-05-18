@@ -6,7 +6,6 @@ import org.springframework.data.repository.query.Param;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 

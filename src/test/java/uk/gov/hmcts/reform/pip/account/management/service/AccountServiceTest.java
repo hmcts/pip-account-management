@@ -21,6 +21,7 @@ import uk.gov.hmcts.reform.pip.account.management.model.UserProvenances;
 import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredAzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredPiUser;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -91,6 +92,7 @@ class AccountServiceTest {
         piUser.setUserId(VALID_USER_ID);
         piUser.setUserProvenance(UserProvenances.PI_AAD);
         piUser.setProvenanceUserId(ID);
+        piUser.setEmail(EMAIL);
 
         piUserIdam.setUserId(VALID_USER_ID_IDAM);
         piUserIdam.setUserProvenance(UserProvenances.CFT_IDAM);
@@ -349,5 +351,33 @@ class AccountServiceTest {
             assertEquals(0, logCaptor.getInfoLogs().size(),
                          "Should not log if failed creating account");
         }
+    }
+
+    @Test
+    void testFindUserEmailsByIds() {
+        when(userRepository.findByUserId(VALID_USER_ID)).thenReturn(Optional.of(piUser));
+
+        List<String> userIdsList = new ArrayList<>();
+        userIdsList.add(VALID_USER_ID.toString());
+
+        Map<String, Optional<String>> expectedUserEmailMap = new ConcurrentHashMap<>();
+        expectedUserEmailMap.put(VALID_USER_ID.toString(), Optional.of(EMAIL));
+
+        assertEquals(expectedUserEmailMap, accountService.findUserEmailsByIds(userIdsList),
+                     "Returned map does not match with expected map");
+    }
+
+    @Test
+    void testFindUserEmailsByIdsNoEmails() {
+        when(userRepository.findByUserId(VALID_USER_ID)).thenReturn(Optional.empty());
+
+        List<String> userIdsList = new ArrayList<>();
+        userIdsList.add(VALID_USER_ID.toString());
+
+        Map<String, Optional<String>> expectedUserEmailMap = new ConcurrentHashMap<>();
+        expectedUserEmailMap.put(VALID_USER_ID.toString(), Optional.empty());
+
+        assertEquals(expectedUserEmailMap, accountService.findUserEmailsByIds(userIdsList),
+                     "Returned map does not match with expected map");
     }
 }

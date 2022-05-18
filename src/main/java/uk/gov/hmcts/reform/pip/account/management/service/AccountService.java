@@ -17,7 +17,12 @@ import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredAzureAcco
 import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredPiUser;
 import uk.gov.hmcts.reform.pip.model.enums.UserActions;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import javax.validation.ConstraintViolation;
@@ -199,17 +204,17 @@ public class AccountService {
         throw new UserNotFoundException("provenanceUserId", provenanceUserId);
     }
 
-    public Map<String, String> findUserEmailsByIds(List<String> userIdsList) {
+    public Map<String, Optional<String>> findUserEmailsByIds(List<String> userIdsList) {
+        Map<String, Optional<String>> emailMap = new ConcurrentHashMap<>();
+        for (String userId : userIdsList) {
+            Optional<PiUser> returnedUser = userRepository.findByUserId(UUID.fromString(userId));
 
+            emailMap.put(userId, Optional.empty());
 
-        Map<String, String> emailMap = new HashMap<>();
-
-        for(String userId : userIdsList) {
-           PiUser returnedUser = userRepository.findByUserId(UUID.fromString(userId)).get();
-
-            emailMap.put(returnedUser.getUserId().toString(), returnedUser.getEmail());
+            returnedUser.ifPresent(value ->
+                emailMap.put(userId, Optional.ofNullable(value.getEmail()))
+            );
         }
-
         return emailMap;
     }
 

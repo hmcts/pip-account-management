@@ -15,8 +15,10 @@ import uk.gov.hmcts.reform.pip.account.management.model.Roles;
 import uk.gov.hmcts.reform.pip.account.management.model.UserProvenances;
 import uk.gov.hmcts.reform.pip.account.management.service.AccountService;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -31,6 +33,13 @@ class AccountControllerTest {
 
     private static final String EMAIL = "a@b.com";
     private static final String STATUS_CODE_MATCH = "Status code responses should match";
+
+    private static final String TEST_ID_STRING_1 = "0b8968b4-5c79-4e4e-8f66-f6a552d9fa67";
+    private static final String TEST_ID_STRING_2 = "0b8968b4-5c79-4e4e-8f66-f6a552d9fa68";
+    private static final String TEST_ID_STRING_3 = "0b8968b4-5c79-4e4e-8f66-f6a552d9fa69";
+    private static final String TEST_EMAIL_1 = "test@user.com";
+    private static final String TEST_EMAIL_2 = "dave@email.com";
+
 
     @Mock
     private AccountService accountService;
@@ -111,6 +120,46 @@ class AccountControllerTest {
         assertEquals(HttpStatus.OK, accountController.getUserByProvenanceId(user.getUserProvenance(),
                                                                             user.getProvenanceUserId()).getStatusCode(),
                      STATUS_CODE_MATCH);
+    }
+
+    @Test
+    void testGetUserEmailsByIds() {
+        List<String> userIdsList = new ArrayList<>();
+        userIdsList.add(TEST_ID_STRING_1);
+        userIdsList.add(TEST_ID_STRING_2);
+
+        Map<String, Optional<String>> userEmailMap = new ConcurrentHashMap<>();
+        userEmailMap.put(TEST_ID_STRING_1, Optional.of(TEST_EMAIL_1));
+        userEmailMap.put(TEST_ID_STRING_2, Optional.of(TEST_EMAIL_2));
+
+        when(accountService.findUserEmailsByIds(userIdsList)).thenReturn(userEmailMap);
+
+        assertEquals(userEmailMap, accountController.getUserEmailsByIds(userIdsList).getBody(),
+                     "Should return correct id and email map");
+
+        assertEquals(HttpStatus.OK, accountController.getUserEmailsByIds(userIdsList)
+            .getStatusCode(), STATUS_CODE_MATCH);
+    }
+
+    @Test
+    void testGetUserEmailsByIdsNoEmail() {
+        List<String> userIdsList = new ArrayList<>();
+        userIdsList.add(TEST_ID_STRING_1);
+        userIdsList.add(TEST_ID_STRING_2);
+
+        Map<String, Optional<String>> userEmailMap = new ConcurrentHashMap<>();
+        userEmailMap.put(TEST_ID_STRING_1, Optional.empty());
+        userEmailMap.put(TEST_ID_STRING_2, Optional.of(TEST_EMAIL_2));
+        userEmailMap.put(TEST_ID_STRING_3, Optional.empty());
+
+
+        when(accountService.findUserEmailsByIds(userIdsList)).thenReturn(userEmailMap);
+
+        assertEquals(userEmailMap, accountController.getUserEmailsByIds(userIdsList).getBody(),
+                     "Should return correct id and email map");
+
+        assertEquals(HttpStatus.OK, accountController.getUserEmailsByIds(userIdsList)
+            .getStatusCode(), STATUS_CODE_MATCH);
     }
 
 }

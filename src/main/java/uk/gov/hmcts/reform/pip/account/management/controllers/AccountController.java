@@ -8,7 +8,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import uk.gov.hmcts.reform.pip.account.management.authentication.roles.IsAdmin;
 import uk.gov.hmcts.reform.pip.account.management.model.AzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
@@ -20,6 +26,7 @@ import uk.gov.hmcts.reform.pip.account.management.validation.annotations.ValidEm
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 @RestController
@@ -32,6 +39,8 @@ public class AccountController {
     @Autowired
     private AccountService accountService;
 
+    private static final String NOT_AUTHORIZED_MESSAGE = "User has not been authorized";
+
     /**
      * POST endpoint to create a new azure account.
      * This will also trigger any welcome emails.
@@ -42,7 +51,7 @@ public class AccountController {
      */
     @ApiResponses({
         @ApiResponse(code = 200, message = "{AzureAccount}"),
-        @ApiResponse(code = 403, message = "User has not been authorized"),
+        @ApiResponse(code = 403, message = NOT_AUTHORIZED_MESSAGE),
     })
     @PostMapping("/add/azure")
     public ResponseEntity<Map<CreationEnum, List<? extends AzureAccount>>> createAzureAccount(
@@ -61,7 +70,7 @@ public class AccountController {
     @ApiResponses({
         @ApiResponse(code = 201,
             message = "CREATED_ACCOUNTS: [{Created User UUID's}]"),
-        @ApiResponse(code = 403, message = "User has not been authorized"),
+        @ApiResponse(code = 403, message = NOT_AUTHORIZED_MESSAGE),
     })
     @ApiOperation("Add a user to the P&I postgres database")
     @PostMapping("/add/pi")
@@ -73,7 +82,7 @@ public class AccountController {
 
     @ApiResponses({
         @ApiResponse(code = 200, message = "{PiUser}"),
-        @ApiResponse(code = 403, message = "User has not been authorized"),
+        @ApiResponse(code = 403, message = NOT_AUTHORIZED_MESSAGE),
         @ApiResponse(code = 404, message = "No user found with the provenance user Id: {provenanceUserId}")
     })
     @ApiOperation("Get a user based on their provenance user Id and provenance")
@@ -95,8 +104,13 @@ public class AccountController {
         return ResponseEntity.ok(accountService.isUserAuthorisedForPublication(userId, listType));
     }
 
+    @ApiResponses({
+        @ApiResponse(code = 200, message = "Map<String, Optional<String>>"),
+        @ApiResponse(code = 403, message = NOT_AUTHORIZED_MESSAGE)
+    })
+    @ApiOperation("Get a map of userId and email from a list of userIds")
     @PostMapping("/emails")
-    public ResponseEntity<Map<String, String>> getUserEmailsByIds(@RequestBody List<String> userIdsList) {
+    public ResponseEntity<Map<String, Optional<String>>> getUserEmailsByIds(@RequestBody List<String> userIdsList) {
         return ResponseEntity.ok(accountService.findUserEmailsByIds(userIdsList));
     }
 }
