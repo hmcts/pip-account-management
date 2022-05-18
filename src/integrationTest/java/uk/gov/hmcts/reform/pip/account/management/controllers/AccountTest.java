@@ -75,6 +75,7 @@ class AccountTest {
     private static final String AZURE_URL = ROOT_URL + "/add/azure";
     private static final String PI_URL = ROOT_URL + "/add/pi";
     private static final String GET_PROVENANCE_USER_URL = ROOT_URL + "/provenance/";
+    private static final String EMAIL_URL = ROOT_URL + "/emails";
     private static final String EMAIL = "a@b";
     private static final String INVALID_EMAIL = "ab";
     private static final String FIRST_NAME = "First name";
@@ -104,6 +105,7 @@ class AccountTest {
     private static final String ERROR_RESPONSE_FORBIDDEN =
         "User: %s does not have sufficient permission to view list type: %s";
     private static final String FORBIDDEN_STATUS_CODE = "Status code does not match forbidden";
+    private static final String TEST_UUID_STRING = UUID.randomUUID().toString();
 
     private ObjectMapper objectMapper;
 
@@ -730,4 +732,17 @@ class AccountTest {
                      FORBIDDEN_STATUS_CODE);
     }
 
+    @Test
+    void testGetUserEmailsByIds() throws Exception {
+        MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
+            .post(EMAIL_URL)
+            .content(objectMapper.writeValueAsString(List.of(TEST_UUID_STRING)))
+            .contentType(MediaType.APPLICATION_JSON);
+
+        MvcResult mvcResult =
+            mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isOk()).andReturn();
+
+        assertEquals(HttpStatus.OK.value(), mvcResult.getResponse().getStatus(),
+                     "Status codes does match OK");
+    }
 }
