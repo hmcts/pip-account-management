@@ -105,7 +105,7 @@ public class AccountController {
     }
 
     @ApiResponses({
-        @ApiResponse(code = 200, message = "Map<String, Optional<String>>"),
+        @ApiResponse(code = 200, message = "{Map<String, Optional>}"),
         @ApiResponse(code = 403, message = NOT_AUTHORIZED_MESSAGE)
     })
     @ApiOperation("Get a map of userId and email from a list of userIds")

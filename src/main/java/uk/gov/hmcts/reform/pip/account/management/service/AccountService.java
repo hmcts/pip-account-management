@@ -209,11 +209,11 @@ public class AccountService {
         for (String userId : userIdsList) {
             Optional<PiUser> returnedUser = userRepository.findByUserId(UUID.fromString(userId));
 
-            emailMap.put(userId, Optional.empty());
-
             returnedUser.ifPresent(value ->
                 emailMap.put(userId, Optional.ofNullable(value.getEmail()))
             );
+
+            emailMap.computeIfAbsent(userId, v -> Optional.empty());
         }
         return emailMap;
     }

@@ -12,7 +12,7 @@ The template is a working application with a minimal setup. It contains:
  * application skeleton.
  * setup script to prepare project
  * common plugins and libraries.
- * docker setup.
+ * docker setup
  * swagger configuration for api documentation ([see how to publish your api documentation to shared repository](https://github.com/hmcts/reform-api-docs#publish-swagger-docs))
  * code quality tools already set up.
  * integration with Travis CI.
