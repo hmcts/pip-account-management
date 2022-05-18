@@ -182,6 +182,7 @@ dependencies {
   implementation group: 'org.apache.tomcat.embed', name: 'tomcat-embed-core', version: '9.0.58'
   implementation group: 'org.apache.tomcat.embed', name: 'tomcat-embed-websocket', version: '9.0.58'
   implementation group: 'com.squareup.okhttp3', name: 'okhttp', version: '4.9.3'
+  implementation group: 'io.netty', name: 'netty-codec', version: '4.1.77.Final'
 
   // Include the sdk as a dependency
   implementation group: 'com.microsoft.graph', name: 'microsoft-graph', version: '5.17.0'
