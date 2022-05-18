@@ -17,6 +17,7 @@ import uk.gov.hmcts.reform.pip.account.management.service.AccountService;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -83,14 +84,27 @@ class AccountControllerTest {
         when(accountService.isUserAuthorisedForPublication(any(), any())).thenReturn(true);
         assertEquals(
             HttpStatus.OK,
-            accountController.checkUserAuthorised(UUID.randomUUID(), ListType.MAGS_PUBLIC_LIST).getStatusCode(),
+            accountController.checkUserAuthorised(Optional.of(UUID.randomUUID()),
+                                                  ListType.MAGS_PUBLIC_LIST).getStatusCode(),
             STATUS_CODE_MATCH
         );
         assertEquals(
             true,
-            accountController.checkUserAuthorised(UUID.randomUUID(), ListType.MAGS_PUBLIC_LIST).getBody(),
+            accountController.checkUserAuthorised(Optional.of(UUID.randomUUID()), ListType.MAGS_PUBLIC_LIST).getBody(),
             "Should return boolean value"
         );
+    }
+
+    @Test
+    void testIsListPublic() {
+        when(accountService.isListTypePublic(ListType.MAGS_PUBLIC_LIST)).thenReturn(true);
+        assertEquals(HttpStatus.OK,
+                     accountController.checkUserAuthorised(Optional.empty(), ListType.MAGS_PUBLIC_LIST).getStatusCode(),
+                     STATUS_CODE_MATCH);
+
+        assertEquals(true,
+                     accountController.checkUserAuthorised(Optional.empty(), ListType.MAGS_PUBLIC_LIST).getBody(),
+                     "Should return boolean value");
     }
 
     @Test

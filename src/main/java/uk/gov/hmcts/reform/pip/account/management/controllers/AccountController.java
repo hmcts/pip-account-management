@@ -26,6 +26,7 @@ import uk.gov.hmcts.reform.pip.account.management.validation.annotations.ValidEm
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 @RestController
@@ -96,8 +97,10 @@ public class AccountController {
         @ApiResponse(code = 404, message = "No user found with the userId: {userId}"),
     })
     @ApiOperation("Check if a user can see a classified publication through list type and their provenance")
-    @GetMapping("/isAuthorised/{userId}/{listType}")
-    public ResponseEntity<Boolean> checkUserAuthorised(@PathVariable UUID userId, @PathVariable ListType listType) {
-        return ResponseEntity.ok(accountService.isUserAuthorisedForPublication(userId, listType));
+    @GetMapping({"/isAuthorised/{userId}/{listType}", "/isAuthorised/{listType}"})
+    public ResponseEntity<Boolean> checkUserAuthorised(@PathVariable Optional<UUID> userId,
+                                                       @PathVariable ListType listType) {
+        return ResponseEntity.ok(userId.map(uuid -> accountService.isUserAuthorisedForPublication(uuid, listType))
+                                     .orElseGet(() -> accountService.isListTypePublic(listType)));
     }
 }

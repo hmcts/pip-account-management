@@ -730,4 +730,26 @@ class AccountTest {
                      FORBIDDEN_STATUS_CODE);
     }
 
+    @Test
+    void testPublicUserCheckAuthorised() throws Exception {
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+            .get(String.format("%s/isAuthorised/%s", ROOT_URL, ListType.MAGS_PUBLIC_LIST));
+
+        MvcResult response = mockMvc.perform(request).andExpect(status().isOk()).andReturn();
+        assertTrue(Boolean.parseBoolean(response.getResponse().getContentAsString()),
+                   "Should return true for public list");
+    }
+
+    @Test
+    void testPublicUserCheckAuthorisedThrows() throws Exception {
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+            .get(String.format("%s/isAuthorised/%s", ROOT_URL, ListType.CROWN_FIRM_LIST));
+
+        MvcResult result = mockMvc.perform(request).andExpect(status().isForbidden()).andReturn();
+
+        assertTrue(result.getResponse().getContentAsString()
+                       .contains(ListType.CROWN_FIRM_LIST + " is not a public list"),
+                     "Should Forbidden message");
+    }
+
 }

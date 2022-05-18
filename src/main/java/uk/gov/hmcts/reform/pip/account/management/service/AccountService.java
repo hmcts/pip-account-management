@@ -140,6 +140,13 @@ public class AccountService {
         return processedAccounts;
     }
 
+    public boolean isListTypePublic(ListType listType) {
+        if (listType.isPublic) {
+            return true;
+        }
+        throw new ForbiddenPermissionsException(listType + " is not a public list");
+    }
+
     /**
      * Used to check if a user can see a given publication based on the provenances of the user and pub.
      * @param userId  the user id of the user to check permissions for.

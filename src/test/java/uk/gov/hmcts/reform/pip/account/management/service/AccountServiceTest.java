@@ -350,4 +350,20 @@ class AccountServiceTest {
                          "Should not log if failed creating account");
         }
     }
+
+    @Test
+    void testIsListTypePublicReturnsTrue() {
+        assertTrue(accountService.isListTypePublic(ListType.MAGS_PUBLIC_LIST),
+                   "Should return true for public list type");
+    }
+
+    @Test
+    void testIsListTypePublicThrows() {
+        ForbiddenPermissionsException ex = assertThrows(ForbiddenPermissionsException.class, () ->
+            accountService.isListTypePublic(ListType.CROWN_FIRM_LIST),
+                "Should throw Forbidden permission exception if not public list"
+        );
+        assertEquals(ListType.CROWN_FIRM_LIST + " is not a public list", ex.getMessage(),
+                     MESSAGES_MATCH);
+    }
 }
