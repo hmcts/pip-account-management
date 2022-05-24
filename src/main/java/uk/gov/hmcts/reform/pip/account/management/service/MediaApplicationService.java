@@ -1,8 +1,10 @@
 package uk.gov.hmcts.reform.pip.account.management.service;
 
 import com.azure.storage.blob.models.BlobStorageException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import uk.gov.hmcts.reform.pip.account.management.database.AzureBlobService;
@@ -14,19 +16,24 @@ import uk.gov.hmcts.reform.pip.account.management.model.MediaApplicationStatus;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 public class MediaApplicationService {
 
     private final MediaApplicationRepository mediaApplicationRepository;
 
     private final AzureBlobService azureBlobService;
+    private final PublicationService publicationService;
 
     @Autowired
     public MediaApplicationService(MediaApplicationRepository mediaApplicationRepository,
-                                   AzureBlobService azureBlobService) {
+                                   AzureBlobService azureBlobService,
+                                   PublicationService publicationService) {
         this.mediaApplicationRepository = mediaApplicationRepository;
         this.azureBlobService = azureBlobService;
+        this.publicationService = publicationService;
     }
 
     /**
@@ -119,5 +126,30 @@ public class MediaApplicationService {
 
         azureBlobService.deleteBlob(applicationToDelete.getImage());
         mediaApplicationRepository.delete(applicationToDelete);
+    }
+
+    /**
+     * Scheduled job that gets all media applications & sends them to publication services.
+     */
+    @Scheduled(cron = "${cron.media-application-reporting}")
+    public void processApplicationsForReporting() {
+        List<MediaApplication> mediaApplications = getApplications();
+        publicationService.sendMediaApplicationReportingEmail(mediaApplications);
+        processApplicationsForDeleting(mediaApplications);
+    }
+
+    /**
+     * Take in a list of applications.
+     * Delete the records that have APPROVED or REJECTED status.
+     *
+     * @param applicationList The list of applications to filter by and delete.
+     */
+    private void processApplicationsForDeleting(List<MediaApplication> applicationList) {
+        mediaApplicationRepository.deleteAllInBatch(
+            applicationList.stream().filter(app -> app.getStatus().equals(MediaApplicationStatus.APPROVED)
+                || app.getStatus().equals(MediaApplicationStatus.REJECTED))
+                .collect(Collectors.toList()));
+
+        log.info("Approved and Rejected applications deleted");
     }
 }

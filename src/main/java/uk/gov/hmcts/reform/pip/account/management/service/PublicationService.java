@@ -9,9 +9,11 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientException;
+import uk.gov.hmcts.reform.pip.account.management.model.MediaApplication;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.List;
 
 @Slf4j
 @Component
@@ -48,6 +50,24 @@ public class PublicationService {
         } catch (WebClientException | URISyntaxException ex) {
             log.error(String.format("Request failed with error message: %s", ex.getMessage()));
             return "Email request failed to send: " + emailAddress;
+        }
+    }
+
+    /**
+     * Method which sends a request to publication services to email the P&I team.
+     * With a list of all media applications in the database.
+     *
+     * @return String for logging success or failure
+     */
+    public void sendMediaApplicationReportingEmail(List<MediaApplication> mediaApplicationList) {
+        try {
+            webClient.post().uri(url + "/")
+                .body(BodyInserters.fromValue(mediaApplicationList)).retrieve()
+                .bodyToMono(Void.class).block();
+            log.info("List of applications has been sent to publication services");
+        } catch (WebClientException ex) {
+            log.error(String.format("Request: %s failed. With error message: %s",
+                                    mediaApplicationList, ex.getMessage()));
         }
     }
 }

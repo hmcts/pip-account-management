@@ -1,2 +1,5 @@
 service-to-service:
   publication-services: localhost:8081
+
+cron:
+  media-application-reporting: "*/10 * * * * *"
