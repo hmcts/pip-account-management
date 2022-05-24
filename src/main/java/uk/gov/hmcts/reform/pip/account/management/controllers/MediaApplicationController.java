@@ -20,10 +20,10 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import uk.gov.hmcts.reform.pip.account.management.authentication.roles.IsAdmin;
-import uk.gov.hmcts.reform.pip.account.management.model.MediaAndLegalApplication;
-import uk.gov.hmcts.reform.pip.account.management.model.MediaAndLegalApplicationDto;
-import uk.gov.hmcts.reform.pip.account.management.model.MediaLegalApplicationStatus;
-import uk.gov.hmcts.reform.pip.account.management.service.MediaLegalApplicationService;
+import uk.gov.hmcts.reform.pip.account.management.model.MediaApplication;
+import uk.gov.hmcts.reform.pip.account.management.model.MediaApplicationDto;
+import uk.gov.hmcts.reform.pip.account.management.model.MediaApplicationStatus;
+import uk.gov.hmcts.reform.pip.account.management.service.MediaApplicationService;
 
 import java.util.List;
 import java.util.UUID;
@@ -35,46 +35,46 @@ import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
 @Api(tags = "Account Management - API for managing media applications")
 @IsAdmin
 @RequestMapping("/application")
-public class MediaLegalApplicationController {
+public class MediaApplicationController {
 
-    private final MediaLegalApplicationService mediaLegalApplicationService;
+    private final MediaApplicationService mediaApplicationService;
 
     private static final String NOT_AUTHORIZED_MESSAGE = "User has not been authorized";
 
     @Autowired
-    public MediaLegalApplicationController(MediaLegalApplicationService mediaLegalApplicationService) {
-        this.mediaLegalApplicationService = mediaLegalApplicationService;
+    public MediaApplicationController(MediaApplicationService mediaApplicationService) {
+        this.mediaApplicationService = mediaApplicationService;
     }
 
     @ApiResponses({
-        @ApiResponse(code = 200, message = "List<{MediaAndLegalApplication}>"),
+        @ApiResponse(code = 200, message = "List<{MediaApplication}>"),
         @ApiResponse(code = 403, message = NOT_AUTHORIZED_MESSAGE),
     })
     @ApiOperation("Get all applications")
     @GetMapping(produces = APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<MediaAndLegalApplication>> getApplications() {
-        return ResponseEntity.ok(mediaLegalApplicationService.getApplications());
+    public ResponseEntity<List<MediaApplication>> getApplications() {
+        return ResponseEntity.ok(mediaApplicationService.getApplications());
     }
 
     @ApiResponses({
-        @ApiResponse(code = 200, message = "List<{MediaAndLegalApplication}>"),
+        @ApiResponse(code = 200, message = "List<{MediaApplication}>"),
         @ApiResponse(code = 403, message = NOT_AUTHORIZED_MESSAGE),
     })
     @ApiOperation("Get all application by the status")
     @GetMapping(value = "/status/{status}", produces = APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<MediaAndLegalApplication>> getApplicationsByStatus(
-        @PathVariable MediaLegalApplicationStatus status) {
-        return ResponseEntity.ok(mediaLegalApplicationService.getApplicationsByStatus(status));
+    public ResponseEntity<List<MediaApplication>> getApplicationsByStatus(
+        @PathVariable MediaApplicationStatus status) {
+        return ResponseEntity.ok(mediaApplicationService.getApplicationsByStatus(status));
     }
 
     @ApiResponses({
-        @ApiResponse(code = 200, message = "{MediaAndLegalApplication}"),
+        @ApiResponse(code = 200, message = "{MediaApplication}"),
         @ApiResponse(code = 403, message = NOT_AUTHORIZED_MESSAGE),
         @ApiResponse(code = 404, message = "No media application found with id: {id}"),
     })
     @GetMapping(value = "/{id}", produces = APPLICATION_JSON_VALUE)
-    public ResponseEntity<MediaAndLegalApplication> getApplicationById(@PathVariable UUID id) {
-        return ResponseEntity.ok(mediaLegalApplicationService.getApplicationById(id));
+    public ResponseEntity<MediaApplication> getApplicationById(@PathVariable UUID id) {
+        return ResponseEntity.ok(mediaApplicationService.getApplicationById(id));
     }
 
     @ApiResponses({
@@ -86,32 +86,32 @@ public class MediaLegalApplicationController {
     public ResponseEntity<Resource> getImageById(@PathVariable String id) {
         return ResponseEntity.ok()
             .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_OCTET_STREAM_VALUE)
-            .body(mediaLegalApplicationService.getImageById(id));
+            .body(mediaApplicationService.getImageById(id));
     }
 
     @ApiResponses({
-        @ApiResponse(code = 200, message = "{MediaAndLegalApplication}"),
+        @ApiResponse(code = 200, message = "{MediaApplication}"),
         @ApiResponse(code = 403, message = NOT_AUTHORIZED_MESSAGE),
     })
     @ApiOperation("Create a new application")
     @PostMapping(produces = APPLICATION_JSON_VALUE, consumes = MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<MediaAndLegalApplication> createApplication(
-        @ModelAttribute("application") MediaAndLegalApplicationDto application,
+    public ResponseEntity<MediaApplication> createApplication(
+        @ModelAttribute("application") MediaApplicationDto application,
         @RequestPart("file") MultipartFile file) {
-        return ResponseEntity.ok(mediaLegalApplicationService.createApplication(application.toEntity(), file));
+        return ResponseEntity.ok(mediaApplicationService.createApplication(application.toEntity(), file));
     }
 
     @ApiResponses({
-        @ApiResponse(code = 200, message = "{MediaAndLegalApplication}"),
+        @ApiResponse(code = 200, message = "{MediaApplication}"),
         @ApiResponse(code = 403, message = NOT_AUTHORIZED_MESSAGE),
         @ApiResponse(code = 404, message = "No media application found with id: {id}"),
     })
     @ApiOperation("Update an existing application")
     @PutMapping("/{id}/{status}")
-    public ResponseEntity<MediaAndLegalApplication> updateApplication(@PathVariable UUID id,
-        @PathVariable MediaLegalApplicationStatus status) {
+    public ResponseEntity<MediaApplication> updateApplication(@PathVariable UUID id,
+                                                              @PathVariable MediaApplicationStatus status) {
         return ResponseEntity.ok(
-            mediaLegalApplicationService.updateApplication(id, status));
+            mediaApplicationService.updateApplication(id, status));
     }
 
     @ApiResponses({
@@ -122,7 +122,7 @@ public class MediaLegalApplicationController {
     @ApiOperation("Delete an application")
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteApplication(@PathVariable UUID id) {
-        mediaLegalApplicationService.deleteApplication(id);
+        mediaApplicationService.deleteApplication(id);
         return ResponseEntity.ok("Application deleted");
     }
 }

@@ -17,9 +17,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import uk.gov.hmcts.reform.pip.account.management.Application;
 import uk.gov.hmcts.reform.pip.account.management.config.AzureConfigurationClientTest;
-import uk.gov.hmcts.reform.pip.account.management.model.MediaAndLegalApplication;
-import uk.gov.hmcts.reform.pip.account.management.model.MediaAndLegalApplicationDto;
-import uk.gov.hmcts.reform.pip.account.management.model.MediaLegalApplicationStatus;
+import uk.gov.hmcts.reform.pip.account.management.model.MediaApplication;
+import uk.gov.hmcts.reform.pip.account.management.model.MediaApplicationDto;
+import uk.gov.hmcts.reform.pip.account.management.model.MediaApplicationStatus;
 
 import java.io.InputStream;
 import java.util.Arrays;
@@ -43,7 +43,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles(profiles = "test")
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
 @WithMockUser(username = "admin", authorities = { "APPROLE_api.request.admin" })
-class MediaLegalApplicationTest {
+class MediaApplicationTest {
 
     @Autowired
     BlobContainerClient blobContainerClient;
@@ -53,7 +53,7 @@ class MediaLegalApplicationTest {
 
     @Autowired
     private MockMvc mockMvc;
-    
+
     private static final String ROOT_URL = "/application";
     private static final String GET_STATUS_URL = ROOT_URL + "/status/{status}";
     private static final String PUT_URL = ROOT_URL + "/{id}/{status}";
@@ -66,8 +66,8 @@ class MediaLegalApplicationTest {
     private static final String EMAIL = "test@email.com";
     private static final String EMPLOYER = "Test employer";
     private static final String BLOB_IMAGE_URL = "https://localhost";
-    private static final MediaLegalApplicationStatus STATUS = MediaLegalApplicationStatus.PENDING;
-    private static final MediaLegalApplicationStatus UPDATED_STATUS = MediaLegalApplicationStatus.APPROVED;
+    private static final MediaApplicationStatus STATUS = MediaApplicationStatus.PENDING;
+    private static final MediaApplicationStatus UPDATED_STATUS = MediaApplicationStatus.APPROVED;
     private static final UUID TEST_ID = UUID.randomUUID();
 
     private static final String NOT_FOUND_ERROR = "Returned ID does not match the expected ID";
@@ -78,8 +78,8 @@ class MediaLegalApplicationTest {
         objectMapper.findAndRegisterModules();
     }
 
-    private MediaAndLegalApplication createApplication() throws Exception {
-        MediaAndLegalApplicationDto applicationDto = new MediaAndLegalApplicationDto();
+    private MediaApplication createApplication() throws Exception {
+        MediaApplicationDto applicationDto = new MediaApplicationDto();
         applicationDto.setFullName(FULL_NAME);
         applicationDto.setEmail(EMAIL);
         applicationDto.setEmployer(EMPLOYER);
@@ -101,23 +101,23 @@ class MediaLegalApplicationTest {
                                                   .contentType(MediaType.MULTIPART_FORM_DATA_VALUE))
                                                   .andExpect(status().isOk()).andReturn();
 
-            return objectMapper.readValue(mvcResult.getResponse().getContentAsString(), MediaAndLegalApplication.class);
+            return objectMapper.readValue(mvcResult.getResponse().getContentAsString(), MediaApplication.class);
         }
     }
 
     @Test
     void testGetApplications() throws Exception {
-        MediaAndLegalApplication application = createApplication();
+        MediaApplication application = createApplication();
 
         MvcResult mvcResult = mockMvc.perform(get(ROOT_URL))
             .andExpect(status().isOk())
             .andReturn();
 
-        MediaAndLegalApplication[] arrayApplications = objectMapper.readValue(mvcResult.getResponse()
+        MediaApplication[] arrayApplications = objectMapper.readValue(mvcResult.getResponse()
                                                                              .getContentAsString(),
-                                                                             MediaAndLegalApplication[].class);
+                                                                             MediaApplication[].class);
 
-        List<MediaAndLegalApplication> applicationList = Arrays.asList(arrayApplications);
+        List<MediaApplication> applicationList = Arrays.asList(arrayApplications);
 
         assertEquals(application.getEmail(), applicationList.get(0).getEmail(), "Emails do not match");
         assertEquals(FORMATTED_FULL_NAME, applicationList.get(0).getFullName(), "Full name hasn't been formatted");
@@ -127,17 +127,17 @@ class MediaLegalApplicationTest {
 
     @Test
     void testGetApplicationsByStatus() throws Exception {
-        MediaAndLegalApplication application = createApplication();
+        MediaApplication application = createApplication();
 
         MvcResult mvcResult = mockMvc.perform(get(GET_STATUS_URL, "PENDING"))
             .andExpect(status().isOk())
             .andReturn();
 
-        MediaAndLegalApplication[] arrayApplications = objectMapper.readValue(mvcResult.getResponse()
+        MediaApplication[] arrayApplications = objectMapper.readValue(mvcResult.getResponse()
                                                                                   .getContentAsString(),
-                                                                              MediaAndLegalApplication[].class);
+                                                                              MediaApplication[].class);
 
-        List<MediaAndLegalApplication> applicationList = Arrays.asList(arrayApplications);
+        List<MediaApplication> applicationList = Arrays.asList(arrayApplications);
 
         assertEquals(application.getEmail(), applicationList.get(0).getEmail(), "Emails do not match");
         assertEquals(FORMATTED_FULL_NAME, applicationList.get(0).getFullName(), "Full name hasn't been formatted");
@@ -148,15 +148,15 @@ class MediaLegalApplicationTest {
 
     @Test
     void testGetApplicationById() throws Exception {
-        MediaAndLegalApplication application = createApplication();
+        MediaApplication application = createApplication();
 
         MvcResult mvcResult = mockMvc.perform(get(GET_BY_ID_URL, application.getId()))
             .andExpect(status().isOk())
             .andReturn();
 
-        MediaAndLegalApplication returnedApplication = objectMapper.readValue(mvcResult.getResponse()
+        MediaApplication returnedApplication = objectMapper.readValue(mvcResult.getResponse()
                                                                                   .getContentAsString(),
-                                                                              MediaAndLegalApplication.class);
+                                                                              MediaApplication.class);
 
 
         assertEquals(application.getEmail(), returnedApplication.getEmail(), "Emails do not match");
@@ -175,7 +175,7 @@ class MediaLegalApplicationTest {
 
     @Test
     void testUpdateApplication() throws Exception {
-        MediaAndLegalApplication application = createApplication();
+        MediaApplication application = createApplication();
 
         assertEquals(STATUS, application.getStatus(), "Original statuses do not match");
 
@@ -183,9 +183,9 @@ class MediaLegalApplicationTest {
             .andExpect(status().isOk())
             .andReturn();
 
-        MediaAndLegalApplication returnedApplication = objectMapper.readValue(mvcResult.getResponse()
+        MediaApplication returnedApplication = objectMapper.readValue(mvcResult.getResponse()
                                                                                   .getContentAsString(),
-                                                                              MediaAndLegalApplication.class);
+                                                                              MediaApplication.class);
 
         assertEquals(UPDATED_STATUS, returnedApplication.getStatus(), "Updated statuses do not match");
 
@@ -202,7 +202,7 @@ class MediaLegalApplicationTest {
 
     @Test
     void testDeleteApplication() throws Exception {
-        MediaAndLegalApplication application = createApplication();
+        MediaApplication application = createApplication();
 
         MvcResult mvcResult = mockMvc.perform(delete(DELETE_URL, application.getId()))
             .andExpect(status().isOk())
