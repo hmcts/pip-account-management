@@ -20,6 +20,7 @@ import uk.gov.hmcts.reform.pip.account.management.model.AzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.ListType;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
+import uk.gov.hmcts.reform.pip.account.management.model.Sensitivity;
 import uk.gov.hmcts.reform.pip.account.management.model.UserProvenances;
 import uk.gov.hmcts.reform.pip.account.management.service.AccountService;
 import uk.gov.hmcts.reform.pip.account.management.validation.annotations.ValidEmail;
@@ -95,9 +96,12 @@ public class AccountController {
             message = "User: {userId} does not have sufficient permission to view list type: {listType}"),
         @ApiResponse(code = 404, message = "No user found with the userId: {userId}"),
     })
-    @ApiOperation("Check if a user can see a classified publication through list type and their provenance")
-    @GetMapping("/isAuthorised/{userId}/{listType}")
-    public ResponseEntity<Boolean> checkUserAuthorised(@PathVariable UUID userId, @PathVariable ListType listType) {
-        return ResponseEntity.ok(accountService.isUserAuthorisedForPublication(userId, listType));
+    @ApiOperation("Check if a user can see a classified publication through "
+        + "their user ID and the publications list type and sensitivity")
+    @GetMapping("/isAuthorised/{userId}/{listType}/{sensitivity}")
+    public ResponseEntity<Boolean> checkUserAuthorised(@PathVariable UUID userId,
+                                                       @PathVariable ListType listType,
+                                                       @PathVariable Sensitivity sensitivity) {
+        return ResponseEntity.ok(accountService.isUserAuthorisedForPublication(userId, listType, sensitivity));
     }
 }

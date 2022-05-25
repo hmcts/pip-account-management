@@ -6,12 +6,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import uk.gov.hmcts.reform.pip.account.management.database.UserRepository;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.AzureCustomException;
-import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.ForbiddenPermissionsException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.UserNotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.model.AzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.ListType;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
+import uk.gov.hmcts.reform.pip.account.management.model.Sensitivity;
 import uk.gov.hmcts.reform.pip.account.management.model.UserProvenances;
 import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredAzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredPiUser;
@@ -39,9 +39,6 @@ import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
 @SuppressWarnings("PMD.LawOfDemeter")
 public class AccountService {
 
-    private static final String FORBIDDEN_MESSAGE =
-        "User: %s does not have sufficient permission to view list type: %s";
-
     @Autowired
     Validator validator;
 
@@ -53,6 +50,9 @@ public class AccountService {
 
     @Autowired
     PublicationService publicationService;
+
+    @Autowired
+    SensitivityService sensitivityService;
 
     /**
      * Method to create new accounts in azure.
@@ -141,17 +141,16 @@ public class AccountService {
     }
 
     /**
-     * Used to check if a user can see a given publication based on the provenances of the user and pub.
+     * Used to check if a user can see a given publication based on the provenances of the user,
+     * and list type / sensitivity of the publication.
      * @param userId  the user id of the user to check permissions for.
-     * @param listType the list type of the publication used to check which provenances can see classififed.
+     * @param listType the list type of the publication.
+     * @param sensitivity the sensitivity of the publication.
      * @return bool of true if user can see it, else exception is thrown
      */
-    public boolean isUserAuthorisedForPublication(UUID userId, ListType listType) {
+    public boolean isUserAuthorisedForPublication(UUID userId, ListType listType, Sensitivity sensitivity) {
         PiUser userToCheck = checkUserReturned(userRepository.findByUserId(userId), userId);
-        if (checkAuthorisation(userToCheck.getUserProvenance(), listType)) {
-            return true;
-        }
-        throw new ForbiddenPermissionsException(String.format(FORBIDDEN_MESSAGE, userId, listType));
+        return sensitivityService.checkAuthorisation(userToCheck, listType, sensitivity);
 
     }
 
@@ -166,28 +165,6 @@ public class AccountService {
             throw new UserNotFoundException("userId", userID.toString());
         }
         return user.get();
-    }
-
-    /**
-     * Checks the allowed provenance of the list to see if it matches the provenance of the user.
-     * @param userProvenance provenance of the user to check.
-     * @param listType list type to check against, ENUM value contains the allowed provenance.
-     * @return true if list type is available public or private, or if provenances match, else returns false.
-     */
-    private boolean checkAuthorisation(UserProvenances userProvenance, ListType listType) {
-        if (!isGenericListType(listType)) {
-            return listType.allowedProvenance.equals(userProvenance);
-        }
-        return true;
-    }
-
-    /**
-     * Checks if the list type has no classified restrictions.
-     * @param listType list type to check
-     * @return true if the list type doesnt require classified restrictions.
-     */
-    private boolean isGenericListType(ListType listType) {
-        return listType.allowedProvenance == null;
     }
 
     /**

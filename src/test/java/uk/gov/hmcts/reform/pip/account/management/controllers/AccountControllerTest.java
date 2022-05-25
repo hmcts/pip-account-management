@@ -12,6 +12,7 @@ import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.ListType;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
 import uk.gov.hmcts.reform.pip.account.management.model.Roles;
+import uk.gov.hmcts.reform.pip.account.management.model.Sensitivity;
 import uk.gov.hmcts.reform.pip.account.management.model.UserProvenances;
 import uk.gov.hmcts.reform.pip.account.management.service.AccountService;
 
@@ -80,15 +81,17 @@ class AccountControllerTest {
 
     @Test
     void testIsUserAuthorised() {
-        when(accountService.isUserAuthorisedForPublication(any(), any())).thenReturn(true);
+        when(accountService.isUserAuthorisedForPublication(any(), any(), any())).thenReturn(true);
         assertEquals(
             HttpStatus.OK,
-            accountController.checkUserAuthorised(UUID.randomUUID(), ListType.MAGS_PUBLIC_LIST).getStatusCode(),
+            accountController.checkUserAuthorised(UUID.randomUUID(), ListType.MAGS_PUBLIC_LIST,
+                                                  Sensitivity.PUBLIC).getStatusCode(),
             STATUS_CODE_MATCH
         );
         assertEquals(
             true,
-            accountController.checkUserAuthorised(UUID.randomUUID(), ListType.MAGS_PUBLIC_LIST).getBody(),
+            accountController.checkUserAuthorised(UUID.randomUUID(), ListType.MAGS_PUBLIC_LIST,
+                                                  Sensitivity.PUBLIC).getBody(),
             "Should return boolean value"
         );
     }
