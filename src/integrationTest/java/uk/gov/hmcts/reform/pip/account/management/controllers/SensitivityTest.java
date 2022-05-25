@@ -210,6 +210,4 @@ class SensitivityTest {
         assertEquals(FALSE, response.getResponse().getContentAsString(), FALSE_MESSAGE);
     }
 
-
-
 }
