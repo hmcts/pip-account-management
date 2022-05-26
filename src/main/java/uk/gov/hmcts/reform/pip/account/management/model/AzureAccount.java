@@ -38,7 +38,6 @@ public class AzureAccount {
     /**
      * The surname of the account.
      */
-    @NotEmpty
     private String surname;
 
     /**
