@@ -19,7 +19,7 @@ static LinkedHashMap<String, Object> secret(String secretName, String envVar) {
 
 
 withPipeline(type, product, component) {
- 
+
 
     enableSlackNotifications('#pip-build-notices')
     enableAksStagingDeployment()
