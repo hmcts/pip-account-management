@@ -4,6 +4,7 @@ import com.azure.storage.blob.models.BlobStorageException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -20,6 +21,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Service
+@EnableScheduling
 public class MediaApplicationService {
 
     private final MediaApplicationRepository mediaApplicationRepository;
@@ -134,7 +136,7 @@ public class MediaApplicationService {
     @Scheduled(cron = "${cron.media-application-reporting}")
     public void processApplicationsForReporting() {
         List<MediaApplication> mediaApplications = getApplications();
-        publicationService.sendMediaApplicationReportingEmail(mediaApplications);
+        log.info(publicationService.sendMediaApplicationReportingEmail(mediaApplications));
         processApplicationsForDeleting(mediaApplications);
     }
 
@@ -150,6 +152,6 @@ public class MediaApplicationService {
                 || app.getStatus().equals(MediaApplicationStatus.REJECTED))
                 .collect(Collectors.toList()));
 
-        log.info("Approved and Rejected applications deleted");
+        log.info("Approved and Rejected media applications deleted");
     }
 }

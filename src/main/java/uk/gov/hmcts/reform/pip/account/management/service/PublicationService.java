@@ -59,15 +59,16 @@ public class PublicationService {
      *
      * @return String for logging success or failure
      */
-    public void sendMediaApplicationReportingEmail(List<MediaApplication> mediaApplicationList) {
+    public String sendMediaApplicationReportingEmail(List<MediaApplication> mediaApplicationList) {
         try {
-            webClient.post().uri(url + "/")
+            return webClient.post().uri(url + "/notify/media/report")
                 .body(BodyInserters.fromValue(mediaApplicationList)).retrieve()
-                .bodyToMono(Void.class).block();
-            log.info("List of applications has been sent to publication services");
+                .bodyToMono(String.class).block();
         } catch (WebClientException ex) {
             log.error(String.format("Request: %s failed. With error message: %s",
                                     mediaApplicationList, ex.getMessage()));
+            return String.format("Email request failed to send with list of applications: %s",
+                                 mediaApplicationList);
         }
     }
 }
