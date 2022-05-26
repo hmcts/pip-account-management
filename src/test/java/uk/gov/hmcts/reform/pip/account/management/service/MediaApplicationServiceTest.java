@@ -1,6 +1,7 @@
 package uk.gov.hmcts.reform.pip.account.management.service;
 
 import com.azure.storage.blob.models.BlobStorageException;
+import nl.altindag.log.LogCaptor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -42,8 +43,13 @@ class MediaApplicationServiceTest {
     @Mock
     private AzureBlobService azureBlobService;
 
+    @Mock
+    private PublicationService publicationService;
+
     @InjectMocks
     private MediaApplicationService mediaApplicationService;
+
+    LogCaptor logCaptor = LogCaptor.forClass(MediaApplicationService.class);
 
     private MediaApplication mediaApplicationExample = new MediaApplication();
     private MediaApplication mediaApplicationExampleWithImageUrl = new MediaApplication();
@@ -187,5 +193,20 @@ class MediaApplicationServiceTest {
             mediaApplicationService.deleteApplication(TEST_ID), NOT_FOUND_EXCEPTION_THROWN_MESSAGE);
 
         assertTrue(notFoundException.getMessage().contains(String.valueOf(TEST_ID)), NOT_FOUND_MESSAGE);
+    }
+
+    @Test
+    void testProcessApplicationForReporting() {
+        when(mediaApplicationRepository.findAll()).thenReturn(List.of(mediaApplicationExample));
+        when(publicationService.sendMediaApplicationReportingEmail(List.of(mediaApplicationExample)))
+            .thenReturn("Email sent");
+
+        mediaApplicationService.processApplicationsForReporting();
+
+        assertTrue("Email sent".equals(logCaptor.getInfoLogs().get(0)),
+                   "Publication service response logs not being captured.");
+
+        assertTrue("Approved and Rejected media applications deleted".equals(logCaptor.getInfoLogs().get(1)),
+                   "Application deletion logs not being captured");
     }
 }
