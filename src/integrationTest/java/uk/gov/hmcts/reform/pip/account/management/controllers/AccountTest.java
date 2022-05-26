@@ -90,7 +90,6 @@ class AccountTest {
     private static final String EMAIL_VALIDATION_MESSAGE = "email: Invalid email provided. "
         + "Email must contain an @ symbol";
     private static final String INVALID_FIRST_NAME_MESSAGE = "firstName: must not be empty";
-    private static final String INVALID_SURNAME_MESSAGE = "surname: must not be empty";
     private static final String INVALID_ROLE_MESSAGE = "role: must not be null";
     private static final String DIRECTORY_ERROR = "Error when persisting account into Azure. "
         + "Check that the user doesn't already exist in the directory";
@@ -297,10 +296,17 @@ class AccountTest {
 
     @Test
     void testCreationOfNoSurnameAccount() throws Exception {
+        User userToReturn = new User();
+        userToReturn.id = ID;
+
         AzureAccount azureAccount = new AzureAccount();
         azureAccount.setEmail(EMAIL);
         azureAccount.setFirstName(FIRST_NAME);
         azureAccount.setRole(Roles.INTERNAL_ADMIN_CTSC);
+
+        when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
+        when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
+        when(userCollectionRequest.post(any())).thenReturn(userToReturn);
 
         objectMapper.findAndRegisterModules();
 
@@ -317,23 +323,20 @@ class AccountTest {
             objectMapper.readValue(response.getResponse().getContentAsString(),
                                    new TypeReference<>() {});
 
-        assertEquals(1, accounts.get(CreationEnum.ERRORED_ACCOUNTS).size(),
+        assertEquals(0, accounts.get(CreationEnum.ERRORED_ACCOUNTS).size(),
                      SINGLE_ERRORED_ACCOUNT);
-        assertEquals(0, accounts.get(CreationEnum.CREATED_ACCOUNTS).size(),
+        assertEquals(1, accounts.get(CreationEnum.CREATED_ACCOUNTS).size(),
                      ZERO_CREATED_ACCOUNTS);
 
-        List<Object> accountList = accounts.get(CreationEnum.ERRORED_ACCOUNTS);
-        ErroredAzureAccount erroredAccount = objectMapper.convertValue(
+        List<Object> accountList = accounts.get(CreationEnum.CREATED_ACCOUNTS);
+        AzureAccount returnedAzureAccount = objectMapper.convertValue(
             accountList.get(0),
-            ErroredAzureAccount.class);
+            AzureAccount.class);
 
-        assertNull(erroredAccount.getAzureAccountId(), TEST_MESSAGE_ID);
-        assertEquals(EMAIL, erroredAccount.getEmail(), TEST_MESSAGE_EMAIL);
-        assertEquals(FIRST_NAME, erroredAccount.getFirstName(), TEST_MESSAGE_FIRST_NAME);
-        assertNull(erroredAccount.getSurname(), "Surname has been sent");
-        assertEquals(Roles.INTERNAL_ADMIN_CTSC, erroredAccount.getRole(), TEST_MESSAGE_ROLE);
-        assertEquals(INVALID_SURNAME_MESSAGE, erroredAccount.getErrorMessages().get(0),
-                     "Error message is displayed for an invalid name");
+        assertEquals(ID, returnedAzureAccount.getAzureAccountId(), TEST_MESSAGE_ID);
+        assertEquals(EMAIL, returnedAzureAccount.getEmail(), TEST_MESSAGE_EMAIL);
+        assertEquals(FIRST_NAME, returnedAzureAccount.getFirstName(), TEST_MESSAGE_FIRST_NAME);
+        assertEquals(Roles.INTERNAL_ADMIN_CTSC, returnedAzureAccount.getRole(), TEST_MESSAGE_ROLE);
     }
 
     @Test
