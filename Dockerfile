@@ -1,4 +1,4 @@
-FROM hmctspublic.azurecr.io/base/java:openjdk-11-distroless-debug-1.2
+FROM hmctspublic.azurecr.io/base/java:openjdk-11-distroless-debug-1.4
 ARG APP_INSIGHTS_AGENT_VERSION=2.5.1
 
 ENV APP pip-account-management.jar
