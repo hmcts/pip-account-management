@@ -77,4 +77,4 @@ azure:
     container-name: files
 
 cron:
-  media-application-reporting: "0 12 */30 * *"
+  media-application-reporting: "59 23 */30 * * *"

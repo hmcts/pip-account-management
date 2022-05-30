@@ -65,7 +65,7 @@ class PublicationServiceTest {
 
         assertEquals(TEST_EMAIL_SENT, publicationService.sendMediaApplicationReportingEmail(
             createApplicationList(2)),
-                     "No trigger sent");
+                     "No application list sent");
         mockPublicationServicesEndpoint.shutdown();
     }
 
@@ -75,12 +75,8 @@ class PublicationServiceTest {
             "Email request failed to send with list of applications: %s",
             createApplicationList(2));
 
-        assertEquals(expectedResponse, publicationService.sendMediaApplicationReportingEmail(
-            createApplicationList(2)),
-                     "trigger sent in error");
-
-        assertTrue(logCaptor.getErrorLogs().get(0).contains("With error message:"),
-                   "Error logs not being captured.");
+        assertTrue(publicationService.sendMediaApplicationReportingEmail(createApplicationList(2))
+                       .contains(expectedResponse), "Expected error message not in response");
     }
 
 }

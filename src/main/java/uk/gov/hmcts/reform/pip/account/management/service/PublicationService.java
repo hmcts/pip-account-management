@@ -65,10 +65,8 @@ public class PublicationService {
                 .body(BodyInserters.fromValue(mediaApplicationList)).retrieve()
                 .bodyToMono(String.class).block();
         } catch (WebClientException ex) {
-            log.error(String.format("Request: %s failed. With error message: %s",
-                                    mediaApplicationList, ex.getMessage()));
-            return String.format("Email request failed to send with list of applications: %s",
-                                 mediaApplicationList);
+            return String.format("Email request failed to send with list of applications: %s. With error message: %s",
+                                 mediaApplicationList, ex.getMessage());
         }
     }
 }
