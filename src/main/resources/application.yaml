@@ -62,7 +62,7 @@ service-to-service:
 
 azure:
   application-insights:
-    instrumentation-key: ${rpe.AppInsightsInstrumentationKey:00000000-0000-0000-0000-000000000000}
+    instrumentation-key: ${INSTRUMENTATION_KEY:00000000-0000-0000-0000-000000000000}
   id:
     client-id: ${CLIENT_ID_B2C:00000000-0000-0000-0000-000000000000}
     client-secret: ${CLIENT_SECRET_B2C}
