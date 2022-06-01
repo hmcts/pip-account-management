@@ -94,7 +94,7 @@
   </suppress>
   <suppress>
     <notes><![CDATA[
-   file name: spring-boot-starter-oauth2-client-2.5.13.jar
+   file name: spring-boot-starter-oauth2-client-2.5.14.jar
    ]]></notes>
     <packageUrl regex="true">^pkg:maven/org.springframework.boot/spring-boot-starter-oauth2-client@2.5.14</packageUrl>
     <cve>CVE-2018-1258</cve>
@@ -102,7 +102,7 @@
   </suppress>
   <suppress>
     <notes><![CDATA[
-   file name: spring-boot-starter-oauth2-resource-server-2.5.13.jar
+   file name: spring-boot-starter-oauth2-resource-server-2.5.14.jar
    ]]></notes>
     <packageUrl regex="true">^pkg:maven/org.springframework.boot/spring-boot-starter-oauth2-resource-server@2.5.14</packageUrl>
     <cve>CVE-2018-1258</cve>
@@ -116,9 +116,9 @@
     <vulnerabilityName>CWE-862: Missing Authorization</vulnerabilityName>
   </suppress>
   <suppress>
-    <notes>Netty vulnerability, effects Java 6 and under</notes>
-    <packageUrl regex="true">^pkg:maven/io.netty/netty-.*@4.1.76.Final</packageUrl>
-    <cve>CVE-2022-24823</cve>
+    <notes><![CDATA[Spring old vuln thats been re-flagged recently, doesnt look like we are impacted]]></notes>
+    <packageUrl regex="true">^pkg:maven/org\.springframework/spring.*$</packageUrl>
+    <cve>CVE-2016-1000027</cve>
   </suppress>
   <suppress>
     <notes><![CDATA[Spring old vuln thats been re-flagged recently, doesnt look like we are impacted]]></notes>
