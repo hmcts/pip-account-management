@@ -21,7 +21,7 @@ import static uk.gov.hmcts.reform.pip.account.management.helper.MediaApplication
 
 @ExtendWith(MockitoExtension.class)
 @SpringBootTest(classes = {AzureConfigurationClientTest.class, Application.class})
-@ActiveProfiles("test")
+@ActiveProfiles({"test", "non-async"})
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
 class PublicationServiceTest {
 

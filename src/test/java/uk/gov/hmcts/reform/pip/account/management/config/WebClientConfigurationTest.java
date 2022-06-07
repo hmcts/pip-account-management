@@ -1,21 +1,17 @@
 package uk.gov.hmcts.reform.pip.account.management.config;
 
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
+import org.springframework.web.reactive.function.client.WebClient;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@ExtendWith(MockitoExtension.class)
+@Profile({"test", "non-async"})
+@Configuration
 class WebClientConfigurationTest {
 
-    @Test
-    void testWebClientIsInitialised() {
-        WebClientConfig webClientConfig = new WebClientConfig();
-        assertTrue(
-            webClientConfig.toString().contains("uk.gov.hmcts.reform.pip.account.management.config"
-                                                    + ".WebClientConfig"),
-            "WebClient has not been initialised"
-        );
+    @Bean
+    public WebClient webClient() {
+        return WebClient.create();
     }
 }
