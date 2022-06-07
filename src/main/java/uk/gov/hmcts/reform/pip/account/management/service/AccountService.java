@@ -181,6 +181,20 @@ public class AccountService {
         throw new UserNotFoundException("provenanceUserId", provenanceUserId);
     }
 
+    public Map<String, Optional<String>> findUserEmailsByIds(List<String> userIdsList) {
+        Map<String, Optional<String>> emailMap = new ConcurrentHashMap<>();
+        for (String userId : userIdsList) {
+            Optional<PiUser> returnedUser = userRepository.findByUserId(UUID.fromString(userId));
+
+            returnedUser.ifPresent(value ->
+                emailMap.put(userId, Optional.ofNullable(value.getEmail()))
+            );
+
+            emailMap.computeIfAbsent(userId, v -> Optional.empty());
+        }
+        return emailMap;
+    }
+
     private void handleAccountCreationEmail(AzureAccount createdAccount) {
         switch (createdAccount.getRole()) {
             case INTERNAL_ADMIN_CTSC:
