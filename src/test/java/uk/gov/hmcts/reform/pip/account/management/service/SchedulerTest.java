@@ -15,7 +15,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(SpringExtension.class)
-@ActiveProfiles("test")
+@ActiveProfiles({"test", "non-async"})
 @SpringBootTest(classes = {Application.class})
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
 @SuppressWarnings("PMD.JUnitTestsShouldIncludeAssert")
