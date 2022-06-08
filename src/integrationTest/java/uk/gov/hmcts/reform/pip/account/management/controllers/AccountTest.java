@@ -33,6 +33,7 @@ import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.ListType;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
 import uk.gov.hmcts.reform.pip.account.management.model.Roles;
+import uk.gov.hmcts.reform.pip.account.management.model.Sensitivity;
 import uk.gov.hmcts.reform.pip.account.management.model.UserProvenances;
 import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredAzureAccount;
 
@@ -101,8 +102,6 @@ class AccountTest {
     private static final String ZERO_CREATED_ACCOUNTS = "0 created accounts should be returned";
     private static final String SINGLE_ERRORED_ACCOUNT = "1 errored account should be returned";
     private static final String ERROR_RESPONSE_USER_PROVENANCE = "No user found with the provenanceUserId: 1234";
-    private static final String ERROR_RESPONSE_FORBIDDEN =
-        "User: %s does not have sufficient permission to view list type: %s";
     private static final String FORBIDDEN_STATUS_CODE = "Status code does not match forbidden";
     private static final String TEST_UUID_STRING = UUID.randomUUID().toString();
 
@@ -630,54 +629,6 @@ class AccountTest {
     }
 
     @Test
-    void testIsUserAuthenticatedReturnsSuccessful() throws Exception {
-        MockHttpServletRequestBuilder setupRequest = MockMvcRequestBuilders
-            .post(PI_URL)
-            .content(objectMapper.writeValueAsString(List.of(validUser)))
-            .header(ISSUER_HEADER, ISSUER_EMAIL)
-            .contentType(MediaType.APPLICATION_JSON);
-
-        MvcResult userResponse = mockMvc.perform(setupRequest).andExpect(status().isCreated()).andReturn();
-        ConcurrentHashMap<CreationEnum, List<Object>> mappedResponse =
-            objectMapper.readValue(userResponse.getResponse().getContentAsString(),
-                                   new TypeReference<>() {});
-        String createdUserId = mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).get(0).toString();
-
-
-        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
-            .get(String.format("%s/isAuthorised/%s/%s", ROOT_URL, createdUserId, ListType.SJP_PRESS_LIST));
-
-        MvcResult response = mockMvc.perform(request).andExpect(status().isOk()).andReturn();
-
-        assertEquals("true", response.getResponse().getContentAsString(), "Should return true");
-    }
-
-    @Test
-    void testIsUserAuthenticatedReturnsForbidden() throws Exception {
-        validUser.setUserProvenance(UserProvenances.CFT_IDAM);
-        MockHttpServletRequestBuilder setupRequest = MockMvcRequestBuilders
-            .post(PI_URL)
-            .content(objectMapper.writeValueAsString(List.of(validUser)))
-            .header(ISSUER_HEADER, ISSUER_EMAIL)
-            .contentType(MediaType.APPLICATION_JSON);
-
-        MvcResult userResponse = mockMvc.perform(setupRequest).andExpect(status().isCreated()).andReturn();
-        ConcurrentHashMap<CreationEnum, List<Object>> mappedResponse =
-            objectMapper.readValue(userResponse.getResponse().getContentAsString(),
-                                   new TypeReference<>() {});
-        String createdUserId = mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).get(0).toString();
-
-        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
-            .get(String.format("%s/isAuthorised/%s/%s", ROOT_URL, createdUserId, ListType.SJP_PRESS_LIST));
-
-        MvcResult response = mockMvc.perform(request).andExpect(status().isForbidden()).andReturn();
-
-        assertTrue(response.getResponse().getContentAsString()
-                       .contains(String.format(ERROR_RESPONSE_FORBIDDEN, createdUserId, ListType.SJP_PRESS_LIST)),
-                   "Should return forbidden message");
-    }
-
-    @Test
     @WithMockUser(username = "unauthorized_account", authorities = { "APPROLE_unknown.account" })
     void testUnauthorizedCreateAccount() throws Exception {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
@@ -727,7 +678,8 @@ class AccountTest {
     @WithMockUser(username = "unauthorized_isAuthorized", authorities = { "APPROLE_unknown.authorized" })
     void testUnauthorizedGetUserIsAuthorized() throws Exception {
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
-            .get(String.format("%s/isAuthorised/%s/%s", ROOT_URL, UUID.randomUUID(), ListType.SJP_PRESS_LIST));
+            .get(String.format("%s/isAuthorised/%s/%s/%s", ROOT_URL, UUID.randomUUID(),
+                               ListType.SJP_PRESS_LIST, Sensitivity.PUBLIC));
 
         MvcResult mvcResult = mockMvc.perform(request).andExpect(status().isForbidden()).andReturn();
 

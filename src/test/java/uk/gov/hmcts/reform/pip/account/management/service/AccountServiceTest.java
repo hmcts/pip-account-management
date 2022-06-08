@@ -10,13 +10,13 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.hmcts.reform.pip.account.management.database.UserRepository;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.AzureCustomException;
-import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.ForbiddenPermissionsException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.UserNotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.model.AzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.ListType;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
 import uk.gov.hmcts.reform.pip.account.management.model.Roles;
+import uk.gov.hmcts.reform.pip.account.management.model.Sensitivity;
 import uk.gov.hmcts.reform.pip.account.management.model.UserProvenances;
 import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredAzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredPiUser;
@@ -33,6 +33,7 @@ import javax.validation.Path;
 import javax.validation.Validator;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -63,6 +64,9 @@ class AccountServiceTest {
 
     @Mock
     private PublicationService publicationService;
+
+    @Mock
+    private SensitivityService sensitivityService;
 
     @InjectMocks
     private AccountService accountService;
@@ -290,42 +294,26 @@ class AccountServiceTest {
 
     @Test
     void testIsUserAuthorisedForPublicationReturnsTrue() {
+        when(sensitivityService.checkAuthorisation(piUser, ListType.SJP_PRESS_LIST, Sensitivity.PUBLIC))
+            .thenReturn(true);
+
         assertTrue(
-            accountService.isUserAuthorisedForPublication(VALID_USER_ID, ListType.SJP_PRESS_LIST),
+            accountService.isUserAuthorisedForPublication(VALID_USER_ID, ListType.SJP_PRESS_LIST, Sensitivity.PUBLIC),
             "User from PI_AAD should return true for allowed list type"
         );
     }
 
     @Test
-    void testIsUserAuthorisedForPublicationPublicListType() {
-        assertTrue(
-            accountService.isUserAuthorisedForPublication(VALID_USER_ID_IDAM, ListType.CIVIL_DAILY_CAUSE_LIST),
-            "Should return true regardless of user provenance if list type has no restrictions"
+    void testIsUserAuthorisedForPublicationReturnsFalse() {
+        when(sensitivityService.checkAuthorisation(piUser, ListType.SJP_PRESS_LIST, Sensitivity.PUBLIC))
+            .thenReturn(false);
+
+        assertFalse(
+            accountService.isUserAuthorisedForPublication(VALID_USER_ID, ListType.SJP_PRESS_LIST, Sensitivity.PUBLIC),
+            "User from PI_AAD should return true for allowed list type"
         );
     }
 
-    @Test
-    void testIsUserAuthorisedInvalidUser() {
-        UUID invalidId = UUID.randomUUID();
-        when(userRepository.findByUserId(invalidId)).thenReturn(Optional.empty());
-        UserNotFoundException ex = assertThrows(UserNotFoundException.class, () ->
-            accountService.isUserAuthorisedForPublication(invalidId, ListType.CIVIL_DAILY_CAUSE_LIST));
-        assertEquals("No user found with the userId: " + invalidId, ex.getMessage(), MESSAGES_MATCH);
-    }
-
-    @Test
-    void testIsUserAuthorisedNotAuthorised() {
-        ForbiddenPermissionsException ex = assertThrows(ForbiddenPermissionsException.class, () ->
-            accountService.isUserAuthorisedForPublication(VALID_USER_ID_IDAM, ListType.SJP_PRESS_LIST),
-            "Should throw forbidden if user is not "
-            + "allowed to see list type"
-        );
-        assertEquals(String.format("User: %s does not have sufficient permission to view list type: %s",
-                                   VALID_USER_ID_IDAM, ListType.SJP_PRESS_LIST
-                     ), ex.getMessage(),
-                     MESSAGES_MATCH
-        );
-    }
 
     @Test
     void testAzureAdminAccountCreatedTriggersEmail() throws AzureCustomException {
