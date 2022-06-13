@@ -1,7 +1,6 @@
 package uk.gov.hmcts.reform.pip.account.management.service;
 
 import com.azure.storage.blob.models.BlobStorageException;
-import com.microsoft.graph.models.MacOSOfficeSuiteApp;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
@@ -19,7 +18,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
-import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeGenericLog;
 import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
 
 @Service

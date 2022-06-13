@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.ForbiddenPermissionsException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.NotFoundException;
-import uk.gov.hmcts.reform.pip.model.enums.UserActions;
 
 import java.time.LocalDateTime;
 import javax.validation.ConstraintViolationException;
