@@ -1,6 +1,8 @@
 package uk.gov.hmcts.reform.pip.account.management.service;
 
 import com.azure.storage.blob.models.BlobStorageException;
+import com.microsoft.graph.models.MacOSOfficeSuiteApp;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
@@ -11,12 +13,17 @@ import uk.gov.hmcts.reform.pip.account.management.database.MediaLegalApplication
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.NotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.model.MediaAndLegalApplication;
 import uk.gov.hmcts.reform.pip.account.management.model.MediaLegalApplicationStatus;
+import uk.gov.hmcts.reform.pip.model.enums.UserActions;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeGenericLog;
+import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
+
 @Service
+@Slf4j
 public class MediaLegalApplicationService {
 
     private final MediaLegalApplicationRepository mediaLegalApplicationRepository;
@@ -84,6 +91,9 @@ public class MediaLegalApplicationService {
      * @return The newly created application
      */
     public MediaAndLegalApplication createApplication(MediaAndLegalApplication application, MultipartFile file) {
+
+        log.info(writeLog(application.getEmail(), UserActions.CREATE_MEDIA_APPLICATION, application.getEmail()));
+
         String imageId = azureBlobService.uploadFile(UUID.randomUUID().toString(), file);
 
         application.setFullName(StringUtils.trimAllWhitespace(application.getFullName()));
@@ -106,6 +116,8 @@ public class MediaLegalApplicationService {
         MediaAndLegalApplication applicationToUpdate = mediaLegalApplicationRepository.findById(id).orElseThrow(() ->
             new NotFoundException(String.format("Application with id %s could not be found", id)));
 
+        log.info(writeLog(UserActions.UPDATE_MEDIA_APPLICATION, applicationToUpdate.getEmail()));
+
         applicationToUpdate.setStatus(status);
         applicationToUpdate.setStatusDate(now);
 
@@ -120,6 +132,8 @@ public class MediaLegalApplicationService {
     public void deleteApplication(UUID id) {
         MediaAndLegalApplication applicationToDelete = mediaLegalApplicationRepository.findById(id).orElseThrow(() ->
             new NotFoundException(String.format("Application with id %s could not be found", id)));
+
+        log.info(writeLog(UserActions.DELETE_MEDIA_APPLICATION, applicationToDelete.getEmail()));
 
         azureBlobService.deleteBlob(applicationToDelete.getImage());
         mediaLegalApplicationRepository.delete(applicationToDelete);

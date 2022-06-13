@@ -1,6 +1,7 @@
 package uk.gov.hmcts.reform.pip.account.management.errorhandling;
 
 import com.fasterxml.jackson.databind.JsonMappingException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MissingRequestHeaderException;
@@ -8,15 +9,19 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.ForbiddenPermissionsException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.NotFoundException;
+import uk.gov.hmcts.reform.pip.model.enums.UserActions;
 
 import java.time.LocalDateTime;
 import javax.validation.ConstraintViolationException;
+
+import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
 
 /**
  * Global exception handler, that captures exceptions thrown by the controllers, and encapsulates
  * the logic to handle them and return a standardised response to the user.
  */
 @ControllerAdvice
+@Slf4j
 public class GlobalExceptionHandler {
 
     /**
@@ -29,6 +34,8 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ExceptionResponse> handle(
         JsonMappingException ex) {
 
+        log.warn(writeLog("400, Unable to create account from provided JSON"));
+
         ExceptionResponse exceptionResponse = new ExceptionResponse();
         exceptionResponse.setMessage(ex.getOriginalMessage());
         exceptionResponse.setTimestamp(LocalDateTime.now());
@@ -38,6 +45,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MissingRequestHeaderException.class)
     public ResponseEntity<ExceptionResponse> handle(MissingRequestHeaderException ex) {
+
+        log.warn(writeLog("400, Missing headers from request"));
 
         ExceptionResponse exceptionResponse = new ExceptionResponse();
         exceptionResponse.setMessage(ex.getMessage());
@@ -49,6 +58,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<ExceptionResponse> handle(ConstraintViolationException ex) {
 
+        log.warn(writeLog("400, Error while validating the JSON provided"));
+
         ExceptionResponse exceptionResponse = new ExceptionResponse();
         exceptionResponse.setMessage(ex.getMessage());
         exceptionResponse.setTimestamp(LocalDateTime.now());
@@ -59,6 +70,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ForbiddenPermissionsException.class)
     public ResponseEntity<ExceptionResponse> handle(ForbiddenPermissionsException ex) {
 
+        log.warn(writeLog("403, User is not permitted to access the requested endpoint"));
+
         ExceptionResponse exceptionResponse = new ExceptionResponse();
         exceptionResponse.setMessage(ex.getMessage());
         exceptionResponse.setTimestamp(LocalDateTime.now());
@@ -68,6 +81,9 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<ExceptionResponse> handle(NotFoundException ex) {
+
+        log.warn(writeLog("404, Unable to find requested account / application"));
+
         ExceptionResponse exceptionResponse = new ExceptionResponse();
         exceptionResponse.setMessage(ex.getMessage());
         exceptionResponse.setTimestamp(LocalDateTime.now());
