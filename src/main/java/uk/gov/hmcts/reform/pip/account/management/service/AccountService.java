@@ -20,6 +20,7 @@ import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredPiUser;
 import uk.gov.hmcts.reform.pip.model.enums.UserActions;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -138,8 +139,14 @@ public class AccountService {
 
             if (userRepository.findByEmail(user.getEmail()).isPresent()
                 && application.isPresent()) {
-                publicationService.sendNotificationEmailForDuplicateMediaAccount(user.getEmail(),
+                String emailSent = publicationService.sendNotificationEmailForDuplicateMediaAccount(user.getEmail(),
                                                                             application.get().getFullName());
+                if (emailSent != null && !emailSent.isEmpty()) {
+                    ErroredPiUser erroredUser = new ErroredPiUser(user);
+                    erroredUser.setErrorMessages(Arrays.asList(emailSent));
+                    erroredAccounts.add(erroredUser);
+                }
+
                 continue;
             }
 

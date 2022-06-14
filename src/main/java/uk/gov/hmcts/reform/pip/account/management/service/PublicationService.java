@@ -54,9 +54,10 @@ public class PublicationService {
     public String sendNotificationEmailForSetupMediaAccount(String emailAddress, String fullName) {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("email", emailAddress);
+        jsonObject.put("isExisting", false);
         jsonObject.put("fullName", fullName);
         try {
-            return webClient.post().uri(new URI(url + "/notify/created/media"))
+            return webClient.post().uri(new URI(url + "/notify/welcome-email"))
                 .body(BodyInserters.fromValue(jsonObject)).retrieve()
                 .bodyToMono(String.class).block();
 
