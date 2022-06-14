@@ -17,4 +17,6 @@ public interface UserRepository extends JpaRepository<PiUser, Long> {
                                             @Param("userProv") String userProvenance);
 
     Optional<PiUser> findByUserId(UUID userId);
+
+    Optional<PiUser> findByEmail(String email);
 }

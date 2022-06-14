@@ -4,12 +4,14 @@ import com.microsoft.graph.models.User;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import uk.gov.hmcts.reform.pip.account.management.database.MediaLegalApplicationRepository;
 import uk.gov.hmcts.reform.pip.account.management.database.UserRepository;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.AzureCustomException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.UserNotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.model.AzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.ListType;
+import uk.gov.hmcts.reform.pip.account.management.model.MediaAndLegalApplication;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
 import uk.gov.hmcts.reform.pip.account.management.model.Sensitivity;
 import uk.gov.hmcts.reform.pip.account.management.model.UserProvenances;
@@ -47,6 +49,9 @@ public class AccountService {
 
     @Autowired
     UserRepository userRepository;
+
+    @Autowired
+    MediaLegalApplicationRepository mediaLegalApplicationRepository;
 
     @Autowired
     PublicationService publicationService;
@@ -128,8 +133,23 @@ public class AccountService {
                 continue;
             }
 
+            Optional<MediaAndLegalApplication> application =
+                mediaLegalApplicationRepository.findByEmail(user.getEmail());
+
+            if (userRepository.findByEmail(user.getEmail()).isPresent()
+                && application.isPresent()) {
+                publicationService.sendNotificationEmailForDuplicateMediaAccount(user.getEmail(),
+                                                                            application.get().getFullName());
+                continue;
+            }
+
             PiUser addedUser = userRepository.save(user);
             createdAccounts.add(addedUser.getUserId());
+
+            if (application.isPresent()) {
+                publicationService.sendNotificationEmailForSetupMediaAccount(user.getEmail(),
+                                                                             application.get().getFullName());
+            }
 
             log.info(writeLog(issuerEmail, UserActions.CREATE_ACCOUNT, addedUser.getEmail()));
         }

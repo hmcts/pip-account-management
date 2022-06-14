@@ -50,4 +50,34 @@ public class PublicationService {
             return "Email request failed to send: " + emailAddress;
         }
     }
+
+    public String sendNotificationEmailForSetupMediaAccount(String emailAddress, String fullName) {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("email", emailAddress);
+        jsonObject.put("fullName", fullName);
+        try {
+            return webClient.post().uri(new URI(url + "/notify/created/media"))
+                .body(BodyInserters.fromValue(jsonObject)).retrieve()
+                .bodyToMono(String.class).block();
+
+        } catch (WebClientException | URISyntaxException ex) {
+            log.error(String.format("Request failed with error message: %s", ex.getMessage()));
+            return "Email request failed to send: " + emailAddress;
+        }
+    }
+
+    public String sendNotificationEmailForDuplicateMediaAccount(String emailAddress, String fullName) {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("email", emailAddress);
+        jsonObject.put("fullName", fullName);
+        try {
+            return webClient.post().uri(new URI(url + "/notify/created/duplicate/media"))
+                .body(BodyInserters.fromValue(jsonObject)).retrieve()
+                .bodyToMono(String.class).block();
+
+        } catch (WebClientException | URISyntaxException ex) {
+            log.error(String.format("Request failed with error message: %s", ex.getMessage()));
+            return "Email request failed to send: " + emailAddress;
+        }
+    }
 }

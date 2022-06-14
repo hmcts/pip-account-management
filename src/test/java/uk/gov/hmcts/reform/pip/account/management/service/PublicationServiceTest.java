@@ -29,6 +29,10 @@ class PublicationServiceTest {
     @Autowired
     PublicationService publicationService;
 
+    private static final String EMAIL = "test@example.com";
+    private static final String FORENAME = "forename";
+    private static final String EMAIL_SENT_MESSAGE = "test email sent";
+
     LogCaptor logCaptor = LogCaptor.forClass(PublicationService.class);
 
 
@@ -36,20 +40,42 @@ class PublicationServiceTest {
     void testSendEmail() throws IOException {
         mockPublicationServicesEndpoint = new MockWebServer();
         mockPublicationServicesEndpoint.start(8081);
-        mockPublicationServicesEndpoint.enqueue(new MockResponse().setBody("test email sent"));
+        mockPublicationServicesEndpoint.enqueue(new MockResponse().setBody(EMAIL_SENT_MESSAGE));
 
-        assertEquals("test email sent", publicationService.sendNotificationEmail("test@example.com",
-                                                                                 "forename", "surname"
+        assertEquals(EMAIL_SENT_MESSAGE, publicationService.sendNotificationEmail(EMAIL,
+                                                                                 FORENAME, "surname"
         ), "No trigger sent");
+
+        assertEquals(EMAIL_SENT_MESSAGE, publicationService.sendNotificationEmailForSetupMediaAccount(
+            EMAIL, FORENAME),
+                     "No trigger sent");
+
+        assertEquals(EMAIL_SENT_MESSAGE, publicationService.sendNotificationEmailForDuplicateMediaAccount(
+            EMAIL, FORENAME),
+                     "No trigger sent");
+
         mockPublicationServicesEndpoint.shutdown();
     }
 
     @Test
     void testFailedEmailSend() {
         assertEquals("Email request failed to send: test@example.com",
-                     publicationService.sendNotificationEmail("test@example.com", "forename", "surname"),
+                     publicationService.sendNotificationEmail(EMAIL, FORENAME, "surname"),
                      "trigger sent in error"
         );
+
+        assertEquals("Email request failed to send: test@example.com",
+                     publicationService.sendNotificationEmailForSetupMediaAccount(
+                         EMAIL, FORENAME),
+                     "trigger sent in error"
+        );
+
+        assertEquals("Email request failed to send: test@example.com",
+                     publicationService.sendNotificationEmailForDuplicateMediaAccount(
+                         EMAIL, FORENAME),
+                     "trigger sent in error"
+        );
+
         assertTrue(logCaptor.getErrorLogs().get(0).contains("Request failed with error message:"),
                    "Error logs not being captured.");
     }

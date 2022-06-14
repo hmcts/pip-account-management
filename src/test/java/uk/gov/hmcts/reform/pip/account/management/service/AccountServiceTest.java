@@ -8,12 +8,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.hmcts.reform.pip.account.management.database.MediaLegalApplicationRepository;
 import uk.gov.hmcts.reform.pip.account.management.database.UserRepository;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.AzureCustomException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.UserNotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.model.AzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.ListType;
+import uk.gov.hmcts.reform.pip.account.management.model.MediaAndLegalApplication;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
 import uk.gov.hmcts.reform.pip.account.management.model.Roles;
 import uk.gov.hmcts.reform.pip.account.management.model.Sensitivity;
@@ -63,6 +65,9 @@ class AccountServiceTest {
     private UserRepository userRepository;
 
     @Mock
+    MediaLegalApplicationRepository mediaLegalApplicationRepository;
+
+    @Mock
     private PublicationService publicationService;
 
     @Mock
@@ -71,6 +76,7 @@ class AccountServiceTest {
     @InjectMocks
     private AccountService accountService;
 
+    private static final String FULL_NAME = "Full name";
     private static final String ISSUER_EMAIL = "b@c.com";
     private static final String EMAIL = "a@b.com";
     private static final String INVALID_EMAIL = "ab.com";
@@ -88,6 +94,7 @@ class AccountServiceTest {
 
     private final PiUser piUser = new PiUser();
     private final PiUser piUserIdam = new PiUser();
+    private final MediaAndLegalApplication mediaAndLegalApplication = new MediaAndLegalApplication();
     private AzureAccount azureAccount;
     private User expectedUser;
 
@@ -101,6 +108,9 @@ class AccountServiceTest {
         piUserIdam.setUserId(VALID_USER_ID_IDAM);
         piUserIdam.setUserProvenance(UserProvenances.CFT_IDAM);
         piUserIdam.setProvenanceUserId(ID);
+
+        mediaAndLegalApplication.setEmail(EMAIL);
+        mediaAndLegalApplication.setFullName(FULL_NAME);
 
         azureAccount = new AzureAccount();
         azureAccount.setEmail(EMAIL);
@@ -224,12 +234,33 @@ class AccountServiceTest {
     @Test
     void testAddUsers() {
         PiUser user = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, ID, EMAIL, Roles.INTERNAL_ADMIN_CTSC);
+
+        lenient().when(mediaLegalApplicationRepository.findByEmail(EMAIL))
+            .thenReturn(Optional.of(mediaAndLegalApplication));
+        lenient().when(userRepository.findByEmail("a123@b.com")).thenReturn(Optional.of(piUser));
+
         Map<CreationEnum, List<?>> expected = new ConcurrentHashMap<>();
         expected.put(CreationEnum.CREATED_ACCOUNTS, List.of(user.getUserId()));
         expected.put(CreationEnum.ERRORED_ACCOUNTS, List.of());
 
         when(validator.validate(user)).thenReturn(Set.of());
         when(userRepository.save(user)).thenReturn(user);
+
+        assertEquals(expected, accountService.addUsers(List.of(user), EMAIL), "Returned maps should match");
+    }
+
+    @Test
+    void testAddDuplicateUsers() {
+        lenient().when(mediaLegalApplicationRepository.findByEmail(EMAIL))
+            .thenReturn(Optional.of(mediaAndLegalApplication));
+        lenient().when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.of(piUser));
+
+        Map<CreationEnum, List<?>> expected = new ConcurrentHashMap<>();
+        expected.put(CreationEnum.CREATED_ACCOUNTS, List.of());
+        expected.put(CreationEnum.ERRORED_ACCOUNTS, List.of());
+
+        PiUser user = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, ID, EMAIL, Roles.INTERNAL_ADMIN_CTSC);
+        when(validator.validate(user)).thenReturn(Set.of());
 
         assertEquals(expected, accountService.addUsers(List.of(user), EMAIL), "Returned maps should match");
     }
