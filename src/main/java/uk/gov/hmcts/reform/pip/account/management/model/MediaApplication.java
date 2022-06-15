@@ -17,13 +17,13 @@ import javax.persistence.Id;
 
 
 /**
- * Model that represents a media or orphaned legal professional application for AAD access.
+ * Model that represents a media application for AAD access.
  */
 @Entity
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class MediaAndLegalApplication {
+public class MediaApplication {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -44,7 +44,7 @@ public class MediaAndLegalApplication {
     private LocalDateTime requestDate;
 
     @Enumerated(EnumType.STRING)
-    private MediaLegalApplicationStatus status;
+    private MediaApplicationStatus status;
 
     private LocalDateTime statusDate;
 }

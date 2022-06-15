@@ -5,22 +5,22 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * DTO that represents a media or orphaned legal professional application for AAD access.
+ * DTO that represents a media application for AAD access.
  */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class MediaAndLegalApplicationDto {
+public class MediaApplicationDto {
     private String fullName;
 
     private String email;
 
     private String employer;
 
-    private MediaLegalApplicationStatus status;
+    private MediaApplicationStatus status;
 
-    public MediaAndLegalApplication toEntity() {
-        MediaAndLegalApplication entity = new MediaAndLegalApplication();
+    public MediaApplication toEntity() {
+        MediaApplication entity = new MediaApplication();
         entity.setFullName(this.fullName);
         entity.setEmail(this.email);
         entity.setEmployer(this.employer);

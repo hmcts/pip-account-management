@@ -17,10 +17,11 @@ import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static uk.gov.hmcts.reform.pip.account.management.helper.MediaApplicationHelper.createApplicationList;
 
 @ExtendWith(MockitoExtension.class)
 @SpringBootTest(classes = {AzureConfigurationClientTest.class, Application.class})
-@ActiveProfiles("test")
+@ActiveProfiles({"test", "non-async"})
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
 class PublicationServiceTest {
 
@@ -31,14 +32,16 @@ class PublicationServiceTest {
 
     LogCaptor logCaptor = LogCaptor.forClass(PublicationService.class);
 
+    private static final String TEST_EMAIL_SENT = "test email sent";
+
 
     @Test
     void testSendEmail() throws IOException {
         mockPublicationServicesEndpoint = new MockWebServer();
         mockPublicationServicesEndpoint.start(8081);
-        mockPublicationServicesEndpoint.enqueue(new MockResponse().setBody("test email sent"));
+        mockPublicationServicesEndpoint.enqueue(new MockResponse().setBody(TEST_EMAIL_SENT));
 
-        assertEquals("test email sent", publicationService.sendNotificationEmail("test@example.com",
+        assertEquals(TEST_EMAIL_SENT, publicationService.sendNotificationEmail("test@example.com",
                                                                                  "forename", "surname"
         ), "No trigger sent");
         mockPublicationServicesEndpoint.shutdown();
@@ -53,5 +56,28 @@ class PublicationServiceTest {
         assertTrue(logCaptor.getErrorLogs().get(0).contains("Request failed with error message:"),
                    "Error logs not being captured.");
     }
+
+    @Test
+    void testSendMediaApplicationReportingEmail() throws IOException {
+        mockPublicationServicesEndpoint = new MockWebServer();
+        mockPublicationServicesEndpoint.start(8081);
+        mockPublicationServicesEndpoint.enqueue(new MockResponse().setBody(TEST_EMAIL_SENT));
+
+        assertEquals(TEST_EMAIL_SENT, publicationService.sendMediaApplicationReportingEmail(
+            createApplicationList(2)),
+                     "No application list sent");
+        mockPublicationServicesEndpoint.shutdown();
+    }
+
+    @Test
+    void testFailedMediaApplicationReportEmail() {
+        String expectedResponse = String.format(
+            "Email request failed to send with list of applications: %s",
+            createApplicationList(2));
+
+        assertTrue(publicationService.sendMediaApplicationReportingEmail(createApplicationList(2))
+                       .contains(expectedResponse), "Expected error message not in response");
+    }
+
 }
 
