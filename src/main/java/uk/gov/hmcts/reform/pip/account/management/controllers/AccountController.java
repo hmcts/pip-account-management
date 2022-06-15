@@ -14,7 +14,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 import uk.gov.hmcts.reform.pip.account.management.authentication.roles.IsAdmin;
 import uk.gov.hmcts.reform.pip.account.management.model.AzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
@@ -58,7 +60,7 @@ public class AccountController {
     public ResponseEntity<Map<CreationEnum, List<? extends AzureAccount>>> createAzureAccount(
         @RequestHeader("x-issuer-email") @ValidEmail String issuerEmail,
         @RequestBody List<AzureAccount> azureAccounts) {
-        return ResponseEntity.ok(accountService.addAzureAccounts(azureAccounts, issuerEmail));
+        return ResponseEntity.ok(accountService.addAzureAccounts(azureAccounts, issuerEmail, false));
     }
 
     /**
@@ -116,5 +118,17 @@ public class AccountController {
     @PostMapping("/emails")
     public ResponseEntity<Map<String, Optional<String>>> getUserEmailsByIds(@RequestBody List<String> userIdsList) {
         return ResponseEntity.ok(accountService.findUserEmailsByIds(userIdsList));
+    }
+
+    @ApiResponses({
+        @ApiResponse(code = 200,
+            message = "CREATED_ACCOUNTS:[{Created user ids}], ERRORED_ACCOUNTS: [{failed accounts}]"),
+        @ApiResponse(code = 400, message = "Bad request"),
+    })
+    @ApiOperation("Create media accounts via CSV upload")
+    @PostMapping("/media-bulk-upload")
+    public ResponseEntity<Map<CreationEnum, List<?>>> createMediaAccountsBulk(
+        @RequestHeader("x-issuer-email") @ValidEmail String issuerEmail, @RequestPart MultipartFile mediaList) {
+        return ResponseEntity.ok(accountService.uploadMediaFromCsv(mediaList, issuerEmail));
     }
 }

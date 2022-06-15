@@ -21,7 +21,13 @@ spring:
           tenant-id: ${TENANT_ID}
         credential:
           client-id: ${CLIENT_ID}
+          client-secret: ${CLIENT_SECRET}
         app-id-uri: ${APP_URI}
+        authorization-clients:
+          publicationServicesApi:
+            authorization-grant-type: client_credentials
+            scopes:
+              - ${PUBLICATION_SERVICES_AZ_API}/.default
   config:
     import: "optional:configtree:/mnt/secrets/pip-ss-kv/"
   jackson:

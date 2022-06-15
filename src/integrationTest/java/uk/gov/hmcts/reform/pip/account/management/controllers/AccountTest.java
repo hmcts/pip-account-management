@@ -11,7 +11,6 @@ import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
 import okhttp3.Request;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,12 +18,15 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.web.multipart.MultipartFile;
+import org.testcontainers.shaded.org.apache.commons.io.IOUtils;
 import uk.gov.hmcts.reform.pip.account.management.Application;
 import uk.gov.hmcts.reform.pip.account.management.config.AzureConfigurationClientTest;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.ExceptionResponse;
@@ -37,7 +39,10 @@ import uk.gov.hmcts.reform.pip.account.management.model.Sensitivity;
 import uk.gov.hmcts.reform.pip.account.management.model.UserProvenances;
 import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredAzureAccount;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -46,12 +51,13 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(classes = {AzureConfigurationClientTest.class, Application.class},
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
-@ActiveProfiles(profiles = "test")
+@ActiveProfiles(profiles = "integration")
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
 @WithMockUser(username = "admin", authorities = { "APPROLE_api.request.admin" })
 @SuppressWarnings({"PMD.TooManyMethods", "PMD.LawOfDemeter", "PMD.ExcessiveImports"})
@@ -74,10 +80,11 @@ class AccountTest {
 
     private static final String ROOT_URL = "/account";
     private static final String AZURE_URL = ROOT_URL + "/add/azure";
+    private static final String BULK_UPLOAD = ROOT_URL + "/media-bulk-upload";
     private static final String PI_URL = ROOT_URL + "/add/pi";
     private static final String GET_PROVENANCE_USER_URL = ROOT_URL + "/provenance/";
     private static final String EMAIL_URL = ROOT_URL + "/emails";
-    private static final String EMAIL = "a@b";
+    private static final String EMAIL = "test_account_admin@hmcts.net";
     private static final String INVALID_EMAIL = "ab";
     private static final String FIRST_NAME = "First name";
     private static final String SURNAME = "Surname";
@@ -87,6 +94,7 @@ class AccountTest {
     private static final String ISSUER_HEADER = "x-issuer-email";
 
     private static final String ID = "1234";
+    private static final String ADDITIONAL_ID = "4321";
 
     private static final String EMAIL_VALIDATION_MESSAGE = "email: Invalid email provided. "
         + "Email must contain an @ symbol";
@@ -104,6 +112,7 @@ class AccountTest {
     private static final String ERROR_RESPONSE_USER_PROVENANCE = "No user found with the provenanceUserId: 1234";
     private static final String FORBIDDEN_STATUS_CODE = "Status code does not match forbidden";
     private static final String TEST_UUID_STRING = UUID.randomUUID().toString();
+    private static final String MAP_SIZE_MESSAGE = "Map size should match";
 
     private ObjectMapper objectMapper;
 
@@ -123,6 +132,14 @@ class AccountTest {
     void setup() {
         objectMapper = new ObjectMapper();
         validUser = createUser(true, UUID.randomUUID().toString());
+
+        User userToReturn = new User();
+        userToReturn.id = ID;
+        User additionalUser = new User();
+        additionalUser.id = ADDITIONAL_ID;
+        when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
+        when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
+        when(userCollectionRequest.post(any())).thenReturn(userToReturn, additionalUser);
     }
 
     @AfterEach
@@ -130,17 +147,8 @@ class AccountTest {
         Mockito.reset(graphClient, userCollectionRequest, userCollectionRequestBuilder);
     }
 
-    @DisplayName("Should welcome upon root request with 200 response code")
     @Test
     void creationOfValidAccount() throws Exception {
-
-        User userToReturn = new User();
-        userToReturn.id = ID;
-
-        when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
-        when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
-        when(userCollectionRequest.post(any())).thenReturn(userToReturn);
-
         AzureAccount azureAccount = new AzureAccount();
         azureAccount.setEmail(EMAIL);
         azureAccount.setSurname(SURNAME);
@@ -297,7 +305,7 @@ class AccountTest {
     }
 
     @Test
-    void testCreationOfNoSurnameAccount() throws Exception {
+    void testSoftFailureOfNoSurnameAccount() throws Exception {
         User userToReturn = new User();
         userToReturn.id = ID;
 
@@ -325,20 +333,11 @@ class AccountTest {
             objectMapper.readValue(response.getResponse().getContentAsString(),
                                    new TypeReference<>() {});
 
-        assertEquals(0, accounts.get(CreationEnum.ERRORED_ACCOUNTS).size(),
+        assertEquals(1, accounts.get(CreationEnum.ERRORED_ACCOUNTS).size(),
                      SINGLE_ERRORED_ACCOUNT);
-        assertEquals(1, accounts.get(CreationEnum.CREATED_ACCOUNTS).size(),
+        assertEquals(0, accounts.get(CreationEnum.CREATED_ACCOUNTS).size(),
                      ZERO_CREATED_ACCOUNTS);
 
-        List<Object> accountList = accounts.get(CreationEnum.CREATED_ACCOUNTS);
-        AzureAccount returnedAzureAccount = objectMapper.convertValue(
-            accountList.get(0),
-            AzureAccount.class);
-
-        assertEquals(ID, returnedAzureAccount.getAzureAccountId(), TEST_MESSAGE_ID);
-        assertEquals(EMAIL, returnedAzureAccount.getEmail(), TEST_MESSAGE_EMAIL);
-        assertEquals(FIRST_NAME, returnedAzureAccount.getFirstName(), TEST_MESSAGE_FIRST_NAME);
-        assertEquals(Roles.INTERNAL_ADMIN_CTSC, returnedAzureAccount.getRole(), TEST_MESSAGE_ROLE);
     }
 
     @Test
@@ -699,5 +698,42 @@ class AccountTest {
 
         assertEquals(HttpStatus.OK.value(), mvcResult.getResponse().getStatus(),
                      "Status codes does match OK");
+    }
+
+    @Test
+    void testUploadBulkMedia() {
+        try(InputStream inputStream = this.getClass().getClassLoader()
+            .getResourceAsStream("csv/valid.csv")) {
+
+            MockMultipartFile multipartFile = new MockMultipartFile("mediaList",
+                                                                IOUtils.toByteArray(inputStream));
+
+            MvcResult mvcResult = mockMvc.perform(multipart(BULK_UPLOAD).file(multipartFile)
+                                                      .header(ISSUER_HEADER, ISSUER_EMAIL))
+                .andExpect(status().isOk()).andReturn();
+            Map<CreationEnum, List<?>> users = objectMapper.readValue(
+                mvcResult.getResponse().getContentAsString(),
+                new TypeReference<>() {});
+
+            assertEquals(2, users.get(CreationEnum.CREATED_ACCOUNTS).size(), MAP_SIZE_MESSAGE);
+            assertEquals(0, users.get(CreationEnum.ERRORED_ACCOUNTS).size(), MAP_SIZE_MESSAGE);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    void testUploadBulkMediaFailsCsv() {
+        try (InputStream inputStream = this.getClass().getClassLoader()
+            .getResourceAsStream("location/invalidCsv.txt")) {
+            MockMultipartFile csvFile
+                = new MockMultipartFile("locationList", inputStream);
+
+            mockMvc.perform(multipart(BULK_UPLOAD).file(csvFile))
+                .andExpect(status().isBadRequest());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

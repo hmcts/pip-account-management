@@ -7,6 +7,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.multipart.MultipartFile;
+import org.testcontainers.shaded.org.apache.commons.io.IOUtils;
 import uk.gov.hmcts.reform.pip.account.management.model.AzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.ListType;
@@ -16,6 +19,8 @@ import uk.gov.hmcts.reform.pip.account.management.model.Sensitivity;
 import uk.gov.hmcts.reform.pip.account.management.model.UserProvenances;
 import uk.gov.hmcts.reform.pip.account.management.service.AccountService;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -59,7 +64,7 @@ class AccountControllerTest {
         List<AzureAccount> azureAccounts = List.of(azureAccount);
 
         when(accountService.addAzureAccounts(argThat(arg -> arg.equals(azureAccounts)),
-                                             eq("b@c.com"))).thenReturn(accountsMap);
+                                             eq("b@c.com"), false)).thenReturn(accountsMap);
 
         ResponseEntity<Map<CreationEnum, List<? extends AzureAccount>>> response =
             accountController.createAzureAccount("b@c.com", azureAccounts);
@@ -163,6 +168,38 @@ class AccountControllerTest {
 
         assertEquals(HttpStatus.OK, accountController.getUserEmailsByIds(userIdsList)
             .getStatusCode(), STATUS_CODE_MATCH);
+    }
+
+    @Test
+    void testCreateMediaAccountsBulkReturnsOk() {
+        try(InputStream is = this.getClass().getClassLoader().getResourceAsStream("csv/valid.csv")) {
+            MultipartFile multipartFile = new MockMultipartFile("file",
+                                                                "TestFileName", "text/plain",
+                                                                IOUtils.toByteArray(is));
+            when(accountService.uploadMediaFromCsv(multipartFile, TEST_EMAIL_1)).thenReturn(new ConcurrentHashMap<>());
+
+            assertEquals(HttpStatus.OK,
+                         accountController.createMediaAccountsBulk(TEST_EMAIL_1, multipartFile).getStatusCode(),
+                         STATUS_CODE_MATCH);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    void testCreateMediaAccountsBulkReturnsMap() {
+        try(InputStream is = this.getClass().getClassLoader().getResourceAsStream("csv/valid.csv")) {
+            MultipartFile multipartFile = new MockMultipartFile("file",
+                                                                "TestFileName", "text/plain",
+                                                                IOUtils.toByteArray(is));
+            when(accountService.uploadMediaFromCsv(multipartFile, TEST_EMAIL_1)).thenReturn(new ConcurrentHashMap<>());
+
+            assertEquals(new ConcurrentHashMap<>(),
+                         accountController.createMediaAccountsBulk(TEST_EMAIL_1, multipartFile).getBody(),
+                         "Maps should match");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
 }

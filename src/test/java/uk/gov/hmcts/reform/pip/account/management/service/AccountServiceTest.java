@@ -8,8 +8,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.multipart.MultipartFile;
+import org.testcontainers.shaded.org.apache.commons.io.IOUtils;
 import uk.gov.hmcts.reform.pip.account.management.database.UserRepository;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.AzureCustomException;
+import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.CsvParseException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.UserNotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.model.AzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
@@ -21,6 +25,8 @@ import uk.gov.hmcts.reform.pip.account.management.model.UserProvenances;
 import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredAzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredPiUser;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -68,6 +74,9 @@ class AccountServiceTest {
     @Mock
     private SensitivityService sensitivityService;
 
+    @Mock
+    private AccountModelMapperService accountModelMapperService;
+
     @InjectMocks
     private AccountService accountService;
 
@@ -82,6 +91,8 @@ class AccountServiceTest {
     private static final String ERRORED_ACCOUNTS_VALIDATION_MESSAGE = "Should contain ERRORED_ACCOUNTS key";
     private static final String TEST = "Test";
     private static final String MESSAGES_MATCH = "Messages should match";
+    private static final boolean FALSE = false;
+    private static final boolean TRUE = true;
 
     private static final UUID VALID_USER_ID = UUID.randomUUID();
     private static final UUID VALID_USER_ID_IDAM = UUID.randomUUID();
@@ -125,10 +136,10 @@ class AccountServiceTest {
         when(azureUserService.createUser(argThat(user -> user.getEmail().equals(azureAccount.getEmail()))))
             .thenReturn(expectedUser);
 
-        when(publicationService.sendNotificationEmail(any(), any(), any())).thenReturn(TEST);
+        when(publicationService.sendNotificationEmail(any(), any(), any())).thenReturn(TRUE);
 
         Map<CreationEnum, List<? extends AzureAccount>> createdAccounts =
-            accountService.addAzureAccounts(List.of(azureAccount), ISSUER_EMAIL);
+            accountService.addAzureAccounts(List.of(azureAccount), ISSUER_EMAIL, FALSE);
 
         assertTrue(createdAccounts.containsKey(CreationEnum.CREATED_ACCOUNTS), "Should contain "
             + "CREATED_ACCOUNTS key");
@@ -150,7 +161,7 @@ class AccountServiceTest {
             .thenThrow(new AzureCustomException(ERROR_MESSAGE));
 
         Map<CreationEnum, List<? extends AzureAccount>> createdAccounts =
-            accountService.addAzureAccounts(List.of(azureAccount), ISSUER_EMAIL);
+            accountService.addAzureAccounts(List.of(azureAccount), ISSUER_EMAIL, FALSE);
 
         assertTrue(createdAccounts.containsKey(CreationEnum.ERRORED_ACCOUNTS), ERRORED_ACCOUNTS_VALIDATION_MESSAGE);
         List<? extends AzureAccount> accounts = createdAccounts.get(CreationEnum.ERRORED_ACCOUNTS);
@@ -170,7 +181,7 @@ class AccountServiceTest {
             .thenReturn(Set.of(constraintViolation));
 
         Map<CreationEnum, List<? extends AzureAccount>> createdAccounts =
-            accountService.addAzureAccounts(List.of(azureAccount), ISSUER_EMAIL);
+            accountService.addAzureAccounts(List.of(azureAccount), ISSUER_EMAIL, FALSE);
 
         assertTrue(createdAccounts.containsKey(CreationEnum.ERRORED_ACCOUNTS), ERRORED_ACCOUNTS_VALIDATION_MESSAGE);
         List<? extends AzureAccount> accounts = createdAccounts.get(CreationEnum.ERRORED_ACCOUNTS);
@@ -189,6 +200,25 @@ class AccountServiceTest {
     }
 
     @Test
+    void testAccountSoftErrored() throws AzureCustomException {
+        when(validator.validate(argThat(sub -> ((AzureAccount) sub).getEmail().equals(azureAccount.getEmail()))))
+            .thenReturn(Set.of());
+
+        when(azureUserService.createUser(argThat(user -> user.getEmail().equals(azureAccount.getEmail()))))
+            .thenReturn(expectedUser);
+
+        when(publicationService.sendNotificationEmail(any(), any(), any())).thenReturn(FALSE);
+
+        Map<CreationEnum, List<? extends AzureAccount>> erroredAccounts =
+            accountService.addAzureAccounts(List.of(azureAccount), ISSUER_EMAIL, FALSE);
+
+        List<? extends AzureAccount> accounts = erroredAccounts.get(CreationEnum.ERRORED_ACCOUNTS);
+        assertEquals(azureAccount.getEmail(), accounts.get(0).getEmail(), EMAIL_VALIDATION_MESSAGE);
+        assertEquals(ID, azureAccount.getAzureAccountId(), "AzureAccount should have azure "
+            + "object ID");
+    }
+
+    @Test
     void creationOfMultipleAccounts() throws AzureCustomException {
         AzureAccount erroredAzureAccount = new AzureAccount();
         erroredAzureAccount.setEmail(INVALID_EMAIL);
@@ -202,8 +232,10 @@ class AccountServiceTest {
         when(azureUserService.createUser(argThat(user -> user.getEmail().equals(azureAccount.getEmail()))))
             .thenReturn(expectedUser);
 
+        when(publicationService.sendNotificationEmail(any(), any(), any())).thenReturn(TRUE);
+
         Map<CreationEnum, List<? extends AzureAccount>> createdAccounts =
-            accountService.addAzureAccounts(List.of(azureAccount, erroredAzureAccount), ISSUER_EMAIL);
+            accountService.addAzureAccounts(List.of(azureAccount, erroredAzureAccount), ISSUER_EMAIL, FALSE);
 
         assertTrue(createdAccounts.containsKey(CreationEnum.CREATED_ACCOUNTS), "Should contain "
             + "CREATED_ACCOUNTS key");
@@ -316,26 +348,13 @@ class AccountServiceTest {
 
 
     @Test
-    void testAzureAdminAccountCreatedTriggersEmail() throws AzureCustomException {
-        when(validator.validate(argThat(sub -> ((AzureAccount) sub).getEmail().equals(azureAccount.getEmail()))))
-            .thenReturn(Set.of());
-        when(azureUserService.createUser(azureAccount)).thenReturn(expectedUser);
-        when(publicationService.sendNotificationEmail(any(), any(), any())).thenReturn(TEST);
-
-        try (LogCaptor logCaptor = LogCaptor.forClass(AccountService.class)) {
-            accountService.addAzureAccounts(List.of(azureAccount), ISSUER_EMAIL);
-            assertEquals(TEST, logCaptor.getInfoLogs().get(1), "Should trigger admin email");
-        }
-    }
-
-    @Test
     void testAzureAdminAccountFailedDoesntTriggerEmail() throws AzureCustomException {
         when(validator.validate(argThat(sub -> ((AzureAccount) sub).getEmail().equals(azureAccount.getEmail()))))
             .thenReturn(Set.of());
         when(azureUserService.createUser(azureAccount)).thenThrow(new AzureCustomException(TEST));
 
         try (LogCaptor logCaptor = LogCaptor.forClass(AccountService.class)) {
-            accountService.addAzureAccounts(List.of(azureAccount), ISSUER_EMAIL);
+            accountService.addAzureAccounts(List.of(azureAccount), ISSUER_EMAIL, FALSE);
             assertEquals(0, logCaptor.getInfoLogs().size(),
                          "Should not log if failed creating account");
         }
@@ -367,5 +386,53 @@ class AccountServiceTest {
 
         assertEquals(expectedUserEmailMap, accountService.findUserEmailsByIds(userIdsList),
                      "Returned map does not match with expected map");
+    }
+
+    @Test
+    void testUploadMediaFromCsv() throws AzureCustomException {
+        PiUser user1 = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, ID, EMAIL, Roles.VERIFIED);
+        PiUser user2 = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, ID, EMAIL, Roles.VERIFIED);
+
+        when(validator.validate(any())).thenReturn(Set.of());
+        when(azureUserService.createUser(any())).thenReturn(expectedUser);
+        when(publicationService.sendNotificationEmail(any(), any(), any())).thenReturn(TRUE);
+        when(accountModelMapperService.createAzureUsersFromCsv(any())).thenReturn(List.of(azureAccount, azureAccount));
+        when(accountModelMapperService.createPiUsersFromAzureAccounts(List.of(azureAccount, azureAccount)))
+            .thenReturn(List.of(user1, user2));
+        when(userRepository.save(user1)).thenReturn(user1);
+        when(userRepository.save(user2)).thenReturn(user2);
+
+        try(InputStream inputStream = this.getClass().getClassLoader()
+            .getResourceAsStream("csv/valid.csv")) {
+            MultipartFile multipartFile = new MockMultipartFile("file", "TestFileName",
+                                                                "text/plain",
+                                                                IOUtils.toByteArray(inputStream));
+
+            assertEquals(2, accountService.uploadMediaFromCsv(multipartFile, EMAIL)
+                .get(CreationEnum.CREATED_ACCOUNTS).size(), "Created account size should match");
+
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    void testUploadMediaFromInvalidCsv() {
+        try(InputStream inputStream = this.getClass().getClassLoader()
+            .getResourceAsStream("csv/invalidCsv.txt")) {
+            MultipartFile multipartFile = new MockMultipartFile("file", "TestFileName",
+                                                                "text/plain",
+                                                                IOUtils.toByteArray(inputStream));
+
+            CsvParseException ex = assertThrows(CsvParseException.class, () ->
+                accountService.uploadMediaFromCsv(multipartFile, EMAIL),
+                                                "Should throw CsvParseException");
+            assertTrue(ex.getMessage().contains("Failed to parse CSV File due to"), MESSAGES_MATCH);
+
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
