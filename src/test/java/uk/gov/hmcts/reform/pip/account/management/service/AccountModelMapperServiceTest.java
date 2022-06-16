@@ -6,6 +6,7 @@ import uk.gov.hmcts.reform.pip.account.management.model.MediaCsv;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
 import uk.gov.hmcts.reform.pip.account.management.model.Roles;
 import uk.gov.hmcts.reform.pip.account.management.model.UserProvenances;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -113,7 +114,8 @@ class AccountModelMapperServiceTest {
 
     @Test
     void testCreatePiUsersFromAzureAccountsEmpty() {
-        assertEquals(new ArrayList<>(), accountModelMapperService.createPiUsersFromAzureAccounts(List.of()), LIST_MATCH);
+        assertEquals(new ArrayList<>(), accountModelMapperService.createPiUsersFromAzureAccounts(List.of()),
+                     LIST_MATCH);
     }
 
 }

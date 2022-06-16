@@ -25,7 +25,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import org.springframework.web.multipart.MultipartFile;
 import org.testcontainers.shaded.org.apache.commons.io.IOUtils;
 import uk.gov.hmcts.reform.pip.account.management.Application;
 import uk.gov.hmcts.reform.pip.account.management.config.AzureConfigurationClientTest;
@@ -701,8 +700,8 @@ class AccountTest {
     }
 
     @Test
-    void testUploadBulkMedia() {
-        try(InputStream inputStream = this.getClass().getClassLoader()
+    void testUploadBulkMedia() throws Exception {
+        try (InputStream inputStream = Thread.currentThread().getContextClassLoader()
             .getResourceAsStream("csv/valid.csv")) {
 
             MockMultipartFile multipartFile = new MockMultipartFile("mediaList",
@@ -711,35 +710,34 @@ class AccountTest {
             MvcResult mvcResult = mockMvc.perform(multipart(BULK_UPLOAD).file(multipartFile)
                                                       .header(ISSUER_HEADER, ISSUER_EMAIL))
                 .andExpect(status().isOk()).andReturn();
-            Map<CreationEnum, List<?>> users = objectMapper.readValue(
+            ConcurrentHashMap<CreationEnum, List<?>> users = objectMapper.readValue(
                 mvcResult.getResponse().getContentAsString(),
                 new TypeReference<>() {});
 
             assertEquals(2, users.get(CreationEnum.CREATED_ACCOUNTS).size(), MAP_SIZE_MESSAGE);
             assertEquals(0, users.get(CreationEnum.ERRORED_ACCOUNTS).size(), MAP_SIZE_MESSAGE);
 
-        } catch (Exception e) {
-            e.printStackTrace();
         }
     }
 
     @Test
-    void testUploadBulkMediaFailsCsv() {
-        try (InputStream inputStream = this.getClass().getClassLoader()
-            .getResourceAsStream("location/invalidCsv.txt")) {
+    void testUploadBulkMediaFailsCsv() throws Exception {
+        try (InputStream inputStream = Thread.currentThread().getContextClassLoader()
+            .getResourceAsStream("csv/invalidCsv.txt")) {
             MockMultipartFile csvFile
-                = new MockMultipartFile("locationList", inputStream);
+                = new MockMultipartFile("mediaList", inputStream);
 
-            mockMvc.perform(multipart(BULK_UPLOAD).file(csvFile))
-                .andExpect(status().isBadRequest());
-        } catch (Exception e) {
-            e.printStackTrace();
+            MvcResult result = mockMvc.perform(multipart(BULK_UPLOAD).file(csvFile).header(ISSUER_HEADER, ISSUER_EMAIL))
+                .andExpect(status().isBadRequest()).andReturn();
+
+            assertTrue(result.getResponse().getContentAsString().contains("Failed to parse CSV File"),
+                       "Should contain error");
         }
     }
 
     @Test
-    void testUploadBulkMediaEmailOnly() {
-        try(InputStream inputStream = this.getClass().getClassLoader()
+    void testUploadBulkMediaEmailOnly() throws Exception {
+        try (InputStream inputStream = Thread.currentThread().getContextClassLoader()
             .getResourceAsStream("csv/mediaEmailOnly.csv")) {
 
             MockMultipartFile multipartFile = new MockMultipartFile("mediaList",
@@ -748,15 +746,13 @@ class AccountTest {
             MvcResult mvcResult = mockMvc.perform(multipart(BULK_UPLOAD).file(multipartFile)
                                                       .header(ISSUER_HEADER, ISSUER_EMAIL))
                 .andExpect(status().isOk()).andReturn();
-            Map<CreationEnum, List<?>> users = objectMapper.readValue(
+            ConcurrentHashMap<CreationEnum, List<?>> users = objectMapper.readValue(
                 mvcResult.getResponse().getContentAsString(),
                 new TypeReference<>() {});
 
             assertEquals(2, users.get(CreationEnum.CREATED_ACCOUNTS).size(), MAP_SIZE_MESSAGE);
             assertEquals(0, users.get(CreationEnum.ERRORED_ACCOUNTS).size(), MAP_SIZE_MESSAGE);
 
-        } catch (Exception e) {
-            e.printStackTrace();
         }
     }
 }

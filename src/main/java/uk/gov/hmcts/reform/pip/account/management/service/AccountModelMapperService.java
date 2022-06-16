@@ -7,6 +7,7 @@ import uk.gov.hmcts.reform.pip.account.management.model.MediaCsv;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
 import uk.gov.hmcts.reform.pip.account.management.model.Roles;
 import uk.gov.hmcts.reform.pip.account.management.model.UserProvenances;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,8 +20,8 @@ public class AccountModelMapperService {
             AzureAccount azureAccount = new AzureAccount();
             azureAccount.setEmail(csvEntry.getEmail());
             azureAccount.setSurname(csvEntry.getSurname());
-            azureAccount.setFirstName(!Strings.isNullOrEmpty(csvEntry.getFirstName()) ?
-                                          csvEntry.getFirstName() : csvEntry.getEmail());
+            azureAccount.setFirstName(!Strings.isNullOrEmpty(csvEntry.getFirstName())
+                                          ? csvEntry.getFirstName() : csvEntry.getEmail());
             azureAccount.setRole(Roles.VERIFIED);
             azureAccounts.add(azureAccount);
         });

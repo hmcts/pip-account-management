@@ -3,13 +3,18 @@ package uk.gov.hmcts.reform.pip.account.management.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizedClientRepository;
 import org.springframework.security.oauth2.client.web.reactive.function.client.ServletOAuth2AuthorizedClientExchangeFilterFunction;
 import org.springframework.web.reactive.function.client.WebClient;
 
+/**
+ * Configures the Web Client that is used in requests to external services.
+ */
 @Configuration
-@Profile("!test")
+@Profile({"!test", "!non-async"})
+@EnableAsync
 public class WebClientConfig {
 
     @Bean

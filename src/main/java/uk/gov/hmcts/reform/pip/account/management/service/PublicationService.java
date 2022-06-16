@@ -10,8 +10,9 @@ import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
-import java.net.URI;
-import java.net.URISyntaxException;
+import uk.gov.hmcts.reform.pip.account.management.model.MediaApplication;
+
+import java.util.List;
 
 @Slf4j
 @Component
@@ -72,6 +73,23 @@ public class PublicationService {
         } catch (WebClientResponseException ex) {
             log.error("Request to publication services {} failed due to: {}", WELCOME_EMAIL_URL, ex.getMessage());
             return false;
+        }
+    }
+
+    /**
+     * Method which sends a request to publication services to email the P&I team.
+     * With a list of all media applications in the database.
+     *
+     * @return String for logging success or failure
+     */
+    public String sendMediaApplicationReportingEmail(List<MediaApplication> mediaApplicationList) {
+        try {
+            return webClient.post().uri(url + "/notify/media/report")
+                .body(BodyInserters.fromValue(mediaApplicationList)).retrieve()
+                .bodyToMono(String.class).block();
+        } catch (WebClientException ex) {
+            return String.format("Email request failed to send with list of applications: %s. With error message: %s",
+                                 mediaApplicationList, ex.getMessage());
         }
     }
 }

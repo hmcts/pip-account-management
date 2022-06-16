@@ -402,7 +402,7 @@ class AccountServiceTest {
         when(userRepository.save(user1)).thenReturn(user1);
         when(userRepository.save(user2)).thenReturn(user2);
 
-        try(InputStream inputStream = this.getClass().getClassLoader()
+        try (InputStream inputStream = this.getClass().getClassLoader()
             .getResourceAsStream("csv/valid.csv")) {
             MultipartFile multipartFile = new MockMultipartFile("file", "TestFileName",
                                                                 "text/plain",
@@ -419,7 +419,7 @@ class AccountServiceTest {
 
     @Test
     void testUploadMediaFromInvalidCsv() {
-        try(InputStream inputStream = this.getClass().getClassLoader()
+        try (InputStream inputStream = this.getClass().getClassLoader()
             .getResourceAsStream("csv/invalidCsv.txt")) {
             MultipartFile multipartFile = new MockMultipartFile("file", "TestFileName",
                                                                 "text/plain",

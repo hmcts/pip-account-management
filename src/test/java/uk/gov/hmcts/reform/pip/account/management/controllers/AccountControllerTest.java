@@ -172,7 +172,7 @@ class AccountControllerTest {
 
     @Test
     void testCreateMediaAccountsBulkReturnsOk() {
-        try(InputStream is = this.getClass().getClassLoader().getResourceAsStream("csv/valid.csv")) {
+        try (InputStream is = this.getClass().getClassLoader().getResourceAsStream("csv/valid.csv")) {
             MultipartFile multipartFile = new MockMultipartFile("file",
                                                                 "TestFileName", "text/plain",
                                                                 IOUtils.toByteArray(is));
@@ -188,7 +188,7 @@ class AccountControllerTest {
 
     @Test
     void testCreateMediaAccountsBulkReturnsMap() {
-        try(InputStream is = this.getClass().getClassLoader().getResourceAsStream("csv/valid.csv")) {
+        try (InputStream is = this.getClass().getClassLoader().getResourceAsStream("csv/valid.csv")) {
             MultipartFile multipartFile = new MockMultipartFile("file",
                                                                 "TestFileName", "text/plain",
                                                                 IOUtils.toByteArray(is));

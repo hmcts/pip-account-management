@@ -20,10 +20,11 @@ import java.io.IOException;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static uk.gov.hmcts.reform.pip.account.management.helper.MediaApplicationHelper.createApplicationList;
 
 @ExtendWith(MockitoExtension.class)
 @SpringBootTest(classes = {AzureConfigurationClientTest.class, Application.class})
-@ActiveProfiles("test")
+@ActiveProfiles({"test", "non-async"})
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
 class PublicationServiceTest {
 
@@ -90,5 +91,28 @@ class PublicationServiceTest {
         assertTrue(logCaptor.getErrorLogs().get(0).contains(
             "Request to publication services /notify/welcome-email failed"), MESSAGES_MATCH);
     }
+
+    @Test
+    void testSendMediaApplicationReportingEmail() throws IOException {
+        mockPublicationServicesEndpoint = new MockWebServer();
+        mockPublicationServicesEndpoint.start(8081);
+        mockPublicationServicesEndpoint.enqueue(new MockResponse().setBody(SENT_MESSAGE));
+
+        assertEquals(SENT_MESSAGE, publicationService.sendMediaApplicationReportingEmail(
+            createApplicationList(2)),
+                     "No application list sent");
+        mockPublicationServicesEndpoint.shutdown();
+    }
+
+    @Test
+    void testFailedMediaApplicationReportEmail() {
+        String expectedResponse = String.format(
+            "Email request failed to send with list of applications: %s",
+            createApplicationList(2));
+
+        assertTrue(publicationService.sendMediaApplicationReportingEmail(createApplicationList(2))
+                       .contains(expectedResponse), "Expected error message not in response");
+    }
+
 }
 

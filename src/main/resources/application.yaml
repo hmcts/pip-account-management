@@ -81,3 +81,6 @@ azure:
   blob:
     connection-string: ${CONNECTION_STRING}
     container-name: files
+
+cron:
+  media-application-reporting: "59 23 */30 * * *"
