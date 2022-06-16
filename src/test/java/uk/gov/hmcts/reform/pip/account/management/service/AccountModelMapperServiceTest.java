@@ -18,6 +18,7 @@ class AccountModelMapperServiceTest {
     private static final String SURNAME = "lightyear";
     private static final String LIST_MATCH = "Returned lists should match";
     private static final String ID = "123";
+    private static final String EMPTY = "";
 
     private AccountModelMapperService accountModelMapperService = new AccountModelMapperService();
 
@@ -43,13 +44,13 @@ class AccountModelMapperServiceTest {
     void testCreateAzureUsersFromCsvMultiple() {
         MediaCsv mediaCsv = new MediaCsv();
         mediaCsv.setEmail(EMAIL);
-        mediaCsv.setFirstName(FIRST_NAME);
-        mediaCsv.setSurname(SURNAME);
+        mediaCsv.setFirstName(EMPTY);
+        mediaCsv.setSurname(EMPTY);
 
         AzureAccount expected = new AzureAccount();
         expected.setEmail(EMAIL);
-        expected.setFirstName(FIRST_NAME);
-        expected.setSurname(SURNAME);
+        expected.setFirstName(EMPTY);
+        expected.setSurname(EMPTY);
         expected.setRole(Roles.VERIFIED);
 
         assertEquals(List.of(expected, expected),
@@ -60,6 +61,14 @@ class AccountModelMapperServiceTest {
     @Test
     void testCreateAzureUsersFromCsvEmpty() {
         assertEquals(new ArrayList<>(), accountModelMapperService.createAzureUsersFromCsv(List.of()), LIST_MATCH);
+    }
+
+    @Test
+    void testCreateAzureUserNoFirstName() {
+        MediaCsv mediaCsv = new MediaCsv();
+        mediaCsv.setEmail(EMAIL);
+        mediaCsv.setFirstName(FIRST_NAME);
+        mediaCsv.setSurname(SURNAME);
     }
 
     @Test

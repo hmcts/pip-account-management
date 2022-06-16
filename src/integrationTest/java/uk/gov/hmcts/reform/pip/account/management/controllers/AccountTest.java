@@ -736,4 +736,27 @@ class AccountTest {
             e.printStackTrace();
         }
     }
+
+    @Test
+    void testUploadBulkMediaEmailOnly() {
+        try(InputStream inputStream = this.getClass().getClassLoader()
+            .getResourceAsStream("csv/mediaEmailOnly.csv")) {
+
+            MockMultipartFile multipartFile = new MockMultipartFile("mediaList",
+                                                                    IOUtils.toByteArray(inputStream));
+
+            MvcResult mvcResult = mockMvc.perform(multipart(BULK_UPLOAD).file(multipartFile)
+                                                      .header(ISSUER_HEADER, ISSUER_EMAIL))
+                .andExpect(status().isOk()).andReturn();
+            Map<CreationEnum, List<?>> users = objectMapper.readValue(
+                mvcResult.getResponse().getContentAsString(),
+                new TypeReference<>() {});
+
+            assertEquals(2, users.get(CreationEnum.CREATED_ACCOUNTS).size(), MAP_SIZE_MESSAGE);
+            assertEquals(0, users.get(CreationEnum.ERRORED_ACCOUNTS).size(), MAP_SIZE_MESSAGE);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 }

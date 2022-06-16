@@ -1,5 +1,6 @@
 package uk.gov.hmcts.reform.pip.account.management.service;
 
+import com.microsoft.applicationinsights.core.dependencies.google.common.base.Strings;
 import org.springframework.stereotype.Service;
 import uk.gov.hmcts.reform.pip.account.management.model.AzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.MediaCsv;
@@ -18,7 +19,8 @@ public class AccountModelMapperService {
             AzureAccount azureAccount = new AzureAccount();
             azureAccount.setEmail(csvEntry.getEmail());
             azureAccount.setSurname(csvEntry.getSurname());
-            azureAccount.setFirstName(csvEntry.getFirstName());
+            azureAccount.setFirstName(!Strings.isNullOrEmpty(csvEntry.getFirstName()) ?
+                                          csvEntry.getFirstName() : csvEntry.getEmail());
             azureAccount.setRole(Roles.VERIFIED);
             azureAccounts.add(azureAccount);
         });
