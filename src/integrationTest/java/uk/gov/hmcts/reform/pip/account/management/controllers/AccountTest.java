@@ -1,5 +1,7 @@
 package uk.gov.hmcts.reform.pip.account.management.controllers;
 
+import com.azure.storage.blob.BlobClient;
+import com.azure.storage.blob.BlobContainerClient;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.graph.http.GraphServiceException;
@@ -19,6 +21,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -31,12 +34,16 @@ import uk.gov.hmcts.reform.pip.account.management.errorhandling.ExceptionRespons
 import uk.gov.hmcts.reform.pip.account.management.model.AzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.ListType;
+import uk.gov.hmcts.reform.pip.account.management.model.MediaAndLegalApplication;
+import uk.gov.hmcts.reform.pip.account.management.model.MediaAndLegalApplicationDto;
+import uk.gov.hmcts.reform.pip.account.management.model.MediaLegalApplicationStatus;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
 import uk.gov.hmcts.reform.pip.account.management.model.Roles;
 import uk.gov.hmcts.reform.pip.account.management.model.Sensitivity;
 import uk.gov.hmcts.reform.pip.account.management.model.UserProvenances;
 import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredAzureAccount;
 
+import java.io.InputStream;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -46,6 +53,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(classes = {AzureConfigurationClientTest.class, Application.class},
@@ -56,6 +64,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WithMockUser(username = "admin", authorities = { "APPROLE_api.request.admin" })
 @SuppressWarnings({"PMD.TooManyMethods", "PMD.LawOfDemeter", "PMD.ExcessiveImports"})
 class AccountTest {
+
+    @Autowired
+    BlobContainerClient blobContainerClient;
+
+    @Autowired
+    BlobClient blobClient;
 
     @Autowired
     private MockMvc mockMvc;
@@ -75,6 +89,7 @@ class AccountTest {
     private static final String ROOT_URL = "/account";
     private static final String AZURE_URL = ROOT_URL + "/add/azure";
     private static final String PI_URL = ROOT_URL + "/add/pi";
+    private static final String CREATE_MEDIA_USER_URL = "/application";
     private static final String GET_PROVENANCE_USER_URL = ROOT_URL + "/provenance/";
     private static final String EMAIL_URL = ROOT_URL + "/emails";
     private static final String EMAIL = "a@b";
@@ -105,6 +120,11 @@ class AccountTest {
     private static final String FORBIDDEN_STATUS_CODE = "Status code does not match forbidden";
     private static final String TEST_UUID_STRING = UUID.randomUUID().toString();
 
+    private static final String FULL_NAME = "Test user";
+    private static final String EMPLOYER = "Test employer";
+    private static final String BLOB_IMAGE_URL = "https://localhost";
+    private static final MediaLegalApplicationStatus STATUS = MediaLegalApplicationStatus.PENDING;
+
     private ObjectMapper objectMapper;
 
     private PiUser validUser;
@@ -119,9 +139,37 @@ class AccountTest {
         return user;
     }
 
+    private MediaAndLegalApplication createApplication() throws Exception {
+        MediaAndLegalApplicationDto applicationDto = new MediaAndLegalApplicationDto();
+        applicationDto.setFullName(FULL_NAME);
+        applicationDto.setEmail(EMAIL);
+        applicationDto.setEmployer(EMPLOYER);
+        applicationDto.setStatus(STATUS);
+
+        try (InputStream imageInputStream = Thread.currentThread().getContextClassLoader()
+            .getResourceAsStream("files/test-image.png")) {
+
+            MockMultipartFile imageFile = new MockMultipartFile("file", "test-image.png",
+                                                                "", imageInputStream);
+
+
+            when(blobContainerClient.getBlobClient(any())).thenReturn(blobClient);
+            when(blobContainerClient.getBlobContainerUrl()).thenReturn(BLOB_IMAGE_URL);
+
+            MvcResult mvcResult = mockMvc.perform(multipart(CREATE_MEDIA_USER_URL)
+                                                      .file(imageFile)
+                                                      .flashAttr("application", applicationDto)
+                                                      .contentType(MediaType.MULTIPART_FORM_DATA_VALUE))
+                .andExpect(status().isOk()).andReturn();
+
+            return objectMapper.readValue(mvcResult.getResponse().getContentAsString(), MediaAndLegalApplication.class);
+        }
+    }
+
     @BeforeEach
     void setup() {
         objectMapper = new ObjectMapper();
+        objectMapper.findAndRegisterModules();
         validUser = createUser(true, UUID.randomUUID().toString());
     }
 
@@ -524,7 +572,16 @@ class AccountTest {
         PiUser validUser1 = createUser(true, UUID.randomUUID().toString());
         PiUser validUser2 = createUser(true, UUID.randomUUID().toString());
 
-        MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
+        createApplication();
+
+        MockHttpServletRequestBuilder mockHttpServletRequestMediaUserBuilder = MockMvcRequestBuilders
+            .get(CREATE_MEDIA_USER_URL)
+            .contentType(MediaType.APPLICATION_JSON);
+
+        mockMvc.perform(mockHttpServletRequestMediaUserBuilder).andExpect(status().isOk()).andReturn();
+
+        MockHttpServletRequestBuilder mockHttpServletRequestBuilder =
+            MockMvcRequestBuilders
             .post(PI_URL)
             .content(objectMapper.writeValueAsString(List.of(validUser1, validUser2)))
             .header(ISSUER_HEADER, ISSUER_EMAIL)
@@ -535,7 +592,7 @@ class AccountTest {
             objectMapper.readValue(response.getResponse().getContentAsString(),
                                    new TypeReference<>() {});
 
-        assertEquals(2, mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).size(), "2 Users should be created");
+        assertEquals(1, mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).size(), "1 Users should be created");
     }
 
     @Test

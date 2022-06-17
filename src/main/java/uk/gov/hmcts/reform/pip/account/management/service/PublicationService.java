@@ -10,9 +10,6 @@ import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientException;
 
-import java.net.URI;
-import java.net.URISyntaxException;
-
 @Slf4j
 @Component
 /**
@@ -41,11 +38,11 @@ public class PublicationService {
         jsonObject.put("forename", forename);
         jsonObject.put("surname", surname);
         try {
-            return webClient.post().uri(new URI(url + "/notify/created/admin"))
+            return webClient.post().uri(url + "/notify/created/admin")
                 .body(BodyInserters.fromValue(jsonObject)).retrieve()
                 .bodyToMono(String.class).block();
 
-        } catch (WebClientException | URISyntaxException ex) {
+        } catch (WebClientException ex) {
             log.error(String.format("Request failed with error message: %s", ex.getMessage()));
             return "Email request failed to send: " + emailAddress;
         }
@@ -57,11 +54,11 @@ public class PublicationService {
         jsonObject.put("isExisting", false);
         jsonObject.put("fullName", fullName);
         try {
-            return webClient.post().uri(new URI(url + "/notify/welcome-email"))
+            return webClient.post().uri(url + "/notify/welcome-email")
                 .body(BodyInserters.fromValue(jsonObject)).retrieve()
                 .bodyToMono(String.class).block();
 
-        } catch (WebClientException | URISyntaxException ex) {
+        } catch (WebClientException ex) {
             log.error(String.format("Request failed with error message: %s", ex.getMessage()));
             return "Email request failed to send: " + emailAddress;
         }
@@ -72,11 +69,11 @@ public class PublicationService {
         jsonObject.put("email", emailAddress);
         jsonObject.put("fullName", fullName);
         try {
-            return webClient.post().uri(new URI(url + "/notify/created/duplicate/media"))
+            return webClient.post().uri(url + "/notify/created/duplicate/media")
                 .body(BodyInserters.fromValue(jsonObject)).retrieve()
                 .bodyToMono(String.class).block();
 
-        } catch (WebClientException | URISyntaxException ex) {
+        } catch (WebClientException ex) {
             log.error(String.format("Request failed with error message: %s", ex.getMessage()));
             return "Email request failed to send: " + emailAddress;
         }
