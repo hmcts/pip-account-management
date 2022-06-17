@@ -35,6 +35,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.validation.ConstraintViolation;
+import javax.validation.Valid;
 import javax.validation.Validator;
 
 import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
@@ -101,6 +102,7 @@ public class AccountService {
             try {
                 User user = azureUserService.createUser(azureAccount);
                 azureAccount.setAzureAccountId(user.id);
+                createdAzureAccounts.add(azureAccount);
 
                 log.info(writeLog(issuerEmail, UserActions.CREATE_ACCOUNT, azureAccount.getEmail()));
 
@@ -108,8 +110,6 @@ public class AccountService {
                     ErroredAzureAccount softErroredAccount = new ErroredAzureAccount(azureAccount);
                     softErroredAccount.setErrorMessages(List.of(EMAIL_NOT_SENT_MESSAGE));
                     erroredAccounts.add(softErroredAccount);
-                } else {
-                    createdAzureAccounts.add(azureAccount);
                 }
 
             } catch (AzureCustomException azureCustomException) {
