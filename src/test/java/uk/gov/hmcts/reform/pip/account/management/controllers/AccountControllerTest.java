@@ -64,7 +64,7 @@ class AccountControllerTest {
         List<AzureAccount> azureAccounts = List.of(azureAccount);
 
         when(accountService.addAzureAccounts(argThat(arg -> arg.equals(azureAccounts)),
-                                             eq("b@c.com"), false)).thenReturn(accountsMap);
+                                             eq("b@c.com"), eq(false))).thenReturn(accountsMap);
 
         ResponseEntity<Map<CreationEnum, List<? extends AzureAccount>>> response =
             accountController.createAzureAccount("b@c.com", azureAccounts);
@@ -171,8 +171,8 @@ class AccountControllerTest {
     }
 
     @Test
-    void testCreateMediaAccountsBulkReturnsOk() {
-        try (InputStream is = this.getClass().getClassLoader().getResourceAsStream("csv/valid.csv")) {
+    void testCreateMediaAccountsBulkReturnsOk() throws IOException {
+        try (InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream("csv/valid.csv")) {
             MultipartFile multipartFile = new MockMultipartFile("file",
                                                                 "TestFileName", "text/plain",
                                                                 IOUtils.toByteArray(is));
@@ -181,14 +181,12 @@ class AccountControllerTest {
             assertEquals(HttpStatus.OK,
                          accountController.createMediaAccountsBulk(TEST_EMAIL_1, multipartFile).getStatusCode(),
                          STATUS_CODE_MATCH);
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 
     @Test
-    void testCreateMediaAccountsBulkReturnsMap() {
-        try (InputStream is = this.getClass().getClassLoader().getResourceAsStream("csv/valid.csv")) {
+    void testCreateMediaAccountsBulkReturnsMap() throws IOException {
+        try (InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream("csv/valid.csv")) {
             MultipartFile multipartFile = new MockMultipartFile("file",
                                                                 "TestFileName", "text/plain",
                                                                 IOUtils.toByteArray(is));
@@ -197,8 +195,6 @@ class AccountControllerTest {
             assertEquals(new ConcurrentHashMap<>(),
                          accountController.createMediaAccountsBulk(TEST_EMAIL_1, multipartFile).getBody(),
                          "Maps should match");
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 

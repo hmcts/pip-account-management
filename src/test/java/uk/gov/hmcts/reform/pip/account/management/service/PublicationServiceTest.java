@@ -87,25 +87,23 @@ class PublicationServiceTest {
     void testSendMediaNotificationEmailFails() {
         mockPublicationServicesEndpoint.enqueue(new MockResponse().setResponseCode(400));
 
-        assertFalse(publicationService.sendMediaNotificationEmail(EMAIL, true));
+        assertFalse(publicationService.sendMediaNotificationEmail(EMAIL, true), "Should return false");
         assertTrue(logCaptor.getErrorLogs().get(0).contains(
             "Request to publication services /notify/welcome-email failed"), MESSAGES_MATCH);
     }
 
     @Test
-    void testSendMediaApplicationReportingEmail() throws IOException {
-        mockPublicationServicesEndpoint = new MockWebServer();
-        mockPublicationServicesEndpoint.start(8081);
+    void testSendMediaApplicationReportingEmail() {
         mockPublicationServicesEndpoint.enqueue(new MockResponse().setBody(SENT_MESSAGE));
 
         assertEquals(SENT_MESSAGE, publicationService.sendMediaApplicationReportingEmail(
             createApplicationList(2)),
                      "No application list sent");
-        mockPublicationServicesEndpoint.shutdown();
     }
 
     @Test
     void testFailedMediaApplicationReportEmail() {
+        mockPublicationServicesEndpoint.enqueue(new MockResponse().setResponseCode(400));
         String expectedResponse = String.format(
             "Email request failed to send with list of applications: %s",
             createApplicationList(2));

@@ -20,8 +20,8 @@ public class AccountModelMapperService {
             AzureAccount azureAccount = new AzureAccount();
             azureAccount.setEmail(csvEntry.getEmail());
             azureAccount.setSurname(csvEntry.getSurname());
-            azureAccount.setFirstName(!Strings.isNullOrEmpty(csvEntry.getFirstName())
-                                          ? csvEntry.getFirstName() : csvEntry.getEmail());
+            azureAccount.setFirstName(Strings.isNullOrEmpty(csvEntry.getFirstName())
+                                          ? csvEntry.getEmail() : csvEntry.getFirstName());
             azureAccount.setRole(Roles.VERIFIED);
             azureAccounts.add(azureAccount);
         });

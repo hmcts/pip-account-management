@@ -38,10 +38,8 @@ import uk.gov.hmcts.reform.pip.account.management.model.Sensitivity;
 import uk.gov.hmcts.reform.pip.account.management.model.UserProvenances;
 import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredAzureAccount;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -91,6 +89,7 @@ class AccountTest {
     private static final Roles ROLE = Roles.INTERNAL_ADMIN_CTSC;
     private static final String ISSUER_EMAIL = "issuer@email.com";
     private static final String ISSUER_HEADER = "x-issuer-email";
+    private static final String MEDIA_LIST = "mediaList";
 
     private static final String ID = "1234";
     private static final String ADDITIONAL_ID = "4321";
@@ -704,7 +703,7 @@ class AccountTest {
         try (InputStream inputStream = Thread.currentThread().getContextClassLoader()
             .getResourceAsStream("csv/valid.csv")) {
 
-            MockMultipartFile multipartFile = new MockMultipartFile("mediaList",
+            MockMultipartFile multipartFile = new MockMultipartFile(MEDIA_LIST,
                                                                 IOUtils.toByteArray(inputStream));
 
             MvcResult mvcResult = mockMvc.perform(multipart(BULK_UPLOAD).file(multipartFile)
@@ -725,7 +724,7 @@ class AccountTest {
         try (InputStream inputStream = Thread.currentThread().getContextClassLoader()
             .getResourceAsStream("csv/invalidCsv.txt")) {
             MockMultipartFile csvFile
-                = new MockMultipartFile("mediaList", inputStream);
+                = new MockMultipartFile(MEDIA_LIST, inputStream);
 
             MvcResult result = mockMvc.perform(multipart(BULK_UPLOAD).file(csvFile).header(ISSUER_HEADER, ISSUER_EMAIL))
                 .andExpect(status().isBadRequest()).andReturn();
@@ -740,7 +739,7 @@ class AccountTest {
         try (InputStream inputStream = Thread.currentThread().getContextClassLoader()
             .getResourceAsStream("csv/mediaEmailOnly.csv")) {
 
-            MockMultipartFile multipartFile = new MockMultipartFile("mediaList",
+            MockMultipartFile multipartFile = new MockMultipartFile(MEDIA_LIST,
                                                                     IOUtils.toByteArray(inputStream));
 
             MvcResult mvcResult = mockMvc.perform(multipart(BULK_UPLOAD).file(multipartFile)
@@ -761,7 +760,7 @@ class AccountTest {
         try (InputStream inputStream = Thread.currentThread().getContextClassLoader()
             .getResourceAsStream("csv/invalidEmail.csv")) {
 
-            MockMultipartFile multipartFile = new MockMultipartFile("mediaList",
+            MockMultipartFile multipartFile = new MockMultipartFile(MEDIA_LIST,
                                                                     IOUtils.toByteArray(inputStream));
 
             MvcResult mvcResult = mockMvc.perform(multipart(BULK_UPLOAD).file(multipartFile)

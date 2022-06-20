@@ -21,7 +21,7 @@ class AccountModelMapperServiceTest {
     private static final String ID = "123";
     private static final String EMPTY = "";
 
-    private AccountModelMapperService accountModelMapperService = new AccountModelMapperService();
+    private final AccountModelMapperService accountModelMapperService = new AccountModelMapperService();
 
     @Test
     void testCreateAzureUsersFromCsv() {
@@ -50,7 +50,7 @@ class AccountModelMapperServiceTest {
 
         AzureAccount expected = new AzureAccount();
         expected.setEmail(EMAIL);
-        expected.setFirstName(EMPTY);
+        expected.setFirstName(EMAIL);
         expected.setSurname(EMPTY);
         expected.setRole(Roles.VERIFIED);
 
@@ -68,8 +68,18 @@ class AccountModelMapperServiceTest {
     void testCreateAzureUserNoFirstName() {
         MediaCsv mediaCsv = new MediaCsv();
         mediaCsv.setEmail(EMAIL);
-        mediaCsv.setFirstName(FIRST_NAME);
-        mediaCsv.setSurname(SURNAME);
+        mediaCsv.setFirstName(EMPTY);
+        mediaCsv.setSurname(EMPTY);
+
+        AzureAccount expected = new AzureAccount();
+        expected.setEmail(EMAIL);
+        expected.setFirstName(EMAIL);
+        expected.setSurname(EMPTY);
+        expected.setRole(Roles.VERIFIED);
+
+        assertEquals(List.of(expected, expected),
+                     accountModelMapperService.createAzureUsersFromCsv(List.of(mediaCsv, mediaCsv)),
+                     LIST_MATCH);
     }
 
     @Test

@@ -50,7 +50,7 @@ import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-@SuppressWarnings("PMD.TooManyMethods")
+@SuppressWarnings({"PMD.TooManyMethods", "PMD.ExcessiveImports"})
 class AccountServiceTest {
 
     @Mock
@@ -389,7 +389,7 @@ class AccountServiceTest {
     }
 
     @Test
-    void testUploadMediaFromCsv() throws AzureCustomException {
+    void testUploadMediaFromCsv() throws AzureCustomException, IOException {
         PiUser user1 = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, ID, EMAIL, Roles.VERIFIED);
         PiUser user2 = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, ID, EMAIL, Roles.VERIFIED);
 
@@ -402,7 +402,7 @@ class AccountServiceTest {
         when(userRepository.save(user1)).thenReturn(user1);
         when(userRepository.save(user2)).thenReturn(user2);
 
-        try (InputStream inputStream = this.getClass().getClassLoader()
+        try (InputStream inputStream = Thread.currentThread().getContextClassLoader()
             .getResourceAsStream("csv/valid.csv")) {
             MultipartFile multipartFile = new MockMultipartFile("file", "TestFileName",
                                                                 "text/plain",
@@ -412,14 +412,12 @@ class AccountServiceTest {
                 .get(CreationEnum.CREATED_ACCOUNTS).size(), "Created account size should match");
 
 
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 
     @Test
-    void testUploadMediaFromInvalidCsv() {
-        try (InputStream inputStream = this.getClass().getClassLoader()
+    void testUploadMediaFromInvalidCsv() throws IOException {
+        try (InputStream inputStream = Thread.currentThread().getContextClassLoader()
             .getResourceAsStream("csv/invalidCsv.txt")) {
             MultipartFile multipartFile = new MockMultipartFile("file", "TestFileName",
                                                                 "text/plain",
@@ -431,8 +429,6 @@ class AccountServiceTest {
             assertTrue(ex.getMessage().contains("Failed to parse CSV File due to"), MESSAGES_MATCH);
 
 
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 }
