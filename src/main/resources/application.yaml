@@ -22,6 +22,11 @@ spring:
         credential:
           client-id: ${CLIENT_ID}
         app-id-uri: ${APP_URI}
+        authorization-clients:
+          publicationServicesApi:
+            authorization-grant-type: client_credentials
+            scopes:
+              - ${PUBLICATION_SERVICES_AZ_API}/.default
   config:
     import: "optional:configtree:/mnt/secrets/pip-ss-kv/"
   jackson:
@@ -75,3 +80,6 @@ azure:
   blob:
     connection-string: ${CONNECTION_STRING}
     container-name: files
+
+cron:
+  media-application-reporting: "59 23 */30 * * *"
