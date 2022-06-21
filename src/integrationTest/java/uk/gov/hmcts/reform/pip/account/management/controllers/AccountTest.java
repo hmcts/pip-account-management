@@ -596,6 +596,39 @@ class AccountTest {
     }
 
     @Test
+    void testCreateMultipleSuccessUsersWithDifferenetEmails() throws Exception {
+        PiUser validUser1 = createUser(true, UUID.randomUUID().toString());
+
+        PiUser validUser2 = new PiUser();
+        validUser2.setEmail("a@test.com");
+        validUser2.setProvenanceUserId(UUID.randomUUID().toString());
+        validUser2.setUserProvenance(PROVENANCE);
+        validUser2.setRoles(ROLE);
+
+        createApplication();
+
+        MockHttpServletRequestBuilder mockHttpServletRequestMediaUserBuilder = MockMvcRequestBuilders
+            .get(CREATE_MEDIA_USER_URL)
+            .contentType(MediaType.APPLICATION_JSON);
+
+        mockMvc.perform(mockHttpServletRequestMediaUserBuilder).andExpect(status().isOk()).andReturn();
+
+        MockHttpServletRequestBuilder mockHttpServletRequestBuilder =
+            MockMvcRequestBuilders
+                .post(PI_URL)
+                .content(objectMapper.writeValueAsString(List.of(validUser1, validUser2)))
+                .header(ISSUER_HEADER, ISSUER_EMAIL)
+                .contentType(MediaType.APPLICATION_JSON);
+
+        MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isCreated()).andReturn();
+        ConcurrentHashMap<CreationEnum, List<Object>> mappedResponse =
+            objectMapper.readValue(response.getResponse().getContentAsString(),
+                                   new TypeReference<>() {});
+
+        assertEquals(2, mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).size(), "2 Users should be created");
+    }
+
+    @Test
     void testCreateSingleErroredUser() throws Exception {
         PiUser invalidUser = createUser(false, UUID.randomUUID().toString());
 
