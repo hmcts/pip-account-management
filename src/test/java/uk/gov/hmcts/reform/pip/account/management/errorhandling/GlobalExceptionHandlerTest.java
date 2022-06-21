@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MissingRequestHeaderException;
 import uk.gov.hmcts.reform.pip.account.management.controllers.AccountController;
+import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.CsvParseException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.ForbiddenPermissionsException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.NotFoundException;
 
@@ -85,6 +86,24 @@ class GlobalExceptionHandlerTest {
         assertNotNull(responseEntity.getBody(), RESPONSE_SHOULD_CONTAIN_A_BODY);
         assertEquals(ERROR_MESSAGE,
                      responseEntity.getBody().getMessage(), EXCEPTION_BODY_NOT_MATCH);
+    }
+
+    @Test
+    void testCsvParseException() {
+        CsvParseException csvParseException = new CsvParseException(ERROR_MESSAGE);
+
+        ResponseEntity<ExceptionResponse> responseEntity =
+            globalExceptionHandler.handle(csvParseException);
+
+        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode(),
+                     "Should be bad request exception"
+        );
+        assertNotNull(responseEntity.getBody(), NOT_NULL_MESSAGE);
+        assertTrue(
+            responseEntity.getBody().getMessage()
+                .contains(ERROR_MESSAGE),
+            EXCEPTION_BODY_NOT_MATCH
+        );
     }
 
 }

@@ -21,6 +21,7 @@ spring:
           tenant-id: ${TENANT_ID}
         credential:
           client-id: ${CLIENT_ID}
+          client-secret: ${CLIENT_SECRET}
         app-id-uri: ${APP_URI}
         authorization-clients:
           publicationServicesApi:
