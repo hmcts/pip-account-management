@@ -136,7 +136,7 @@ jacocoTestCoverageVerification {
 
 project.tasks['sonarqube'].dependsOn jacocoTestReport
 
-def sonarExclusions = []
+def sonarExclusions = ["**/WebClientConfig.java"]
 
 sonarqube {
   properties {
