@@ -25,12 +25,12 @@ import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
 import uk.gov.hmcts.reform.pip.account.management.model.Sensitivity;
 import uk.gov.hmcts.reform.pip.account.management.model.UserProvenances;
 import uk.gov.hmcts.reform.pip.account.management.service.AccountService;
-import uk.gov.hmcts.reform.pip.account.management.validation.annotations.ValidEmail;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import javax.validation.constraints.Email;
 
 @RestController
 @Api(tags = "Account Management - API for managing accounts")
@@ -58,7 +58,7 @@ public class AccountController {
     })
     @PostMapping("/add/azure")
     public ResponseEntity<Map<CreationEnum, List<? extends AzureAccount>>> createAzureAccount(
-        @RequestHeader("x-issuer-email") @ValidEmail String issuerEmail,
+        @RequestHeader("x-issuer-email") @Email String issuerEmail,
         @RequestBody List<AzureAccount> azureAccounts) {
         return ResponseEntity.ok(accountService.addAzureAccounts(azureAccounts, issuerEmail, false));
     }
@@ -78,7 +78,7 @@ public class AccountController {
     @ApiOperation("Add a user to the P&I postgres database")
     @PostMapping("/add/pi")
     public ResponseEntity<Map<CreationEnum, List<?>>> createUsers(
-        @RequestHeader("x-issuer-email") @ValidEmail String issuerEmail,
+        @RequestHeader("x-issuer-email") @Email String issuerEmail,
         @RequestBody List<PiUser> users) {
         return ResponseEntity.status(HttpStatus.CREATED).body(accountService.addUsers(users, issuerEmail));
     }
@@ -128,7 +128,7 @@ public class AccountController {
     @ApiOperation("Create media accounts via CSV upload")
     @PostMapping("/media-bulk-upload")
     public ResponseEntity<Map<CreationEnum, List<?>>> createMediaAccountsBulk(
-        @RequestHeader("x-issuer-email") @ValidEmail String issuerEmail, @RequestPart MultipartFile mediaList) {
+        @RequestHeader("x-issuer-email") @Email String issuerEmail, @RequestPart MultipartFile mediaList) {
         return ResponseEntity.ok(accountService.uploadMediaFromCsv(mediaList, issuerEmail));
     }
 }
