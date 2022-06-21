@@ -101,11 +101,12 @@ public class AccountService {
             try {
                 User user = azureUserService.createUser(azureAccount);
                 azureAccount.setAzureAccountId(user.id);
-                createdAzureAccounts.add(azureAccount);
 
                 log.info(writeLog(issuerEmail, UserActions.CREATE_ACCOUNT, azureAccount.getEmail()));
 
-                if (!handleAccountCreationEmail(azureAccount, isExisting)) {
+                if (handleAccountCreationEmail(azureAccount, isExisting)) {
+                    createdAzureAccounts.add(azureAccount);
+                } else {
                     ErroredAzureAccount softErroredAccount = new ErroredAzureAccount(azureAccount);
                     softErroredAccount.setErrorMessages(List.of(EMAIL_NOT_SENT_MESSAGE));
                     erroredAccounts.add(softErroredAccount);
