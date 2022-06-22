@@ -15,7 +15,7 @@ import java.util.List;
 /**
  * Configuration class used to initialise beans to talk to Azure graph.
  */
-@Profile("!test")
+@Profile("!test & !integration")
 @Configuration
 public class AzureConfigurationClient {
 

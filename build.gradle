@@ -136,7 +136,7 @@ jacocoTestCoverageVerification {
 
 project.tasks['sonarqube'].dependsOn jacocoTestReport
 
-def sonarExclusions = []
+def sonarExclusions = ["**/WebClientConfig.java"]
 
 sonarqube {
   properties {
@@ -176,7 +176,7 @@ dependencies {
   }
   implementation group: 'org.postgresql', name: 'postgresql', version: '42.3.3'
   implementation 'com.azure.spring:spring-cloud-azure-starter-active-directory:4.0.0'
-  implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
+  implementation group: 'org.springframework.boot', name: 'spring-boot-starter-oauth2-resource-server'
   implementation group: 'org.springframework.boot', name:'spring-boot-starter-webflux'
   implementation group: 'org.springframework.boot', name: 'spring-boot-starter-validation'
   implementation group: 'org.springframework.boot', name: 'spring-boot-starter-jdbc'
@@ -184,6 +184,8 @@ dependencies {
   implementation group: 'org.apache.tomcat.embed', name: 'tomcat-embed-core', version: '9.0.63'
   implementation group: 'org.apache.tomcat.embed', name: 'tomcat-embed-websocket', version: '9.0.63'
   implementation group: 'com.squareup.okhttp3', name: 'okhttp', version: '4.9.3'
+  implementation group: 'com.opencsv', name: 'opencsv', version: '5.5.2'
+  implementation group: 'org.springframework.boot', name: 'spring-boot-starter-oauth2-client'
 
   // Include the sdk as a dependency
   implementation group: 'com.microsoft.graph', name: 'microsoft-graph', version: '5.17.0'
@@ -205,6 +207,7 @@ dependencies {
   testImplementation group: 'com.squareup.okhttp3', name: 'mockwebserver', version: '4.9.3'
   testImplementation group: 'io.github.hakky54', name: 'logcaptor', version: '2.7.8'
   testImplementation group: 'io.zonky.test', name: 'embedded-database-spring-test', version: '2.1.1'
+  testImplementation group: 'org.awaitility', name: 'awaitility', version: '3.0.0'
 
   integrationTestImplementation sourceSets.main.runtimeClasspath
   integrationTestImplementation sourceSets.test.runtimeClasspath

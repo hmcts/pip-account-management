@@ -4,7 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Type;
-import uk.gov.hmcts.reform.pip.account.management.validation.annotations.ValidEmail;
 import uk.gov.hmcts.reform.pip.account.management.validation.annotations.ValidProvenanceUserId;
 
 import java.util.UUID;
@@ -15,6 +14,7 @@ import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
@@ -53,7 +53,7 @@ public class PiUser {
     /**
      * Email of the user.
      */
-    @ValidEmail
+    @Email
     private String email;
 
     /**
