@@ -141,7 +141,7 @@ public class AccountService {
                 && application.isPresent()) {
                 String emailSent = publicationService.sendNotificationEmailForDuplicateMediaAccount(user.getEmail(),
                                                                             application.get().getFullName());
-                if (emailSent != null && !emailSent.isEmpty()) {
+                if (emailSent != null && emailSent.contains("request failed")) {
                     ErroredPiUser erroredUser = new ErroredPiUser(user);
                     erroredUser.setErrorMessages(Arrays.asList(emailSent));
                     erroredAccounts.add(erroredUser);

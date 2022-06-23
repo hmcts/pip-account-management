@@ -238,7 +238,7 @@ class AccountServiceTest {
         lenient().when(mediaApplicationRepository.findByEmail(EMAIL))
             .thenReturn(Optional.of(mediaAndLegalApplication));
         lenient().when(userRepository.findByEmail("a123@b.com")).thenReturn(Optional.of(piUser));
-
+        when(publicationService.sendNotificationEmailForSetupMediaAccount(any(), any())).thenReturn(TEST);
         Map<CreationEnum, List<?>> expected = new ConcurrentHashMap<>();
         expected.put(CreationEnum.CREATED_ACCOUNTS, List.of(user.getUserId()));
         expected.put(CreationEnum.ERRORED_ACCOUNTS, List.of());
@@ -301,6 +301,29 @@ class AccountServiceTest {
         when(userRepository.save(validUser)).thenReturn(validUser);
 
         assertEquals(expected, accountService.addUsers(List.of(invalidUser, validUser), EMAIL),
+                     "Returned maps should match created and errored"
+        );
+    }
+
+    @Test
+    void testAddUsersForBothCreatedAndDuplicateErrored() {
+        PiUser invalidUser = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, ID, EMAIL,
+                                        Roles.INTERNAL_ADMIN_CTSC
+        );
+        ErroredPiUser erroredUser = new ErroredPiUser(invalidUser);
+        erroredUser.setErrorMessages(List.of(VALIDATION_MESSAGE));
+        Map<CreationEnum, List<?>> expected = new ConcurrentHashMap<>();
+        expected.put(CreationEnum.ERRORED_ACCOUNTS, List.of(erroredUser));
+        expected.put(CreationEnum.CREATED_ACCOUNTS, List.of());
+
+        lenient().when(mediaApplicationRepository.findByEmail(EMAIL))
+            .thenReturn(Optional.of(mediaAndLegalApplication));
+        lenient().when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.of(piUser));
+        lenient().when(publicationService.sendNotificationEmailForSetupMediaAccount(EMAIL, FULL_NAME)).thenReturn(ERROR_MESSAGE);
+        lenient().when(userRepository.save(invalidUser)).thenReturn(invalidUser);
+        doReturn(Set.of(constraintViolation)).when(validator).validate(invalidUser);
+
+        assertEquals(expected, accountService.addUsers(List.of(invalidUser), EMAIL),
                      "Returned maps should match created and errored"
         );
     }
