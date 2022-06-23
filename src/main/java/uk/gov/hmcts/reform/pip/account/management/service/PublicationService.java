@@ -69,7 +69,7 @@ public class PublicationService {
         jsonObject.put("email", emailAddress);
         jsonObject.put("fullName", fullName);
         try {
-            return webClient.post().uri(url + "/notify/created/duplicate/media")
+            return webClient.post().uri(url + "/notify/duplicate/media")
                 .body(BodyInserters.fromValue(jsonObject)).retrieve()
                 .bodyToMono(String.class).block();
 
