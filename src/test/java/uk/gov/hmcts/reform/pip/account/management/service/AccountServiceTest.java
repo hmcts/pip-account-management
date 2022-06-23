@@ -8,14 +8,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.hmcts.reform.pip.account.management.database.MediaLegalApplicationRepository;
+import uk.gov.hmcts.reform.pip.account.management.database.MediaApplicationRepository;
 import uk.gov.hmcts.reform.pip.account.management.database.UserRepository;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.AzureCustomException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.UserNotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.model.AzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.ListType;
-import uk.gov.hmcts.reform.pip.account.management.model.MediaAndLegalApplication;
+import uk.gov.hmcts.reform.pip.account.management.model.MediaApplication;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
 import uk.gov.hmcts.reform.pip.account.management.model.Roles;
 import uk.gov.hmcts.reform.pip.account.management.model.Sensitivity;
@@ -65,7 +65,7 @@ class AccountServiceTest {
     private UserRepository userRepository;
 
     @Mock
-    MediaLegalApplicationRepository mediaLegalApplicationRepository;
+    MediaApplicationRepository mediaApplicationRepository;
 
     @Mock
     private PublicationService publicationService;
@@ -94,7 +94,7 @@ class AccountServiceTest {
 
     private final PiUser piUser = new PiUser();
     private final PiUser piUserIdam = new PiUser();
-    private final MediaAndLegalApplication mediaAndLegalApplication = new MediaAndLegalApplication();
+    private final MediaApplication mediaAndLegalApplication = new MediaApplication();
     private AzureAccount azureAccount;
     private User expectedUser;
 
@@ -235,7 +235,7 @@ class AccountServiceTest {
     void testAddUsers() {
         PiUser user = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, ID, EMAIL, Roles.INTERNAL_ADMIN_CTSC);
 
-        lenient().when(mediaLegalApplicationRepository.findByEmail(EMAIL))
+        lenient().when(mediaApplicationRepository.findByEmail(EMAIL))
             .thenReturn(Optional.of(mediaAndLegalApplication));
         lenient().when(userRepository.findByEmail("a123@b.com")).thenReturn(Optional.of(piUser));
 
@@ -251,7 +251,7 @@ class AccountServiceTest {
 
     @Test
     void testAddDuplicateUsers() {
-        lenient().when(mediaLegalApplicationRepository.findByEmail(EMAIL))
+        lenient().when(mediaApplicationRepository.findByEmail(EMAIL))
             .thenReturn(Optional.of(mediaAndLegalApplication));
         lenient().when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.of(piUser));
 

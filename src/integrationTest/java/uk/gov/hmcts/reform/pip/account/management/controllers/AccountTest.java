@@ -34,9 +34,8 @@ import uk.gov.hmcts.reform.pip.account.management.errorhandling.ExceptionRespons
 import uk.gov.hmcts.reform.pip.account.management.model.AzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.ListType;
-import uk.gov.hmcts.reform.pip.account.management.model.MediaAndLegalApplication;
-import uk.gov.hmcts.reform.pip.account.management.model.MediaAndLegalApplicationDto;
-import uk.gov.hmcts.reform.pip.account.management.model.MediaLegalApplicationStatus;
+import uk.gov.hmcts.reform.pip.account.management.model.MediaApplication;
+import uk.gov.hmcts.reform.pip.account.management.model.MediaApplicationStatus;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
 import uk.gov.hmcts.reform.pip.account.management.model.Roles;
 import uk.gov.hmcts.reform.pip.account.management.model.Sensitivity;
@@ -123,7 +122,7 @@ class AccountTest {
     private static final String FULL_NAME = "Test user";
     private static final String EMPLOYER = "Test employer";
     private static final String BLOB_IMAGE_URL = "https://localhost";
-    private static final MediaLegalApplicationStatus STATUS = MediaLegalApplicationStatus.PENDING;
+    private static final MediaApplicationStatus STATUS = MediaApplicationStatus.PENDING;
 
     private ObjectMapper objectMapper;
 
@@ -139,12 +138,12 @@ class AccountTest {
         return user;
     }
 
-    private MediaAndLegalApplication createApplication() throws Exception {
-        MediaAndLegalApplicationDto applicationDto = new MediaAndLegalApplicationDto();
-        applicationDto.setFullName(FULL_NAME);
-        applicationDto.setEmail(EMAIL);
-        applicationDto.setEmployer(EMPLOYER);
-        applicationDto.setStatus(STATUS);
+    private MediaApplication createApplication() throws Exception {
+        MediaApplication application = new MediaApplication();
+        application.setFullName(FULL_NAME);
+        application.setEmail(EMAIL);
+        application.setEmployer(EMPLOYER);
+        application.setStatus(STATUS);
 
         try (InputStream imageInputStream = Thread.currentThread().getContextClassLoader()
             .getResourceAsStream("files/test-image.png")) {
@@ -158,11 +157,11 @@ class AccountTest {
 
             MvcResult mvcResult = mockMvc.perform(multipart(CREATE_MEDIA_USER_URL)
                                                       .file(imageFile)
-                                                      .flashAttr("application", applicationDto)
+                                                      .flashAttr("application", application)
                                                       .contentType(MediaType.MULTIPART_FORM_DATA_VALUE))
                 .andExpect(status().isOk()).andReturn();
 
-            return objectMapper.readValue(mvcResult.getResponse().getContentAsString(), MediaAndLegalApplication.class);
+            return objectMapper.readValue(mvcResult.getResponse().getContentAsString(), MediaApplication.class);
         }
     }
 
@@ -596,14 +595,7 @@ class AccountTest {
     }
 
     @Test
-    void testCreateMultipleSuccessUsersWithDifferenetEmails() throws Exception {
-        PiUser validUser1 = createUser(true, UUID.randomUUID().toString());
-
-        PiUser validUser2 = new PiUser();
-        validUser2.setEmail("a@test.com");
-        validUser2.setProvenanceUserId(UUID.randomUUID().toString());
-        validUser2.setUserProvenance(PROVENANCE);
-        validUser2.setRoles(ROLE);
+    void testCreateMultipleSuccessUsersWithDifferentEmails() throws Exception {
 
         createApplication();
 
@@ -612,6 +604,13 @@ class AccountTest {
             .contentType(MediaType.APPLICATION_JSON);
 
         mockMvc.perform(mockHttpServletRequestMediaUserBuilder).andExpect(status().isOk()).andReturn();
+
+        PiUser validUser1 = createUser(true, UUID.randomUUID().toString());
+        PiUser validUser2 = new PiUser();
+        validUser2.setEmail("a@test.com");
+        validUser2.setProvenanceUserId(UUID.randomUUID().toString());
+        validUser2.setUserProvenance(PROVENANCE);
+        validUser2.setRoles(ROLE);
 
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder =
             MockMvcRequestBuilders

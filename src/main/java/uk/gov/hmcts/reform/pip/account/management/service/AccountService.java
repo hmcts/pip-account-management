@@ -4,14 +4,14 @@ import com.microsoft.graph.models.User;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import uk.gov.hmcts.reform.pip.account.management.database.MediaLegalApplicationRepository;
+import uk.gov.hmcts.reform.pip.account.management.database.MediaApplicationRepository;
 import uk.gov.hmcts.reform.pip.account.management.database.UserRepository;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.AzureCustomException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.UserNotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.model.AzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.ListType;
-import uk.gov.hmcts.reform.pip.account.management.model.MediaAndLegalApplication;
+import uk.gov.hmcts.reform.pip.account.management.model.MediaApplication;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
 import uk.gov.hmcts.reform.pip.account.management.model.Sensitivity;
 import uk.gov.hmcts.reform.pip.account.management.model.UserProvenances;
@@ -52,7 +52,7 @@ public class AccountService {
     UserRepository userRepository;
 
     @Autowired
-    MediaLegalApplicationRepository mediaLegalApplicationRepository;
+    MediaApplicationRepository mediaApplicationRepository;
 
     @Autowired
     PublicationService publicationService;
@@ -134,8 +134,8 @@ public class AccountService {
                 continue;
             }
 
-            Optional<MediaAndLegalApplication> application =
-                mediaLegalApplicationRepository.findByEmail(user.getEmail());
+            Optional<MediaApplication> application =
+                mediaApplicationRepository.findByEmail(user.getEmail());
 
             if (userRepository.findByEmail(user.getEmail()).isPresent()
                 && application.isPresent()) {
