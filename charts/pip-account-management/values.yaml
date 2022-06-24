@@ -43,3 +43,5 @@ java:
           alias: PUBLICATION_SERVICES_AZ_API
         - name: b2c-ad-url
           alias: IDENTITY_ISSUER
+      environment:
+        SPRING_PROFILES_ACTIVE: dev
