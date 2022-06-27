@@ -151,7 +151,7 @@ class MediaApplicationServiceTest {
     }
 
     @Test
-    void testUpdateApplication() {
+    void testUpdateApplicationApproved() {
         when(mediaApplicationRepository.findById(TEST_ID)).thenReturn(Optional.ofNullable(
             mediaApplicationExample));
 
@@ -162,6 +162,42 @@ class MediaApplicationServiceTest {
             .updateApplication(TEST_ID, MediaApplicationStatus.APPROVED);
 
         assertEquals(UPDATED_STATUS, returnedApplication.getStatus(), "Application status was not updated");
+
+        verify(azureBlobService, times(1)).deleteBlob(BLOB_UUID);
+    }
+
+    @Test
+    void testUpdateApplicationRejected() {
+        when(mediaApplicationRepository.findById(TEST_ID)).thenReturn(Optional.ofNullable(
+            mediaApplicationExample));
+
+        when(mediaApplicationRepository.save(mediaApplicationExample))
+            .thenReturn(mediaApplicationExample);
+
+        MediaApplication returnedApplication = mediaApplicationService
+            .updateApplication(TEST_ID, MediaApplicationStatus.REJECTED);
+
+        assertEquals(MediaApplicationStatus.REJECTED, returnedApplication.getStatus(),
+                     "Application status was not updated");
+
+        verify(azureBlobService, times(1)).deleteBlob(BLOB_UUID);
+    }
+
+    @Test
+    void testUpdateApplicationPending() {
+        when(mediaApplicationRepository.findById(TEST_ID)).thenReturn(Optional.ofNullable(
+            mediaApplicationExample));
+
+        when(mediaApplicationRepository.save(mediaApplicationExample))
+            .thenReturn(mediaApplicationExample);
+
+        MediaApplication returnedApplication = mediaApplicationService
+            .updateApplication(TEST_ID, MediaApplicationStatus.PENDING);
+
+        assertEquals(MediaApplicationStatus.PENDING, returnedApplication.getStatus(),
+                     "Application status was not updated");
+
+        verify(azureBlobService, times(0)).deleteBlob(BLOB_UUID);
     }
 
     @Test
