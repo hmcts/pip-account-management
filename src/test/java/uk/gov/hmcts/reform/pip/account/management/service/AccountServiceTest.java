@@ -11,7 +11,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 import org.testcontainers.shaded.org.apache.commons.io.IOUtils;
-import uk.gov.hmcts.reform.pip.account.management.database.MediaApplicationRepository;
 import uk.gov.hmcts.reform.pip.account.management.database.UserRepository;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.AzureCustomException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.CsvParseException;
@@ -69,9 +68,6 @@ class AccountServiceTest {
 
     @Mock
     private UserRepository userRepository;
-
-    @Mock
-    MediaApplicationRepository mediaApplicationRepository;
 
     @Mock
     private PublicationService publicationService;
@@ -283,8 +279,6 @@ class AccountServiceTest {
     @Test
     void testAddDuplicateUsers() throws AzureCustomException {
         lenient().when(azureUserService.getUser(EMAIL)).thenReturn(expectedUser);
-        lenient().when(mediaApplicationRepository.findByEmail(EMAIL))
-            .thenReturn(Optional.of(mediaAndLegalApplication));
         lenient().when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.of(piUser));
         PiUser user = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, ID, EMAIL, Roles.INTERNAL_ADMIN_CTSC);
         Map<CreationEnum, List<?>> expected = new ConcurrentHashMap<>();
