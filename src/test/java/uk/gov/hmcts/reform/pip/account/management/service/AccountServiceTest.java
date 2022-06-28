@@ -8,13 +8,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import uk.gov.hmcts.reform.pip.account.management.database.MediaApplicationRepository;
-
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 import org.testcontainers.shaded.org.apache.commons.io.IOUtils;
-
+import uk.gov.hmcts.reform.pip.account.management.database.MediaApplicationRepository;
 import uk.gov.hmcts.reform.pip.account.management.database.UserRepository;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.AzureCustomException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.CsvParseException;
@@ -268,13 +265,12 @@ class AccountServiceTest {
 
     @Test
     void testAddUsers() {
-        PiUser user = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, ID, EMAIL, Roles.INTERNAL_ADMIN_CTSC);
-
         lenient().when(mediaApplicationRepository.findByEmail(EMAIL))
             .thenReturn(Optional.of(mediaAndLegalApplication));
         lenient().when(userRepository.findByEmail("a123@b.com")).thenReturn(Optional.of(piUser));
         when(publicationService.sendNotificationEmailForSetupMediaAccount(any(), any())).thenReturn(TEST);
         Map<CreationEnum, List<?>> expected = new ConcurrentHashMap<>();
+        PiUser user = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, ID, EMAIL, Roles.INTERNAL_ADMIN_CTSC);
         expected.put(CreationEnum.CREATED_ACCOUNTS, List.of(user.getUserId()));
         expected.put(CreationEnum.ERRORED_ACCOUNTS, List.of());
 
@@ -354,7 +350,8 @@ class AccountServiceTest {
         lenient().when(mediaApplicationRepository.findByEmail(EMAIL))
             .thenReturn(Optional.of(mediaAndLegalApplication));
         lenient().when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.of(piUser));
-        lenient().when(publicationService.sendNotificationEmailForSetupMediaAccount(EMAIL, FULL_NAME)).thenReturn(ERROR_MESSAGE);
+        lenient().when(publicationService.sendNotificationEmailForSetupMediaAccount(EMAIL, FULL_NAME))
+            .thenReturn(ERROR_MESSAGE);
         lenient().when(userRepository.save(invalidUser)).thenReturn(invalidUser);
         doReturn(Set.of(constraintViolation)).when(validator).validate(invalidUser);
 
