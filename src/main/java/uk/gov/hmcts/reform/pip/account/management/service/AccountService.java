@@ -159,11 +159,11 @@ public class AccountService {
 
             if (userRepository.findByEmail(user.getEmail()).isPresent()
                 && application.isPresent()) {
-                String emailSent = publicationService.sendNotificationEmailForDuplicateMediaAccount(user.getEmail(),
+                boolean emailSent = publicationService.sendNotificationEmailForDuplicateMediaAccount(user.getEmail(),
                                                                             application.get().getFullName());
-                if (emailSent != null && emailSent.contains("request failed")) {
+                if (!emailSent) {
                     ErroredPiUser erroredUser = new ErroredPiUser(user);
-                    erroredUser.setErrorMessages(Arrays.asList(emailSent));
+                    erroredUser.setErrorMessages(Arrays.asList("Unable to send duplicate media account email"));
                     erroredAccounts.add(erroredUser);
                 }
 

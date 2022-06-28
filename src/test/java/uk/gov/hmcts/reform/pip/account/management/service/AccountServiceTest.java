@@ -268,7 +268,7 @@ class AccountServiceTest {
         lenient().when(mediaApplicationRepository.findByEmail(EMAIL))
             .thenReturn(Optional.of(mediaAndLegalApplication));
         lenient().when(userRepository.findByEmail("a123@b.com")).thenReturn(Optional.of(piUser));
-        when(publicationService.sendNotificationEmailForSetupMediaAccount(any(), any())).thenReturn(TEST);
+        when(publicationService.sendNotificationEmailForSetupMediaAccount(any(), any())).thenReturn(Boolean.TRUE);
         Map<CreationEnum, List<?>> expected = new ConcurrentHashMap<>();
         PiUser user = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, ID, EMAIL, Roles.INTERNAL_ADMIN_CTSC);
         expected.put(CreationEnum.CREATED_ACCOUNTS, List.of(user.getUserId()));
@@ -285,12 +285,11 @@ class AccountServiceTest {
         lenient().when(mediaApplicationRepository.findByEmail(EMAIL))
             .thenReturn(Optional.of(mediaAndLegalApplication));
         lenient().when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.of(piUser));
-
+        PiUser user = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, ID, EMAIL, Roles.INTERNAL_ADMIN_CTSC);
         Map<CreationEnum, List<?>> expected = new ConcurrentHashMap<>();
         expected.put(CreationEnum.CREATED_ACCOUNTS, List.of());
-        expected.put(CreationEnum.ERRORED_ACCOUNTS, List.of());
+        expected.put(CreationEnum.ERRORED_ACCOUNTS, List.of(user));
 
-        PiUser user = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, ID, EMAIL, Roles.INTERNAL_ADMIN_CTSC);
         when(validator.validate(user)).thenReturn(Set.of());
 
         assertEquals(expected, accountService.addUsers(List.of(user), EMAIL), "Returned maps should match");
@@ -351,7 +350,7 @@ class AccountServiceTest {
             .thenReturn(Optional.of(mediaAndLegalApplication));
         lenient().when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.of(piUser));
         lenient().when(publicationService.sendNotificationEmailForSetupMediaAccount(EMAIL, FULL_NAME))
-            .thenReturn(ERROR_MESSAGE);
+            .thenReturn(FALSE);
         lenient().when(userRepository.save(invalidUser)).thenReturn(invalidUser);
         doReturn(Set.of(constraintViolation)).when(validator).validate(invalidUser);
 

@@ -98,21 +98,21 @@ class PublicationServiceTest {
     void testSendDuplicateMediaAccountEmail() {
         mockPublicationServicesEndpoint.enqueue(new MockResponse().setBody(SENT_MESSAGE));
 
-        assertEquals(SENT_MESSAGE, publicationService.sendNotificationEmailForDuplicateMediaAccount(
+        assertTrue(publicationService.sendNotificationEmailForDuplicateMediaAccount(
             EMAIL, "FULL_NAME"),
                      "No duplicate media account email sent");
+        assertTrue(logCaptor.getInfoLogs().get(0).contains(SENT_MESSAGE), MESSAGES_MATCH);
     }
 
     @Test
     void testFailedDuplicateMediaAccountEmail() {
         mockPublicationServicesEndpoint.enqueue(new MockResponse().setResponseCode(400));
-        String expectedResponse = String.format(
-            "Email request failed to send: %s",
-            EMAIL);
 
-        assertTrue(publicationService.sendNotificationEmailForDuplicateMediaAccount(
-            EMAIL, "FULL_NAME")
-                       .contains(expectedResponse), "Expected error message not in response");
+        assertFalse(publicationService.sendNotificationEmailForDuplicateMediaAccount(
+            EMAIL, "FULL_NAME"), "Expected error message not in response");
+
+        assertTrue(logCaptor.getErrorLogs().get(0).contains(
+            "Request failed with error message"), MESSAGES_MATCH);
     }
 
     @Test

@@ -55,33 +55,35 @@ public class PublicationService {
         }
     }
 
-    public String sendNotificationEmailForSetupMediaAccount(String emailAddress, String fullName) {
+    public boolean sendNotificationEmailForSetupMediaAccount(String emailAddress, String fullName) {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put(EMAIL, emailAddress);
         jsonObject.put("isExisting", false);
         jsonObject.put("fullName", fullName);
         try {
-            return webClient.post().uri(url + "/notify/welcome-email")
+            log.info(webClient.post().uri(url + WELCOME_EMAIL_URL)
                 .body(BodyInserters.fromValue(jsonObject)).retrieve()
-                .bodyToMono(String.class).block();
+                .bodyToMono(String.class).block());
+            return true;
 
         } catch (WebClientException ex) {
             log.error(String.format("Request failed with error message: %s", ex.getMessage()));
-            return "Email request failed to send: " + emailAddress;
+            return false;
         }
     }
 
-    public String sendNotificationEmailForDuplicateMediaAccount(String emailAddress, String fullName) {
+    public boolean sendNotificationEmailForDuplicateMediaAccount(String emailAddress, String fullName) {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put(EMAIL, emailAddress);
         jsonObject.put("fullName", fullName);
         try {
-            return webClient.post().uri(url + "/notify/duplicate/media")
+            log.info(webClient.post().uri(url + "/notify/duplicate/media")
                 .body(BodyInserters.fromValue(jsonObject)).retrieve()
-                .bodyToMono(String.class).block();
+                .bodyToMono(String.class).block());
+            return true;
         } catch (WebClientException ex) {
             log.error(String.format("Request failed with error message: %s", ex.getMessage()));
-            return "Email request failed to send: " + emailAddress;
+            return false;
         }
     }
 
