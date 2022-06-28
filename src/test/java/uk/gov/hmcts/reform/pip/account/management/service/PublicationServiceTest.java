@@ -95,6 +95,27 @@ class PublicationServiceTest {
     }
 
     @Test
+    void testSendNotificationEmailForSetupMediaAccount() {
+        mockPublicationServicesEndpoint.enqueue(new MockResponse().setBody(SENT_MESSAGE));
+
+        assertTrue(publicationService.sendNotificationEmailForSetupMediaAccount(
+            EMAIL, "FULL_NAME"),
+                   "Should return true");
+        assertTrue(logCaptor.getInfoLogs().get(0).contains(SENT_MESSAGE), MESSAGES_MATCH);
+    }
+
+    @Test
+    void testSendNotificationEmailForSetupMediaAccountFails() {
+        mockPublicationServicesEndpoint.enqueue(new MockResponse().setResponseCode(400));
+
+        assertFalse(publicationService.sendNotificationEmailForSetupMediaAccount(
+            EMAIL, "FULL_NAME"),
+                    "Should return false");
+        assertTrue(logCaptor.getErrorLogs().get(0).contains(
+            "Request failed with error message"), MESSAGES_MATCH);
+    }
+
+    @Test
     void testSendDuplicateMediaAccountEmail() {
         mockPublicationServicesEndpoint.enqueue(new MockResponse().setBody(SENT_MESSAGE));
 
