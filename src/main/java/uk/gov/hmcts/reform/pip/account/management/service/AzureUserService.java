@@ -79,4 +79,20 @@ public class AzureUserService {
         return user;
     }
 
+    /**
+     * Get a azureAccount information from the Azure active directory.
+     * @param email The azureAccount email address.
+     * @return The created user if it was successful.
+     * @throws AzureCustomException thrown if theres an error with communicating with Azure.
+     */
+    public User getUser(String email) throws AzureCustomException {
+        try {
+            return graphClient.users(email)
+                .buildRequest()
+                .get();
+        } catch (GraphServiceException e) {
+            throw new AzureCustomException("Error when checking account into Azure.");
+        }
+    }
+
 }

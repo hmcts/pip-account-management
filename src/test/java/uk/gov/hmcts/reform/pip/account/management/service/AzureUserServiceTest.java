@@ -8,6 +8,8 @@ import com.microsoft.graph.models.User;
 import com.microsoft.graph.requests.GraphServiceClient;
 import com.microsoft.graph.requests.UserCollectionRequest;
 import com.microsoft.graph.requests.UserCollectionRequestBuilder;
+import com.microsoft.graph.requests.UserRequest;
+import com.microsoft.graph.requests.UserRequestBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -40,7 +42,13 @@ class AzureUserServiceTest {
     private UserCollectionRequestBuilder userCollectionRequestBuilder;
 
     @Mock
+    private UserRequestBuilder userRequestBuilder;
+
+    @Mock
     private UserCollectionRequest userCollectionRequest;
+
+    @Mock
+    private UserRequest userRequest;
 
     @Mock
     private GraphServiceException graphServiceException;
@@ -62,6 +70,7 @@ class AzureUserServiceTest {
     private static final String FIRST_NAME = "First Name";
     private static final String SURNAME = "Surname";
     private static final String EXTENSION_ID = "1234-1234";
+    private static final String DISPLAY_NAME = "Display Name";
 
     AzureAccount azureAccount;
 
@@ -69,10 +78,6 @@ class AzureUserServiceTest {
     public void setup() {
         azureAccount = new AzureAccount();
         azureAccount.setRole(Roles.INTERNAL_ADMIN_CTSC);
-
-        when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
-        when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
-        when(clientConfiguration.getExtensionId()).thenReturn(EXTENSION_ID);
     }
 
     @Test
@@ -80,6 +85,9 @@ class AzureUserServiceTest {
         User user = new User();
         user.id = ID;
 
+        when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
+        when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
+        when(clientConfiguration.getExtensionId()).thenReturn(EXTENSION_ID);
         when(userCollectionRequest.post(any())).thenReturn(user);
 
         User returnedUser = azureUserService.createUser(azureAccount);
@@ -92,6 +100,9 @@ class AzureUserServiceTest {
         User user = new User();
         user.id = ID;
 
+        when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
+        when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
+        when(clientConfiguration.getExtensionId()).thenReturn(EXTENSION_ID);
         when(userCollectionRequest.post(any())).thenThrow(graphServiceException);
 
         AzureCustomException azureCustomException = assertThrows(AzureCustomException.class, () -> {
@@ -109,6 +120,9 @@ class AzureUserServiceTest {
         User userToReturn = new User();
         userToReturn.id = ID;
 
+        when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
+        when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
+        when(clientConfiguration.getExtensionId()).thenReturn(EXTENSION_ID);
         when(userCollectionRequest.post(any())).thenReturn(userToReturn);
 
         azureAccount.setEmail(EMAIL);
@@ -139,6 +153,9 @@ class AzureUserServiceTest {
         User userToReturn = new User();
         userToReturn.id = ID;
 
+        when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
+        when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
+        when(clientConfiguration.getExtensionId()).thenReturn(EXTENSION_ID);
         when(userCollectionRequest.post(any())).thenReturn(userToReturn);
         when(userConfiguration.getSignInType()).thenReturn("SignInType");
         when(userConfiguration.getIdentityIssuer()).thenReturn("IdentityIssuer");
@@ -166,6 +183,9 @@ class AzureUserServiceTest {
         User userToReturn = new User();
         userToReturn.id = ID;
 
+        when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
+        when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
+        when(clientConfiguration.getExtensionId()).thenReturn(EXTENSION_ID);
         when(userCollectionRequest.post(any())).thenReturn(userToReturn);
 
         azureAccount.setEmail(EMAIL);
@@ -182,6 +202,40 @@ class AzureUserServiceTest {
         String password = passwordProfile.password;
         assertEquals(20, password.length(), "The password has the right complexity");
         assertTrue(passwordProfile.forceChangePasswordNextSignIn, "The force chain password is set to false");
+    }
+
+    @Test
+    void testValidRequestReturnsUserByEmail() throws AzureCustomException {
+        User user = new User();
+        user.id = ID;
+        user.displayName = DISPLAY_NAME;
+
+        when(graphClient.users(any())).thenReturn(userRequestBuilder);
+        when(userRequestBuilder.buildRequest()).thenReturn(userRequest);
+        when(userRequest.get()).thenReturn(user);
+
+        User returnedUser = azureUserService.getUser(any());
+
+        assertEquals(DISPLAY_NAME, returnedUser.displayName, "The ID is equal to the expected user ID");
+    }
+
+    @Test
+    void testInvalidUserByEmailRequest() {
+        User user = new User();
+        user.id = ID;
+        user.displayName = DISPLAY_NAME;
+
+        when(graphClient.users(any())).thenReturn(userRequestBuilder);
+        when(userRequestBuilder.buildRequest()).thenReturn(userRequest);
+        when(userRequest.get()).thenThrow(graphServiceException);
+
+        AzureCustomException azureCustomException = assertThrows(AzureCustomException.class, () -> {
+            azureUserService.getUser(any());
+        });
+
+        assertEquals("Error when checking account into Azure.",
+                     azureCustomException.getMessage(),
+                     "Error message should be present when failing to communicate with the AD service");
     }
 
 }

@@ -15,7 +15,6 @@ import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.UserN
 import uk.gov.hmcts.reform.pip.account.management.model.AzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.ListType;
-import uk.gov.hmcts.reform.pip.account.management.model.MediaApplication;
 import uk.gov.hmcts.reform.pip.account.management.model.MediaCsv;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
 import uk.gov.hmcts.reform.pip.account.management.model.Sensitivity;
@@ -154,13 +153,17 @@ public class AccountService {
                 continue;
             }
 
-            Optional<MediaApplication> application =
-                mediaApplicationRepository.findByEmail(user.getEmail());
+            User userAzure = null;
+            try {
+                userAzure = azureUserService.getUser(user.getEmail());
+            } catch (AzureCustomException azureCustomException) {
+                log.error(writeLog(issuerEmail, UserActions.CREATE_ACCOUNT, user.getEmail()));
+            }
 
             if (userRepository.findByEmail(user.getEmail()).isPresent()
-                && application.isPresent()) {
+                && !userAzure.displayName.isEmpty()) {
                 boolean emailSent = publicationService.sendNotificationEmailForDuplicateMediaAccount(user.getEmail(),
-                                                                            application.get().getFullName());
+                        userAzure.displayName);
                 if (!emailSent) {
                     ErroredPiUser erroredUser = new ErroredPiUser(user);
                     erroredUser.setErrorMessages(Arrays.asList("Unable to send duplicate media account email"));
@@ -173,9 +176,9 @@ public class AccountService {
             PiUser addedUser = userRepository.save(user);
             createdAccounts.add(addedUser.getUserId());
 
-            if (application.isPresent()) {
+            if (!userAzure.displayName.isEmpty()) {
                 publicationService.sendNotificationEmailForSetupMediaAccount(user.getEmail(),
-                                                                             application.get().getFullName());
+                        userAzure.displayName);
             }
 
             log.info(writeLog(issuerEmail, UserActions.CREATE_ACCOUNT, addedUser.getEmail()));

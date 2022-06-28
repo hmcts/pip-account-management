@@ -9,11 +9,14 @@ import com.microsoft.graph.models.User;
 import com.microsoft.graph.requests.GraphServiceClient;
 import com.microsoft.graph.requests.UserCollectionRequest;
 import com.microsoft.graph.requests.UserCollectionRequestBuilder;
+import com.microsoft.graph.requests.UserRequest;
+import com.microsoft.graph.requests.UserRequestBuilder;
 import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
 import okhttp3.Request;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -34,8 +37,6 @@ import uk.gov.hmcts.reform.pip.account.management.errorhandling.ExceptionRespons
 import uk.gov.hmcts.reform.pip.account.management.model.AzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.ListType;
-import uk.gov.hmcts.reform.pip.account.management.model.MediaApplication;
-import uk.gov.hmcts.reform.pip.account.management.model.MediaApplicationStatus;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
 import uk.gov.hmcts.reform.pip.account.management.model.Roles;
 import uk.gov.hmcts.reform.pip.account.management.model.Sensitivity;
@@ -82,6 +83,12 @@ class AccountTest {
     @Autowired
     UserCollectionRequest userCollectionRequest;
 
+    @Mock
+    private UserRequestBuilder userRequestBuilder;
+
+    @Mock
+    private UserRequest userRequest;
+
     @Autowired
     GraphServiceException graphServiceException;
 
@@ -123,11 +130,6 @@ class AccountTest {
     private static final String TEST_UUID_STRING = UUID.randomUUID().toString();
     private static final String MAP_SIZE_MESSAGE = "Map size should match";
 
-    private static final String FULL_NAME = "Test user";
-    private static final String EMPLOYER = "Test employer";
-    private static final String BLOB_IMAGE_URL = "https://localhost";
-    private static final MediaApplicationStatus STATUS = MediaApplicationStatus.PENDING;
-
     private ObjectMapper objectMapper;
 
     private PiUser validUser;
@@ -140,33 +142,6 @@ class AccountTest {
         user.setRoles(ROLE);
 
         return user;
-    }
-
-    private MediaApplication createApplication() throws Exception {
-        MediaApplication application = new MediaApplication();
-        application.setFullName(FULL_NAME);
-        application.setEmail(EMAIL);
-        application.setEmployer(EMPLOYER);
-        application.setStatus(STATUS);
-
-        try (InputStream imageInputStream = Thread.currentThread().getContextClassLoader()
-            .getResourceAsStream("files/test-image.png")) {
-
-            MockMultipartFile imageFile = new MockMultipartFile("file", "test-image.png",
-                                                                "", imageInputStream);
-
-
-            when(blobContainerClient.getBlobClient(any())).thenReturn(blobClient);
-            when(blobContainerClient.getBlobContainerUrl()).thenReturn(BLOB_IMAGE_URL);
-
-            MvcResult mvcResult = mockMvc.perform(multipart(CREATE_MEDIA_USER_URL)
-                                                      .file(imageFile)
-                                                      .flashAttr("application", application)
-                                                      .contentType(MediaType.MULTIPART_FORM_DATA_VALUE))
-                .andExpect(status().isOk()).andReturn();
-
-            return objectMapper.readValue(mvcResult.getResponse().getContentAsString(), MediaApplication.class);
-        }
     }
 
     @BeforeEach
@@ -565,7 +540,9 @@ class AccountTest {
         PiUser validUser1 = createUser(true, UUID.randomUUID().toString());
         PiUser validUser2 = createUser(true, UUID.randomUUID().toString());
 
-        createApplication();
+        when(graphClient.users(any())).thenReturn(userRequestBuilder);
+        when(userRequestBuilder.buildRequest()).thenReturn(userRequest);
+        when(userRequest.get()).thenThrow(graphServiceException);
 
         MockHttpServletRequestBuilder mockHttpServletRequestMediaUserBuilder = MockMvcRequestBuilders
             .get(CREATE_MEDIA_USER_URL)
@@ -591,7 +568,9 @@ class AccountTest {
     @Test
     void testCreateMultipleSuccessUsersWithDifferentEmails() throws Exception {
 
-        createApplication();
+        when(graphClient.users(any())).thenReturn(userRequestBuilder);
+        when(userRequestBuilder.buildRequest()).thenReturn(userRequest);
+        when(userRequest.get()).thenThrow(graphServiceException);
 
         MockHttpServletRequestBuilder mockHttpServletRequestMediaUserBuilder = MockMvcRequestBuilders
             .get(CREATE_MEDIA_USER_URL)

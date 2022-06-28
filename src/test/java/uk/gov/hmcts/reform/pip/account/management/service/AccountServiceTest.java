@@ -130,6 +130,7 @@ class AccountServiceTest {
         expectedUser = new User();
         expectedUser.givenName = TEST;
         expectedUser.id = ID;
+        expectedUser.displayName = "Test User";
 
         lenient().when(userRepository.findByUserId(VALID_USER_ID)).thenReturn(Optional.of(piUser));
         lenient().when(userRepository.findByUserId(VALID_USER_ID_IDAM)).thenReturn(Optional.of(piUserIdam));
@@ -264,9 +265,8 @@ class AccountServiceTest {
     }
 
     @Test
-    void testAddUsers() {
-        lenient().when(mediaApplicationRepository.findByEmail(EMAIL))
-            .thenReturn(Optional.of(mediaAndLegalApplication));
+    void testAddUsers()  throws AzureCustomException {
+        lenient().when(azureUserService.getUser(EMAIL)).thenReturn(expectedUser);
         lenient().when(userRepository.findByEmail("a123@b.com")).thenReturn(Optional.of(piUser));
         when(publicationService.sendNotificationEmailForSetupMediaAccount(any(), any())).thenReturn(Boolean.TRUE);
         Map<CreationEnum, List<?>> expected = new ConcurrentHashMap<>();
@@ -281,7 +281,8 @@ class AccountServiceTest {
     }
 
     @Test
-    void testAddDuplicateUsers() {
+    void testAddDuplicateUsers() throws AzureCustomException {
+        lenient().when(azureUserService.getUser(EMAIL)).thenReturn(expectedUser);
         lenient().when(mediaApplicationRepository.findByEmail(EMAIL))
             .thenReturn(Optional.of(mediaAndLegalApplication));
         lenient().when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.of(piUser));
@@ -313,7 +314,7 @@ class AccountServiceTest {
     }
 
     @Test
-    void testAddUsersForBothCreatedAndErrored() {
+    void testAddUsersForBothCreatedAndErrored() throws AzureCustomException {
         PiUser invalidUser = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, ID, INVALID_EMAIL,
                                         Roles.INTERNAL_ADMIN_CTSC
         );
@@ -323,6 +324,8 @@ class AccountServiceTest {
         Map<CreationEnum, List<?>> expected = new ConcurrentHashMap<>();
         expected.put(CreationEnum.CREATED_ACCOUNTS, List.of(validUser.getUserId()));
         expected.put(CreationEnum.ERRORED_ACCOUNTS, List.of(erroredUser));
+
+        lenient().when(azureUserService.getUser(EMAIL)).thenReturn(expectedUser);
 
         lenient().when(userRepository.save(invalidUser)).thenReturn(invalidUser);
         doReturn(Set.of(constraintViolation)).when(validator).validate(invalidUser);
@@ -336,7 +339,7 @@ class AccountServiceTest {
     }
 
     @Test
-    void testAddUsersForBothCreatedAndDuplicateErrored() {
+    void testAddUsersForBothCreatedAndDuplicateErrored()  throws AzureCustomException {
         PiUser invalidUser = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, ID, EMAIL,
                                         Roles.INTERNAL_ADMIN_CTSC
         );
@@ -346,8 +349,7 @@ class AccountServiceTest {
         expected.put(CreationEnum.ERRORED_ACCOUNTS, List.of(erroredUser));
         expected.put(CreationEnum.CREATED_ACCOUNTS, List.of());
 
-        lenient().when(mediaApplicationRepository.findByEmail(EMAIL))
-            .thenReturn(Optional.of(mediaAndLegalApplication));
+        lenient().when(azureUserService.getUser(EMAIL)).thenReturn(expectedUser);
         lenient().when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.of(piUser));
         lenient().when(publicationService.sendNotificationEmailForSetupMediaAccount(EMAIL, FULL_NAME))
             .thenReturn(FALSE);
@@ -448,6 +450,7 @@ class AccountServiceTest {
 
         when(validator.validate(any())).thenReturn(Set.of());
         when(azureUserService.createUser(any())).thenReturn(expectedUser);
+        when(azureUserService.getUser(any())).thenReturn(expectedUser);
         when(publicationService.sendNotificationEmail(any(), any(), any())).thenReturn(TRUE);
         when(accountModelMapperService.createAzureUsersFromCsv(any())).thenReturn(List.of(azureAccount, azureAccount));
         when(accountModelMapperService.createPiUsersFromAzureAccounts(List.of(azureAccount, azureAccount)))
