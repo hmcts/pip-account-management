@@ -34,7 +34,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ExceptionResponse> handle(
         JsonMappingException ex) {
 
-        log.warn(writeLog("400, Unable to create account from provided JSON"));
+        log.error(writeLog("400, Unable to create account from provided JSON"));
 
         ExceptionResponse exceptionResponse = new ExceptionResponse();
         exceptionResponse.setMessage(ex.getOriginalMessage());
