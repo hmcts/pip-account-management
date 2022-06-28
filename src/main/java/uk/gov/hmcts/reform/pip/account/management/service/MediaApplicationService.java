@@ -23,6 +23,7 @@ import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
 
 @Slf4j
 @Service
+@SuppressWarnings("PMD.LawOfDemeter")
 public class MediaApplicationService {
 
     private final MediaApplicationRepository mediaApplicationRepository;
@@ -104,6 +105,7 @@ public class MediaApplicationService {
 
     /**
      * Update an application by fetching the application.
+     * If the status has been updated to Approved or Rejected then also delete the stored image.
      *
      * @param id The id of the application to update
      * @param status The status to update the application with
@@ -117,6 +119,10 @@ public class MediaApplicationService {
 
         applicationToUpdate.setStatus(status);
         applicationToUpdate.setStatusDate(LocalDateTime.now());
+
+        if (MediaApplicationStatus.APPROVED.equals(status) || MediaApplicationStatus.REJECTED.equals(status)) {
+            azureBlobService.deleteBlob(applicationToUpdate.getImage());
+        }
 
         return mediaApplicationRepository.save(applicationToUpdate);
     }
