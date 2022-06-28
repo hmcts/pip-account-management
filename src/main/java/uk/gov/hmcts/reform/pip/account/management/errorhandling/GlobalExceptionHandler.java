@@ -46,7 +46,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MissingRequestHeaderException.class)
     public ResponseEntity<ExceptionResponse> handle(MissingRequestHeaderException ex) {
 
-        log.warn(writeLog("400, Missing headers from request"));
+        log.error(writeLog("400, Missing headers from request"));
 
         ExceptionResponse exceptionResponse = new ExceptionResponse();
         exceptionResponse.setMessage(ex.getMessage());
@@ -58,7 +58,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<ExceptionResponse> handle(ConstraintViolationException ex) {
 
-        log.warn(writeLog("400, Error while validating the JSON provided"));
+        log.error(writeLog("400, Error while validating the JSON provided"));
 
         ExceptionResponse exceptionResponse = new ExceptionResponse();
         exceptionResponse.setMessage(ex.getMessage());
@@ -70,7 +70,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ForbiddenPermissionsException.class)
     public ResponseEntity<ExceptionResponse> handle(ForbiddenPermissionsException ex) {
 
-        log.warn(writeLog("403, User is not permitted to access the requested endpoint"));
+        log.error(writeLog("403, User is not permitted to access the requested endpoint"));
 
         ExceptionResponse exceptionResponse = new ExceptionResponse();
         exceptionResponse.setMessage(ex.getMessage());
@@ -82,7 +82,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<ExceptionResponse> handle(NotFoundException ex) {
 
-        log.warn(writeLog("404, Unable to find requested account / application"));
+        log.error(writeLog("404, Unable to find requested account / application"));
 
         ExceptionResponse exceptionResponse = new ExceptionResponse();
         exceptionResponse.setMessage(ex.getMessage());
