@@ -20,4 +20,11 @@ class CustomExceptionTest {
         UserNotFoundException userNotFoundException = new UserNotFoundException("test", "testId");
         assertEquals("No user found with the test: testId", userNotFoundException.getMessage(), ASSERTION_MESSAGE);
     }
+
+    @Test
+    void testCreationOfCsvParseException() {
+        CsvParseException csvParseException = new CsvParseException(TEST_MESSAGE);
+        assertEquals("Failed to parse CSV File due to: " + TEST_MESSAGE, csvParseException.getMessage(),
+                     ASSERTION_MESSAGE);
+    }
 }

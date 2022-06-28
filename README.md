@@ -214,6 +214,8 @@ is created by azure.
 the request and a body of a list of users to add to the database following the [P&I User model](#piuser) without the
 `userId` as this is created by the service.
 
+- POST `/account/media-bulk-upload` - used to bulk upload media members to P&I, adds to azure db and to P&I db.
+
 - GET `/account/provenance/{userProvenance}/{provenanceUserId}` - used to get the [P&I User](#piuser) from the pi_user
   table by matching the user provenance and the provenanceUserId. eg a user from `PI_AAD` with the `provenanceUserId`
   of `123` would be returned if both attributes matched.
@@ -246,6 +248,12 @@ the request and a body of a list of users to add to the database following the [
   "role": "INTERNAL_ADMIN_LOCAL"
 }
 ```
+
+### CSV Media bulk upload format
+the media bulk upload [api](#api) takes in a csv containing email, first name and surname. The column headers are
+named as such: `email`, `firstName` and `surname` case sensitive. ideally all columns are populated, but can be sent
+with only email column populated, in this scenario the `firstName`field of the user will be populated with their email.
+an example valid csv can be found [here](src/test/resources/csv/valid.csv).
 
 ### Roles
 an enum for the different roles available to P&I.

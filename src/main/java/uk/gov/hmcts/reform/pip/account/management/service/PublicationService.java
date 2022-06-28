@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientException;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import uk.gov.hmcts.reform.pip.account.management.model.MediaApplication;
 
 import java.util.List;
@@ -24,6 +25,8 @@ public class PublicationService {
     @Value("${service-to-service.publication-services}")
     private String url;
 
+    private static final String WELCOME_EMAIL_URL = "/notify/welcome-email";
+
     @Autowired
     WebClient webClient;
 
@@ -35,7 +38,7 @@ public class PublicationService {
      * @param surname - surname
      * @return string for logging success or failure
      */
-    public String sendNotificationEmail(String emailAddress, String forename, String surname) {
+    public boolean sendNotificationEmail(String emailAddress, String forename, String surname) {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("email", emailAddress);
         jsonObject.put("forename", forename);
@@ -47,7 +50,7 @@ public class PublicationService {
 
         } catch (WebClientException ex) {
             log.error(String.format("Request failed with error message: %s", ex.getMessage()));
-            return "Email request failed to send: " + emailAddress;
+            return false;
         }
     }
 
@@ -75,10 +78,31 @@ public class PublicationService {
             return webClient.post().uri(url + "/notify/duplicate/media")
                 .body(BodyInserters.fromValue(jsonObject)).retrieve()
                 .bodyToMono(String.class).block();
-
         } catch (WebClientException ex) {
             log.error(String.format("Request failed with error message: %s", ex.getMessage()));
             return "Email request failed to send: " + emailAddress;
+        }
+    }
+
+    /**
+     * Method calling Publication services send welcome email api.
+     * @param emailAddress email address to send welcome email to
+     * @param isExisting bool to determine if coming from migration or new user creation
+     * @return success message for logging
+     */
+    public boolean sendMediaNotificationEmail(String emailAddress, boolean isExisting) {
+        JSONObject body = new JSONObject();
+        body.put("email", emailAddress);
+        body.put("isExisting", isExisting);
+        try {
+            log.info(webClient.post().uri(url + WELCOME_EMAIL_URL)
+                .bodyValue(body)
+                .retrieve()
+                .bodyToMono(String.class).block());
+            return true;
+        } catch (WebClientResponseException ex) {
+            log.error("Request to publication services {} failed due to: {}", WELCOME_EMAIL_URL, ex.getMessage());
+            return false;
         }
     }
 

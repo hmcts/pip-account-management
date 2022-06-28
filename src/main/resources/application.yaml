@@ -21,6 +21,7 @@ spring:
           tenant-id: ${TENANT_ID}
         credential:
           client-id: ${CLIENT_ID}
+          client-secret: ${CLIENT_SECRET}
         app-id-uri: ${APP_URI}
         authorization-clients:
           publicationServicesApi:
@@ -75,7 +76,7 @@ azure:
     extension-id: ${EXTENSION_ID:00000000-0000-0000-0000-000000000000}
     token-provider: "https://graph.microsoft.com/.default"
   user:
-    identity-issuer: "hmctspipnonprod.onmicrosoft.com"
+    identity-issuer: ${IDENTITY_ISSUER:hmctspipnonprod.onmicrosoft.com}
     signInType: emailAddress
   blob:
     connection-string: ${CONNECTION_STRING}
