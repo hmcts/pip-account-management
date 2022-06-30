@@ -152,6 +152,7 @@ class AccountTest {
 
         User userToReturn = new User();
         userToReturn.id = ID;
+        userToReturn.displayName = "Display name";
         User additionalUser = new User();
         additionalUser.id = ADDITIONAL_ID;
         when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
@@ -540,9 +541,13 @@ class AccountTest {
         PiUser validUser1 = createUser(true, UUID.randomUUID().toString());
         PiUser validUser2 = createUser(true, UUID.randomUUID().toString());
 
+        User userToReturn = new User();
+        userToReturn.id = ID;
+        userToReturn.displayName = "Display name";
+
         when(graphClient.users(any())).thenReturn(userRequestBuilder);
         when(userRequestBuilder.buildRequest()).thenReturn(userRequest);
-        when(userRequest.get()).thenThrow(graphServiceException);
+        when(userRequest.get()).thenReturn(userToReturn);
 
         MockHttpServletRequestBuilder mockHttpServletRequestMediaUserBuilder = MockMvcRequestBuilders
             .get(CREATE_MEDIA_USER_URL)
@@ -567,10 +572,13 @@ class AccountTest {
 
     @Test
     void testCreateMultipleSuccessUsersWithDifferentEmails() throws Exception {
+        User userToReturn = new User();
+        userToReturn.id = ID;
+        userToReturn.displayName = "Display name";
 
         when(graphClient.users(any())).thenReturn(userRequestBuilder);
         when(userRequestBuilder.buildRequest()).thenReturn(userRequest);
-        when(userRequest.get()).thenThrow(graphServiceException);
+        when(userRequest.get()).thenReturn(userToReturn);
 
         MockHttpServletRequestBuilder mockHttpServletRequestMediaUserBuilder = MockMvcRequestBuilders
             .get(CREATE_MEDIA_USER_URL)
