@@ -538,8 +538,6 @@ class AccountTest {
 
     @Test
     void testCreateMultipleSuccessUsers() throws Exception {
-        PiUser validUser1 = createUser(true, UUID.randomUUID().toString());
-        PiUser validUser2 = createUser(true, UUID.randomUUID().toString());
 
         User userToReturn = new User();
         userToReturn.id = ID;
@@ -554,6 +552,9 @@ class AccountTest {
             .contentType(MediaType.APPLICATION_JSON);
 
         mockMvc.perform(mockHttpServletRequestMediaUserBuilder).andExpect(status().isOk()).andReturn();
+
+        PiUser validUser1 = createUser(true, UUID.randomUUID().toString());
+        PiUser validUser2 = createUser(true, UUID.randomUUID().toString());
 
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder =
             MockMvcRequestBuilders
