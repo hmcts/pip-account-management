@@ -170,8 +170,8 @@ public class AccountService {
                 createdAccounts.add(addedUser.getUserId());
 
                 if (!userAzure.displayName.isEmpty()) {
-                    publicationService.sendNotificationEmailForSetupMediaAccount(user.getEmail(),
-                                                                                 userAzure.displayName);
+                    publicationService.sendMediaNotificationEmail(user.getEmail(),
+                                                                  userAzure.displayName, false);
                 }
 
                 log.info(writeLog(issuerEmail, UserActions.CREATE_ACCOUNT, addedUser.getEmail()));
@@ -298,7 +298,7 @@ public class AccountService {
                                                                   createdAccount.getSurname());
                 break;
             case VERIFIED:
-                isSuccessful = publicationService.sendMediaNotificationEmail(createdAccount.getEmail(), isExisting);
+                isSuccessful = publicationService.sendMediaNotificationEmail(createdAccount.getEmail(), "", isExisting);
                 break;
 
             default:

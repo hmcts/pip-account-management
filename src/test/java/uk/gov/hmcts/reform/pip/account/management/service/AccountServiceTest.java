@@ -264,7 +264,8 @@ class AccountServiceTest {
     void testAddUsers()  throws AzureCustomException {
         lenient().when(azureUserService.getUser(EMAIL)).thenReturn(expectedUser);
         lenient().when(userRepository.findByEmail("a123@b.com")).thenReturn(Optional.of(piUser));
-        when(publicationService.sendNotificationEmailForSetupMediaAccount(any(), any())).thenReturn(Boolean.TRUE);
+        when(publicationService.sendMediaNotificationEmail(EMAIL, "Test User", FALSE))
+            .thenReturn(Boolean.TRUE);
         Map<CreationEnum, List<?>> expected = new ConcurrentHashMap<>();
         PiUser user = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, ID, EMAIL, Roles.INTERNAL_ADMIN_CTSC);
         expected.put(CreationEnum.CREATED_ACCOUNTS, List.of(user.getUserId()));
@@ -345,7 +346,7 @@ class AccountServiceTest {
 
         lenient().when(azureUserService.getUser(EMAIL)).thenReturn(expectedUser);
         lenient().when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.of(piUser));
-        lenient().when(publicationService.sendNotificationEmailForSetupMediaAccount(EMAIL, FULL_NAME))
+        lenient().when(publicationService.sendMediaNotificationEmail(EMAIL, FULL_NAME, false))
             .thenReturn(FALSE);
         lenient().when(userRepository.save(invalidUser)).thenReturn(invalidUser);
         doReturn(Set.of(constraintViolation)).when(validator).validate(invalidUser);

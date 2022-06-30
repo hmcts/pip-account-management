@@ -55,23 +55,6 @@ public class PublicationService {
         }
     }
 
-    public boolean sendNotificationEmailForSetupMediaAccount(String emailAddress, String fullName) {
-        JSONObject jsonObject = new JSONObject();
-        jsonObject.put(EMAIL, emailAddress);
-        jsonObject.put("isExisting", false);
-        jsonObject.put("fullName", fullName);
-        try {
-            log.info(webClient.post().uri(url + WELCOME_EMAIL_URL)
-                .body(BodyInserters.fromValue(jsonObject)).retrieve()
-                .bodyToMono(String.class).block());
-            return true;
-
-        } catch (WebClientException ex) {
-            log.error(String.format("Request failed with error message: %s", ex.getMessage()));
-            return false;
-        }
-    }
-
     public boolean sendNotificationEmailForDuplicateMediaAccount(String emailAddress, String fullName) {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put(EMAIL, emailAddress);
@@ -93,9 +76,11 @@ public class PublicationService {
      * @param isExisting bool to determine if coming from migration or new user creation
      * @return success message for logging
      */
-    public boolean sendMediaNotificationEmail(String emailAddress, boolean isExisting) {
+    public boolean sendMediaNotificationEmail(String emailAddress, String fullName,
+                                              boolean isExisting) {
         JSONObject body = new JSONObject();
         body.put(EMAIL, emailAddress);
+        body.put("fullName", fullName);
         body.put("isExisting", isExisting);
         try {
             log.info(webClient.post().uri(url + WELCOME_EMAIL_URL)
