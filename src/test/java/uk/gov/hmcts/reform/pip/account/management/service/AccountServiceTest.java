@@ -309,6 +309,26 @@ class AccountServiceTest {
     }
 
     @Test
+    void testAddUsersNotExistsInAadBuildsErrored() {
+        PiUser user = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, ID, EMAIL,
+                                 Roles.INTERNAL_ADMIN_CTSC
+        );
+
+        lenient().when(publicationService.sendMediaNotificationEmail(EMAIL, FULL_NAME, false))
+            .thenReturn(FALSE);
+
+        ErroredPiUser erroredUser = new ErroredPiUser(user);
+        erroredUser.setErrorMessages(List.of(VALIDATION_MESSAGE));
+        Map<CreationEnum, List<?>> expected = new ConcurrentHashMap<>();
+        expected.put(CreationEnum.CREATED_ACCOUNTS, List.of());
+        expected.put(CreationEnum.ERRORED_ACCOUNTS, List.of(erroredUser));
+
+        doReturn(Set.of(constraintViolation)).when(validator).validate(user);
+
+        assertEquals(expected, accountService.addUsers(List.of(user), EMAIL), "Returned Errored accounts should match");
+    }
+
+    @Test
     void testAddUsersForBothCreatedAndErrored() throws AzureCustomException {
         PiUser invalidUser = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, ID, INVALID_EMAIL,
                                         Roles.INTERNAL_ADMIN_CTSC
@@ -405,6 +425,19 @@ class AccountServiceTest {
 
         try (LogCaptor logCaptor = LogCaptor.forClass(AccountService.class)) {
             accountService.addAzureAccounts(List.of(azureAccount), ISSUER_EMAIL, FALSE);
+            assertEquals(0, logCaptor.getInfoLogs().size(),
+                         "Should not log if failed creating account");
+        }
+    }
+
+    @Test
+    void testPandIAccountFailedDoesntTriggerEmail() throws AzureCustomException {
+        when(validator.validate(argThat(sub -> ((PiUser) sub).getEmail().equals(piUser.getEmail()))))
+            .thenReturn(Set.of());
+        when(azureUserService.getUser(EMAIL)).thenThrow(new AzureCustomException(TEST));
+        PiUser user = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, ID, EMAIL, Roles.INTERNAL_ADMIN_CTSC);
+        try (LogCaptor logCaptor = LogCaptor.forClass(AccountService.class)) {
+            accountService.addUsers(List.of(user), ISSUER_EMAIL);
             assertEquals(0, logCaptor.getInfoLogs().size(),
                          "Should not log if failed creating account");
         }
