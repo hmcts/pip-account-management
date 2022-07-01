@@ -18,8 +18,6 @@ public interface UserRepository extends JpaRepository<PiUser, Long> {
 
     Optional<PiUser> findByUserId(UUID userId);
 
-    Optional<PiUser> findByEmail(String email);
-
     @Query(value = "SELECT * FROM pi_user WHERE email=:email AND user_provenance=:userProv",
         nativeQuery = true)
     Optional<PiUser> findByEmailAndProvenanceId(@Param("email") String provenanceUserId,
