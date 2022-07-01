@@ -152,7 +152,8 @@ public class AccountService {
             try {
                 User userAzure = azureUserService.getUser(user.getEmail());
 
-                if (userRepository.findByEmail(user.getEmail()).isPresent()
+                if (userRepository.findByEmailAndProvenanceId(user.getEmail(),
+                                                              "PI_AAD").isPresent()
                     && !userAzure.displayName.isEmpty()) {
                     boolean emailSent = publicationService
                         .sendNotificationEmailForDuplicateMediaAccount(user.getEmail(),

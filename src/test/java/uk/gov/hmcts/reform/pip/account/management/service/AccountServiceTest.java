@@ -263,7 +263,8 @@ class AccountServiceTest {
     @Test
     void testAddUsers()  throws AzureCustomException {
         lenient().when(azureUserService.getUser(EMAIL)).thenReturn(expectedUser);
-        lenient().when(userRepository.findByEmail("a123@b.com")).thenReturn(Optional.of(piUser));
+        lenient().when(userRepository.findByEmailAndProvenanceId("a123@b.com", "PI_AAD"))
+            .thenReturn(Optional.of(piUser));
         when(publicationService.sendMediaNotificationEmail(EMAIL, "Test User", FALSE))
             .thenReturn(Boolean.TRUE);
         Map<CreationEnum, List<?>> expected = new ConcurrentHashMap<>();
@@ -280,7 +281,8 @@ class AccountServiceTest {
     @Test
     void testAddDuplicateUsers() throws AzureCustomException {
         lenient().when(azureUserService.getUser(EMAIL)).thenReturn(expectedUser);
-        lenient().when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.of(piUser));
+        lenient().when(userRepository.findByEmailAndProvenanceId(EMAIL, "PI_AAD"))
+            .thenReturn(Optional.of(piUser));
         PiUser user = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, ID, EMAIL, Roles.INTERNAL_ADMIN_CTSC);
         Map<CreationEnum, List<?>> expected = new ConcurrentHashMap<>();
         expected.put(CreationEnum.CREATED_ACCOUNTS, List.of());
@@ -365,7 +367,8 @@ class AccountServiceTest {
         expected.put(CreationEnum.CREATED_ACCOUNTS, List.of());
 
         lenient().when(azureUserService.getUser(EMAIL)).thenReturn(expectedUser);
-        lenient().when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.of(piUser));
+        lenient().when(userRepository.findByEmailAndProvenanceId(EMAIL, "PI_AAD"))
+            .thenReturn(Optional.of(piUser));
         lenient().when(publicationService.sendMediaNotificationEmail(EMAIL, FULL_NAME, false))
             .thenReturn(FALSE);
         lenient().when(userRepository.save(invalidUser)).thenReturn(invalidUser);
