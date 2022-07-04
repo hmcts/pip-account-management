@@ -40,15 +40,6 @@ sourceSets {
     resources.srcDir file('src/functionalTest/resources')
   }
 
-  integrationTest {
-    java {
-      compileClasspath += main.output
-      runtimeClasspath += main.output
-      srcDir file('src/integrationTest/java')
-    }
-    resources.srcDir file('src/integrationTest/resources')
-  }
-
   smokeTest {
     java {
       compileClasspath += main.output
@@ -82,14 +73,6 @@ task functional(type: Test) {
   classpath = sourceSets.functionalTest.runtimeClasspath
 }
 
-task integration(type: Test) {
-  description = "Runs integration tests"
-  group = "Verification"
-  testClassesDirs = sourceSets.integrationTest.output.classesDirs
-  classpath = sourceSets.integrationTest.runtimeClasspath
-  failFast = true
-}
-
 task smoke(type: Test) {
   description = "Runs Smoke Tests"
   testClassesDirs = sourceSets.smokeTest.output.classesDirs
@@ -104,7 +87,7 @@ checkstyle {
 
 pmd {
   toolVersion = "6.39.0"
-  sourceSets = [sourceSets.main, sourceSets.test, sourceSets.functionalTest, sourceSets.integrationTest, sourceSets.smokeTest]
+  sourceSets = [sourceSets.main, sourceSets.test, sourceSets.functionalTest, sourceSets.smokeTest]
   reportsDir = file("$project.buildDir/reports/pmd")
   // https://github.com/pmd/pmd/issues/876
   ruleSets = []
@@ -209,10 +192,8 @@ dependencies {
   testImplementation group: 'io.zonky.test', name: 'embedded-database-spring-test', version: '2.1.1'
   testImplementation group: 'org.awaitility', name: 'awaitility', version: '3.0.0'
 
-  integrationTestImplementation sourceSets.main.runtimeClasspath
-  integrationTestImplementation sourceSets.test.runtimeClasspath
-
   functionalTestImplementation sourceSets.main.runtimeClasspath
+  functionalTestImplementation sourceSets.test.runtimeClasspath
 
   smokeTestImplementation sourceSets.main.runtimeClasspath
   smokeTestImplementation sourceSets.test.runtimeClasspath
@@ -232,7 +213,7 @@ rootProject.tasks.named("processSmokeTestResources") {
 }
 
 // Gradle 7.x issue, workaround from: https://github.com/gradle/gradle/issues/17236#issuecomment-894768083
-rootProject.tasks.named("processIntegrationTestResources") {
+rootProject.tasks.named("processFunctionalTestResources") {
   duplicatesStrategy = 'include'
 }
 
