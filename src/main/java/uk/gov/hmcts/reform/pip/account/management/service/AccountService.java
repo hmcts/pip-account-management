@@ -100,6 +100,28 @@ public class AccountService {
             }
 
             try {
+                User userAzure = azureUserService.getUser(azureAccount.getEmail());
+
+                if (userAzure != null
+                    && !userAzure.displayName.isEmpty()) {
+                    boolean emailSent = publicationService
+                        .sendNotificationEmailForDuplicateMediaAccount(azureAccount.getEmail(),
+                                                                       userAzure.displayName);
+                    if (!emailSent) {
+                        ErroredAzureAccount softErroredAccount = new ErroredAzureAccount(azureAccount);
+                        softErroredAccount.setErrorMessages(
+                            Arrays.asList("Unable to send duplicate media account email"));
+                        erroredAccounts.add(softErroredAccount);
+                    }
+
+                    continue;
+                }
+
+            } catch (AzureCustomException azureCustomException) {
+                log.error(writeLog(issuerEmail, UserActions.CREATE_ACCOUNT, azureAccount.getEmail()));
+            }
+
+            try {
                 User user = azureUserService.createUser(azureAccount);
                 azureAccount.setAzureAccountId(user.id);
                 createdAzureAccounts.add(azureAccount);
@@ -152,25 +174,11 @@ public class AccountService {
             try {
                 User userAzure = azureUserService.getUser(user.getEmail());
 
-                if (userRepository.findByEmailAndProvenanceId(user.getEmail(),
-                                                              "PI_AAD").isPresent()
-                    && !userAzure.displayName.isEmpty()) {
-                    boolean emailSent = publicationService
-                        .sendNotificationEmailForDuplicateMediaAccount(user.getEmail(),
-                                                                       userAzure.displayName);
-                    if (!emailSent) {
-                        ErroredPiUser erroredUser = new ErroredPiUser(user);
-                        erroredUser.setErrorMessages(Arrays.asList("Unable to send duplicate media account email"));
-                        erroredAccounts.add(erroredUser);
-                    }
-
-                    continue;
-                }
-
                 PiUser addedUser = userRepository.save(user);
                 createdAccounts.add(addedUser.getUserId());
 
-                if (!userAzure.displayName.isEmpty()) {
+                if (userAzure != null
+                    && !userAzure.displayName.isEmpty()) {
                     publicationService.sendMediaNotificationEmail(user.getEmail(),
                                                                   userAzure.displayName, false);
                 }
