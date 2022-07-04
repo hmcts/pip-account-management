@@ -1,4 +1,4 @@
-package uk.gov.hmcts.reform.pip.account.management.config;
+package uk.gov.hmcts.reform.pip.account.management.controllers;
 
 import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
 import org.junit.jupiter.api.DisplayName;
@@ -6,44 +6,33 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import uk.gov.hmcts.reform.pip.account.management.Application;
+import uk.gov.hmcts.reform.pip.account.management.config.AzureConfigurationClientTest;
 
-import java.io.OutputStream;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-/**
- * Built-in feature which saves service's swagger specs in temporary directory.
- * Each CI run on master should automatically save and upload (if updated) documentation.
- */
 @SpringBootTest(classes = {AzureConfigurationClientTest.class, Application.class},
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
-@ActiveProfiles(profiles = "test")
+@ActiveProfiles(profiles = "functional")
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
-class SwaggerPublisherTest {
+class GetWelcomeTest {
 
     @Autowired
-    private MockMvc mvc;
+    private transient MockMvc mockMvc;
 
-    @DisplayName("Generate swagger documentation")
+    @DisplayName("Should welcome upon root request with 200 response code")
     @Test
-    @SuppressWarnings("PMD.JUnitTestsShouldIncludeAssert")
-    void generateDocs() throws Exception {
-        byte[] specs = mvc.perform(get("/v3/api-docs"))
-            .andExpect(status().isOk())
-            .andReturn()
-            .getResponse()
-            .getContentAsByteArray();
+    void welcomeRootEndpoint() throws Exception {
+        MvcResult response = mockMvc.perform(get("/")).andExpect(status().isOk()).andReturn();
 
-        try (OutputStream outputStream = Files.newOutputStream(Paths.get("/tmp/swagger-specs.json"))) {
-            outputStream.write(specs);
-        }
-
+        assertThat(response.getResponse().getContentAsString()).startsWith("Welcome");
     }
 }
