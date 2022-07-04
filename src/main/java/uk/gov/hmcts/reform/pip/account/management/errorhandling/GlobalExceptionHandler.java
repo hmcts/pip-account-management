@@ -14,6 +14,8 @@ import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.NotFo
 import java.time.LocalDateTime;
 import javax.validation.ConstraintViolationException;
 
+import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
+
 /**
  * Global exception handler, that captures exceptions thrown by the controllers, and encapsulates
  * the logic to handle them and return a standardised response to the user.
@@ -32,6 +34,8 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ExceptionResponse> handle(
         JsonMappingException ex) {
 
+        log.error(writeLog("400, Unable to create account from provided JSON"));
+
         ExceptionResponse exceptionResponse = new ExceptionResponse();
         exceptionResponse.setMessage(ex.getOriginalMessage());
         exceptionResponse.setTimestamp(LocalDateTime.now());
@@ -41,6 +45,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MissingRequestHeaderException.class)
     public ResponseEntity<ExceptionResponse> handle(MissingRequestHeaderException ex) {
+
+        log.error(writeLog("400, Missing headers from request"));
 
         ExceptionResponse exceptionResponse = new ExceptionResponse();
         exceptionResponse.setMessage(ex.getMessage());
@@ -52,6 +58,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<ExceptionResponse> handle(ConstraintViolationException ex) {
 
+        log.error(writeLog("400, Error while validating the JSON provided"));
+
         ExceptionResponse exceptionResponse = new ExceptionResponse();
         exceptionResponse.setMessage(ex.getMessage());
         exceptionResponse.setTimestamp(LocalDateTime.now());
@@ -62,6 +70,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ForbiddenPermissionsException.class)
     public ResponseEntity<ExceptionResponse> handle(ForbiddenPermissionsException ex) {
 
+        log.error(writeLog("403, User is not permitted to access the requested endpoint"));
+
         ExceptionResponse exceptionResponse = new ExceptionResponse();
         exceptionResponse.setMessage(ex.getMessage());
         exceptionResponse.setTimestamp(LocalDateTime.now());
@@ -71,6 +81,9 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<ExceptionResponse> handle(NotFoundException ex) {
+
+        log.error(writeLog("404, Unable to find requested account / application"));
+
         ExceptionResponse exceptionResponse = new ExceptionResponse();
         exceptionResponse.setMessage(ex.getMessage());
         exceptionResponse.setTimestamp(LocalDateTime.now());
