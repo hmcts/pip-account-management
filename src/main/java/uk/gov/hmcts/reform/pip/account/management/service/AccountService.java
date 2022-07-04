@@ -100,6 +100,7 @@ public class AccountService {
             }
 
             try {
+
                 User userAzure = azureUserService.getUser(azureAccount.getEmail());
 
                 if (userAzure != null
@@ -117,11 +118,6 @@ public class AccountService {
                     continue;
                 }
 
-            } catch (AzureCustomException azureCustomException) {
-                log.error(writeLog(issuerEmail, UserActions.CREATE_ACCOUNT, azureAccount.getEmail()));
-            }
-
-            try {
                 User user = azureUserService.createUser(azureAccount);
                 azureAccount.setAzureAccountId(user.id);
                 createdAzureAccounts.add(azureAccount);
