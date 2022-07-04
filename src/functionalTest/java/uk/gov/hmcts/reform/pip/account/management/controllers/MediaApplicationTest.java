@@ -12,6 +12,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -42,6 +43,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles(profiles = "functional")
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 @WithMockUser(username = "admin", authorities = { "APPROLE_api.request.admin" })
 class MediaApplicationTest {
 
@@ -62,7 +64,7 @@ class MediaApplicationTest {
 
     private ObjectMapper objectMapper;
     private static final String FULL_NAME = "Test user";
-    private static final String FORMATTED_FULL_NAME = "Testuser";
+    private static final String FORMATTED_FULL_NAME = "Test user";
     private static final String EMAIL = "test@email.com";
     private static final String EMPLOYER = "Test employer";
     private static final String BLOB_IMAGE_URL = "https://localhost";
