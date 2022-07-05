@@ -5,7 +5,10 @@ import com.microsoft.graph.models.ObjectIdentity;
 import com.microsoft.graph.models.PasswordProfile;
 import com.microsoft.graph.models.Request;
 import com.microsoft.graph.models.User;
-import com.microsoft.graph.requests.*;
+import com.microsoft.graph.requests.GraphServiceClient;
+import com.microsoft.graph.requests.UserCollectionPage;
+import com.microsoft.graph.requests.UserCollectionRequest;
+import com.microsoft.graph.requests.UserCollectionRequestBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -40,9 +43,6 @@ class AzureUserServiceTest {
 
     @Mock
     private UserCollectionRequest userCollectionRequest;
-
-    @Mock
-    private UserCollectionPage userCollectionPage;
 
     @Mock
     private GraphServiceException graphServiceException;
@@ -207,7 +207,7 @@ class AzureUserServiceTest {
         List<User> users = new ArrayList<>();
         users.add(user);
 
-        userCollectionPage = new UserCollectionPage(users, userCollectionRequestBuilder);
+        UserCollectionPage userCollectionPage = new UserCollectionPage(users, userCollectionRequestBuilder);
 
         when(clientConfiguration.getB2cUrl()).thenReturn(B2C_URL);
         when(graphClient.users()).thenReturn(userCollectionRequestBuilder);

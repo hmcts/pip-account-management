@@ -1,6 +1,5 @@
 package uk.gov.hmcts.reform.pip.account.management.service;
 
-import com.microsoft.graph.http.GraphServiceException;
 import com.microsoft.graph.models.User;
 import nl.altindag.log.LogCaptor;
 import org.junit.jupiter.api.BeforeEach;
@@ -96,6 +95,7 @@ class AccountServiceTest {
     private static final String MESSAGES_MATCH = "Messages should match";
     private static final boolean FALSE = false;
     private static final boolean TRUE = true;
+    private static final String SHOULD_CONTAIN = "Should contain ";
 
     private static final UUID VALID_USER_ID = UUID.randomUUID();
     private static final UUID VALID_USER_ID_IDAM = UUID.randomUUID();
@@ -151,7 +151,7 @@ class AccountServiceTest {
         Map<CreationEnum, List<? extends AzureAccount>> createdAccounts =
             accountService.addAzureAccounts(List.of(azureAccount), ISSUER_EMAIL, FALSE);
 
-        assertTrue(createdAccounts.containsKey(CreationEnum.CREATED_ACCOUNTS), "Should contain "
+        assertTrue(createdAccounts.containsKey(CreationEnum.CREATED_ACCOUNTS), SHOULD_CONTAIN
             + "CREATED_ACCOUNTS key");
         List<? extends AzureAccount> accounts = createdAccounts.get(CreationEnum.CREATED_ACCOUNTS);
         assertEquals(azureAccount.getEmail(), accounts.get(0).getEmail(), EMAIL_VALIDATION_MESSAGE);
@@ -176,7 +176,7 @@ class AccountServiceTest {
         Map<CreationEnum, List<? extends AzureAccount>> createdAccounts =
             accountService.addAzureAccounts(List.of(azureAccount), ISSUER_EMAIL, FALSE);
 
-        assertTrue(createdAccounts.containsKey(CreationEnum.ERRORED_ACCOUNTS), "Should contain "
+        assertTrue(createdAccounts.containsKey(CreationEnum.ERRORED_ACCOUNTS), SHOULD_CONTAIN
             + "ERRORED_ACCOUNTS key");
     }
 
@@ -194,7 +194,7 @@ class AccountServiceTest {
         Map<CreationEnum, List<? extends AzureAccount>> createdAccounts =
             accountService.addAzureAccounts(List.of(azureAccount), ISSUER_EMAIL, FALSE);
 
-        assertTrue(createdAccounts.containsKey(CreationEnum.CREATED_ACCOUNTS), "Should contain "
+        assertTrue(createdAccounts.containsKey(CreationEnum.CREATED_ACCOUNTS), SHOULD_CONTAIN
             + "ERRORED_ACCOUNTS key");
         assertFalse(createdAccounts.containsValue(CreationEnum.CREATED_ACCOUNTS), "Should not contain "
             + "CREATED_ACCOUNTS value");
@@ -205,7 +205,8 @@ class AccountServiceTest {
         when(validator.validate(argThat(sub -> ((AzureAccount) sub).getEmail().equals(azureAccount.getEmail()))))
             .thenReturn(Set.of());
 
-        lenient().when(azureUserService.getUser(any())).thenThrow(new AzureCustomException("Error when checking account into Azure."));
+        lenient().when(azureUserService.getUser(any()))
+            .thenThrow(new AzureCustomException("Error when checking account into Azure."));
 
         AzureCustomException azureCustomException = assertThrows(AzureCustomException.class, () -> {
             azureUserService.getUser(any());
@@ -305,7 +306,7 @@ class AccountServiceTest {
         Map<CreationEnum, List<? extends AzureAccount>> createdAccounts =
             accountService.addAzureAccounts(List.of(azureAccount, erroredAzureAccount), ISSUER_EMAIL, FALSE);
 
-        assertTrue(createdAccounts.containsKey(CreationEnum.CREATED_ACCOUNTS), "Should contain "
+        assertTrue(createdAccounts.containsKey(CreationEnum.CREATED_ACCOUNTS), SHOULD_CONTAIN
             + "CREATED_ACCOUNTS key");
         List<? extends AzureAccount> accounts = createdAccounts.get(CreationEnum.CREATED_ACCOUNTS);
         assertEquals(azureAccount.getEmail(), accounts.get(0).getEmail(), EMAIL_VALIDATION_MESSAGE);

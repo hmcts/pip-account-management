@@ -228,6 +228,49 @@ class AccountTest {
     }
 
     @Test
+    void creationOfDuplicateAccount() throws Exception {
+        AzureAccount azureAccount = new AzureAccount();
+        azureAccount.setEmail(EMAIL);
+        azureAccount.setSurname(SURNAME);
+        azureAccount.setFirstName(FIRST_NAME);
+        azureAccount.setRole(Roles.INTERNAL_ADMIN_CTSC);
+
+        User user = new User();
+        user.id = ID;
+        user.displayName = DISPLAY_NAME;
+        List<User> azUsers = new ArrayList<>();
+        azUsers.add(user);
+
+        userCollectionPage = new UserCollectionPage(azUsers, userCollectionRequestBuilder);
+
+        when(clientConfiguration.getB2cUrl()).thenReturn(B2C_URL);
+        when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
+        when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
+        when(userCollectionRequest.filter(any())).thenReturn(userCollectionRequest);
+        when(userCollectionRequest.get()).thenReturn(userCollectionPage);
+
+        objectMapper.findAndRegisterModules();
+
+        MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
+            .post(AZURE_URL)
+            .content(objectMapper.writeValueAsString(List.of(azureAccount)))
+            .header(ISSUER_HEADER, ISSUER_EMAIL)
+            .contentType(MediaType.APPLICATION_JSON);
+
+        MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder)
+            .andExpect(status().isOk()).andReturn();
+
+        ConcurrentHashMap<CreationEnum, List<Object>> accounts =
+            objectMapper.readValue(response.getResponse().getContentAsString(),
+                                   new TypeReference<>() {});
+
+        assertEquals(1, accounts.get(CreationEnum.ERRORED_ACCOUNTS).size(),
+                     SINGLE_ERRORED_ACCOUNT);
+        assertEquals(0, accounts.get(CreationEnum.CREATED_ACCOUNTS).size(),
+                     ZERO_CREATED_ACCOUNTS);
+    }
+
+    @Test
     void testCreationOfInvalidEmailAccount() throws Exception {
         AzureAccount azureAccount = new AzureAccount();
         azureAccount.setEmail("ab");

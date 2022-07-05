@@ -26,7 +26,6 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -111,7 +110,7 @@ public class AccountService {
                     if (!emailSent) {
                         ErroredAzureAccount softErroredAccount = new ErroredAzureAccount(azureAccount);
                         softErroredAccount.setErrorMessages(
-                            Arrays.asList("Unable to send duplicate media account email"));
+                            List.of("Unable to send duplicate media account email"));
                         erroredAccounts.add(softErroredAccount);
                     }
 
@@ -291,7 +290,8 @@ public class AccountService {
                                                                   createdAccount.getSurname());
                 break;
             case VERIFIED:
-                isSuccessful = publicationService.sendMediaNotificationEmail(createdAccount.getEmail(), fullName, isExisting);
+                isSuccessful = publicationService.sendMediaNotificationEmail(createdAccount.getEmail(),
+                                                                             fullName, isExisting);
                 break;
 
             default:
