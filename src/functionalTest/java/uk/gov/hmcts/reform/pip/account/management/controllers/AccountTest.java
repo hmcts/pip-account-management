@@ -191,6 +191,15 @@ class AccountTest {
         user.displayName = "";
         List<User> azUsers = new ArrayList<>();
         azUsers.add(user);
+
+        userCollectionPage = new UserCollectionPage(azUsers, userCollectionRequestBuilder);
+
+        when(clientConfiguration.getB2cUrl()).thenReturn(B2C_URL);
+        when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
+        when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
+        when(userCollectionRequest.filter(any())).thenReturn(userCollectionRequest);
+        when(userCollectionRequest.get()).thenReturn(userCollectionPage);
+
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(AZURE_URL)
             .content(objectMapper.writeValueAsString(List.of(azureAccount)))
