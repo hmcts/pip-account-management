@@ -5,11 +5,7 @@ import com.microsoft.graph.models.ObjectIdentity;
 import com.microsoft.graph.models.PasswordProfile;
 import com.microsoft.graph.models.Request;
 import com.microsoft.graph.models.User;
-import com.microsoft.graph.requests.GraphServiceClient;
-import com.microsoft.graph.requests.UserCollectionRequest;
-import com.microsoft.graph.requests.UserCollectionRequestBuilder;
-import com.microsoft.graph.requests.UserRequest;
-import com.microsoft.graph.requests.UserRequestBuilder;
+import com.microsoft.graph.requests.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,6 +19,7 @@ import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.Azure
 import uk.gov.hmcts.reform.pip.account.management.model.AzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.Roles;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -42,13 +39,10 @@ class AzureUserServiceTest {
     private UserCollectionRequestBuilder userCollectionRequestBuilder;
 
     @Mock
-    private UserRequestBuilder userRequestBuilder;
-
-    @Mock
     private UserCollectionRequest userCollectionRequest;
 
     @Mock
-    private UserRequest userRequest;
+    private UserCollectionPage userCollectionPage;
 
     @Mock
     private GraphServiceException graphServiceException;
@@ -71,6 +65,7 @@ class AzureUserServiceTest {
     private static final String SURNAME = "Surname";
     private static final String EXTENSION_ID = "1234-1234";
     private static final String DISPLAY_NAME = "Display Name";
+    private static final String B2C_URL = "URL";
 
     AzureAccount azureAccount;
 
@@ -209,28 +204,33 @@ class AzureUserServiceTest {
         User user = new User();
         user.id = ID;
         user.displayName = DISPLAY_NAME;
+        List<User> users = new ArrayList<>();
+        users.add(user);
 
-        when(graphClient.users(any())).thenReturn(userRequestBuilder);
-        when(userRequestBuilder.buildRequest()).thenReturn(userRequest);
-        when(userRequest.get()).thenReturn(user);
+        userCollectionPage = new UserCollectionPage(users, userCollectionRequestBuilder);
 
-        User returnedUser = azureUserService.getUser(any());
+        when(clientConfiguration.getB2cUrl()).thenReturn(B2C_URL);
+        when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
+        when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
+        when(userCollectionRequest.filter(any())).thenReturn(userCollectionRequest);
+        when(userCollectionRequest.get()).thenReturn(userCollectionPage);
+
+        User returnedUser = azureUserService.getUser(EMAIL);
 
         assertEquals(DISPLAY_NAME, returnedUser.displayName, "The ID is equal to the expected user ID");
     }
 
     @Test
     void testInvalidUserByEmailRequest() {
-        User user = new User();
-        user.id = ID;
-        user.displayName = DISPLAY_NAME;
 
-        when(graphClient.users(any())).thenReturn(userRequestBuilder);
-        when(userRequestBuilder.buildRequest()).thenReturn(userRequest);
-        when(userRequest.get()).thenThrow(graphServiceException);
+        when(clientConfiguration.getB2cUrl()).thenReturn(B2C_URL);
+        when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
+        when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
+        when(userCollectionRequest.filter(any())).thenReturn(userCollectionRequest);
+        when(userCollectionRequest.get()).thenThrow(graphServiceException);
 
         AzureCustomException azureCustomException = assertThrows(AzureCustomException.class, () -> {
-            azureUserService.getUser(any());
+            azureUserService.getUser(EMAIL);
         });
 
         assertEquals("Error when checking account into Azure.",

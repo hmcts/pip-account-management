@@ -124,7 +124,7 @@ public class AccountService {
 
                 log.info(writeLog(issuerEmail, UserActions.CREATE_ACCOUNT, azureAccount.getEmail()));
 
-                if (!handleAccountCreationEmail(azureAccount, isExisting)) {
+                if (!handleAccountCreationEmail(azureAccount, user.displayName, isExisting)) {
                     ErroredAzureAccount softErroredAccount = new ErroredAzureAccount(azureAccount);
                     softErroredAccount.setErrorMessages(List.of(EMAIL_NOT_SENT_MESSAGE));
                     erroredAccounts.add(softErroredAccount);
@@ -167,23 +167,10 @@ public class AccountService {
                 continue;
             }
 
-            try {
-                User userAzure = azureUserService.getUser(user.getEmail());
+            PiUser addedUser = userRepository.save(user);
+            createdAccounts.add(addedUser.getUserId());
 
-                PiUser addedUser = userRepository.save(user);
-                createdAccounts.add(addedUser.getUserId());
-
-                if (userAzure != null
-                    && !userAzure.displayName.isEmpty()) {
-                    publicationService.sendMediaNotificationEmail(user.getEmail(),
-                                                                  userAzure.displayName, false);
-                }
-
-                log.info(writeLog(issuerEmail, UserActions.CREATE_ACCOUNT, addedUser.getEmail()));
-
-            } catch (AzureCustomException azureCustomException) {
-                log.error(writeLog(issuerEmail, UserActions.CREATE_ACCOUNT, user.getEmail()));
-            }
+            log.info(writeLog(issuerEmail, UserActions.CREATE_ACCOUNT, addedUser.getEmail()));
         }
 
         Map<CreationEnum, List<?>> processedAccounts = new ConcurrentHashMap<>();
@@ -291,7 +278,8 @@ public class AccountService {
         return completedAccounts;
     }
 
-    private boolean handleAccountCreationEmail(AzureAccount createdAccount, boolean isExisting) {
+    private boolean handleAccountCreationEmail(AzureAccount createdAccount, String fullName,
+                                               boolean isExisting) {
         boolean isSuccessful;
         switch (createdAccount.getRole()) {
             case INTERNAL_ADMIN_CTSC:
@@ -303,7 +291,7 @@ public class AccountService {
                                                                   createdAccount.getSurname());
                 break;
             case VERIFIED:
-                isSuccessful = publicationService.sendMediaNotificationEmail(createdAccount.getEmail(), "", isExisting);
+                isSuccessful = publicationService.sendMediaNotificationEmail(createdAccount.getEmail(), fullName, isExisting);
                 break;
 
             default:

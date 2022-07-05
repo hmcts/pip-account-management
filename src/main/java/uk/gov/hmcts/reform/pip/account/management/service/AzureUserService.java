@@ -7,8 +7,10 @@ import com.microsoft.graph.models.ObjectIdentity;
 import com.microsoft.graph.models.PasswordProfile;
 import com.microsoft.graph.models.User;
 import com.microsoft.graph.requests.GraphServiceClient;
+import com.microsoft.graph.requests.UserCollectionPage;
 import okhttp3.Request;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import uk.gov.hmcts.reform.pip.account.management.config.ClientConfiguration;
 import uk.gov.hmcts.reform.pip.account.management.config.UserConfiguration;
@@ -87,9 +89,13 @@ public class AzureUserService {
      */
     public User getUser(String email) throws AzureCustomException {
         try {
-            return graphClient.users(email)
+            UserCollectionPage users = graphClient.users()
                 .buildRequest()
+                .filter(String.format("identities/any(c:c/issuerAssignedId eq '%s' and c/issuer eq '%s')", email,
+                                      clientConfiguration.getB2cUrl()))
                 .get();
+
+            return users.getCurrentPage().get(0);
         } catch (GraphServiceException e) {
             throw new AzureCustomException("Error when checking account into Azure.");
         }

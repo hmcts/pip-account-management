@@ -75,6 +75,7 @@ azure:
     tenant-guid: ${TENANT_GUID_B2C:00000000-0000-0000-0000-000000000000}
     extension-id: ${EXTENSION_ID:00000000-0000-0000-0000-000000000000}
     token-provider: "https://graph.microsoft.com/.default"
+    b2c-url: ${IDENTITY_ISSUER}
   user:
     identity-issuer: ${IDENTITY_ISSUER:hmctspipnonprod.onmicrosoft.com}
     signInType: emailAddress
