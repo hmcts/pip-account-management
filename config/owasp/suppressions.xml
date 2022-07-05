@@ -70,14 +70,14 @@
     <cve>CVE-2014-0054</cve>
     <cve>CVE-2013-7315</cve>
     <cve>CVE-2013-4152</cve>
-    <cve>CVE-2018-11039</cve>
-    <cve>CVE-2018-11040</cve>
-    <cve>CVE-2018-1257</cve>
-    <cve>CVE-2020-5421</cve>
     <cve>CVE-2022-22965</cve>
     <cve>CVE-2022-22968</cve>
     <cve>CVE-2022-22978</cve>
     <cve>CVE-2022-22950</cve>
+    <cve>CVE-2018-11040</cve>
+    <cve>CVE-2020-5421</cve>
+    <cve>CVE-2018-1257</cve>
+    <cve>CVE-2018-11039</cve>
   </suppress>
   <suppress>
     <notes><![CDATA[
@@ -88,14 +88,14 @@
     <cve>CVE-2014-0054</cve>
     <cve>CVE-2013-7315</cve>
     <cve>CVE-2013-4152</cve>
-    <cve>CVE-2018-11039</cve>
-    <cve>CVE-2018-11040</cve>
-    <cve>CVE-2018-1257</cve>
-    <cve>CVE-2020-5421</cve>
     <cve>CVE-2022-22965</cve>
     <cve>CVE-2022-22968</cve>
     <cve>CVE-2022-22978</cve>
     <cve>CVE-2022-22950</cve>
+    <cve>CVE-2018-11040</cve>
+    <cve>CVE-2020-5421</cve>
+    <cve>CVE-2018-1257</cve>
+    <cve>CVE-2018-11039</cve>
   </suppress>
   <suppress>
     <notes><![CDATA[
@@ -162,6 +162,11 @@
     <cve>CVE-2022-22970</cve>
   </suppress>
   <suppress>
+    <notes><![CDATA[No known fix at the moment, already on latest version of Log 4J]]></notes>
+    <packageUrl regex="true">^pkg:maven/org.apache.logging.log4j/log4j-api@2.17.1</packageUrl>
+    <cve>CVE-2022-33915</cve>
+  </suppress>
+  <suppress>
     <notes><![CDATA[file name: tomcat-embed-core-9.0.63.jar]]></notes>
     <packageUrl regex="true">^pkg:maven/org.apache.tomcat.embed/tomcat-embed-core@9.0.63</packageUrl>
     <cve>CVE-2022-34305</cve>
@@ -170,10 +175,5 @@
     <notes><![CDATA[file name: tomcat-embed-websocket-9.0.63.jar]]></notes>
     <packageUrl regex="true">^pkg:maven/org.apache.tomcat.embed/tomcat-embed-websocket@9.0.63</packageUrl>
     <cve>CVE-2022-34305</cve>
-  </suppress>
-  <suppress>
-    <notes><![CDATA[No known fix at the moment, already on latest version of Log 4J]]></notes>
-    <packageUrl regex="true">^pkg:maven/org.apache.logging.log4j/log4j-api@2.17.1</packageUrl>
-    <cve>CVE-2022-33915</cve>
   </suppress>
 </suppressions>

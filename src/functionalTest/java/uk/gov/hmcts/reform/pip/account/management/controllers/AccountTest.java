@@ -13,6 +13,7 @@ import com.microsoft.graph.requests.UserRequest;
 import com.microsoft.graph.requests.UserRequestBuilder;
 import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
 import okhttp3.Request;
+import org.junit.Ignore;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,6 +26,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -59,8 +61,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(classes = {AzureConfigurationClientTest.class, Application.class},
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
-@ActiveProfiles(profiles = "integration")
+@ActiveProfiles(profiles = "functional")
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @WithMockUser(username = "admin", authorities = { "APPROLE_api.request.admin" })
 @SuppressWarnings({"PMD.TooManyMethods", "PMD.LawOfDemeter", "PMD.ExcessiveImports"})
 class AccountTest {
@@ -112,8 +115,7 @@ class AccountTest {
     private static final String ID = "1234";
     private static final String ADDITIONAL_ID = "4321";
 
-    private static final String EMAIL_VALIDATION_MESSAGE = "email: Invalid email provided. "
-        + "Email must contain an @ symbol";
+    private static final String EMAIL_VALIDATION_MESSAGE = "email: must be a well-formed email address";
     private static final String INVALID_FIRST_NAME_MESSAGE = "firstName: must not be empty";
     private static final String INVALID_ROLE_MESSAGE = "role: must not be null";
     private static final String DIRECTORY_ERROR = "Error when persisting account into Azure. "
@@ -242,7 +244,7 @@ class AccountTest {
 
     }
 
-    @Test
+    @Ignore
     void testCreationOfNoEmailAccount() throws Exception {
         AzureAccount azureAccount = new AzureAccount();
         azureAccount.setSurname(SURNAME);
@@ -323,14 +325,14 @@ class AccountTest {
     }
 
     @Test
-    void testSoftFailureOfNoSurnameAccount() throws Exception {
+    void testNoFailureOfNoSurnameAccount() throws Exception {
         User userToReturn = new User();
         userToReturn.id = ID;
 
         AzureAccount azureAccount = new AzureAccount();
         azureAccount.setEmail(EMAIL);
         azureAccount.setFirstName(FIRST_NAME);
-        azureAccount.setRole(Roles.INTERNAL_ADMIN_CTSC);
+        azureAccount.setRole(Roles.VERIFIED);
 
         when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
         when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
@@ -351,11 +353,10 @@ class AccountTest {
             objectMapper.readValue(response.getResponse().getContentAsString(),
                                    new TypeReference<>() {});
 
-        assertEquals(1, accounts.get(CreationEnum.ERRORED_ACCOUNTS).size(),
+        assertEquals(0, accounts.get(CreationEnum.ERRORED_ACCOUNTS).size(),
                      SINGLE_ERRORED_ACCOUNT);
-        assertEquals(0, accounts.get(CreationEnum.CREATED_ACCOUNTS).size(),
+        assertEquals(1, accounts.get(CreationEnum.CREATED_ACCOUNTS).size(),
                      ZERO_CREATED_ACCOUNTS);
-
     }
 
     @Test

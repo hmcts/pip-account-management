@@ -12,11 +12,14 @@ import uk.gov.hmcts.reform.pip.account.management.database.MediaApplicationRepos
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.NotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.model.MediaApplication;
 import uk.gov.hmcts.reform.pip.account.management.model.MediaApplicationStatus;
+import uk.gov.hmcts.reform.pip.model.enums.UserActions;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
+import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
 
 @Slf4j
 @Service
@@ -89,8 +92,9 @@ public class MediaApplicationService {
      * @return The newly created application
      */
     public MediaApplication createApplication(MediaApplication application, MultipartFile file) {
-        String imageId = azureBlobService.uploadFile(UUID.randomUUID().toString(), file);
+        log.info(writeLog(application.getEmail(), UserActions.CREATE_MEDIA_APPLICATION, application.getEmail()));
 
+        String imageId = azureBlobService.uploadFile(UUID.randomUUID().toString(), file);
         application.setRequestDate(LocalDateTime.now());
         application.setStatusDate(LocalDateTime.now());
         application.setImage(imageId);
@@ -111,6 +115,8 @@ public class MediaApplicationService {
         MediaApplication applicationToUpdate = mediaApplicationRepository.findById(id).orElseThrow(() ->
             new NotFoundException(String.format("Application with id %s could not be found", id)));
 
+        log.info(writeLog(UserActions.UPDATE_MEDIA_APPLICATION, applicationToUpdate.getEmail()));
+
         applicationToUpdate.setStatus(status);
         applicationToUpdate.setStatusDate(LocalDateTime.now());
 
@@ -129,6 +135,8 @@ public class MediaApplicationService {
     public void deleteApplication(UUID id) {
         MediaApplication applicationToDelete = mediaApplicationRepository.findById(id).orElseThrow(() ->
             new NotFoundException(String.format("Application with id %s could not be found", id)));
+
+        log.info(writeLog(UserActions.DELETE_MEDIA_APPLICATION, applicationToDelete.getEmail()));
 
         azureBlobService.deleteBlob(applicationToDelete.getImage());
         mediaApplicationRepository.delete(applicationToDelete);
