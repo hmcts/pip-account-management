@@ -94,7 +94,12 @@ public class AzureUserService {
                                       clientConfiguration.getB2cUrl()))
                 .get();
 
-            return users.getCurrentPage().get(0);
+            User returnUser = null;
+            if (users.getCurrentPage().stream().count() != 0) {
+                returnUser = users.getCurrentPage().get(0);
+            }
+            return returnUser;
+
         } catch (GraphServiceException e) {
             throw new AzureCustomException("Error when checking account into Azure.");
         }

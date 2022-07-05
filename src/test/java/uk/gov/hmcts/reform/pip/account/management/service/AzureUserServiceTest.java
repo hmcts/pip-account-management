@@ -221,6 +221,23 @@ class AzureUserServiceTest {
     }
 
     @Test
+    void testValidRequestReturnsNoUserByEmail() throws AzureCustomException {
+        List<User> users = new ArrayList<>();
+
+        UserCollectionPage userCollectionPage = new UserCollectionPage(users, userCollectionRequestBuilder);
+
+        when(clientConfiguration.getB2cUrl()).thenReturn(B2C_URL);
+        when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
+        when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
+        when(userCollectionRequest.filter(any())).thenReturn(userCollectionRequest);
+        when(userCollectionRequest.get()).thenReturn(userCollectionPage);
+
+        User returnedUser = azureUserService.getUser(EMAIL);
+
+        assertEquals(null, returnedUser, "The ID is equal to the expected user ID");
+    }
+
+    @Test
     void testInvalidUserByEmailRequest() {
 
         when(clientConfiguration.getB2cUrl()).thenReturn(B2C_URL);
