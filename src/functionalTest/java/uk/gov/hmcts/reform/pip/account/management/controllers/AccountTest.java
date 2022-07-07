@@ -189,6 +189,7 @@ class AccountTest {
         User user = new User();
         user.id = ID;
         user.displayName = "";
+        user.givenName = "name";
         List<User> azUsers = new ArrayList<>();
         azUsers.add(user);
 
@@ -570,6 +571,7 @@ class AccountTest {
         User user = new User();
         user.id = ID;
         user.displayName = "";
+        user.givenName = "name";
         List<User> azUsers = new ArrayList<>();
         azUsers.add(user);
 
