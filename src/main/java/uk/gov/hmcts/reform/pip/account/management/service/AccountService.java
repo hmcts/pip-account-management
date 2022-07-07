@@ -123,7 +123,7 @@ public class AccountService {
 
                 log.info(writeLog(issuerEmail, UserActions.CREATE_ACCOUNT, azureAccount.getEmail()));
 
-                if (!handleAccountCreationEmail(azureAccount, user.displayName, isExisting)) {
+                if (!handleAccountCreationEmail(azureAccount, user.givenName, isExisting)) {
                     ErroredAzureAccount softErroredAccount = new ErroredAzureAccount(azureAccount);
                     softErroredAccount.setErrorMessages(List.of(EMAIL_NOT_SENT_MESSAGE));
                     erroredAccounts.add(softErroredAccount);
