@@ -166,6 +166,8 @@ class AccountTest {
         User userToReturn = new User();
         userToReturn.id = ID;
         userToReturn.displayName = "Display name";
+        userToReturn.givenName = DISPLAY_NAME;
+
         User additionalUser = new User();
         additionalUser.id = ADDITIONAL_ID;
         when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
@@ -239,6 +241,7 @@ class AccountTest {
         User user = new User();
         user.id = ID;
         user.displayName = DISPLAY_NAME;
+        user.givenName = DISPLAY_NAME;
         List<User> azUsers = new ArrayList<>();
         azUsers.add(user);
 
@@ -410,6 +413,7 @@ class AccountTest {
         User user = new User();
         user.id = ID;
         user.displayName = "";
+        user.givenName = "name";
         List<User> azUsers = new ArrayList<>();
         azUsers.add(user);
 
@@ -492,6 +496,7 @@ class AccountTest {
         User user = new User();
         user.id = ID;
         user.displayName = "";
+        user.givenName = "name";
         List<User> azUsers = new ArrayList<>();
         azUsers.add(user);
 
@@ -890,6 +895,7 @@ class AccountTest {
         User user = new User();
         user.id = ID;
         user.displayName = "";
+        user.givenName = "name";
         List<User> azUsers = new ArrayList<>();
         azUsers.add(user);
 
@@ -940,6 +946,7 @@ class AccountTest {
         User user = new User();
         user.id = ID;
         user.displayName = "";
+        user.givenName = "name";
         List<User> azUsers = new ArrayList<>();
         azUsers.add(user);
 
