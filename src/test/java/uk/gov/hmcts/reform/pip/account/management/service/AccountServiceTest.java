@@ -18,6 +18,7 @@ import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.UserN
 import uk.gov.hmcts.reform.pip.account.management.model.AzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.ListType;
+import uk.gov.hmcts.reform.pip.account.management.model.MediaApplication;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
 import uk.gov.hmcts.reform.pip.account.management.model.Roles;
 import uk.gov.hmcts.reform.pip.account.management.model.Sensitivity;
@@ -80,6 +81,7 @@ class AccountServiceTest {
     @InjectMocks
     private AccountService accountService;
 
+    private static final String FULL_NAME = "Full name";
     private static final String ISSUER_EMAIL = "b@c.com";
     private static final String EMAIL = "a@b.com";
     private static final String INVALID_EMAIL = "ab.com";
@@ -93,12 +95,14 @@ class AccountServiceTest {
     private static final String MESSAGES_MATCH = "Messages should match";
     private static final boolean FALSE = false;
     private static final boolean TRUE = true;
+    private static final String SHOULD_CONTAIN = "Should contain ";
 
     private static final UUID VALID_USER_ID = UUID.randomUUID();
     private static final UUID VALID_USER_ID_IDAM = UUID.randomUUID();
 
     private final PiUser piUser = new PiUser();
     private final PiUser piUserIdam = new PiUser();
+    private final MediaApplication mediaAndLegalApplication = new MediaApplication();
     private AzureAccount azureAccount;
     private User expectedUser;
 
@@ -113,6 +117,9 @@ class AccountServiceTest {
         piUserIdam.setUserProvenance(UserProvenances.CFT_IDAM);
         piUserIdam.setProvenanceUserId(ID);
 
+        mediaAndLegalApplication.setEmail(EMAIL);
+        mediaAndLegalApplication.setFullName(FULL_NAME);
+
         azureAccount = new AzureAccount();
         azureAccount.setEmail(EMAIL);
         azureAccount.setRole(Roles.INTERNAL_ADMIN_CTSC);
@@ -120,6 +127,7 @@ class AccountServiceTest {
         expectedUser = new User();
         expectedUser.givenName = TEST;
         expectedUser.id = ID;
+        expectedUser.displayName = "Test User";
 
         lenient().when(userRepository.findByUserId(VALID_USER_ID)).thenReturn(Optional.of(piUser));
         lenient().when(userRepository.findByUserId(VALID_USER_ID_IDAM)).thenReturn(Optional.of(piUserIdam));
@@ -133,6 +141,8 @@ class AccountServiceTest {
         when(validator.validate(argThat(sub -> ((AzureAccount) sub).getEmail().equals(azureAccount.getEmail()))))
             .thenReturn(Set.of());
 
+        lenient().when(azureUserService.getUser(EMAIL)).thenReturn(null);
+
         when(azureUserService.createUser(argThat(user -> user.getEmail().equals(azureAccount.getEmail()))))
             .thenReturn(expectedUser);
 
@@ -141,7 +151,7 @@ class AccountServiceTest {
         Map<CreationEnum, List<? extends AzureAccount>> createdAccounts =
             accountService.addAzureAccounts(List.of(azureAccount), ISSUER_EMAIL, FALSE);
 
-        assertTrue(createdAccounts.containsKey(CreationEnum.CREATED_ACCOUNTS), "Should contain "
+        assertTrue(createdAccounts.containsKey(CreationEnum.CREATED_ACCOUNTS), SHOULD_CONTAIN
             + "CREATED_ACCOUNTS key");
         List<? extends AzureAccount> accounts = createdAccounts.get(CreationEnum.CREATED_ACCOUNTS);
         assertEquals(azureAccount.getEmail(), accounts.get(0).getEmail(), EMAIL_VALIDATION_MESSAGE);
@@ -153,9 +163,68 @@ class AccountServiceTest {
     }
 
     @Test
+    void testAccountCreatedAlreadyExistsNoEmail() throws AzureCustomException {
+        when(validator.validate(argThat(sub -> ((AzureAccount) sub).getEmail().equals(azureAccount.getEmail()))))
+            .thenReturn(Set.of());
+
+        User azUser = new User();
+        azUser.id = ID;
+        azUser.displayName = FULL_NAME;
+
+        lenient().when(azureUserService.getUser(EMAIL)).thenReturn(azUser);
+
+        Map<CreationEnum, List<? extends AzureAccount>> createdAccounts =
+            accountService.addAzureAccounts(List.of(azureAccount), ISSUER_EMAIL, FALSE);
+
+        assertTrue(createdAccounts.containsKey(CreationEnum.ERRORED_ACCOUNTS), SHOULD_CONTAIN
+            + "ERRORED_ACCOUNTS key");
+    }
+
+    @Test
+    void testAccountCreatedAlreadyExistsWithEmail() throws AzureCustomException {
+        when(validator.validate(argThat(sub -> ((AzureAccount) sub).getEmail().equals(azureAccount.getEmail()))))
+            .thenReturn(Set.of());
+
+        User azUser = new User();
+        azUser.id = ID;
+        azUser.displayName = FULL_NAME;
+
+        lenient().when(azureUserService.getUser(EMAIL)).thenReturn(azUser);
+        when(publicationService.sendNotificationEmailForDuplicateMediaAccount(any(), any())).thenReturn(TRUE);
+        Map<CreationEnum, List<? extends AzureAccount>> createdAccounts =
+            accountService.addAzureAccounts(List.of(azureAccount), ISSUER_EMAIL, FALSE);
+
+        assertTrue(createdAccounts.containsKey(CreationEnum.CREATED_ACCOUNTS), SHOULD_CONTAIN
+            + "ERRORED_ACCOUNTS key");
+        assertFalse(createdAccounts.containsValue(CreationEnum.CREATED_ACCOUNTS), "Should not contain "
+            + "CREATED_ACCOUNTS value");
+    }
+
+    @Test
+    void testAccountCreatedGetUserException() throws AzureCustomException {
+        when(validator.validate(argThat(sub -> ((AzureAccount) sub).getEmail().equals(azureAccount.getEmail()))))
+            .thenReturn(Set.of());
+
+        lenient().when(azureUserService.getUser(any()))
+            .thenThrow(new AzureCustomException("Error when checking account into Azure."));
+
+        AzureCustomException azureCustomException = assertThrows(AzureCustomException.class, () -> {
+            azureUserService.getUser(any());
+        });
+
+        accountService.addAzureAccounts(List.of(azureAccount), ISSUER_EMAIL, FALSE);
+
+        assertEquals("Error when checking account into Azure.",
+                     azureCustomException.getMessage(),
+                     "Error message should be present when failing to communicate with the AD service");
+    }
+
+    @Test
     void testAccountNotCreated() throws AzureCustomException {
         when(validator.validate(argThat(sub -> ((AzureAccount) sub).getEmail().equals(azureAccount.getEmail()))))
             .thenReturn(Set.of());
+
+        lenient().when(azureUserService.getUser(EMAIL)).thenReturn(null);
 
         when(azureUserService.createUser(argThat(user -> user.getEmail().equals(azureAccount.getEmail()))))
             .thenThrow(new AzureCustomException(ERROR_MESSAGE));
@@ -237,7 +306,7 @@ class AccountServiceTest {
         Map<CreationEnum, List<? extends AzureAccount>> createdAccounts =
             accountService.addAzureAccounts(List.of(azureAccount, erroredAzureAccount), ISSUER_EMAIL, FALSE);
 
-        assertTrue(createdAccounts.containsKey(CreationEnum.CREATED_ACCOUNTS), "Should contain "
+        assertTrue(createdAccounts.containsKey(CreationEnum.CREATED_ACCOUNTS), SHOULD_CONTAIN
             + "CREATED_ACCOUNTS key");
         List<? extends AzureAccount> accounts = createdAccounts.get(CreationEnum.CREATED_ACCOUNTS);
         assertEquals(azureAccount.getEmail(), accounts.get(0).getEmail(), EMAIL_VALIDATION_MESSAGE);
@@ -255,8 +324,8 @@ class AccountServiceTest {
 
     @Test
     void testAddUsers() {
-        PiUser user = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, ID, EMAIL, Roles.INTERNAL_ADMIN_CTSC);
         Map<CreationEnum, List<?>> expected = new ConcurrentHashMap<>();
+        PiUser user = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, ID, EMAIL, Roles.INTERNAL_ADMIN_CTSC);
         expected.put(CreationEnum.CREATED_ACCOUNTS, List.of(user.getUserId()));
         expected.put(CreationEnum.ERRORED_ACCOUNTS, List.of());
 
@@ -264,6 +333,33 @@ class AccountServiceTest {
         when(userRepository.save(user)).thenReturn(user);
 
         assertEquals(expected, accountService.addUsers(List.of(user), EMAIL), "Returned maps should match");
+    }
+
+    @Test
+    void testAddDuplicateUsers() {
+        PiUser user1 = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, ID, EMAIL,
+                                 Roles.INTERNAL_ADMIN_CTSC);
+        PiUser user2 = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, "567", "test@test.com",
+                                 Roles.INTERNAL_ADMIN_CTSC);
+        List<PiUser> users = new ArrayList<>();
+        users.add(user1);
+        users.add(user2);
+
+        List<UUID> createdAccounts = new ArrayList<>();
+        createdAccounts.add(user1.getUserId());
+        createdAccounts.add(user2.getUserId());
+
+        Map<CreationEnum, List<?>> expected = new ConcurrentHashMap<>();
+        expected.put(CreationEnum.CREATED_ACCOUNTS, createdAccounts);
+        expected.put(CreationEnum.ERRORED_ACCOUNTS, List.of());
+
+        when(validator.validate(user1)).thenReturn(Set.of());
+        when(userRepository.save(user1)).thenReturn(user1);
+
+        when(validator.validate(user2)).thenReturn(Set.of());
+        when(userRepository.save(user2)).thenReturn(user2);
+
+        assertEquals(expected, accountService.addUsers(users, EMAIL), "Returned maps should match");
     }
 
     @Test
@@ -281,29 +377,6 @@ class AccountServiceTest {
         doReturn(Set.of(constraintViolation)).when(validator).validate(user);
 
         assertEquals(expected, accountService.addUsers(List.of(user), EMAIL), "Returned Errored accounts should match");
-    }
-
-    @Test
-    void testAddUsersForBothCreatedAndErrored() {
-        PiUser invalidUser = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, ID, INVALID_EMAIL,
-                                        Roles.INTERNAL_ADMIN_CTSC
-        );
-        PiUser validUser = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, ID, EMAIL, Roles.INTERNAL_ADMIN_CTSC);
-        ErroredPiUser erroredUser = new ErroredPiUser(invalidUser);
-        erroredUser.setErrorMessages(List.of(VALIDATION_MESSAGE));
-        Map<CreationEnum, List<?>> expected = new ConcurrentHashMap<>();
-        expected.put(CreationEnum.CREATED_ACCOUNTS, List.of(validUser.getUserId()));
-        expected.put(CreationEnum.ERRORED_ACCOUNTS, List.of(erroredUser));
-
-        lenient().when(userRepository.save(invalidUser)).thenReturn(invalidUser);
-        doReturn(Set.of(constraintViolation)).when(validator).validate(invalidUser);
-
-        doReturn(Set.of()).when(validator).validate(validUser);
-        when(userRepository.save(validUser)).thenReturn(validUser);
-
-        assertEquals(expected, accountService.addUsers(List.of(invalidUser, validUser), EMAIL),
-                     "Returned maps should match created and errored"
-        );
     }
 
     @Test

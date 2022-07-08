@@ -1,18 +1,24 @@
 package uk.gov.hmcts.reform.pip.account.management.controllers;
 
+import com.azure.storage.blob.BlobClient;
+import com.azure.storage.blob.BlobContainerClient;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.graph.http.GraphServiceException;
 import com.microsoft.graph.models.User;
 import com.microsoft.graph.requests.GraphServiceClient;
+import com.microsoft.graph.requests.UserCollectionPage;
 import com.microsoft.graph.requests.UserCollectionRequest;
 import com.microsoft.graph.requests.UserCollectionRequestBuilder;
+import com.microsoft.graph.requests.UserRequest;
+import com.microsoft.graph.requests.UserRequestBuilder;
 import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
 import okhttp3.Request;
 import org.junit.Ignore;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -30,6 +36,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.testcontainers.shaded.org.apache.commons.io.IOUtils;
 import uk.gov.hmcts.reform.pip.account.management.Application;
 import uk.gov.hmcts.reform.pip.account.management.config.AzureConfigurationClientTest;
+import uk.gov.hmcts.reform.pip.account.management.config.ClientConfiguration;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.ExceptionResponse;
 import uk.gov.hmcts.reform.pip.account.management.model.AzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
@@ -41,6 +48,7 @@ import uk.gov.hmcts.reform.pip.account.management.model.UserProvenances;
 import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredAzureAccount;
 
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -64,6 +72,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class AccountTest {
 
     @Autowired
+    BlobContainerClient blobContainerClient;
+
+    @Autowired
+    BlobClient blobClient;
+
+    @Autowired
     private MockMvc mockMvc;
 
     @Autowired
@@ -75,13 +89,26 @@ class AccountTest {
     @Autowired
     UserCollectionRequest userCollectionRequest;
 
+    @Mock
+    private UserRequestBuilder userRequestBuilder;
+
+    @Mock
+    private UserRequest userRequest;
+
+    @Mock
+    private UserCollectionPage userCollectionPage;
+
     @Autowired
     GraphServiceException graphServiceException;
+
+    @Mock
+    private ClientConfiguration clientConfiguration;
 
     private static final String ROOT_URL = "/account";
     private static final String AZURE_URL = ROOT_URL + "/add/azure";
     private static final String BULK_UPLOAD = ROOT_URL + "/media-bulk-upload";
     private static final String PI_URL = ROOT_URL + "/add/pi";
+    private static final String CREATE_MEDIA_USER_URL = "/application";
     private static final String GET_PROVENANCE_USER_URL = ROOT_URL + "/provenance/";
     private static final String EMAIL_URL = ROOT_URL + "/emails";
     private static final String EMAIL = "test_account_admin@hmcts.net";
@@ -93,6 +120,8 @@ class AccountTest {
     private static final String ISSUER_EMAIL = "issuer@email.com";
     private static final String ISSUER_HEADER = "x-issuer-email";
     private static final String MEDIA_LIST = "mediaList";
+    private static final String DISPLAY_NAME = "Display Name";
+    private static final String B2C_URL = "URL";
 
     private static final String ID = "1234";
     private static final String ADDITIONAL_ID = "4321";
@@ -131,10 +160,12 @@ class AccountTest {
     @BeforeEach
     void setup() {
         objectMapper = new ObjectMapper();
+        objectMapper.findAndRegisterModules();
         validUser = createUser(true, UUID.randomUUID().toString());
 
         User userToReturn = new User();
         userToReturn.id = ID;
+        userToReturn.displayName = "Display name";
         User additionalUser = new User();
         additionalUser.id = ADDITIONAL_ID;
         when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
@@ -154,6 +185,21 @@ class AccountTest {
         azureAccount.setSurname(SURNAME);
         azureAccount.setFirstName(FIRST_NAME);
         azureAccount.setRole(Roles.INTERNAL_ADMIN_CTSC);
+
+        User user = new User();
+        user.id = ID;
+        user.displayName = "";
+        user.givenName = "name";
+        List<User> azUsers = new ArrayList<>();
+        azUsers.add(user);
+
+        userCollectionPage = new UserCollectionPage(azUsers, userCollectionRequestBuilder);
+
+        when(clientConfiguration.getB2cUrl()).thenReturn(B2C_URL);
+        when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
+        when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
+        when(userCollectionRequest.filter(any())).thenReturn(userCollectionRequest);
+        when(userCollectionRequest.get()).thenReturn(userCollectionPage);
 
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(AZURE_URL)
@@ -180,6 +226,49 @@ class AccountTest {
         assertEquals(FIRST_NAME, returnedAzureAccount.getFirstName(), TEST_MESSAGE_FIRST_NAME);
         assertEquals(SURNAME, returnedAzureAccount.getSurname(), TEST_MESSAGE_SURNAME);
         assertEquals(Roles.INTERNAL_ADMIN_CTSC, returnedAzureAccount.getRole(), TEST_MESSAGE_ROLE);
+    }
+
+    @Test
+    void creationOfDuplicateAccount() throws Exception {
+        AzureAccount azureAccount = new AzureAccount();
+        azureAccount.setEmail(EMAIL);
+        azureAccount.setSurname(SURNAME);
+        azureAccount.setFirstName(FIRST_NAME);
+        azureAccount.setRole(Roles.INTERNAL_ADMIN_CTSC);
+
+        User user = new User();
+        user.id = ID;
+        user.displayName = DISPLAY_NAME;
+        List<User> azUsers = new ArrayList<>();
+        azUsers.add(user);
+
+        userCollectionPage = new UserCollectionPage(azUsers, userCollectionRequestBuilder);
+
+        when(clientConfiguration.getB2cUrl()).thenReturn(B2C_URL);
+        when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
+        when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
+        when(userCollectionRequest.filter(any())).thenReturn(userCollectionRequest);
+        when(userCollectionRequest.get()).thenReturn(userCollectionPage);
+
+        objectMapper.findAndRegisterModules();
+
+        MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
+            .post(AZURE_URL)
+            .content(objectMapper.writeValueAsString(List.of(azureAccount)))
+            .header(ISSUER_HEADER, ISSUER_EMAIL)
+            .contentType(MediaType.APPLICATION_JSON);
+
+        MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder)
+            .andExpect(status().isOk()).andReturn();
+
+        ConcurrentHashMap<CreationEnum, List<Object>> accounts =
+            objectMapper.readValue(response.getResponse().getContentAsString(),
+                                   new TypeReference<>() {});
+
+        assertEquals(1, accounts.get(CreationEnum.ERRORED_ACCOUNTS).size(),
+                     SINGLE_ERRORED_ACCOUNT);
+        assertEquals(0, accounts.get(CreationEnum.CREATED_ACCOUNTS).size(),
+                     ZERO_CREATED_ACCOUNTS);
     }
 
     @Test
@@ -318,6 +407,20 @@ class AccountTest {
         when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
         when(userCollectionRequest.post(any())).thenReturn(userToReturn);
 
+        User user = new User();
+        user.id = ID;
+        user.displayName = "";
+        List<User> azUsers = new ArrayList<>();
+        azUsers.add(user);
+
+        userCollectionPage = new UserCollectionPage(azUsers, userCollectionRequestBuilder);
+
+        when(clientConfiguration.getB2cUrl()).thenReturn(B2C_URL);
+        when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
+        when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
+        when(userCollectionRequest.filter(any())).thenReturn(userCollectionRequest);
+        when(userCollectionRequest.get()).thenReturn(userCollectionPage);
+
         objectMapper.findAndRegisterModules();
 
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
@@ -386,6 +489,20 @@ class AccountTest {
         when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
         when(userCollectionRequest.post(any())).thenThrow(graphServiceException);
 
+        User user = new User();
+        user.id = ID;
+        user.displayName = "";
+        List<User> azUsers = new ArrayList<>();
+        azUsers.add(user);
+
+        userCollectionPage = new UserCollectionPage(azUsers, userCollectionRequestBuilder);
+
+        when(clientConfiguration.getB2cUrl()).thenReturn(B2C_URL);
+        when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
+        when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
+        when(userCollectionRequest.filter(any())).thenReturn(userCollectionRequest);
+        when(userCollectionRequest.get()).thenReturn(userCollectionPage);
+
         AzureAccount azureAccount = new AzureAccount();
         azureAccount.setEmail(EMAIL);
         azureAccount.setSurname(SURNAME);
@@ -450,6 +567,21 @@ class AccountTest {
         when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
         when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
         when(userCollectionRequest.post(any())).thenReturn(userToReturn);
+
+        User user = new User();
+        user.id = ID;
+        user.displayName = "";
+        user.givenName = "name";
+        List<User> azUsers = new ArrayList<>();
+        azUsers.add(user);
+
+        userCollectionPage = new UserCollectionPage(azUsers, userCollectionRequestBuilder);
+
+        when(clientConfiguration.getB2cUrl()).thenReturn(B2C_URL);
+        when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
+        when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
+        when(userCollectionRequest.filter(any())).thenReturn(userCollectionRequest);
+        when(userCollectionRequest.get()).thenReturn(userCollectionPage);
 
         AzureAccount validAzureAccount = new AzureAccount();
         validAzureAccount.setEmail(EMAIL);
@@ -519,14 +651,68 @@ class AccountTest {
 
     @Test
     void testCreateMultipleSuccessUsers() throws Exception {
+
+        User userToReturn = new User();
+        userToReturn.id = ID;
+        userToReturn.displayName = "Display name";
+
+        when(graphClient.users(any())).thenReturn(userRequestBuilder);
+        when(userRequestBuilder.buildRequest()).thenReturn(userRequest);
+        when(userRequest.get()).thenReturn(userToReturn);
+
+        MockHttpServletRequestBuilder mockHttpServletRequestMediaUserBuilder = MockMvcRequestBuilders
+            .get(CREATE_MEDIA_USER_URL)
+            .contentType(MediaType.APPLICATION_JSON);
+
+        mockMvc.perform(mockHttpServletRequestMediaUserBuilder).andExpect(status().isOk()).andReturn();
+
         PiUser validUser1 = createUser(true, UUID.randomUUID().toString());
         PiUser validUser2 = createUser(true, UUID.randomUUID().toString());
 
-        MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
+        MockHttpServletRequestBuilder mockHttpServletRequestBuilder =
+            MockMvcRequestBuilders
             .post(PI_URL)
             .content(objectMapper.writeValueAsString(List.of(validUser1, validUser2)))
             .header(ISSUER_HEADER, ISSUER_EMAIL)
             .contentType(MediaType.APPLICATION_JSON);
+
+        MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isCreated()).andReturn();
+        ConcurrentHashMap<CreationEnum, List<Object>> mappedResponse =
+            objectMapper.readValue(response.getResponse().getContentAsString(),
+                                   new TypeReference<>() {});
+
+        assertEquals(2, mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).size(), "1 Users should be created");
+    }
+
+    @Test
+    void testCreateMultipleSuccessUsersWithDifferentEmails() throws Exception {
+        User userToReturn = new User();
+        userToReturn.id = ID;
+        userToReturn.displayName = "Display name";
+
+        when(graphClient.users(any())).thenReturn(userRequestBuilder);
+        when(userRequestBuilder.buildRequest()).thenReturn(userRequest);
+        when(userRequest.get()).thenReturn(userToReturn);
+
+        MockHttpServletRequestBuilder mockHttpServletRequestMediaUserBuilder = MockMvcRequestBuilders
+            .get(CREATE_MEDIA_USER_URL)
+            .contentType(MediaType.APPLICATION_JSON);
+
+        mockMvc.perform(mockHttpServletRequestMediaUserBuilder).andExpect(status().isOk()).andReturn();
+
+        PiUser validUser1 = createUser(true, UUID.randomUUID().toString());
+        PiUser validUser2 = new PiUser();
+        validUser2.setEmail("a@test.com");
+        validUser2.setProvenanceUserId(UUID.randomUUID().toString());
+        validUser2.setUserProvenance(PROVENANCE);
+        validUser2.setRoles(ROLE);
+
+        MockHttpServletRequestBuilder mockHttpServletRequestBuilder =
+            MockMvcRequestBuilders
+                .post(PI_URL)
+                .content(objectMapper.writeValueAsString(List.of(validUser1, validUser2)))
+                .header(ISSUER_HEADER, ISSUER_EMAIL)
+                .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isCreated()).andReturn();
         ConcurrentHashMap<CreationEnum, List<Object>> mappedResponse =
@@ -701,6 +887,20 @@ class AccountTest {
 
     @Test
     void testUploadBulkMedia() throws Exception {
+        User user = new User();
+        user.id = ID;
+        user.displayName = "";
+        List<User> azUsers = new ArrayList<>();
+        azUsers.add(user);
+
+        userCollectionPage = new UserCollectionPage(azUsers, userCollectionRequestBuilder);
+
+        when(clientConfiguration.getB2cUrl()).thenReturn(B2C_URL);
+        when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
+        when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
+        when(userCollectionRequest.filter(any())).thenReturn(userCollectionRequest);
+        when(userCollectionRequest.get()).thenReturn(userCollectionPage);
+
         try (InputStream inputStream = Thread.currentThread().getContextClassLoader()
             .getResourceAsStream("csv/valid.csv")) {
 
@@ -737,6 +937,20 @@ class AccountTest {
 
     @Test
     void testUploadBulkMediaEmailOnly() throws Exception {
+        User user = new User();
+        user.id = ID;
+        user.displayName = "";
+        List<User> azUsers = new ArrayList<>();
+        azUsers.add(user);
+
+        userCollectionPage = new UserCollectionPage(azUsers, userCollectionRequestBuilder);
+
+        when(clientConfiguration.getB2cUrl()).thenReturn(B2C_URL);
+        when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
+        when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
+        when(userCollectionRequest.filter(any())).thenReturn(userCollectionRequest);
+        when(userCollectionRequest.get()).thenReturn(userCollectionPage);
+
         try (InputStream inputStream = Thread.currentThread().getContextClassLoader()
             .getResourceAsStream("csv/mediaEmailOnly.csv")) {
 

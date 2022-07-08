@@ -7,6 +7,7 @@ import com.microsoft.graph.models.ObjectIdentity;
 import com.microsoft.graph.models.PasswordProfile;
 import com.microsoft.graph.models.User;
 import com.microsoft.graph.requests.GraphServiceClient;
+import com.microsoft.graph.requests.UserCollectionPage;
 import okhttp3.Request;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -77,6 +78,31 @@ public class AzureUserService {
         user.identities = identitiesList;
 
         return user;
+    }
+
+    /**
+     * Get a azureAccount information from the Azure active directory.
+     * @param email The azureAccount email address.
+     * @return The created user if it was successful.
+     * @throws AzureCustomException thrown if theres an error with communicating with Azure.
+     */
+    public User getUser(String email) throws AzureCustomException {
+        try {
+            UserCollectionPage users = graphClient.users()
+                .buildRequest()
+                .filter(String.format("identities/any(c:c/issuerAssignedId eq '%s' and c/issuer eq '%s')", email,
+                                      clientConfiguration.getB2cUrl()))
+                .get();
+
+            User returnUser = null;
+            if (users.getCurrentPage().stream().count() != 0) {
+                returnUser = users.getCurrentPage().get(0);
+            }
+            return returnUser;
+
+        } catch (GraphServiceException e) {
+            throw new AzureCustomException("Error when checking account into Azure.");
+        }
     }
 
 }

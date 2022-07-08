@@ -24,4 +24,6 @@ public class ClientConfiguration {
 
     private String extensionId;
 
+    private String b2cUrl;
+
 }

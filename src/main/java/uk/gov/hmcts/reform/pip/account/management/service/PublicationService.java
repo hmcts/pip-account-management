@@ -26,6 +26,7 @@ public class PublicationService {
     private String url;
 
     private static final String WELCOME_EMAIL_URL = "/notify/welcome-email";
+    private static final String EMAIL = "email";
 
     @Autowired
     WebClient webClient;
@@ -40,11 +41,26 @@ public class PublicationService {
      */
     public boolean sendNotificationEmail(String emailAddress, String forename, String surname) {
         JSONObject jsonObject = new JSONObject();
-        jsonObject.put("email", emailAddress);
+        jsonObject.put(EMAIL, emailAddress);
         jsonObject.put("forename", forename);
         jsonObject.put("surname", surname);
         try {
             log.info(webClient.post().uri(url + "/notify/created/admin")
+                         .body(BodyInserters.fromValue(jsonObject)).retrieve()
+                         .bodyToMono(String.class).block());
+            return true;
+        } catch (WebClientException ex) {
+            log.error(String.format("Request failed with error message: %s", ex.getMessage()));
+            return false;
+        }
+    }
+
+    public boolean sendNotificationEmailForDuplicateMediaAccount(String emailAddress, String fullName) {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put(EMAIL, emailAddress);
+        jsonObject.put("fullName", fullName);
+        try {
+            log.info(webClient.post().uri(url + "/notify/duplicate/media")
                 .body(BodyInserters.fromValue(jsonObject)).retrieve()
                 .bodyToMono(String.class).block());
             return true;
@@ -60,9 +76,11 @@ public class PublicationService {
      * @param isExisting bool to determine if coming from migration or new user creation
      * @return success message for logging
      */
-    public boolean sendMediaNotificationEmail(String emailAddress, boolean isExisting) {
+    public boolean sendMediaNotificationEmail(String emailAddress, String fullName,
+                                              boolean isExisting) {
         JSONObject body = new JSONObject();
-        body.put("email", emailAddress);
+        body.put(EMAIL, emailAddress);
+        body.put("fullName", fullName);
         body.put("isExisting", isExisting);
         try {
             log.info(webClient.post().uri(url + WELCOME_EMAIL_URL)

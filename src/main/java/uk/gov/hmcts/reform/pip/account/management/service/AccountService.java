@@ -99,13 +99,31 @@ public class AccountService {
             }
 
             try {
+
+                User userAzure = azureUserService.getUser(azureAccount.getEmail());
+
+                if (userAzure != null
+                    && !userAzure.displayName.isEmpty()) {
+                    boolean emailSent = publicationService
+                        .sendNotificationEmailForDuplicateMediaAccount(azureAccount.getEmail(),
+                                                                       userAzure.displayName);
+                    if (!emailSent) {
+                        ErroredAzureAccount softErroredAccount = new ErroredAzureAccount(azureAccount);
+                        softErroredAccount.setErrorMessages(
+                            List.of("Unable to send duplicate media account email"));
+                        erroredAccounts.add(softErroredAccount);
+                    }
+
+                    continue;
+                }
+
                 User user = azureUserService.createUser(azureAccount);
                 azureAccount.setAzureAccountId(user.id);
                 createdAzureAccounts.add(azureAccount);
 
                 log.info(writeLog(issuerEmail, UserActions.CREATE_ACCOUNT, azureAccount.getEmail()));
 
-                if (!handleAccountCreationEmail(azureAccount, isExisting)) {
+                if (!handleAccountCreationEmail(azureAccount, user.givenName, isExisting)) {
                     ErroredAzureAccount softErroredAccount = new ErroredAzureAccount(azureAccount);
                     softErroredAccount.setErrorMessages(List.of(EMAIL_NOT_SENT_MESSAGE));
                     erroredAccounts.add(softErroredAccount);
@@ -259,7 +277,8 @@ public class AccountService {
         return completedAccounts;
     }
 
-    private boolean handleAccountCreationEmail(AzureAccount createdAccount, boolean isExisting) {
+    private boolean handleAccountCreationEmail(AzureAccount createdAccount, String fullName,
+                                               boolean isExisting) {
         boolean isSuccessful;
         switch (createdAccount.getRole()) {
             case INTERNAL_ADMIN_CTSC:
@@ -271,7 +290,8 @@ public class AccountService {
                                                                   createdAccount.getSurname());
                 break;
             case VERIFIED:
-                isSuccessful = publicationService.sendMediaNotificationEmail(createdAccount.getEmail(), isExisting);
+                isSuccessful = publicationService.sendMediaNotificationEmail(createdAccount.getEmail(),
+                                                                             fullName, isExisting);
                 break;
 
             default:
