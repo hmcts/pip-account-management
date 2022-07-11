@@ -54,7 +54,7 @@ The template contains the following plugins:
 
     The report will be created in build/reports subdirectory in your project directory.
 
-  * io.spring.dependency-management
+  * io.spring.dependency-management.
 
     https://github.com/spring-gradle-plugins/dependency-management-plugin
 
