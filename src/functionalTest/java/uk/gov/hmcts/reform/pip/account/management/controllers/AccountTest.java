@@ -166,10 +166,8 @@ class AccountTest {
         User userToReturn = new User();
         userToReturn.id = ID;
         userToReturn.displayName = "Display name";
-        userToReturn.givenName = "given Name";
         User additionalUser = new User();
         additionalUser.id = ADDITIONAL_ID;
-        additionalUser.givenName = "given Name";
         when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
         when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
         when(userCollectionRequest.post(any())).thenReturn(userToReturn, additionalUser);
@@ -267,7 +265,7 @@ class AccountTest {
             objectMapper.readValue(response.getResponse().getContentAsString(),
                                    new TypeReference<>() {});
 
-        assertEquals(0, accounts.get(CreationEnum.ERRORED_ACCOUNTS).size(),
+        assertEquals(1, accounts.get(CreationEnum.ERRORED_ACCOUNTS).size(),
                      SINGLE_ERRORED_ACCOUNT);
         assertEquals(0, accounts.get(CreationEnum.CREATED_ACCOUNTS).size(),
                      ZERO_CREATED_ACCOUNTS);
@@ -399,7 +397,6 @@ class AccountTest {
     void testNoFailureOfNoSurnameAccount() throws Exception {
         User userToReturn = new User();
         userToReturn.id = ID;
-        userToReturn.givenName = "give name";
 
         AzureAccount azureAccount = new AzureAccount();
         azureAccount.setEmail(EMAIL);
