@@ -1,19 +1,17 @@
 package uk.gov.hmcts.reform.pip.account.management.model;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Type;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import uk.gov.hmcts.reform.pip.account.management.validation.annotations.ValidProvenanceUserId;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import javax.persistence.*;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
@@ -26,6 +24,7 @@ import javax.validation.constraints.NotNull;
 @AllArgsConstructor
 @NoArgsConstructor
 @ValidProvenanceUserId
+@EntityListeners(AuditingEntityListener.class)
 public class PiUser {
 
     /**
@@ -61,4 +60,8 @@ public class PiUser {
      */
     @Enumerated(EnumType.STRING)
     private Roles roles;
+
+    @CreatedDate
+    @ApiModelProperty(hidden = true)
+    private LocalDateTime createdDate;
 }
