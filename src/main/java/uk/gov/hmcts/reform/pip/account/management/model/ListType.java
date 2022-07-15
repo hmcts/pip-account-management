@@ -10,7 +10,10 @@ public enum ListType {
     MAGS_PUBLIC_LIST(UserProvenances.CRIME_IDAM),
     MAGS_STANDARD_LIST(UserProvenances.CRIME_IDAM),
     CIVIL_DAILY_CAUSE_LIST(UserProvenances.CFT_IDAM),
-    FAMILY_DAILY_CAUSE_LIST(UserProvenances.CFT_IDAM);
+    FAMILY_DAILY_CAUSE_LIST(UserProvenances.CFT_IDAM),
+    CIVIL_AND_FAMILY_DAILY_CAUSE_LIST(UserProvenances.CFT_IDAM),
+    COP_DAILY_CAUSE_LIST(UserProvenances.CFT_IDAM),
+    SSCS_DAILY_LIST(UserProvenances.CFT_IDAM);
 
     public final UserProvenances allowedProvenance;
 
