@@ -53,6 +53,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -800,6 +801,7 @@ class AccountTest {
         PiUser returnedUser = objectMapper.readValue(response.getResponse().getContentAsString(),
                                                      PiUser.class);
         assertEquals(validUser.getProvenanceUserId(), returnedUser.getProvenanceUserId(), "Users should match");
+        assertThat(returnedUser.getCreatedDate()).as("Created date must not be null").isNotNull();
     }
 
     @Test
