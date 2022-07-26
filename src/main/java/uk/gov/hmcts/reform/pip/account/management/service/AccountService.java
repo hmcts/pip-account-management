@@ -73,12 +73,12 @@ public class AccountService {
      * Method to create new accounts in azure.
      *
      * @param azureAccounts The accounts to be created.
-     * @param issuerEmail The email of the user who created the accounts.
+     * @param issuerId The id of the user who created the accounts.
      *
      * @return Returns a map which contains two lists, Errored and Created accounts. Created will have object ID set.
      **/
     public Map<CreationEnum, List<? extends AzureAccount>> addAzureAccounts(
-        List<AzureAccount> azureAccounts, String issuerEmail, boolean isExisting) {
+        List<AzureAccount> azureAccounts, String issuerId, boolean isExisting) {
 
         Map<CreationEnum, List<? extends AzureAccount>> processedAccounts = new ConcurrentHashMap<>();
 
@@ -121,7 +121,7 @@ public class AccountService {
                 azureAccount.setAzureAccountId(user.id);
                 createdAzureAccounts.add(azureAccount);
 
-                log.info(writeLog(issuerEmail, UserActions.CREATE_ACCOUNT, azureAccount.getEmail()));
+                log.info(writeLog(issuerId, UserActions.CREATE_ACCOUNT, azureAccount.getAzureAccountId()));
 
                 if (!handleAccountCreationEmail(azureAccount, user.givenName, isExisting)) {
                     ErroredAzureAccount softErroredAccount = new ErroredAzureAccount(azureAccount);
@@ -130,7 +130,7 @@ public class AccountService {
                 }
 
             } catch (AzureCustomException azureCustomException) {
-                log.error(writeLog(issuerEmail, UserActions.CREATE_ACCOUNT, azureAccount.getEmail()));
+                log.error(writeLog(issuerId, UserActions.CREATE_ACCOUNT, azureAccount.getAzureAccountId()));
                 ErroredAzureAccount erroredSubscriber = new ErroredAzureAccount(azureAccount);
                 erroredSubscriber.setErrorMessages(List.of(azureCustomException.getMessage()));
                 erroredAccounts.add(erroredSubscriber);
@@ -148,10 +148,10 @@ public class AccountService {
      * Method to add users to P&I database, loops through the list and validates the email provided then adds them to
      * success or failure lists.
      * @param users the list of users to be added.
-     * @param issuerEmail the email of the admin adding the users for logging purposes.
+     * @param issuerId the email of the admin adding the users for logging purposes.
      * @return Map of Created and Errored accounts, created has UUID's and errored has user objects.
      */
-    public Map<CreationEnum, List<?>> addUsers(List<PiUser> users, String issuerEmail) {
+    public Map<CreationEnum, List<?>> addUsers(List<PiUser> users, String issuerId) {
         List<UUID> createdAccounts = new ArrayList<>();
         List<ErroredPiUser> erroredAccounts = new ArrayList<>();
 
@@ -169,7 +169,7 @@ public class AccountService {
             PiUser addedUser = userRepository.save(user);
             createdAccounts.add(addedUser.getUserId());
 
-            log.info(writeLog(issuerEmail, UserActions.CREATE_ACCOUNT, addedUser.getEmail()));
+            log.info(writeLog(issuerId, UserActions.CREATE_ACCOUNT, addedUser.getUserId().toString()));
         }
 
         Map<CreationEnum, List<?>> processedAccounts = new ConcurrentHashMap<>();
@@ -233,7 +233,7 @@ public class AccountService {
         return emailMap;
     }
 
-    public Map<CreationEnum, List<?>> uploadMediaFromCsv(MultipartFile mediaCsv, String issuerEmail) {
+    public Map<CreationEnum, List<?>> uploadMediaFromCsv(MultipartFile mediaCsv, String issuerId) {
         List<MediaCsv> mediaList;
 
         try (InputStreamReader inputStreamReader = new InputStreamReader(mediaCsv.getInputStream());
@@ -248,20 +248,20 @@ public class AccountService {
             throw new CsvParseException(ex.getMessage());
         }
 
-        return addToAzureAndPiUsers(mediaList, issuerEmail);
+        return addToAzureAndPiUsers(mediaList, issuerId);
     }
 
-    private Map<CreationEnum, List<?>> addToAzureAndPiUsers(List<MediaCsv> accounts, String issuerEmail) {
+    private Map<CreationEnum, List<?>> addToAzureAndPiUsers(List<MediaCsv> accounts, String issuerId) {
         Map<CreationEnum, List<? extends AzureAccount>> azureAccounts;
         Map<CreationEnum, List<?>> piUserAccounts;
         Map<CreationEnum, List<?>> completedAccounts = new ConcurrentHashMap<>();
 
         azureAccounts = addAzureAccounts(accountModelMapperService.createAzureUsersFromCsv(accounts),
-                                         issuerEmail, true);
+                                         issuerId, true);
         piUserAccounts = addUsers(
             accountModelMapperService
                 .createPiUsersFromAzureAccounts(azureAccounts.get(CreationEnum.CREATED_ACCOUNTS)),
-            issuerEmail);
+            issuerId);
 
 
         completedAccounts.put(
