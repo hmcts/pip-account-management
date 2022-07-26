@@ -92,16 +92,18 @@ public class MediaApplicationService {
      * @return The newly created application
      */
     public MediaApplication createApplication(MediaApplication application, MultipartFile file) {
-        log.info(writeLog(application.getEmail(), UserActions.CREATE_MEDIA_APPLICATION,
-                          application.getId().toString()));
-
         String imageId = azureBlobService.uploadFile(UUID.randomUUID().toString(), file);
         application.setRequestDate(LocalDateTime.now());
         application.setStatusDate(LocalDateTime.now());
         application.setImage(imageId);
         application.setImageName(file.getOriginalFilename());
 
-        return mediaApplicationRepository.save(application);
+        MediaApplication createdMediaApplication = mediaApplicationRepository.save(application);
+
+        log.info(writeLog(createdMediaApplication.getId().toString(), UserActions.CREATE_MEDIA_APPLICATION,
+                          createdMediaApplication.getId().toString()));
+
+        return createdMediaApplication;
     }
 
     /**
