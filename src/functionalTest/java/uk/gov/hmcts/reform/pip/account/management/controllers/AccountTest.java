@@ -118,7 +118,7 @@ class AccountTest {
     private static final String SURNAME = "Surname";
     private static final UserProvenances PROVENANCE = UserProvenances.PI_AAD;
     private static final Roles ROLE = Roles.INTERNAL_ADMIN_CTSC;
-    private static final String ISSUER_ID = "issuer@email.com";
+    private static final String ISSUER_ID = "1234-1234-1234-1234";
     private static final String ISSUER_HEADER = "x-issuer-id";
     private static final String MEDIA_LIST = "mediaList";
     private static final String DISPLAY_NAME = "Display Name";
