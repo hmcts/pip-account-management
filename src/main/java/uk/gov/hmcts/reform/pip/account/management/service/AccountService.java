@@ -103,10 +103,10 @@ public class AccountService {
                 User userAzure = azureUserService.getUser(azureAccount.getEmail());
 
                 if (userAzure != null
-                    && !userAzure.displayName.isEmpty()) {
+                    && !userAzure.givenName.isEmpty()) {
                     boolean emailSent = publicationService
                         .sendNotificationEmailForDuplicateMediaAccount(azureAccount.getEmail(),
-                                                                       userAzure.displayName);
+                                                                       userAzure.givenName);
                     if (!emailSent) {
                         ErroredAzureAccount softErroredAccount = new ErroredAzureAccount(azureAccount);
                         softErroredAccount.setErrorMessages(
