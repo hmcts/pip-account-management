@@ -118,8 +118,8 @@ class AccountTest {
     private static final String SURNAME = "Surname";
     private static final UserProvenances PROVENANCE = UserProvenances.PI_AAD;
     private static final Roles ROLE = Roles.INTERNAL_ADMIN_CTSC;
-    private static final String ISSUER_EMAIL = "issuer@email.com";
-    private static final String ISSUER_HEADER = "x-issuer-email";
+    private static final String ISSUER_ID = "1234-1234-1234-1234";
+    private static final String ISSUER_HEADER = "x-issuer-id";
     private static final String MEDIA_LIST = "mediaList";
     private static final String GIVEN_NAME = "Given Name";
     private static final String B2C_URL = "URL";
@@ -199,7 +199,7 @@ class AccountTest {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(AZURE_URL)
             .content(objectMapper.writeValueAsString(List.of(azureAccount)))
-            .header(ISSUER_HEADER, ISSUER_EMAIL)
+            .header(ISSUER_HEADER, ISSUER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isOk()).andReturn();
@@ -250,7 +250,7 @@ class AccountTest {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(AZURE_URL)
             .content(objectMapper.writeValueAsString(List.of(azureAccount)))
-            .header(ISSUER_HEADER, ISSUER_EMAIL)
+            .header(ISSUER_HEADER, ISSUER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder)
@@ -279,7 +279,7 @@ class AccountTest {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(AZURE_URL)
             .content(objectMapper.writeValueAsString(List.of(azureAccount)))
-            .header(ISSUER_HEADER, ISSUER_EMAIL)
+            .header(ISSUER_HEADER, ISSUER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder)
@@ -320,7 +320,7 @@ class AccountTest {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(AZURE_URL)
             .content(objectMapper.writeValueAsString(List.of(azureAccount)))
-            .header(ISSUER_HEADER, ISSUER_EMAIL)
+            .header(ISSUER_HEADER, ISSUER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder)
@@ -360,7 +360,7 @@ class AccountTest {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(AZURE_URL)
             .content(objectMapper.writeValueAsString(List.of(azureAccount)))
-            .header(ISSUER_HEADER, ISSUER_EMAIL)
+            .header(ISSUER_HEADER, ISSUER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder)
@@ -416,7 +416,7 @@ class AccountTest {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(AZURE_URL)
             .content(objectMapper.writeValueAsString(List.of(azureAccount)))
-            .header(ISSUER_HEADER, ISSUER_EMAIL)
+            .header(ISSUER_HEADER, ISSUER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder)
@@ -444,7 +444,7 @@ class AccountTest {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(AZURE_URL)
             .content(objectMapper.writeValueAsString(List.of(azureAccount)))
-            .header(ISSUER_HEADER, ISSUER_EMAIL)
+            .header(ISSUER_HEADER, ISSUER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder)
@@ -496,7 +496,7 @@ class AccountTest {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(AZURE_URL)
             .content(objectMapper.writeValueAsString(List.of(azureAccount)))
-            .header(ISSUER_HEADER, ISSUER_EMAIL)
+            .header(ISSUER_HEADER, ISSUER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isOk()).andReturn();
@@ -527,7 +527,7 @@ class AccountTest {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(AZURE_URL)
             .content(duplicateKeyString)
-            .header(ISSUER_HEADER, ISSUER_EMAIL)
+            .header(ISSUER_HEADER, ISSUER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder)
@@ -575,7 +575,7 @@ class AccountTest {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(AZURE_URL)
             .content(objectMapper.writeValueAsString(List.of(validAzureAccount, invalidAzureAccount)))
-            .header(ISSUER_HEADER, ISSUER_EMAIL)
+            .header(ISSUER_HEADER, ISSUER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isOk()).andReturn();
@@ -615,7 +615,7 @@ class AccountTest {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(PI_URL)
             .content(objectMapper.writeValueAsString(List.of(validUser)))
-            .header(ISSUER_HEADER, ISSUER_EMAIL)
+            .header(ISSUER_HEADER, ISSUER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isCreated()).andReturn();
@@ -650,7 +650,7 @@ class AccountTest {
             MockMvcRequestBuilders
             .post(PI_URL)
             .content(objectMapper.writeValueAsString(List.of(validUser1, validUser2)))
-            .header(ISSUER_HEADER, ISSUER_EMAIL)
+            .header(ISSUER_HEADER, ISSUER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isCreated()).andReturn();
@@ -688,7 +688,7 @@ class AccountTest {
             MockMvcRequestBuilders
                 .post(PI_URL)
                 .content(objectMapper.writeValueAsString(List.of(validUser1, validUser2)))
-                .header(ISSUER_HEADER, ISSUER_EMAIL)
+                .header(ISSUER_HEADER, ISSUER_ID)
                 .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isCreated()).andReturn();
@@ -706,7 +706,7 @@ class AccountTest {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(PI_URL)
             .content(objectMapper.writeValueAsString(List.of(invalidUser)))
-            .header(ISSUER_HEADER, ISSUER_EMAIL)
+            .header(ISSUER_HEADER, ISSUER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isCreated()).andReturn();
@@ -725,7 +725,7 @@ class AccountTest {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(PI_URL)
             .content(objectMapper.writeValueAsString(List.of(invalidUser1, invalidUser2)))
-            .header(ISSUER_HEADER, ISSUER_EMAIL)
+            .header(ISSUER_HEADER, ISSUER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isCreated()).andReturn();
@@ -743,7 +743,7 @@ class AccountTest {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(PI_URL)
             .content(objectMapper.writeValueAsString(List.of(validUser, invalidUser)))
-            .header(ISSUER_HEADER, ISSUER_EMAIL)
+            .header(ISSUER_HEADER, ISSUER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isCreated()).andReturn();
@@ -760,7 +760,7 @@ class AccountTest {
         MockHttpServletRequestBuilder setupRequest = MockMvcRequestBuilders
             .post(PI_URL)
             .content(objectMapper.writeValueAsString(List.of(validUser)))
-            .header(ISSUER_HEADER, ISSUER_EMAIL)
+            .header(ISSUER_HEADER, ISSUER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
         mockMvc.perform(setupRequest).andExpect(status().isCreated());
@@ -796,7 +796,7 @@ class AccountTest {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(AZURE_URL)
             .content("[]")
-            .header(ISSUER_HEADER, ISSUER_EMAIL)
+            .header(ISSUER_HEADER, ISSUER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult mvcResult =
@@ -812,7 +812,7 @@ class AccountTest {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(PI_URL)
             .content("[]")
-            .header(ISSUER_HEADER, ISSUER_EMAIL)
+            .header(ISSUER_HEADER, ISSUER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult mvcResult =
@@ -881,7 +881,7 @@ class AccountTest {
                                                                 IOUtils.toByteArray(inputStream));
 
             MvcResult mvcResult = mockMvc.perform(multipart(BULK_UPLOAD).file(multipartFile)
-                                                      .header(ISSUER_HEADER, ISSUER_EMAIL))
+                                                      .header(ISSUER_HEADER, ISSUER_ID))
                 .andExpect(status().isOk()).andReturn();
             ConcurrentHashMap<CreationEnum, List<?>> users = objectMapper.readValue(
                 mvcResult.getResponse().getContentAsString(),
@@ -900,7 +900,7 @@ class AccountTest {
             MockMultipartFile csvFile
                 = new MockMultipartFile(MEDIA_LIST, inputStream);
 
-            MvcResult result = mockMvc.perform(multipart(BULK_UPLOAD).file(csvFile).header(ISSUER_HEADER, ISSUER_EMAIL))
+            MvcResult result = mockMvc.perform(multipart(BULK_UPLOAD).file(csvFile).header(ISSUER_HEADER, ISSUER_ID))
                 .andExpect(status().isBadRequest()).andReturn();
 
             assertTrue(result.getResponse().getContentAsString().contains("Failed to parse CSV File"),
@@ -925,7 +925,7 @@ class AccountTest {
                                                                     IOUtils.toByteArray(inputStream));
 
             MvcResult mvcResult = mockMvc.perform(multipart(BULK_UPLOAD).file(multipartFile)
-                                                      .header(ISSUER_HEADER, ISSUER_EMAIL))
+                                                      .header(ISSUER_HEADER, ISSUER_ID))
                 .andExpect(status().isOk()).andReturn();
             ConcurrentHashMap<CreationEnum, List<?>> users = objectMapper.readValue(
                 mvcResult.getResponse().getContentAsString(),
@@ -946,7 +946,7 @@ class AccountTest {
                                                                     IOUtils.toByteArray(inputStream));
 
             MvcResult mvcResult = mockMvc.perform(multipart(BULK_UPLOAD).file(multipartFile)
-                                                      .header(ISSUER_HEADER, ISSUER_EMAIL))
+                                                      .header(ISSUER_HEADER, ISSUER_ID))
                 .andExpect(status().isOk()).andReturn();
             ConcurrentHashMap<CreationEnum, List<?>> users = objectMapper.readValue(
                 mvcResult.getResponse().getContentAsString(),

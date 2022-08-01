@@ -92,15 +92,18 @@ public class MediaApplicationService {
      * @return The newly created application
      */
     public MediaApplication createApplication(MediaApplication application, MultipartFile file) {
-        log.info(writeLog(application.getEmail(), UserActions.CREATE_MEDIA_APPLICATION, application.getEmail()));
-
         String imageId = azureBlobService.uploadFile(UUID.randomUUID().toString(), file);
         application.setRequestDate(LocalDateTime.now());
         application.setStatusDate(LocalDateTime.now());
         application.setImage(imageId);
         application.setImageName(file.getOriginalFilename());
 
-        return mediaApplicationRepository.save(application);
+        MediaApplication createdMediaApplication = mediaApplicationRepository.save(application);
+
+        log.info(writeLog(createdMediaApplication.getId().toString(), UserActions.CREATE_MEDIA_APPLICATION,
+                          createdMediaApplication.getId().toString()));
+
+        return createdMediaApplication;
     }
 
     /**
@@ -115,7 +118,7 @@ public class MediaApplicationService {
         MediaApplication applicationToUpdate = mediaApplicationRepository.findById(id).orElseThrow(() ->
             new NotFoundException(String.format("Application with id %s could not be found", id)));
 
-        log.info(writeLog(UserActions.UPDATE_MEDIA_APPLICATION, applicationToUpdate.getEmail()));
+        log.info(writeLog(UserActions.UPDATE_MEDIA_APPLICATION, applicationToUpdate.getId().toString()));
 
         applicationToUpdate.setStatus(status);
         applicationToUpdate.setStatusDate(LocalDateTime.now());
@@ -136,7 +139,7 @@ public class MediaApplicationService {
         MediaApplication applicationToDelete = mediaApplicationRepository.findById(id).orElseThrow(() ->
             new NotFoundException(String.format("Application with id %s could not be found", id)));
 
-        log.info(writeLog(UserActions.DELETE_MEDIA_APPLICATION, applicationToDelete.getEmail()));
+        log.info(writeLog(UserActions.DELETE_MEDIA_APPLICATION, applicationToDelete.getId().toString()));
 
         azureBlobService.deleteBlob(applicationToDelete.getImage());
         mediaApplicationRepository.delete(applicationToDelete);

@@ -30,7 +30,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import javax.validation.constraints.Email;
 
 @RestController
 @Api(tags = "Account Management - API for managing accounts")
@@ -48,7 +47,7 @@ public class AccountController {
      * POST endpoint to create a new azure account.
      * This will also trigger any welcome emails.
      *
-     * @param issuerEmail The user creating the accounts.
+     * @param issuerId The id of the user creating the accounts.
      * @param azureAccounts The accounts to add.
      * @return A list containing details of any created and errored azureAccounts.
      */
@@ -58,15 +57,15 @@ public class AccountController {
     })
     @PostMapping("/add/azure")
     public ResponseEntity<Map<CreationEnum, List<? extends AzureAccount>>> createAzureAccount(
-        @RequestHeader("x-issuer-email") @Email String issuerEmail,
+        @RequestHeader("x-issuer-id") String issuerId,
         @RequestBody List<AzureAccount> azureAccounts) {
-        return ResponseEntity.ok(accountService.addAzureAccounts(azureAccounts, issuerEmail, false));
+        return ResponseEntity.ok(accountService.addAzureAccounts(azureAccounts, issuerId, false));
     }
 
     /**
      * POST endpoint to create a new user in the P&I postgres database.
      *
-     * @param issuerEmail The user creating the account.
+     * @param issuerId The id of the user creating the account.
      * @param users       The list of users to add to the database.
      * @return the uuid of the created and added users with any errored accounts
      */
@@ -78,9 +77,9 @@ public class AccountController {
     @ApiOperation("Add a user to the P&I postgres database")
     @PostMapping("/add/pi")
     public ResponseEntity<Map<CreationEnum, List<?>>> createUsers(
-        @RequestHeader("x-issuer-email") @Email String issuerEmail,
+        @RequestHeader("x-issuer-id") String issuerId,
         @RequestBody List<PiUser> users) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(accountService.addUsers(users, issuerEmail));
+        return ResponseEntity.status(HttpStatus.CREATED).body(accountService.addUsers(users, issuerId));
     }
 
     @ApiResponses({
@@ -128,7 +127,7 @@ public class AccountController {
     @ApiOperation("Create media accounts via CSV upload")
     @PostMapping("/media-bulk-upload")
     public ResponseEntity<Map<CreationEnum, List<?>>> createMediaAccountsBulk(
-        @RequestHeader("x-issuer-email") @Email String issuerEmail, @RequestPart MultipartFile mediaList) {
-        return ResponseEntity.ok(accountService.uploadMediaFromCsv(mediaList, issuerEmail));
+        @RequestHeader("x-issuer-id") String issuerId, @RequestPart MultipartFile mediaList) {
+        return ResponseEntity.ok(accountService.uploadMediaFromCsv(mediaList, issuerId));
     }
 }
