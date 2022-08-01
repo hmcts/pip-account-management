@@ -47,8 +47,8 @@ class SensitivityTest {
 
     private static final String ROOT_URL = "/account";
     private static final String PI_URL = ROOT_URL + "/add/pi";
-    private static final String ISSUER_EMAIL = "issuer@email.com";
-    private static final String ISSUER_HEADER = "x-issuer-email";
+    private static final String ISSUER_ID = "abcde";
+    private static final String ISSUER_HEADER = "x-issuer-id";
     private static final String EMAIL = "a@b.com";
     private static final String URL_FORMAT = "%s/isAuthorised/%s/%s/%s";
 
@@ -62,7 +62,7 @@ class SensitivityTest {
         MockHttpServletRequestBuilder setupRequest = MockMvcRequestBuilders
             .post(PI_URL)
             .content(objectMapper.writeValueAsString(List.of(validUser)))
-            .header(ISSUER_HEADER, ISSUER_EMAIL)
+            .header(ISSUER_HEADER, ISSUER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult userResponse = mockMvc.perform(setupRequest).andExpect(status().isCreated()).andReturn();
