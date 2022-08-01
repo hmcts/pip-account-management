@@ -229,7 +229,7 @@ class AccountTest {
         azureAccount.setEmail(EMAIL);
         azureAccount.setSurname(SURNAME);
         azureAccount.setFirstName(FIRST_NAME);
-        azureAccount.setRole(Roles.INTERNAL_ADMIN_CTSC);
+        azureAccount.setRole(Roles.VERIFIED);
 
         User user = new User();
         user.id = ID;

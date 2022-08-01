@@ -173,6 +173,8 @@ class AccountServiceTest {
         azUser.id = ID;
         azUser.givenName = FULL_NAME;
 
+        azureAccount.setRole(Roles.VERIFIED);
+
         when(azureUserService.getUser(EMAIL)).thenReturn(azUser);
 
         Map<CreationEnum, List<? extends AzureAccount>> createdAccounts =
@@ -190,6 +192,8 @@ class AccountServiceTest {
         User azUser = new User();
         azUser.id = ID;
         azUser.givenName = FULL_NAME;
+
+        azureAccount.setRole(Roles.VERIFIED);
 
         when(azureUserService.getUser(EMAIL)).thenReturn(azUser);
         when(publicationService.sendNotificationEmailForDuplicateMediaAccount(any(), any())).thenReturn(TRUE);
