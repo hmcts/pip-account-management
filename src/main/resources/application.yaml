@@ -62,6 +62,8 @@ spring:
     hibernate:
       # this ensures the db persists after spring boot connection drops.
       ddl-auto: update
+  flyway:
+    baseline-on-migrate: true
 
 service-to-service:
   publication-services: ${PUBLICATION_SERVICES_URL:https://pip-publication-services.staging.platform.hmcts.net}
@@ -85,3 +87,7 @@ azure:
 
 cron:
   media-application-reporting: "59 23 */30 * * *"
+  media-account-verification-check: ""
+
+dbMigration:
+  runOnStartup: ${RUN_DB_MIGRATION_ON_STARTUP:true}

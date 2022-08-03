@@ -25,6 +25,7 @@ import uk.gov.hmcts.reform.pip.model.enums.UserActions;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -156,6 +157,7 @@ public class AccountService {
         List<ErroredPiUser> erroredAccounts = new ArrayList<>();
 
         for (PiUser user : users) {
+            user.setLastVerifiedDate(LocalDateTime.now());
             Set<ConstraintViolation<PiUser>> constraintViolationSet = validator.validate(user);
             if (!constraintViolationSet.isEmpty()) {
                 ErroredPiUser erroredUser = new ErroredPiUser(user);

@@ -327,7 +327,8 @@ class AccountServiceTest {
     @Test
     void testAddUsers() {
         Map<CreationEnum, List<?>> expected = new ConcurrentHashMap<>();
-        PiUser user = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, ID, EMAIL, Roles.INTERNAL_ADMIN_CTSC, null);
+        PiUser user = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, ID, EMAIL, Roles.INTERNAL_ADMIN_CTSC,
+                                 null, null);
         expected.put(CreationEnum.CREATED_ACCOUNTS, List.of(user.getUserId()));
         expected.put(CreationEnum.ERRORED_ACCOUNTS, List.of());
 
@@ -340,9 +341,9 @@ class AccountServiceTest {
     @Test
     void testAddDuplicateUsers() {
         PiUser user1 = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, ID, EMAIL,
-                                 Roles.INTERNAL_ADMIN_CTSC, null);
+                                  Roles.INTERNAL_ADMIN_CTSC, null, null);
         PiUser user2 = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, "567", "test@test.com",
-                                 Roles.INTERNAL_ADMIN_CTSC, null);
+                                 Roles.INTERNAL_ADMIN_CTSC, null, null);
         List<PiUser> users = new ArrayList<>();
         users.add(user1);
         users.add(user2);
@@ -367,7 +368,7 @@ class AccountServiceTest {
     @Test
     void testAddUsersBuildsErrored() {
         PiUser user = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, ID, INVALID_EMAIL,
-                                 Roles.INTERNAL_ADMIN_CTSC, null
+                                 Roles.INTERNAL_ADMIN_CTSC, null, null
         );
         ErroredPiUser erroredUser = new ErroredPiUser(user);
         erroredUser.setErrorMessages(List.of(VALIDATION_MESSAGE));
@@ -378,12 +379,17 @@ class AccountServiceTest {
         when(userRepository.save(user)).thenReturn(user);
         doReturn(Set.of(constraintViolation)).when(validator).validate(user);
 
-        assertEquals(expected, accountService.addUsers(List.of(user), EMAIL), "Returned Errored accounts should match");
+        assertEquals(1, accountService.addUsers(List.of(user), EMAIL)
+                       .get(CreationEnum.ERRORED_ACCOUNTS).size(), "Errored accounts not expected value");
+
+        assertEquals(0, accountService.addUsers(List.of(user), EMAIL)
+                       .get(CreationEnum.CREATED_ACCOUNTS).size(), "Created accounts not expected value");
     }
 
     @Test
     void testFindUserByProvenanceId() {
-        PiUser user = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, ID, EMAIL, Roles.INTERNAL_ADMIN_CTSC, null);
+        PiUser user = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, ID, EMAIL, Roles.INTERNAL_ADMIN_CTSC,
+                                 null, null);
         when(userRepository.findExistingByProvenanceId(user.getProvenanceUserId(), user.getUserProvenance().name()))
             .thenReturn(List.of(user));
         assertEquals(user, accountService.findUserByProvenanceId(user.getUserProvenance(), user.getProvenanceUserId()),
@@ -465,8 +471,10 @@ class AccountServiceTest {
 
     @Test
     void testUploadMediaFromCsv() throws AzureCustomException, IOException {
-        PiUser user1 = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, ID, EMAIL, Roles.VERIFIED, null);
-        PiUser user2 = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, ID, EMAIL, Roles.VERIFIED, null);
+        PiUser user1 = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, ID, EMAIL, Roles.VERIFIED, null,
+                                  null);
+        PiUser user2 = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, ID, EMAIL, Roles.VERIFIED, null,
+                                  null);
 
         when(validator.validate(any())).thenReturn(Set.of());
         when(azureUserService.createUser(any())).thenReturn(expectedUser);

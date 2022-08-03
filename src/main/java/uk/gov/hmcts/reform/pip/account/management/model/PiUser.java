@@ -68,7 +68,15 @@ public class PiUser {
     @Enumerated(EnumType.STRING)
     private Roles roles;
 
+    /**
+     * The timestamp of when the user was created.
+     */
     @CreatedDate
     @ApiModelProperty(hidden = true)
     private LocalDateTime createdDate;
+
+    /**
+     * The timestamp of when the user was last verified.
+     */
+    private LocalDateTime lastVerifiedDate;
 }
