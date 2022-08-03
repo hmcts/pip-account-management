@@ -3,3 +3,6 @@ service-to-service:
 
 cron:
   media-application-reporting: "*/10 * * * * *"
+
+dbMigration:
+  runOnStartup: true
