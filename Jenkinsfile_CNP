@@ -5,7 +5,7 @@
 def type = "java"
 def product = "pip"
 def component = "account-management"
-def kv = product + '-ss-kv'
+def kv = product + '-ss-kv-' + env.ENV
 
 def setupTestSecrets() {
   def bootstap_env = env.ENV == "prod" || env.ENV == "demo" || env.ENV == "sbox" ? env.ENV : "stg"
