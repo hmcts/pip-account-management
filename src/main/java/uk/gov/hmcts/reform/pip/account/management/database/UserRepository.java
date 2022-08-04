@@ -10,11 +10,14 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface UserRepository extends JpaRepository<PiUser, Long> {
-
     @Query(value = "SELECT * FROM pi_user WHERE provenance_user_id=:provUserId AND user_provenance=:userProv",
         nativeQuery = true)
     List<PiUser> findExistingByProvenanceId(@Param("provUserId") String provenanceUserId,
                                             @Param("userProv") String userProvenance);
 
     Optional<PiUser> findByUserId(UUID userId);
+
+    @Query(value = "SELECT * FROM pi_user WHERE last_verified_date < clock_timestamp() - (interval '1' day) * :daysAgo "
+        + "AND roles = 'VERIFIED'", nativeQuery = true)
+    List<PiUser> findVerifiedUsersByLastVerifiedDate(@Param("daysAgo") int daysSinceLastVerified);
 }

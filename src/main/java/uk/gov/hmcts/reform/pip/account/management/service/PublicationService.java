@@ -27,6 +27,7 @@ public class PublicationService {
 
     private static final String WELCOME_EMAIL_URL = "/notify/welcome-email";
     private static final String EMAIL = "email";
+    private static final String FULL_NAME = "fullName";
 
     @Autowired
     WebClient webClient;
@@ -58,7 +59,7 @@ public class PublicationService {
     public boolean sendNotificationEmailForDuplicateMediaAccount(String emailAddress, String fullName) {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put(EMAIL, emailAddress);
-        jsonObject.put("fullName", fullName);
+        jsonObject.put(FULL_NAME, fullName);
         try {
             log.info(webClient.post().uri(url + "/notify/duplicate/media")
                 .body(BodyInserters.fromValue(jsonObject)).retrieve()
@@ -80,7 +81,7 @@ public class PublicationService {
                                               boolean isExisting) {
         JSONObject body = new JSONObject();
         body.put(EMAIL, emailAddress);
-        body.put("fullName", fullName);
+        body.put(FULL_NAME, fullName);
         body.put("isExisting", isExisting);
         try {
             log.info(webClient.post().uri(url + WELCOME_EMAIL_URL)
@@ -108,6 +109,24 @@ public class PublicationService {
         } catch (WebClientException ex) {
             return String.format("Email request failed to send with list of applications: %s. With error message: %s",
                                  mediaApplicationList, ex.getMessage());
+        }
+    }
+
+    /**
+     * Method which sends a request to publication services to email the user an account verification link.
+     * @param emailAddress The media users email
+     * @param fullName The full name of the media user to email
+     */
+    public String sendAccountVerificationEmail(String emailAddress, String fullName) {
+        try {
+            JSONObject body = new JSONObject();
+            body.put(EMAIL, emailAddress);
+            body.put(FULL_NAME, fullName);
+            return webClient.post().uri(url + "/notify/media/verification")
+                .body(BodyInserters.fromValue(body)).retrieve()
+                .bodyToMono(String.class).block();
+        } catch (WebClientException ex) {
+            return String.format("Media account verification email failed to send with error: %s", ex.getMessage());
         }
     }
 }
