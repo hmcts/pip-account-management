@@ -137,4 +137,20 @@ class PublicationServiceTest {
                        .contains(expectedResponse), "Expected error message not in response");
     }
 
+    @Test
+    void testSendAccountVerificationEmail() {
+        mockPublicationServicesEndpoint.enqueue(new MockResponse().setBody(SENT_MESSAGE));
+
+        assertEquals(SENT_MESSAGE, publicationService.sendAccountVerificationEmail(EMAIL, FULL_NAME),
+                     "No user data sent");
+    }
+
+    @Test
+    void testFailedAccountVerificationEmail() {
+        mockPublicationServicesEndpoint.enqueue(new MockResponse().setResponseCode(400));
+
+        assertTrue(publicationService.sendAccountVerificationEmail(EMAIL, FULL_NAME)
+                       .contains("Media account verification email failed to send with error:"));
+    }
+
 }
