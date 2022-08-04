@@ -547,4 +547,21 @@ class AccountServiceTest {
                        .contains("User with supplied email could not be found"),
                    "Not found error missing");
     }
+
+    @Test
+    void testDeleteAccountThrows() throws AzureCustomException {
+        when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.of(piUser));
+
+        doNothing().when(userRepository).delete(piUser);
+        when(azureUserService.deleteUser(piUser.getProvenanceUserId()))
+            .thenThrow(new AzureCustomException(TEST));
+        when(subscriptionService.sendSubscriptionDeletionRequest(VALID_USER_ID.toString()))
+            .thenReturn("Subscriptions deleted");
+
+        try (LogCaptor logCaptor = LogCaptor.forClass(AccountService.class)) {
+            accountService.deleteAccount(EMAIL);
+            assertEquals(1, logCaptor.getErrorLogs().size(),
+                         "No logs were thrown");
+        }
+    }
 }
