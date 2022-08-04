@@ -525,7 +525,8 @@ class AccountServiceTest {
         when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.of(piUser));
 
         doNothing().when(userRepository).delete(piUser);
-        doNothing().when(azureUserService).deleteUser(piUser.getProvenanceUserId());
+        when(azureUserService.deleteUser(piUser.getProvenanceUserId()))
+            .thenReturn(expectedUser);
         when(subscriptionService.sendSubscriptionDeletionRequest(VALID_USER_ID.toString()))
             .thenReturn("Subscriptions deleted");
 
