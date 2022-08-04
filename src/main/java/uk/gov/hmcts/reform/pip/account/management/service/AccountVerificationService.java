@@ -15,24 +15,29 @@ public class AccountVerificationService {
     private final UserRepository userRepository;
     private final AzureUserService azureUserService;
     private final PublicationService publicationService;
+    private final AccountService accountService;
 
     @Value("${verification.media-account-verification-email-days}")
     private int mediaAccountVerificationDays;
 
+    @Value("${verification.media-account-deletion-days}")
+    private int mediaAccountDeletionDays;
 
     @Autowired
     public AccountVerificationService(UserRepository userRepository, AzureUserService azureUserService,
-                                      PublicationService publicationService) {
+                                      PublicationService publicationService, AccountService accountService) {
         this.userRepository = userRepository;
         this.azureUserService = azureUserService;
         this.publicationService = publicationService;
+        this.accountService = accountService;
     }
 
     /**
-     * Scheduled job that collects eligible media users for email verification.
+     * Scheduled job that handles the media email verification flow.
      */
     @Scheduled(cron = "${cron.media-account-verification-check}")
     public void processEligibleMediaUsersForVerification() {
+        findAccountsForDeletion();
         sendMediaUsersForVerification();
     }
 
@@ -51,6 +56,16 @@ public class AccountVerificationService {
             } catch (AzureCustomException ex) {
                 log.error("Error when getting user from azure: %s", ex.getMessage());
             }
+        });
+    }
+
+    /**
+     * Method that gets all media users who have not verified their account in 365 days.
+     * Account service handles the deletion of their AAD, P&I user and subscriptions.
+     */
+    private void findAccountsForDeletion() {
+        userRepository.findVerifiedUsersByLastVerifiedDate(mediaAccountDeletionDays).forEach(user -> {
+            log.info(accountService.deleteAccount(user.getEmail()));
         });
     }
 }

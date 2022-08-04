@@ -10,6 +10,7 @@ import org.springframework.web.multipart.MultipartFile;
 import uk.gov.hmcts.reform.pip.account.management.database.UserRepository;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.AzureCustomException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.CsvParseException;
+import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.NotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.UserNotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.model.AzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
@@ -66,6 +67,9 @@ public class AccountService {
 
     @Autowired
     AccountModelMapperService accountModelMapperService;
+
+    @Autowired
+    SubscriptionService subscriptionService;
 
     private static final String EMAIL_NOT_SENT_MESSAGE =
         "Account has been successfully created, however email has failed to send.";
@@ -301,5 +305,26 @@ public class AccountService {
                 break;
         }
         return isSuccessful;
+    }
+
+    /**
+     * Delete a user account by the supplied email.
+     * This deletes the user from AAD, our user table and subscriptions.
+     *
+     * @param email The email of the user to delete.
+     * @return Confirmation message that account has been deleted.
+     */
+    public String deleteAccount(String email) {
+        PiUser userToDelete = userRepository.findByEmail(email)
+            .orElseThrow(() -> new NotFoundException("User with supplied email could not be found"));
+        try {
+            azureUserService.deleteUser(userToDelete.getProvenanceUserId());
+            log.info(subscriptionService.sendSubscriptionDeletionRequest(userToDelete.getUserId().toString()));
+            userRepository.delete(userToDelete);
+        } catch (AzureCustomException ex) {
+            log.error("Error when deleting an account from azure with Provenance user id: %s and error: %s",
+                      userToDelete.getProvenanceUserId(), ex.getMessage());
+        }
+        return String.format("User with ID %s has been deleted", userToDelete.getUserId());
     }
 }
