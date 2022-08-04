@@ -7,6 +7,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientException;
 
+import static org.springframework.security.oauth2.client.web.reactive.function.client.ServerOAuth2AuthorizedClientExchangeFilterFunction.clientRegistrationId;
+
 @Slf4j
 @Component
 /**
@@ -29,6 +31,7 @@ public class SubscriptionService {
     public String sendSubscriptionDeletionRequest(String userId) {
         try {
             return webClient.delete().uri(url + "/subscription/user/" + userId)
+                .attributes(clientRegistrationId("subscriptionManagementApi"))
                 .retrieve().bodyToMono(String.class).block();
         } catch (WebClientException ex) {
             return String.format("Deletion request to subscription management failed with error %s",

@@ -150,7 +150,8 @@ class PublicationServiceTest {
         mockPublicationServicesEndpoint.enqueue(new MockResponse().setResponseCode(400));
 
         assertTrue(publicationService.sendAccountVerificationEmail(EMAIL, FULL_NAME)
-                       .contains("Media account verification email failed to send with error:"));
+                       .contains("Media account verification email failed to send with error:"),
+                   "No error was sent back");
     }
 
 }

@@ -16,6 +16,7 @@ import org.testcontainers.shaded.org.apache.commons.io.IOUtils;
 import uk.gov.hmcts.reform.pip.account.management.database.UserRepository;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.AzureCustomException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.CsvParseException;
+import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.NotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.UserNotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.model.AzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
@@ -48,7 +49,10 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -79,6 +83,9 @@ class AccountServiceTest {
 
     @Mock
     private AccountModelMapperService accountModelMapperService;
+
+    @Mock
+    private SubscriptionService subscriptionService;
 
     @InjectMocks
     private AccountService accountService;
@@ -510,8 +517,33 @@ class AccountServiceTest {
                 accountService.uploadMediaFromCsv(multipartFile, EMAIL),
                                                 "Should throw CsvParseException");
             assertTrue(ex.getMessage().contains("Failed to parse CSV File due to"), MESSAGES_MATCH);
-
-
         }
+    }
+
+    @Test
+    void testDeleteAccount() throws AzureCustomException {
+        when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.of(piUser));
+
+        doNothing().when(userRepository).delete(piUser);
+        doNothing().when(azureUserService).deleteUser(piUser.getProvenanceUserId());
+        when(subscriptionService.sendSubscriptionDeletionRequest(VALID_USER_ID.toString()))
+            .thenReturn("Subscriptions deleted");
+
+        accountService.deleteAccount(EMAIL);
+
+        verify(azureUserService, times(1)).deleteUser(piUser.getProvenanceUserId());
+        verify(subscriptionService, times(1))
+            .sendSubscriptionDeletionRequest(VALID_USER_ID.toString());
+        verify(userRepository, times(1)).delete(piUser);
+    }
+
+    @Test
+    void testDeleteAccountNotFound() {
+        NotFoundException notFoundException = assertThrows(NotFoundException.class, () ->
+            accountService.deleteAccount(EMAIL), "Expected NotFoundException to be thrown");
+
+        assertTrue(notFoundException.getMessage()
+                       .contains("User with supplied email could not be found"),
+                   "Not found error missing");
     }
 }

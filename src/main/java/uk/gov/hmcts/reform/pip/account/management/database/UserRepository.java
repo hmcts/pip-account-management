@@ -17,8 +17,8 @@ public interface UserRepository extends JpaRepository<PiUser, Long> {
 
     Optional<PiUser> findByUserId(UUID userId);
 
-    @Query(value = "SELECT * FROM pi_user WHERE last_verified_date < clock_timestamp() - (interval '1' day) * :daysAgo "
-        + "AND roles = 'VERIFIED'", nativeQuery = true)
+    @Query(value = "SELECT * FROM pi_user WHERE CAST(last_verified_date AS DATE) = CURRENT_DATE - (interval '1' day)"
+        + " * :daysAgo AND roles = 'VERIFIED'", nativeQuery = true)
     List<PiUser> findVerifiedUsersByLastVerifiedDate(@Param("daysAgo") int daysSinceLastVerified);
 
     Optional<PiUser> findByEmail(String email);
