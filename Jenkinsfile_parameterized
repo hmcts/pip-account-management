@@ -7,6 +7,6 @@ def product = "pip"
 def component = "account-management"
 
 withPipeline(type, product, component) {
-    enableDbMigration(product)
+    enableDbMigration()
     enableSlackNotifications('#pip-build-notices')
 }
