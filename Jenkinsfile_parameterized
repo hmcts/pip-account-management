@@ -6,7 +6,10 @@ def type = "java"
 def product = "pip"
 def component = "account-management"
 
-withPipeline(type, product, component) {
-    enableDbMigration(product)
-    enableSlackNotifications('#pip-build-notices')
+withParameterizedPipeline(type, product, component, 'sbox', 'sbox') {
+  enableDbMigration(kv)
+  enableSlackNotifications('#pip-build-notices')
+  enableAksStagingDeployment()
+  disableLegacyDeployment()
+  enableApiGatewayTest()
 }
