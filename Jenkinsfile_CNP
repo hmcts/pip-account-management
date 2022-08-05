@@ -5,7 +5,7 @@
 def type = "java"
 def product = "pip"
 def component = "account-management"
-def kv = product + '-ss-kv-' + env.ENV
+def kv = product + '-ss-kv'
 
 def setupTestSecrets() {
   def bootstap_env = env.ENV == "prod" || env.ENV == "demo" || env.ENV == "sbox" ? env.ENV : "stg"
@@ -37,6 +37,7 @@ static LinkedHashMap<String, Object> secret(String secretName, String envVar) {
 }
 
 withPipeline(type, product, component) {
+  enableDbMigration(kv)
 
   onMaster() {
     env.ENV = 'stg'
@@ -54,7 +55,6 @@ withPipeline(type, product, component) {
     env.ENV = 'ithc'
   }
   setupTestSecrets()
-  enableDbMigration(kv)
   enableSlackNotifications('#pip-build-notices')
   enableAksStagingDeployment()
   disableLegacyDeployment()
