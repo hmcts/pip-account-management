@@ -16,6 +16,7 @@ def setupTestSecrets() {
       secret('app-pip-account-management-id', 'CLIENT_ID'),
       secret('app-pip-account-management-pwd', 'CLIENT_SECRET'),
       secret('app-pip-publication-services-scope', 'PUBLICATION_SERVICES_AZ_API'),
+      secret('app-pip-subscription-management-scope', 'SUBSCRIPTION_MANAGEMENT_AZ_API'),
       secret('app-tenant', 'TENANT_ID'),
 
     ]) {
@@ -23,6 +24,7 @@ def setupTestSecrets() {
     env.CLIENT_ID = "${CLIENT_ID}"
     env.CLIENT_SECRET = "${CLIENT_SECRET}"
     env.PUBLICATION_SERVICES_AZ_API = "${PUBLICATION_SERVICES_AZ_API}"
+    env.SUBSCRIPTION_MANAGEMENT_AZ_API = "${SUBSCRIPTION_MANAGEMENT_AZ_API}"
     env.TENANT_ID = "${TENANT_ID}"
   }
 }
