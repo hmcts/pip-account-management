@@ -37,8 +37,6 @@ static LinkedHashMap<String, Object> secret(String secretName, String envVar) {
 }
 
 withPipeline(type, product, component) {
-  enableDbMigration(kv)
-
   onMaster() {
     env.ENV = 'stg'
   }
@@ -54,7 +52,9 @@ withPipeline(type, product, component) {
   onIthc {
     env.ENV = 'ithc'
   }
+
   setupTestSecrets()
+  enableDbMigration(kv)
   enableSlackNotifications('#pip-build-notices')
   enableAksStagingDeployment()
   disableLegacyDeployment()
