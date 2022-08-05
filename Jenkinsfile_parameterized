@@ -5,9 +5,8 @@
 def type = "java"
 def product = "pip"
 def component = "account-management"
-def kv = product + '-ss-kv'
 
 withPipeline(type, product, component) {
-    enableDbMigration(kv)
+    enableDbMigration(product)
     enableSlackNotifications('#pip-build-notices')
 }

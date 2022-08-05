@@ -5,7 +5,6 @@
 def type = "java"
 def product = "pip"
 def component = "account-management"
-def kv = product + '-ss-kv'
 
 def setupTestSecrets() {
   def bootstap_env = env.ENV == "prod" || env.ENV == "demo" || env.ENV == "sbox" ? env.ENV : "stg"
@@ -54,7 +53,7 @@ withPipeline(type, product, component) {
   }
 
   setupTestSecrets()
-  enableDbMigration(kv)
+  enableDbMigration(product)
   enableSlackNotifications('#pip-build-notices')
   enableAksStagingDeployment()
   disableLegacyDeployment()
