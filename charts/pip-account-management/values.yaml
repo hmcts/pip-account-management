@@ -41,6 +41,8 @@ java:
           alias: INSTRUMENTATION_KEY
         - name: app-pip-publication-services-scope
           alias: PUBLICATION_SERVICES_AZ_API
+        - name: app-pip-subscription-management-scope
+          alias: SUBSCRIPTION_MANAGEMENT_AZ_API
         - name: b2c-ad-url
           alias: IDENTITY_ISSUER
     environment:
