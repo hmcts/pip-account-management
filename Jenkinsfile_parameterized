@@ -5,10 +5,10 @@
 def type = "java"
 def product = "pip"
 def component = "account-management"
-def kv = product + '-ss-kv'
+//def kv = product + '-ss-kv'
 
 withParameterizedPipeline(type, product, component, 'sbox', 'sbox') {
-  enableDbMigration(kv)
+//  enableDbMigration(kv)
   enableSlackNotifications('#pip-build-notices')
   enableAksStagingDeployment()
   disableLegacyDeployment()
