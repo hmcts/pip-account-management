@@ -315,16 +315,18 @@ public class AccountService {
      * @return Confirmation message that account has been deleted.
      */
     public String deleteAccount(String email) {
+        String returnMessage = "";
         PiUser userToDelete = userRepository.findByEmail(email)
             .orElseThrow(() -> new NotFoundException("User with supplied email could not be found"));
         try {
             azureUserService.deleteUser(userToDelete.getProvenanceUserId());
             log.info(subscriptionService.sendSubscriptionDeletionRequest(userToDelete.getUserId().toString()));
             userRepository.delete(userToDelete);
+            returnMessage = String.format("User with ID %s has been deleted", userToDelete.getUserId());
         } catch (AzureCustomException ex) {
             log.error("Error when deleting an account from azure with Provenance user id: %s and error: %s",
                       userToDelete.getProvenanceUserId(), ex.getMessage());
         }
-        return String.format("User with ID %s has been deleted", userToDelete.getUserId());
+        return returnMessage;
     }
 }
