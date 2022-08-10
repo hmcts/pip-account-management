@@ -1015,7 +1015,7 @@ class AccountTest {
 
         assertTrue(response.getResponse().getContentAsString().contains("has been verified"),
                    "Response does not contain expected body");
-        assertEquals("200", response.getResponse().getStatus(),
+        assertEquals(200, response.getResponse().getStatus(),
                      "Expected status code does not match");
     }
 
