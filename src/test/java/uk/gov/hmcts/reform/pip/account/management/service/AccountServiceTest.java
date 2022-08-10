@@ -564,4 +564,24 @@ class AccountServiceTest {
                          "No logs were thrown");
         }
     }
+
+    @Test
+    void testUpdateMediaAccountVerification() {
+        when(userRepository.findByProvenanceUserId(ID)).thenReturn(Optional.of(piUser));
+
+        assertEquals("Account with provenance id 1234 has been verified",
+                     accountService.updateMediaAccountVerification(ID),
+                     "Return message does not match expected");
+    }
+
+    @Test
+    void testUpdateMediaAccountVerificationNotFound() {
+        NotFoundException notFoundException = assertThrows(NotFoundException.class, () ->
+            accountService.updateMediaAccountVerification(ID),
+                                                           "Expected NotFoundException to be thrown");
+
+        assertTrue(notFoundException.getMessage()
+                       .contains("User with supplied provenance id: 1234 could not be found"),
+                   "Not found error missing");
+    }
 }

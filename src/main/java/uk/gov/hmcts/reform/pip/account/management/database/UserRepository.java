@@ -22,4 +22,6 @@ public interface UserRepository extends JpaRepository<PiUser, Long> {
     List<PiUser> findVerifiedUsersByLastVerifiedDate(@Param("daysAgo") int daysSinceLastVerified);
 
     Optional<PiUser> findByEmail(String email);
+
+    Optional<PiUser> findByProvenanceUserId(String provenanceUserId);
 }

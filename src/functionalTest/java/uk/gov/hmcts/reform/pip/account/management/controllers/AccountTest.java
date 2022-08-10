@@ -111,6 +111,7 @@ class AccountTest {
     private static final String PI_URL = ROOT_URL + "/add/pi";
     private static final String CREATE_MEDIA_USER_URL = "/application";
     private static final String GET_PROVENANCE_USER_URL = ROOT_URL + "/provenance/";
+    private static final String UPDATE_MEDIA_VERIFICATION_URL = ROOT_URL + "/media/verification/";
     private static final String EMAIL_URL = ROOT_URL + "/emails";
     private static final String EMAIL = "test_account_admin@hmcts.net";
     private static final String INVALID_EMAIL = "ab";
@@ -994,5 +995,43 @@ class AccountTest {
             assertEquals(1, users.get(CreationEnum.ERRORED_ACCOUNTS).size(), MAP_SIZE_MESSAGE);
 
         }
+    }
+
+    @Test
+    void testUpdateMediaAccountVerification() throws Exception {
+        MockHttpServletRequestBuilder setupRequest = MockMvcRequestBuilders
+            .post(PI_URL)
+            .content(objectMapper.writeValueAsString(List.of(validUser)))
+            .header(ISSUER_HEADER, ISSUER_ID)
+            .contentType(MediaType.APPLICATION_JSON);
+
+        mockMvc.perform(setupRequest).andExpect(status().isCreated());
+
+        MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
+            .put(String.format("%s/%s", UPDATE_MEDIA_VERIFICATION_URL, validUser.getProvenanceUserId()))
+            .contentType(MediaType.APPLICATION_JSON);
+
+        MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isOk()).andReturn();
+
+        assertTrue(response.getResponse().getContentAsString().contains("has been verified"),
+                   "Response does not contain expected body");
+        assertEquals("200", response.getResponse().getStatus(),
+                     "Expected status code does not match");
+    }
+
+    @Test
+    void testUpdateApplicationNotFound() throws Exception {
+        MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
+            .put(String.format("%s/%s", UPDATE_MEDIA_VERIFICATION_URL, "1234"))
+            .contentType(MediaType.APPLICATION_JSON);
+
+        MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andReturn();
+
+        assertEquals(404, response.getResponse().getStatus(),
+                     "Expected status code does not match");
+
+        assertTrue(response.getResponse().getContentAsString()
+                       .contains("User with supplied provenance id: 1234 could not be found"),
+                   "Expected status code does not match");
     }
 }
