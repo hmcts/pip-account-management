@@ -8,6 +8,11 @@ import org.springframework.stereotype.Service;
 import uk.gov.hmcts.reform.pip.account.management.database.UserRepository;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.AzureCustomException;
 
+import java.util.Collection;
+import java.util.stream.Stream;
+
+import static uk.gov.hmcts.reform.pip.account.management.model.UserProvenances.PI_AAD;
+
 @Slf4j
 @Service
 public class AccountVerificationService {
@@ -23,6 +28,18 @@ public class AccountVerificationService {
     @Value("${verification.media-account-deletion-days}")
     private int mediaAccountDeletionDays;
 
+    @Value("${verification.aad-admin-account-sign-in-notification-days}")
+    private int aadAdminAccountSignInNotificationDays;
+
+    @Value("${verification.aad-admin-account-deletion-days}")
+    private int aadAdminAccountDeletionDays;
+
+    @Value("${verification.idam-account-sign-in-notification-days}")
+    private int idamAccountSignInNotificationDays;
+
+    @Value("${verification.idam-account-deletion-days}")
+    private int idamAccountDeletionDays;
+
     @Autowired
     public AccountVerificationService(UserRepository userRepository, AzureUserService azureUserService,
                                       PublicationService publicationService, AccountService accountService) {
@@ -33,14 +50,14 @@ public class AccountVerificationService {
     }
 
     /**
-     * Scheduled job that handles the media email verification flow.
+     * Scheduled job that handles the email verification and sign in notification flow.
      */
-    @Scheduled(cron = "${cron.media-account-verification-check}")
-    public void processEligibleMediaUsersForVerification() {
+    @Scheduled(cron = "${cron.account-verification-check}")
+    public void processEligibleUsersForVerification() {
         findAccountsForDeletion();
         sendMediaUsersForVerification();
+        notifyAadAdminAndIdamUsersToSignIn();
     }
-
 
     /**
      * Method that gets all media users who last verified at least 350 days ago.
@@ -60,13 +77,34 @@ public class AccountVerificationService {
     }
 
     /**
-     * Method that gets all media users who have not verified their account in 365 days.
+     * Method that gets all AAD amin users who last signed in at least 76 days (by default) ago, and gets all
+     * IDAM users who last signed in at least 118 days (by default) ago.
+     * Then send their details on to publication services to send them a notification email.
+     */
+    private void notifyAadAdminAndIdamUsersToSignIn() {
+        // TODO: this is a placeholder. Needs to be updated with call to Publication services for notifying the users.
+        Stream.of(
+                userRepository.findAadAdminUsersByLastSignedInDate(aadAdminAccountSignInNotificationDays),
+                userRepository.findIdamUsersByLastSignedInDate(idamAccountSignInNotificationDays))
+            .flatMap(Collection::stream)
+            .forEach(user -> log.info("Remind user to sign in: " + user.getEmail()));
+    }
+
+    /**
+     * Method that gets all media users who have not verified their account (default to 365 days), and AAD admin and
+     * IDAM users who have not signed in to their account (default to 90 days for AAD admin and 128 days for IDAM).
      * Account service handles the deletion of their AAD, P&I user and subscriptions.
      */
     private void findAccountsForDeletion() {
-        userRepository.findVerifiedUsersByLastVerifiedDate(mediaAccountDeletionDays).forEach(user -> {
-            log.info(accountService.deleteAccount(user.getEmail()));
-        });
+        Stream.of(
+                userRepository.findVerifiedUsersByLastVerifiedDate(mediaAccountDeletionDays),
+                userRepository.findAadAdminUsersByLastSignedInDate(aadAdminAccountDeletionDays),
+                userRepository.findIdamUsersByLastSignedInDate(idamAccountDeletionDays))
+            .flatMap(Collection::stream)
+            .forEach(
+                user -> log.info(accountService.deleteAccount(user.getEmail(),
+                                                              PI_AAD.equals(user.getUserProvenance())))
+            );
     }
 }
 
