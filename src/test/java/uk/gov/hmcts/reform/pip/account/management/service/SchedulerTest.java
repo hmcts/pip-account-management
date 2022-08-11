@@ -37,6 +37,6 @@ class SchedulerTest {
     void testSchedulerAccountVerificationEmailRuns() {
         await().atMost(Duration.ONE_MINUTE).untilAsserted(() ->
             verify(accountVerificationService, times(1))
-                .processEligibleMediaUsersForVerification());
+                .processEligibleUsersForVerification());
     }
 }
