@@ -566,18 +566,18 @@ class AccountServiceTest {
     }
 
     @Test
-    void testUpdateMediaAccountVerification() {
+    void testUpdateAccountVerification() {
         when(userRepository.findByProvenanceUserId(ID)).thenReturn(Optional.of(piUser));
 
         assertEquals("Account with provenance id 1234 has been verified",
-                     accountService.updateMediaAccountVerification(ID),
+                     accountService.updateAccountVerification(ID),
                      "Return message does not match expected");
     }
 
     @Test
-    void testUpdateMediaAccountVerificationNotFound() {
+    void testUpdateAccountVerificationNotFound() {
         NotFoundException notFoundException = assertThrows(NotFoundException.class, () ->
-            accountService.updateMediaAccountVerification(ID),
+            accountService.updateAccountVerification(ID),
                                                            "Expected NotFoundException to be thrown");
 
         assertTrue(notFoundException.getMessage()

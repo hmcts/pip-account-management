@@ -199,11 +199,11 @@ class AccountControllerTest {
     }
 
     @Test
-    void testUpdateMediaAccountVerification() {
+    void testUpdateAccountVerification() {
         String expectedString = "Account with provenance id 0b8968b4-5c79-4e4e-8f66-f6a552d9fa67 has been verified";
-        when(accountService.updateMediaAccountVerification(TEST_ID_STRING_1)).thenReturn(expectedString);
+        when(accountService.updateAccountVerification(TEST_ID_STRING_1)).thenReturn(expectedString);
 
-        ResponseEntity<String> response = accountController.updateMediaAccountVerification(TEST_ID_STRING_1);
+        ResponseEntity<String> response = accountController.updateAccountVerification(TEST_ID_STRING_1);
 
         assertEquals(HttpStatus.OK, response.getStatusCode(), STATUS_CODE_MATCH);
         assertEquals(expectedString, response.getBody(), "Body does not match expected");

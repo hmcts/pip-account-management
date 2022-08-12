@@ -111,7 +111,7 @@ class AccountTest {
     private static final String PI_URL = ROOT_URL + "/add/pi";
     private static final String CREATE_MEDIA_USER_URL = "/application";
     private static final String GET_PROVENANCE_USER_URL = ROOT_URL + "/provenance/";
-    private static final String UPDATE_MEDIA_VERIFICATION_URL = ROOT_URL + "/media/verification/";
+    private static final String UPDATE_ACCOUNT_VERIFICATION_URL = ROOT_URL + "/verification/";
     private static final String EMAIL_URL = ROOT_URL + "/emails";
     private static final String EMAIL = "test_account_admin@hmcts.net";
     private static final String INVALID_EMAIL = "ab";
@@ -998,7 +998,7 @@ class AccountTest {
     }
 
     @Test
-    void testUpdateMediaAccountVerification() throws Exception {
+    void testUpdateAccountVerification() throws Exception {
         MockHttpServletRequestBuilder setupRequest = MockMvcRequestBuilders
             .post(PI_URL)
             .content(objectMapper.writeValueAsString(List.of(validUser)))
@@ -1008,7 +1008,7 @@ class AccountTest {
         mockMvc.perform(setupRequest).andExpect(status().isCreated());
 
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
-            .put(String.format("%s/%s", UPDATE_MEDIA_VERIFICATION_URL, validUser.getProvenanceUserId()))
+            .put(String.format("%s/%s", UPDATE_ACCOUNT_VERIFICATION_URL, validUser.getProvenanceUserId()))
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isOk()).andReturn();
@@ -1020,9 +1020,9 @@ class AccountTest {
     }
 
     @Test
-    void testUpdateApplicationNotFound() throws Exception {
+    void testUpdateAccountNotFound() throws Exception {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
-            .put(String.format("%s/%s", UPDATE_MEDIA_VERIFICATION_URL, "1234"))
+            .put(String.format("%s/%s", UPDATE_ACCOUNT_VERIFICATION_URL, "1234"))
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andReturn();

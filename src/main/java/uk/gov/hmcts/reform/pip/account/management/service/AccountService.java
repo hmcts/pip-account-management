@@ -331,12 +331,12 @@ public class AccountService {
     }
 
     /**
-     * Update a media accounts last verified date to the current date by the supplied provenance id.
+     * Update an accounts last verified date to the current date by the supplied provenance id.
      *
      * @param provenanceUserId The provenance id of the user to update.
      * @return Confirmation message that media account verification has been updated.
      */
-    public String updateMediaAccountVerification(String provenanceUserId) {
+    public String updateAccountVerification(String provenanceUserId) {
         PiUser userToUpdate = userRepository.findByProvenanceUserId(provenanceUserId)
             .orElseThrow(() -> new NotFoundException(String.format(
                 "User with supplied provenance id: %s could not be found", provenanceUserId)));

@@ -137,9 +137,9 @@ public class AccountController {
         @ApiResponse(code = 403, message = NOT_AUTHORIZED_MESSAGE),
         @ApiResponse(code = 404, message = "User with supplied provenance id: {provenanceUserId} could not be found"),
     })
-    @ApiOperation("Update the last verified date for a media user")
-    @PutMapping("/media/verification/{provenanceUserId}")
-    public ResponseEntity<String> updateMediaAccountVerification(@PathVariable String provenanceUserId) {
-        return ResponseEntity.ok(accountService.updateMediaAccountVerification(provenanceUserId));
+    @ApiOperation("Update the last verified date for an account")
+    @PutMapping("/verification/{provenanceUserId}")
+    public ResponseEntity<String> updateAccountVerification(@PathVariable String provenanceUserId) {
+        return ResponseEntity.ok(accountService.updateAccountVerification(provenanceUserId));
     }
 }
