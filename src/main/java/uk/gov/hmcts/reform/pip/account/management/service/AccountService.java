@@ -162,6 +162,7 @@ public class AccountService {
 
         for (PiUser user : users) {
             user.setLastVerifiedDate(LocalDateTime.now());
+            user.setLastSignedInDate(LocalDateTime.now());
             Set<ConstraintViolation<PiUser>> constraintViolationSet = validator.validate(user);
             if (!constraintViolationSet.isEmpty()) {
                 ErroredPiUser erroredUser = new ErroredPiUser(user);
@@ -314,12 +315,14 @@ public class AccountService {
      * @param email The email of the user to delete.
      * @return Confirmation message that account has been deleted.
      */
-    public String deleteAccount(String email) {
+    public String deleteAccount(String email, boolean isAadAccount) {
         String returnMessage = "";
         PiUser userToDelete = userRepository.findByEmail(email)
             .orElseThrow(() -> new NotFoundException("User with supplied email could not be found"));
         try {
-            azureUserService.deleteUser(userToDelete.getProvenanceUserId());
+            if (isAadAccount) {
+                azureUserService.deleteUser(userToDelete.getProvenanceUserId());
+            }
             log.info(subscriptionService.sendSubscriptionDeletionRequest(userToDelete.getUserId().toString()));
             userRepository.delete(userToDelete);
             returnMessage = String.format("User with ID %s has been deleted", userToDelete.getUserId());

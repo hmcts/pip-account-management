@@ -21,6 +21,14 @@ public interface UserRepository extends JpaRepository<PiUser, Long> {
         + " * :daysAgo AND roles = 'VERIFIED'", nativeQuery = true)
     List<PiUser> findVerifiedUsersByLastVerifiedDate(@Param("daysAgo") int daysSinceLastVerified);
 
+    @Query(value = "SELECT * FROM pi_user WHERE CAST(last_signed_in_date AS DATE) = CURRENT_DATE - (interval '1' day)"
+        + " * :daysAgo AND roles <> 'VERIFIED' AND user_provenance = 'PI_AAD'", nativeQuery = true)
+    List<PiUser> findAadAdminUsersByLastSignedInDate(@Param("daysAgo") int daysSinceLastSignedIn);
+
+    @Query(value = "SELECT * FROM pi_user WHERE CAST(last_signed_in_date AS DATE) = CURRENT_DATE - (interval '1' day)"
+        + " * :daysAgo AND (user_provenance = 'CFT_IDAM' OR user_provenance = 'CRIME_IDAM')", nativeQuery = true)
+    List<PiUser> findIdamUsersByLastSignedInDate(@Param("daysAgo") int daysSinceLastSignedIn);
+
     Optional<PiUser> findByEmail(String email);
 
     Optional<PiUser> findByProvenanceUserId(String provenanceUserId);
