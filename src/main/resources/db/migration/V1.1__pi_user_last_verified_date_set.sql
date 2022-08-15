@@ -12,6 +12,12 @@ CREATE TABLE IF NOT EXISTS pi_user (
   );
 
 --
+-- If the table already existed without the last_verified_date column, add the column
+--
+ALTER TABLE pi_user
+    ADD COLUMN IF NOT EXISTS last_verified_date timestamp;
+
+--
 -- Set the created date to 12th July 2pm for any users that do not have a created date
 --
 UPDATE pi_user
