@@ -16,6 +16,7 @@ import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
 import uk.gov.hmcts.reform.pip.account.management.model.Roles;
 import uk.gov.hmcts.reform.pip.account.management.model.UserProvenances;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.UUID;
@@ -35,21 +36,26 @@ class AccountVerificationServiceTest {
     private static final String CFT_IDAM_USER_EMAIL = "cft_idam@test.com";
     private static final String CRIME_IDAM_USER_EMAIL = "crime_idam@test.com";
     private static final String AZURE_MEDIA_USER_NAME = "MediaUserName";
+    private static final String AZURE_ADMIN_USER_NAME = "AdminUserName";
+    private static final String IDAM_USER_NAME = "IdamUserName";
+    private static final LocalDateTime LAST_SIGNED_IN_DATE = LocalDateTime.of(2022, 8, 1, 10, 0, 0);
+    private static final String LAST_SIGNED_IN_DATE_STRING = "01 August 2022";
 
     private static final PiUser MEDIA_USER = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD,
                                                         "1", MEDIA_USER_EMAIL, Roles.VERIFIED,
                                                         null, null, null);
     private static final PiUser AAD_ADMIN_USER = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD,
                                                             "2", AAD_ADMIN_USER_EMAIL, Roles.INTERNAL_SUPER_ADMIN_CTSC,
-                                                            null, null, null);
+                                                            null, null, LAST_SIGNED_IN_DATE);
     private static final PiUser CFT_IDAM_USER = new PiUser(UUID.randomUUID(), UserProvenances.CFT_IDAM,
                                                            "3", CFT_IDAM_USER_EMAIL, Roles.INTERNAL_ADMIN_CTSC,
-                                                           null, null, null);
+                                                           null, null, LAST_SIGNED_IN_DATE);
     private static final PiUser CRIME_IDAM_USER = new PiUser(UUID.randomUUID(), UserProvenances.CFT_IDAM,
                                                              "4", CRIME_IDAM_USER_EMAIL, Roles.INTERNAL_ADMIN_CTSC,
-                                                             null, null, null);
+                                                             null, null, LAST_SIGNED_IN_DATE);
 
     private static User azureMediaUser = new User();
+    private static User azureAdminUser = new User();
 
     @Mock
     UserRepository userRepository;
@@ -69,6 +75,7 @@ class AccountVerificationServiceTest {
     @BeforeAll
     static void setup() {
         azureMediaUser.givenName = AZURE_MEDIA_USER_NAME;
+        azureAdminUser.givenName = AZURE_ADMIN_USER_NAME;
     }
 
     @Test
@@ -178,11 +185,18 @@ class AccountVerificationServiceTest {
             .thenReturn(Collections.emptyList())
             .thenReturn(Arrays.asList(CFT_IDAM_USER, CRIME_IDAM_USER));
         when(azureUserService.getUser(MEDIA_USER_EMAIL)).thenReturn(azureMediaUser);
+        when(azureUserService.getUser(AAD_ADMIN_USER_EMAIL)).thenReturn(azureAdminUser);
 
         accountVerificationService.processEligibleUsersForVerification();
 
         verifyNoInteractions(accountService);
         verify(publicationService).sendAccountVerificationEmail(MEDIA_USER_EMAIL, AZURE_MEDIA_USER_NAME);
+        verify(publicationService).sendInactiveAccountSignInNotificationEmail(AAD_ADMIN_USER_EMAIL, AZURE_ADMIN_USER_NAME,
+                                                                              LAST_SIGNED_IN_DATE_STRING);
+        verify(publicationService).sendInactiveAccountSignInNotificationEmail(CFT_IDAM_USER_EMAIL, IDAM_USER_NAME,
+                                                                              LAST_SIGNED_IN_DATE_STRING);
+        verify(publicationService).sendInactiveAccountSignInNotificationEmail(CRIME_IDAM_USER_EMAIL, IDAM_USER_NAME,
+                                                                              LAST_SIGNED_IN_DATE_STRING);
     }
 
     @Test
