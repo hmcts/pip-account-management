@@ -323,12 +323,15 @@ public class AccountService {
             if (isAadAccount) {
                 azureUserService.deleteUser(userToDelete.getProvenanceUserId());
             }
-            log.info(subscriptionService.sendSubscriptionDeletionRequest(userToDelete.getUserId().toString()));
+            log.info(writeLog(
+                subscriptionService.sendSubscriptionDeletionRequest(userToDelete.getUserId().toString()))
+            );
             userRepository.delete(userToDelete);
             returnMessage = String.format("User with ID %s has been deleted", userToDelete.getUserId());
         } catch (AzureCustomException ex) {
-            log.error("Error when deleting an account from azure with Provenance user id: %s and error: %s",
-                      userToDelete.getProvenanceUserId(), ex.getMessage());
+            log.error(writeLog(String.format("Error when deleting an account from azure with Provenance user id: "
+                                                 + "%s and error: %s",
+                                             userToDelete.getProvenanceUserId(), ex.getMessage())));
         }
         return returnMessage;
     }

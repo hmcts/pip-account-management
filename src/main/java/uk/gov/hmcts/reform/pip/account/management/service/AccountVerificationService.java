@@ -12,6 +12,7 @@ import java.util.Collection;
 import java.util.stream.Stream;
 
 import static uk.gov.hmcts.reform.pip.account.management.model.UserProvenances.PI_AAD;
+import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
 
 @Slf4j
 @Service
@@ -71,7 +72,7 @@ public class AccountVerificationService {
                     azureUserService.getUser(user.getEmail()).givenName
                 ));
             } catch (AzureCustomException ex) {
-                log.error("Error when getting user from azure: %s", ex.getMessage());
+                log.error(writeLog("Error when getting user from azure: " + ex.getMessage()));
             }
         });
     }
@@ -87,7 +88,7 @@ public class AccountVerificationService {
                 userRepository.findAadAdminUsersByLastSignedInDate(aadAdminAccountSignInNotificationDays),
                 userRepository.findIdamUsersByLastSignedInDate(idamAccountSignInNotificationDays))
             .flatMap(Collection::stream)
-            .forEach(user -> log.info("Remind user to sign in: " + user.getEmail()));
+            .forEach(user -> log.info(writeLog("Remind user to sign in: " + user.getEmail())));
     }
 
     /**
@@ -102,8 +103,8 @@ public class AccountVerificationService {
                 userRepository.findIdamUsersByLastSignedInDate(idamAccountDeletionDays))
             .flatMap(Collection::stream)
             .forEach(
-                user -> log.info(accountService.deleteAccount(user.getEmail(),
-                                                              PI_AAD.equals(user.getUserProvenance())))
+                user -> log.info(writeLog(accountService.deleteAccount(user.getEmail(),
+                                                              PI_AAD.equals(user.getUserProvenance()))))
             );
     }
 }

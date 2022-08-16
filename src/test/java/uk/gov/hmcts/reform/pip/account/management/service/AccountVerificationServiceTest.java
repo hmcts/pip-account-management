@@ -203,7 +203,7 @@ class AccountVerificationServiceTest {
                 .hasSize(1)
                 .first()
                 .asString()
-                .startsWith("Error when getting user from azure");
+                .contains("Error when getting user from azure");
         }
 
         verifyNoInteractions(accountService);
