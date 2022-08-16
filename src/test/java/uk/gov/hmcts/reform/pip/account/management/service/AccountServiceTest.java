@@ -57,7 +57,7 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
-@SuppressWarnings({"PMD.TooManyMethods", "PMD.ExcessiveImports"})
+@SuppressWarnings({"PMD.TooManyMethods", "PMD.ExcessiveImports", "PMD.LawOfDemeter"})
 class AccountServiceTest {
 
     @Mock
@@ -567,7 +567,8 @@ class AccountServiceTest {
 
     @Test
     void testUpdateAccountVerification() {
-        when(userRepository.findByProvenanceUserId(ID)).thenReturn(Optional.of(piUser));
+        when(userRepository.findByProvenanceUserIdAndUserProvenance(ID, UserProvenances.PI_AAD))
+            .thenReturn(Optional.of(piUser));
 
         assertEquals("Account with provenance id 1234 has been verified",
                      accountService.updateAccountVerification(ID),

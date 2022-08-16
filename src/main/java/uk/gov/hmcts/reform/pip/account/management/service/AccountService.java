@@ -337,7 +337,8 @@ public class AccountService {
      * @return Confirmation message that media account verification has been updated.
      */
     public String updateAccountVerification(String provenanceUserId) {
-        PiUser userToUpdate = userRepository.findByProvenanceUserId(provenanceUserId)
+        PiUser userToUpdate = userRepository.findByProvenanceUserIdAndUserProvenance(provenanceUserId,
+                                                                                     UserProvenances.PI_AAD)
             .orElseThrow(() -> new NotFoundException(String.format(
                 "User with supplied provenance id: %s could not be found", provenanceUserId)));
 
