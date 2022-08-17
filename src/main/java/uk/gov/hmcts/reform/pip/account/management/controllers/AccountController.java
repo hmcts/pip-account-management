@@ -133,14 +133,16 @@ public class AccountController {
     }
 
     @ApiResponses({
-        @ApiResponse(code = 200, message = "Account with provenance id {provenanceUserId} has been updated"),
+        @ApiResponse(code = 200, message = "Account with provenance {userProvenance} and provenance id "
+            + "{provenanceUserId} has been updated"),
         @ApiResponse(code = 403, message = NOT_AUTHORIZED_MESSAGE),
         @ApiResponse(code = 404, message = "User with supplied provenance id: {provenanceUserId} could not be found"),
     })
-    @ApiOperation("Update the user's account")
-    @PutMapping("/{provenanceUserId}")
-    public ResponseEntity<String> updateAccount(@PathVariable String provenanceUserId,
+    @ApiOperation("Update the user's account based on their provenance user id and provenance")
+    @PutMapping("/provenance/{userProvenance}/{provenanceUserId}")
+    public ResponseEntity<String> updateAccount(@PathVariable UserProvenances userProvenance,
+                                                @PathVariable String provenanceUserId,
                                                 @RequestBody Map<String, String> params) {
-        return ResponseEntity.ok(accountService.updateAccount(provenanceUserId, params));
+        return ResponseEntity.ok(accountService.updateAccount(userProvenance, provenanceUserId, params));
     }
 }

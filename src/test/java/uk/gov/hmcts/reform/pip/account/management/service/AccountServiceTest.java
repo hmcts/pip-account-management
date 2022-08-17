@@ -587,10 +587,11 @@ class AccountServiceTest {
             "lastSignedInDate", "2022-08-14T20:21:20.912Z"
         );
 
-        when(userRepository.findByProvenanceUserId(ID)).thenReturn(Optional.of(piUser));
+        when(userRepository.findByProvenanceUserIdAndUserProvenance(ID, UserProvenances.PI_AAD))
+            .thenReturn(Optional.of(piUser));
 
-        assertEquals("Account with provenance id " + ID + " has been updated",
-                     accountService.updateAccount(ID, updateParameters),
+        assertEquals("Account with provenance PI_AAD and provenance id " + ID + " has been updated",
+                     accountService.updateAccount(UserProvenances.PI_AAD, ID, updateParameters),
                      "Return message does not match expected");
     }
 
@@ -599,7 +600,8 @@ class AccountServiceTest {
         Map<String, String> updateParameters = Map.of("lastVerifiedDate", "2022-08-14T20:21:10.912Z");
 
         NotFoundException notFoundException = assertThrows(NotFoundException.class, () ->
-                                                               accountService.updateAccount(ID, updateParameters),
+                                                               accountService.updateAccount(UserProvenances.PI_AAD, ID,
+                                                                                            updateParameters),
                                                            "Expected NotFoundException to be thrown");
 
         assertTrue(notFoundException.getMessage()
@@ -611,10 +613,12 @@ class AccountServiceTest {
     void testUpdateAccountIllegalUpdateParameter() {
         Map<String, String> updateParameters = Map.of("nonExistentField", "value");
 
-        when(userRepository.findByProvenanceUserId(ID)).thenReturn(Optional.of(piUser));
+        when(userRepository.findByProvenanceUserIdAndUserProvenance(ID, UserProvenances.PI_AAD))
+            .thenReturn(Optional.of(piUser));
 
         IllegalArgumentException illegalArgumentException = assertThrows(
-            IllegalArgumentException.class, () -> accountService.updateAccount(ID, updateParameters),
+            IllegalArgumentException.class, () -> accountService.updateAccount(UserProvenances.PI_AAD, ID,
+                                                                               updateParameters),
             "Expected IllegalArgumentException to be thrown");
 
         assertTrue(illegalArgumentException.getMessage()
@@ -626,10 +630,12 @@ class AccountServiceTest {
     void testUpdateAccountUnexpectedDateTimeFormat() {
         Map<String, String> updateParameters = Map.of("lastSignedInDate", "2022-08-14");
 
-        when(userRepository.findByProvenanceUserId(ID)).thenReturn(Optional.of(piUser));
+        when(userRepository.findByProvenanceUserIdAndUserProvenance(ID, UserProvenances.PI_AAD))
+            .thenReturn(Optional.of(piUser));
 
         IllegalArgumentException illegalArgumentException = assertThrows(
-            IllegalArgumentException.class, () -> accountService.updateAccount(ID, updateParameters),
+            IllegalArgumentException.class, () -> accountService.updateAccount(UserProvenances.PI_AAD, ID,
+                                                                               updateParameters),
             "Expected IllegalArgumentException to be thrown");
 
         assertTrue(illegalArgumentException.getMessage()

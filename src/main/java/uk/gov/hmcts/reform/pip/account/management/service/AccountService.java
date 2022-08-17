@@ -341,11 +341,12 @@ public class AccountService {
     /**
      * Update an user account by the supplied provenance id.
      *
+     * @param userProvenance The user provenance of the user to update.
      * @param provenanceUserId The provenance id of the user to update.
      * @return Confirmation message that the user account has been updated.
      */
-    public String updateAccount(String provenanceUserId, Map<String, String> params) {
-        PiUser userToUpdate = userRepository.findByProvenanceUserId(provenanceUserId)
+    public String updateAccount(UserProvenances userProvenance, String provenanceUserId, Map<String, String> params) {
+        PiUser userToUpdate = userRepository.findByProvenanceUserIdAndUserProvenance(provenanceUserId, userProvenance)
             .orElseThrow(() -> new NotFoundException(String.format(
                 "User with supplied provenance id: %s could not be found", provenanceUserId)));
 
@@ -367,6 +368,7 @@ public class AccountService {
         });
 
         userRepository.save(userToUpdate);
-        return String.format("Account with provenance id %s has been updated", provenanceUserId);
+        return String.format("Account with provenance %s and provenance id %s has been updated",
+                             userProvenance.name(), provenanceUserId);
     }
 }

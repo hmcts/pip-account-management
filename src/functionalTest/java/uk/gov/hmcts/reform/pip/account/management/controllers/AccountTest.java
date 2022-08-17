@@ -116,7 +116,7 @@ class AccountTest {
     private static final String PI_URL = ROOT_URL + "/add/pi";
     private static final String CREATE_MEDIA_USER_URL = "/application";
     private static final String GET_PROVENANCE_USER_URL = ROOT_URL + "/provenance/";
-    private static final String UPDATE_ACCOUNT_URL = ROOT_URL + "/";
+    private static final String UPDATE_ACCOUNT_URL = ROOT_URL + "/provenance/";
     private static final String EMAIL_URL = ROOT_URL + "/emails";
     private static final String EMAIL = "test_account_admin@hmcts.net";
     private static final String INVALID_EMAIL = "ab";
@@ -1013,7 +1013,8 @@ class AccountTest {
         mockMvc.perform(setupRequest).andExpect(status().isCreated());
 
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
-            .put(UPDATE_ACCOUNT_URL + validUser.getProvenanceUserId())
+            .put(UPDATE_ACCOUNT_URL + validUser.getUserProvenance() + "/"
+                     + validUser.getProvenanceUserId())
             .content(objectMapper.writeValueAsString(Collections.singletonMap(
                 "lastVerifiedDate", "2022-08-14T20:21:10.912Z")))
             .contentType(MediaType.APPLICATION_JSON);
@@ -1035,7 +1036,8 @@ class AccountTest {
         mockMvc.perform(setupRequest).andExpect(status().isCreated());
 
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
-            .put(UPDATE_ACCOUNT_URL + validUser.getProvenanceUserId())
+            .put(UPDATE_ACCOUNT_URL + validUser.getUserProvenance() + "/"
+                     + validUser.getProvenanceUserId())
             .content(objectMapper.writeValueAsString(Collections.singletonMap(
                 "lastSignedInDate", "2022-08-14T20:21:10.912Z")))
             .contentType(MediaType.APPLICATION_JSON);
@@ -1049,7 +1051,7 @@ class AccountTest {
     @Test
     void testUpdateAccountNotFound() throws Exception {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
-            .put(UPDATE_ACCOUNT_URL + "1234")
+            .put(UPDATE_ACCOUNT_URL + validUser.getUserProvenance() + "/1234")
             .content(objectMapper.writeValueAsString(Map.of(
                 "lastSignedInDate", "2022-08-14T20:21:20.912Z")))
             .contentType(MediaType.APPLICATION_JSON);
@@ -1071,7 +1073,8 @@ class AccountTest {
         mockMvc.perform(setupRequest).andExpect(status().isCreated());
 
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
-            .put(UPDATE_ACCOUNT_URL + validUser.getProvenanceUserId())
+            .put(UPDATE_ACCOUNT_URL + validUser.getUserProvenance() + "/"
+                + validUser.getProvenanceUserId())
             .content(objectMapper.writeValueAsString(Collections.singletonMap(
                 "email", "test@test.com")))
             .contentType(MediaType.APPLICATION_JSON);
