@@ -581,22 +581,59 @@ class AccountServiceTest {
     }
 
     @Test
-    void testUpdateAccountVerification() {
+    void testUpdateAccountSuccessful() {
+        Map<String, String> updateParameters = Map.of(
+            "lastVerifiedDate", "2022-08-14T20:21:10.912Z",
+            "lastSignedInDate", "2022-08-14T20:21:20.912Z"
+        );
+
         when(userRepository.findByProvenanceUserId(ID)).thenReturn(Optional.of(piUser));
 
-        assertEquals("Account with provenance id 1234 has been verified",
-                     accountService.updateAccountVerification(ID),
+        assertEquals("Account with provenance id " + ID + " has been updated",
+                     accountService.updateAccount(ID, updateParameters),
                      "Return message does not match expected");
     }
 
     @Test
-    void testUpdateAccountVerificationNotFound() {
+    void testUpdateAccountUserNotFound() {
+        Map<String, String> updateParameters = Map.of("lastVerifiedDate", "2022-08-14T20:21:10.912Z");
+
         NotFoundException notFoundException = assertThrows(NotFoundException.class, () ->
-            accountService.updateAccountVerification(ID),
+                                                               accountService.updateAccount(ID, updateParameters),
                                                            "Expected NotFoundException to be thrown");
 
         assertTrue(notFoundException.getMessage()
-                       .contains("User with supplied provenance id: 1234 could not be found"),
-                   "Not found error missing");
+                       .contains("User with supplied provenance id: " + ID + " could not be found"),
+                   "Not found error mismatch");
+    }
+
+    @Test
+    void testUpdateAccountIllegalUpdateParameter() {
+        Map<String, String> updateParameters = Map.of("nonExistentField", "value");
+
+        when(userRepository.findByProvenanceUserId(ID)).thenReturn(Optional.of(piUser));
+
+        IllegalArgumentException illegalArgumentException = assertThrows(
+            IllegalArgumentException.class, () -> accountService.updateAccount(ID, updateParameters),
+            "Expected IllegalArgumentException to be thrown");
+
+        assertTrue(illegalArgumentException.getMessage()
+                       .contains("The field 'nonExistentField' could not be updated"),
+                   "Illegal argument error mismatch");
+    }
+
+    @Test
+    void testUpdateAccountUnexpectedDateTimeFormat() {
+        Map<String, String> updateParameters = Map.of("lastSignedInDate", "2022-08-14");
+
+        when(userRepository.findByProvenanceUserId(ID)).thenReturn(Optional.of(piUser));
+
+        IllegalArgumentException illegalArgumentException = assertThrows(
+            IllegalArgumentException.class, () -> accountService.updateAccount(ID, updateParameters),
+            "Expected IllegalArgumentException to be thrown");
+
+        assertTrue(illegalArgumentException.getMessage()
+                       .contains("Date time value '2022-08-14' not in expected format"),
+                   "Illegal argument error mismatch");
     }
 }

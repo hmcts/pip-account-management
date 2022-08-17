@@ -49,17 +49,21 @@ import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredAzureAcco
 
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(classes = {AzureConfigurationClientTest.class, Application.class},
@@ -69,7 +73,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @WithMockUser(username = "admin", authorities = { "APPROLE_api.request.admin" })
-@SuppressWarnings({"PMD.TooManyMethods", "PMD.LawOfDemeter", "PMD.ExcessiveImports"})
+@SuppressWarnings({"PMD.TooManyMethods", "PMD.LawOfDemeter", "PMD.ExcessiveImports",
+    "PMD.JUnitTestsShouldIncludeAssert", "PMD.ExcessiveClassLength"})
 class AccountTest {
 
     @Autowired
@@ -111,7 +116,7 @@ class AccountTest {
     private static final String PI_URL = ROOT_URL + "/add/pi";
     private static final String CREATE_MEDIA_USER_URL = "/application";
     private static final String GET_PROVENANCE_USER_URL = ROOT_URL + "/provenance/";
-    private static final String UPDATE_ACCOUNT_VERIFICATION_URL = ROOT_URL + "/verification/";
+    private static final String UPDATE_ACCOUNT_URL = ROOT_URL + "/";
     private static final String EMAIL_URL = ROOT_URL + "/emails";
     private static final String EMAIL = "test_account_admin@hmcts.net";
     private static final String INVALID_EMAIL = "ab";
@@ -998,7 +1003,7 @@ class AccountTest {
     }
 
     @Test
-    void testUpdateAccountVerification() throws Exception {
+    void testUpdateAccountLastVerifiedDateSuccessful() throws Exception {
         MockHttpServletRequestBuilder setupRequest = MockMvcRequestBuilders
             .post(PI_URL)
             .content(objectMapper.writeValueAsString(List.of(validUser)))
@@ -1008,30 +1013,71 @@ class AccountTest {
         mockMvc.perform(setupRequest).andExpect(status().isCreated());
 
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
-            .put(String.format("%s/%s", UPDATE_ACCOUNT_VERIFICATION_URL, validUser.getProvenanceUserId()))
+            .put(UPDATE_ACCOUNT_URL + validUser.getProvenanceUserId())
+            .content(objectMapper.writeValueAsString(Collections.singletonMap(
+                "lastVerifiedDate", "2022-08-14T20:21:10.912Z")))
             .contentType(MediaType.APPLICATION_JSON);
 
-        MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isOk()).andReturn();
+        mockMvc.perform(mockHttpServletRequestBuilder)
+            .andExpect(status().isOk())
+            .andExpect(content().string(containsString(
+                "has been updated")));
+    }
 
-        assertTrue(response.getResponse().getContentAsString().contains("has been verified"),
-                   "Response does not contain expected body");
-        assertEquals(200, response.getResponse().getStatus(),
-                     "Expected status code does not match");
+    @Test
+    void testUpdateAccountLastSignedInDateSuccessful() throws Exception {
+        MockHttpServletRequestBuilder setupRequest = MockMvcRequestBuilders
+            .post(PI_URL)
+            .content(objectMapper.writeValueAsString(List.of(validUser)))
+            .header(ISSUER_HEADER, ISSUER_ID)
+            .contentType(MediaType.APPLICATION_JSON);
+
+        mockMvc.perform(setupRequest).andExpect(status().isCreated());
+
+        MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
+            .put(UPDATE_ACCOUNT_URL + validUser.getProvenanceUserId())
+            .content(objectMapper.writeValueAsString(Collections.singletonMap(
+                "lastSignedInDate", "2022-08-14T20:21:10.912Z")))
+            .contentType(MediaType.APPLICATION_JSON);
+
+        mockMvc.perform(mockHttpServletRequestBuilder)
+            .andExpect(status().isOk())
+            .andExpect(content().string(containsString(
+            "has been updated")));
     }
 
     @Test
     void testUpdateAccountNotFound() throws Exception {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
-            .put(String.format("%s/%s", UPDATE_ACCOUNT_VERIFICATION_URL, "1234"))
+            .put(UPDATE_ACCOUNT_URL + "1234")
+            .content(objectMapper.writeValueAsString(Map.of(
+                "lastSignedInDate", "2022-08-14T20:21:20.912Z")))
             .contentType(MediaType.APPLICATION_JSON);
 
-        MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andReturn();
+        mockMvc.perform(mockHttpServletRequestBuilder)
+            .andExpect(status().isNotFound())
+            .andExpect(content().string(containsString(
+                "User with supplied provenance id: 1234 could not be found")));
+    }
 
-        assertEquals(404, response.getResponse().getStatus(),
-                     "Expected status code does not match");
+    @Test
+    void testUpdateAccountWithUnsupportedParam() throws Exception {
+        MockHttpServletRequestBuilder setupRequest = MockMvcRequestBuilders
+            .post(PI_URL)
+            .content(objectMapper.writeValueAsString(List.of(validUser)))
+            .header(ISSUER_HEADER, ISSUER_ID)
+            .contentType(MediaType.APPLICATION_JSON);
 
-        assertTrue(response.getResponse().getContentAsString()
-                       .contains("User with supplied provenance id: 1234 could not be found"),
-                   "Expected status code does not match");
+        mockMvc.perform(setupRequest).andExpect(status().isCreated());
+
+        MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
+            .put(UPDATE_ACCOUNT_URL + validUser.getProvenanceUserId())
+            .content(objectMapper.writeValueAsString(Collections.singletonMap(
+                "email", "test@test.com")))
+            .contentType(MediaType.APPLICATION_JSON);
+
+        mockMvc.perform(mockHttpServletRequestBuilder)
+            .andExpect(status().isBadRequest())
+            .andExpect(content().string(containsString("The field 'email' could not be updated")));
     }
 }
