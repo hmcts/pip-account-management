@@ -131,7 +131,8 @@ public class PublicationService {
         }
     }
 
-    public String sendInactiveAccountSignInNotificationEmail(String emailAddress, String fullName, String lastSignedInDate) {
+    public String sendInactiveAccountSignInNotificationEmail(String emailAddress, String fullName,
+                                                             String lastSignedInDate) {
         try {
             JSONObject body = new JSONObject();
             body.put(EMAIL, emailAddress);

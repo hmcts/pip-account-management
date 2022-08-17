@@ -191,11 +191,14 @@ class AccountVerificationServiceTest {
 
         verifyNoInteractions(accountService);
         verify(publicationService).sendAccountVerificationEmail(MEDIA_USER_EMAIL, AZURE_MEDIA_USER_NAME);
-        verify(publicationService).sendInactiveAccountSignInNotificationEmail(AAD_ADMIN_USER_EMAIL, AZURE_ADMIN_USER_NAME,
+        verify(publicationService).sendInactiveAccountSignInNotificationEmail(AAD_ADMIN_USER_EMAIL,
+                                                                              AZURE_ADMIN_USER_NAME,
                                                                               LAST_SIGNED_IN_DATE_STRING);
-        verify(publicationService).sendInactiveAccountSignInNotificationEmail(CFT_IDAM_USER_EMAIL, IDAM_USER_NAME,
+        verify(publicationService).sendInactiveAccountSignInNotificationEmail(CFT_IDAM_USER_EMAIL,
+                                                                              IDAM_USER_NAME,
                                                                               LAST_SIGNED_IN_DATE_STRING);
-        verify(publicationService).sendInactiveAccountSignInNotificationEmail(CRIME_IDAM_USER_EMAIL, IDAM_USER_NAME,
+        verify(publicationService).sendInactiveAccountSignInNotificationEmail(CRIME_IDAM_USER_EMAIL,
+                                                                              IDAM_USER_NAME,
                                                                               LAST_SIGNED_IN_DATE_STRING);
     }
 
