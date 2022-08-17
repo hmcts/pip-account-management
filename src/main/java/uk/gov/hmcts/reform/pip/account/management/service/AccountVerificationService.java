@@ -7,6 +7,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import uk.gov.hmcts.reform.pip.account.management.database.UserRepository;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.AzureCustomException;
+import uk.gov.hmcts.reform.pip.account.management.service.helpers.DateTimeHelper;
 
 import java.util.Collection;
 import java.util.stream.Stream;
@@ -17,6 +18,8 @@ import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
 @Slf4j
 @Service
 public class AccountVerificationService {
+    // TODO: Needs to be replaced with actual user name from IDAM after it is implemented
+    private static final String PLACEHOLDER_IDAM_USER_NAME = "IdamUserName";
 
     private final UserRepository userRepository;
     private final AzureUserService azureUserService;
@@ -67,10 +70,10 @@ public class AccountVerificationService {
     private void sendMediaUsersForVerification() {
         userRepository.findVerifiedUsersByLastVerifiedDate(mediaAccountVerificationDays).forEach(user -> {
             try {
-                log.info(publicationService.sendAccountVerificationEmail(
+                log.info(writeLog(publicationService.sendAccountVerificationEmail(
                     user.getEmail(),
                     azureUserService.getUser(user.getEmail()).givenName
-                ));
+                )));
             } catch (AzureCustomException ex) {
                 log.error(writeLog("Error when getting user from azure: " + ex.getMessage()));
             }
@@ -83,12 +86,24 @@ public class AccountVerificationService {
      * Then send their details on to publication services to send them a notification email.
      */
     private void notifyAadAdminAndIdamUsersToSignIn() {
-        // TODO: this is a placeholder. Needs to be updated with call to Publication services for notifying the users.
         Stream.of(
                 userRepository.findAadAdminUsersByLastSignedInDate(aadAdminAccountSignInNotificationDays),
                 userRepository.findIdamUsersByLastSignedInDate(idamAccountSignInNotificationDays))
             .flatMap(Collection::stream)
-            .forEach(user -> log.info(writeLog("Remind user to sign in: " + user.getEmail())));
+            .forEach(user -> {
+                try {
+                    String name = PI_AAD.equals(user.getUserProvenance())
+                        ? azureUserService.getUser(user.getEmail()).givenName
+                        : PLACEHOLDER_IDAM_USER_NAME;
+                    log.info(writeLog(publicationService.sendInactiveAccountSignInNotificationEmail(
+                        user.getEmail(),
+                        name,
+                        DateTimeHelper.localDateTimeToDateString(user.getLastSignedInDate()
+                    ))));
+                } catch (AzureCustomException ex) {
+                    log.error(writeLog("Error when getting user from azure: " + ex.getMessage()));
+                }
+            });
     }
 
     /**
