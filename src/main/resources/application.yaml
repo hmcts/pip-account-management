@@ -97,4 +97,4 @@ verification:
   aad-admin-account-sign-in-notification-days: 76
   aad-admin-account-deletion-days: 90
   idam-account-sign-in-notification-days: 118
-  idam-account-deletion-days: 128
+  idam-account-deletion-days: 132
