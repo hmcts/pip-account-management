@@ -81,7 +81,7 @@ public class AccountVerificationService {
     }
 
     /**
-     * Method that gets all AAD amin users who last signed in at least 76 days (by default) ago, and gets all
+     * Method that gets all AAD admin users who last signed in at least 76 days (by default) ago, and gets all
      * IDAM users who last signed in at least 118 days (by default) ago.
      * Then send their details on to publication services to send them a notification email.
      */
