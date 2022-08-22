@@ -17,6 +17,7 @@ import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.ListType;
 import uk.gov.hmcts.reform.pip.account.management.model.MediaCsv;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
+import uk.gov.hmcts.reform.pip.account.management.model.Roles;
 import uk.gov.hmcts.reform.pip.account.management.model.Sensitivity;
 import uk.gov.hmcts.reform.pip.account.management.model.UserProvenances;
 import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredAzureAccount;
@@ -108,10 +109,11 @@ public class AccountService {
                 User userAzure = azureUserService.getUser(azureAccount.getEmail());
 
                 if (userAzure != null
-                    && !userAzure.displayName.isEmpty()) {
+                    && !userAzure.givenName.isEmpty()
+                    && azureAccount.getRole().equals(Roles.VERIFIED)) {
                     boolean emailSent = publicationService
                         .sendNotificationEmailForDuplicateMediaAccount(azureAccount.getEmail(),
-                                                                       userAzure.displayName);
+                                                                       userAzure.givenName);
                     if (!emailSent) {
                         ErroredAzureAccount softErroredAccount = new ErroredAzureAccount(azureAccount);
                         softErroredAccount.setErrorMessages(

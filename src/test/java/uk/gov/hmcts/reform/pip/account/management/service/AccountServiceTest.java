@@ -136,7 +136,7 @@ class AccountServiceTest {
         expectedUser = new User();
         expectedUser.givenName = TEST;
         expectedUser.id = ID;
-        expectedUser.displayName = "Test User";
+        expectedUser.givenName = "Test User";
 
         when(userRepository.findByUserId(VALID_USER_ID)).thenReturn(Optional.of(piUser));
         when(userRepository.findByUserId(VALID_USER_ID_IDAM)).thenReturn(Optional.of(piUserIdam));
@@ -178,7 +178,9 @@ class AccountServiceTest {
 
         User azUser = new User();
         azUser.id = ID;
-        azUser.displayName = FULL_NAME;
+        azUser.givenName = FULL_NAME;
+
+        azureAccount.setRole(Roles.VERIFIED);
 
         when(azureUserService.getUser(EMAIL)).thenReturn(azUser);
 
@@ -196,7 +198,9 @@ class AccountServiceTest {
 
         User azUser = new User();
         azUser.id = ID;
-        azUser.displayName = FULL_NAME;
+        azUser.givenName = FULL_NAME;
+
+        azureAccount.setRole(Roles.VERIFIED);
 
         when(azureUserService.getUser(EMAIL)).thenReturn(azUser);
         when(publicationService.sendNotificationEmailForDuplicateMediaAccount(any(), any())).thenReturn(TRUE);
