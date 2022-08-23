@@ -57,7 +57,7 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
-@SuppressWarnings({"PMD.TooManyMethods", "PMD.ExcessiveImports"})
+@SuppressWarnings({"PMD.TooManyMethods", "PMD.ExcessiveImports", "PMD.LawOfDemeter"})
 class AccountServiceTest {
 
     @Mock
@@ -567,5 +567,26 @@ class AccountServiceTest {
             assertEquals(1, logCaptor.getErrorLogs().size(),
                          "No logs were thrown");
         }
+    }
+
+    @Test
+    void testUpdateAccountVerification() {
+        when(userRepository.findByProvenanceUserIdAndUserProvenance(ID, UserProvenances.PI_AAD))
+            .thenReturn(Optional.of(piUser));
+
+        assertEquals("Account with provenance id 1234 has been verified",
+                     accountService.updateAccountVerification(ID),
+                     "Return message does not match expected");
+    }
+
+    @Test
+    void testUpdateAccountVerificationNotFound() {
+        NotFoundException notFoundException = assertThrows(NotFoundException.class, () ->
+            accountService.updateAccountVerification(ID),
+                                                           "Expected NotFoundException to be thrown");
+
+        assertTrue(notFoundException.getMessage()
+                       .contains("User with supplied provenance id: 1234 could not be found"),
+                   "Not found error missing");
     }
 }

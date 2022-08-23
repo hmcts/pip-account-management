@@ -331,4 +331,22 @@ public class AccountService {
         }
         return returnMessage;
     }
+
+    /**
+     * Update an accounts last verified date to the current date by the supplied provenance id.
+     *
+     * @param provenanceUserId The provenance id of the user to update.
+     * @return Confirmation message that media account verification has been updated.
+     */
+    public String updateAccountVerification(String provenanceUserId) {
+        PiUser userToUpdate = userRepository.findByProvenanceUserIdAndUserProvenance(provenanceUserId,
+                                                                                     UserProvenances.PI_AAD)
+            .orElseThrow(() -> new NotFoundException(String.format(
+                "User with supplied provenance id: %s could not be found", provenanceUserId)));
+
+        userToUpdate.setLastVerifiedDate(LocalDateTime.now());
+        userRepository.save(userToUpdate);
+
+        return String.format("Account with provenance id %s has been verified", provenanceUserId);
+    }
 }
