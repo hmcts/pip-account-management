@@ -127,7 +127,7 @@ class AccountTest {
     private static final String ISSUER_ID = "1234-1234-1234-1234";
     private static final String ISSUER_HEADER = "x-issuer-id";
     private static final String MEDIA_LIST = "mediaList";
-    private static final String DISPLAY_NAME = "Display Name";
+    private static final String GIVEN_NAME = "Given Name";
     private static final String B2C_URL = "URL";
 
     private static final String ID = "1234";
@@ -172,11 +172,10 @@ class AccountTest {
 
         User userToReturn = new User();
         userToReturn.id = ID;
-        userToReturn.displayName = "Display name";
-        userToReturn.givenName = "given Name";
+        userToReturn.givenName = GIVEN_NAME;
         User additionalUser = new User();
         additionalUser.id = ADDITIONAL_ID;
-        additionalUser.givenName = "given Name";
+        additionalUser.givenName = GIVEN_NAME;
         when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
         when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
         when(userCollectionRequest.post(any())).thenReturn(userToReturn, additionalUser);
@@ -195,14 +194,7 @@ class AccountTest {
         azureAccount.setFirstName(FIRST_NAME);
         azureAccount.setRole(Roles.INTERNAL_ADMIN_CTSC);
 
-        User user = new User();
-        user.id = ID;
-        user.displayName = "";
-        user.givenName = "name";
-        List<User> azUsers = new ArrayList<>();
-        azUsers.add(user);
-
-        userCollectionPage = new UserCollectionPage(azUsers, userCollectionRequestBuilder);
+        userCollectionPage = new UserCollectionPage(new ArrayList<>(), userCollectionRequestBuilder);
 
         when(clientConfiguration.getB2cUrl()).thenReturn(B2C_URL);
         when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
@@ -243,11 +235,11 @@ class AccountTest {
         azureAccount.setEmail(EMAIL);
         azureAccount.setSurname(SURNAME);
         azureAccount.setFirstName(FIRST_NAME);
-        azureAccount.setRole(Roles.INTERNAL_ADMIN_CTSC);
+        azureAccount.setRole(Roles.VERIFIED);
 
         User user = new User();
         user.id = ID;
-        user.displayName = DISPLAY_NAME;
+        user.givenName = GIVEN_NAME;
         List<User> azUsers = new ArrayList<>();
         azUsers.add(user);
 
@@ -406,7 +398,7 @@ class AccountTest {
     void testNoFailureOfNoSurnameAccount() throws Exception {
         User userToReturn = new User();
         userToReturn.id = ID;
-        userToReturn.givenName = "give name";
+        userToReturn.givenName = GIVEN_NAME;
 
         AzureAccount azureAccount = new AzureAccount();
         azureAccount.setEmail(EMAIL);
@@ -417,13 +409,7 @@ class AccountTest {
         when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
         when(userCollectionRequest.post(any())).thenReturn(userToReturn);
 
-        User user = new User();
-        user.id = ID;
-        user.displayName = "";
-        List<User> azUsers = new ArrayList<>();
-        azUsers.add(user);
-
-        userCollectionPage = new UserCollectionPage(azUsers, userCollectionRequestBuilder);
+        userCollectionPage = new UserCollectionPage(new ArrayList<>(), userCollectionRequestBuilder);
 
         when(clientConfiguration.getB2cUrl()).thenReturn(B2C_URL);
         when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
@@ -499,13 +485,7 @@ class AccountTest {
         when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
         when(userCollectionRequest.post(any())).thenThrow(graphServiceException);
 
-        User user = new User();
-        user.id = ID;
-        user.displayName = "";
-        List<User> azUsers = new ArrayList<>();
-        azUsers.add(user);
-
-        userCollectionPage = new UserCollectionPage(azUsers, userCollectionRequestBuilder);
+        userCollectionPage = new UserCollectionPage(new ArrayList<>(), userCollectionRequestBuilder);
 
         when(clientConfiguration.getB2cUrl()).thenReturn(B2C_URL);
         when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
@@ -578,14 +558,7 @@ class AccountTest {
         when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
         when(userCollectionRequest.post(any())).thenReturn(userToReturn);
 
-        User user = new User();
-        user.id = ID;
-        user.displayName = "";
-        user.givenName = "name";
-        List<User> azUsers = new ArrayList<>();
-        azUsers.add(user);
-
-        userCollectionPage = new UserCollectionPage(azUsers, userCollectionRequestBuilder);
+        userCollectionPage = new UserCollectionPage(new ArrayList<>(), userCollectionRequestBuilder);
 
         when(clientConfiguration.getB2cUrl()).thenReturn(B2C_URL);
         when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
@@ -664,7 +637,7 @@ class AccountTest {
 
         User userToReturn = new User();
         userToReturn.id = ID;
-        userToReturn.displayName = "Display name";
+        userToReturn.givenName = GIVEN_NAME;
 
         when(graphClient.users(any())).thenReturn(userRequestBuilder);
         when(userRequestBuilder.buildRequest()).thenReturn(userRequest);
@@ -698,7 +671,7 @@ class AccountTest {
     void testCreateMultipleSuccessUsersWithDifferentEmails() throws Exception {
         User userToReturn = new User();
         userToReturn.id = ID;
-        userToReturn.displayName = "Display name";
+        userToReturn.givenName = GIVEN_NAME;
 
         when(graphClient.users(any())).thenReturn(userRequestBuilder);
         when(userRequestBuilder.buildRequest()).thenReturn(userRequest);
@@ -898,13 +871,8 @@ class AccountTest {
 
     @Test
     void testUploadBulkMedia() throws Exception {
-        User user = new User();
-        user.id = ID;
-        user.displayName = "";
-        List<User> azUsers = new ArrayList<>();
-        azUsers.add(user);
 
-        userCollectionPage = new UserCollectionPage(azUsers, userCollectionRequestBuilder);
+        userCollectionPage = new UserCollectionPage(new ArrayList<>(), userCollectionRequestBuilder);
 
         when(clientConfiguration.getB2cUrl()).thenReturn(B2C_URL);
         when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
@@ -948,14 +916,8 @@ class AccountTest {
 
     @Test
     void testUploadBulkMediaEmailOnly() throws Exception {
-        User user = new User();
-        user.id = ID;
-        user.displayName = "";
-        List<User> azUsers = new ArrayList<>();
-        azUsers.add(user);
 
-        userCollectionPage = new UserCollectionPage(azUsers, userCollectionRequestBuilder);
-
+        userCollectionPage = new UserCollectionPage(new ArrayList<>(), userCollectionRequestBuilder);
         when(clientConfiguration.getB2cUrl()).thenReturn(B2C_URL);
         when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
         when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
