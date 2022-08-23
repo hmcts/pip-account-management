@@ -17,4 +17,10 @@ public interface UserRepository extends JpaRepository<PiUser, Long> {
                                             @Param("userProv") String userProvenance);
 
     Optional<PiUser> findByUserId(UUID userId);
+
+    @Query(value = "SELECT cast(USER_ID as text), PROVENANCE_USER_ID, USER_PROVENANCE, ROLES FROM pi_user",
+        nativeQuery = true)
+    List<String> getAccManDataForMI();
+
+
 }

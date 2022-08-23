@@ -303,4 +303,14 @@ public class AccountService {
         return isSuccessful;
     }
 
+    public String getAccManDataForMiReporting() {
+        List<String> data = userRepository.getAccManDataForMI();
+        StringBuilder builder = new StringBuilder();
+        builder.append("user_id, provenance_user_id, user_provenance, roles\n");
+        for(String line: data) {
+            builder.append(line).append('\n');
+        }
+        return builder.toString();
+    }
+
 }

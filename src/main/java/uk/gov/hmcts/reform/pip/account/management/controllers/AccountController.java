@@ -130,4 +130,13 @@ public class AccountController {
         @RequestHeader("x-issuer-id") String issuerId, @RequestPart MultipartFile mediaList) {
         return ResponseEntity.ok(accountService.uploadMediaFromCsv(mediaList, issuerId));
     }
+
+    @ApiResponses({
+        @ApiResponse(code = 202, message = "Account Management - MI Data request accepted.")
+    })
+    @ApiOperation("Returns a list of (anonymized) account data for MI reporting.")
+    @GetMapping("/mi-data")
+    public ResponseEntity<String> getSubscriptionDataForMiReportingLocal() {
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(accountService.getAccManDataForMiReporting());
+    }
 }
