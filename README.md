@@ -258,7 +258,7 @@ an example valid csv can be found [here](src/test/resources/csv/valid.csv).
 ### Roles
 an enum for the different roles available to P&I.
 
-`VERIFIED` - will be media users within P&I
+`VERIFIED` - will be media users within P&I.
 
 `INTERNAL_SUPER_ADMIN_CTSC` - super admin privileges for CTSC
 
