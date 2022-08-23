@@ -10,6 +10,7 @@ import org.springframework.web.multipart.MultipartFile;
 import uk.gov.hmcts.reform.pip.account.management.database.UserRepository;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.AzureCustomException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.CsvParseException;
+import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.NotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.UserNotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.model.AzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
@@ -26,6 +27,7 @@ import uk.gov.hmcts.reform.pip.model.enums.UserActions;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -66,6 +68,9 @@ public class AccountService {
 
     @Autowired
     AccountModelMapperService accountModelMapperService;
+
+    @Autowired
+    SubscriptionService subscriptionService;
 
     private static final String EMAIL_NOT_SENT_MESSAGE =
         "Account has been successfully created, however email has failed to send.";
@@ -158,6 +163,7 @@ public class AccountService {
         List<ErroredPiUser> erroredAccounts = new ArrayList<>();
 
         for (PiUser user : users) {
+            user.setLastVerifiedDate(LocalDateTime.now());
             Set<ConstraintViolation<PiUser>> constraintViolationSet = validator.validate(user);
             if (!constraintViolationSet.isEmpty()) {
                 ErroredPiUser erroredUser = new ErroredPiUser(user);
@@ -303,4 +309,26 @@ public class AccountService {
         return isSuccessful;
     }
 
+    /**
+     * Delete a user account by the supplied email.
+     * This deletes the user from AAD, our user table and subscriptions.
+     *
+     * @param email The email of the user to delete.
+     * @return Confirmation message that account has been deleted.
+     */
+    public String deleteAccount(String email) {
+        String returnMessage = "";
+        PiUser userToDelete = userRepository.findByEmail(email)
+            .orElseThrow(() -> new NotFoundException("User with supplied email could not be found"));
+        try {
+            azureUserService.deleteUser(userToDelete.getProvenanceUserId());
+            log.info(subscriptionService.sendSubscriptionDeletionRequest(userToDelete.getUserId().toString()));
+            userRepository.delete(userToDelete);
+            returnMessage = String.format("User with ID %s has been deleted", userToDelete.getUserId());
+        } catch (AzureCustomException ex) {
+            log.error("Error when deleting an account from azure with Provenance user id: %s and error: %s",
+                      userToDelete.getProvenanceUserId(), ex.getMessage());
+        }
+        return returnMessage;
+    }
 }
