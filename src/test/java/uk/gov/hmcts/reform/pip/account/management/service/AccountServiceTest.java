@@ -598,9 +598,9 @@ class AccountServiceTest {
             .as("Only one line exists - data must be missing, as only headers are printing")
             .isGreaterThanOrEqualTo(2);
         assertThat(splitLineString)
+            .as("Wrong comma count compared to header row!")
             .allSatisfy(
-                e -> assertThat(e.chars().filter(character -> character == ',').count()).isEqualTo(countLine1))
-            .as("Wrong comma count compared to header row!");
+                e -> assertThat(e.chars().filter(character -> character == ',').count()).isEqualTo(countLine1));
     }
 
     @Test
