@@ -595,7 +595,7 @@ class AccountServiceTest {
             .as("Header row missing")
             .contains("provenance_user_id");
         assertThat(splitLineString.length)
-            .as("Only one line exists - data must be missing, as only headers are printing")
+            .as("Data must be missing, are only headers printing?")
             .isGreaterThanOrEqualTo(2);
         assertThat(splitLineString)
             .as("Wrong comma count compared to header row!")
