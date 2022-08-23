@@ -139,6 +139,7 @@ public class AccountController {
     @GetMapping("/mi-data")
     public ResponseEntity<String> getMiData() {
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(accountService.getAccManDataForMiReporting());
+    }
 
     @ApiResponses({
         @ApiResponse(code = 200, message = "Account with provenance id {provenanceUserId} has been verified"),
