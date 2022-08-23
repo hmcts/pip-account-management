@@ -9,6 +9,8 @@ import com.microsoft.graph.requests.GraphServiceClient;
 import com.microsoft.graph.requests.UserCollectionPage;
 import com.microsoft.graph.requests.UserCollectionRequest;
 import com.microsoft.graph.requests.UserCollectionRequestBuilder;
+import com.microsoft.graph.requests.UserRequest;
+import com.microsoft.graph.requests.UserRequestBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -55,6 +57,12 @@ class AzureUserServiceTest {
 
     @Mock
     private GraphServiceClient<Request> graphClient;
+
+    @Mock
+    private UserRequestBuilder userRequestBuilder;
+
+    @Mock
+    private UserRequest userRequest;
 
     @InjectMocks
     private AzureUserService azureUserService;
@@ -255,4 +263,34 @@ class AzureUserServiceTest {
                      "Error message should be present when failing to communicate with the AD service");
     }
 
+    @Test
+    void testDeleteUser() throws AzureCustomException {
+        User userToReturn = new User();
+        userToReturn.id = ID;
+
+        when(graphClient.users(userToReturn.id)).thenReturn(userRequestBuilder);
+        when(userRequestBuilder.buildRequest()).thenReturn(userRequest);
+        when(userRequest.delete()).thenReturn(userToReturn);
+
+        assertEquals(userToReturn, azureUserService.deleteUser(userToReturn.id),
+                     "Returned user does not match expected");
+    }
+
+    @Test
+    void testDeleteUserErrors() {
+        User userToReturn = new User();
+        userToReturn.id = ID;
+
+        when(graphClient.users(userToReturn.id)).thenReturn(userRequestBuilder);
+        when(userRequestBuilder.buildRequest()).thenReturn(userRequest);
+        when(userRequest.delete()).thenThrow(graphServiceException);
+
+        AzureCustomException azureCustomException = assertThrows(AzureCustomException.class, () -> {
+            azureUserService.deleteUser(userToReturn.id);
+        });
+
+        assertEquals("Error when deleting account in Azure.",
+                     azureCustomException.getMessage(),
+                     "Error message should be present when failing to communicate with the AD service");
+    }
 }

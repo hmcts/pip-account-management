@@ -24,9 +24,19 @@ class SchedulerTest {
     @SpyBean
     private MediaApplicationService mediaApplicationService;
 
+    @SpyBean
+    private AccountVerificationService accountVerificationService;
+
     @Test
     void testSchedulerApplicationReportingRuns() {
-        await().atMost(Duration.TEN_SECONDS).untilAsserted(() ->
+        await().atMost(Duration.ONE_MINUTE).untilAsserted(() ->
             verify(mediaApplicationService, times(1)).processApplicationsForReporting());
+    }
+
+    @Test
+    void testSchedulerAccountVerificationEmailRuns() {
+        await().atMost(Duration.ONE_MINUTE).untilAsserted(() ->
+            verify(accountVerificationService, times(1))
+                .processEligibleMediaUsersForVerification());
     }
 }
