@@ -524,7 +524,7 @@ class AccountServiceTest {
     }
 
     @Test
-    void testMiEndpoint() {
+    void testMiService() {
 
         when(userRepository.getAccManDataForMI()).thenReturn(EXAMPLE_CSV);
         String testString = accountService.getAccManDataForMiReporting();
