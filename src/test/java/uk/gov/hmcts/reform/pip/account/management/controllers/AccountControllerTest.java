@@ -198,4 +198,12 @@ class AccountControllerTest {
         }
     }
 
+    @Test
+    void testMiDataReturnsOk() {
+        assertEquals(HttpStatus.ACCEPTED,
+                     accountController.getSubscriptionDataForMiReporting().getStatusCode(),
+                     STATUS_CODE_MATCH);
+    }
+
+
 }

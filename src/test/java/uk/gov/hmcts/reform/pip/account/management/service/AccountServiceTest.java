@@ -41,6 +41,7 @@ import javax.validation.ConstraintViolation;
 import javax.validation.Path;
 import javax.validation.Validator;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -507,7 +508,23 @@ class AccountServiceTest {
                                                 "Should throw CsvParseException");
             assertTrue(ex.getMessage().contains("Failed to parse CSV File due to"), MESSAGES_MATCH);
 
-
         }
+    }
+
+    @Test
+    void testMiEndpoint() {
+        String testString = accountService.getAccManDataForMiReporting();
+        String[] splitLineString = testString.split("\r\n|\r|\n");
+        long countLine1 = splitLineString[0].chars().filter(character -> character == ',').count();
+        assertThat(testString)
+            .as("Header row missing")
+            .contains("provenance_user_id");
+        assertThat(splitLineString)
+            .as("Only one line exists - data must be missing, as only headers are printing")
+            .hasSizeGreaterThanOrEqualTo(1);
+        assertThat(splitLineString)
+            .allSatisfy(
+                e -> assertThat(e.chars().filter(character -> character == ',').count()).isEqualTo(countLine1))
+            .as("Wrong comma count compared to header row!");
     }
 }
