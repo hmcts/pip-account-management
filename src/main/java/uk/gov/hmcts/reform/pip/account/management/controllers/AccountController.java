@@ -136,7 +136,7 @@ public class AccountController {
     })
     @ApiOperation("Returns a list of (anonymized) account data for MI reporting.")
     @GetMapping("/mi-data")
-    public ResponseEntity<String> getSubscriptionDataForMiReporting() {
+    public ResponseEntity<String> getMiData() {
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(accountService.getAccManDataForMiReporting());
     }
 }

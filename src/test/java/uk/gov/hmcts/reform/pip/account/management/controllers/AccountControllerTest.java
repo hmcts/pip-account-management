@@ -201,7 +201,7 @@ class AccountControllerTest {
     @Test
     void testMiDataReturnsOk() {
         assertEquals(HttpStatus.ACCEPTED,
-                     accountController.getSubscriptionDataForMiReporting().getStatusCode(),
+                     accountController.getMiData().getStatusCode(),
                      STATUS_CODE_MATCH);
     }
 

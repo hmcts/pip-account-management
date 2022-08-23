@@ -99,6 +99,8 @@ class AccountServiceTest {
     private static final boolean FALSE = false;
     private static final boolean TRUE = true;
     private static final String SHOULD_CONTAIN = "Should contain ";
+    public static final List<String> EXAMPLE_CSV = List.of(
+        "2fe899ff-96ed-435a-bcad-1411bbe96d2a,string,CFT_IDAM,INTERNAL_ADMIN_CTSC");
 
     private static final UUID VALID_USER_ID = UUID.randomUUID();
     private static final UUID VALID_USER_ID_IDAM = UUID.randomUUID();
@@ -221,9 +223,11 @@ class AccountServiceTest {
 
         accountService.addAzureAccounts(List.of(azureAccount), ISSUER_ID, FALSE);
 
-        assertEquals("Error when checking account into Azure.",
-                     azureCustomException.getMessage(),
-                     "Error message should be present when failing to communicate with the AD service");
+        assertEquals(
+            "Error when checking account into Azure.",
+            azureCustomException.getMessage(),
+            "Error message should be present when failing to communicate with the AD service"
+        );
     }
 
     @Test
@@ -345,9 +349,11 @@ class AccountServiceTest {
     @Test
     void testAddDuplicateUsers() {
         PiUser user1 = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, ID, EMAIL,
-                                 Roles.INTERNAL_ADMIN_CTSC, null);
+                                  Roles.INTERNAL_ADMIN_CTSC, null
+        );
         PiUser user2 = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, "567", "test@test.com",
-                                 Roles.INTERNAL_ADMIN_CTSC, null);
+                                  Roles.INTERNAL_ADMIN_CTSC, null
+        );
         List<PiUser> users = new ArrayList<>();
         users.add(user1);
         users.add(user2);
@@ -436,7 +442,8 @@ class AccountServiceTest {
         try (LogCaptor logCaptor = LogCaptor.forClass(AccountService.class)) {
             accountService.addAzureAccounts(List.of(azureAccount), ISSUER_ID, FALSE);
             assertEquals(0, logCaptor.getInfoLogs().size(),
-                         "Should not log if failed creating account");
+                         "Should not log if failed creating account"
+            );
         }
     }
 
@@ -451,7 +458,8 @@ class AccountServiceTest {
         expectedUserEmailMap.put(VALID_USER_ID.toString(), Optional.of(EMAIL));
 
         assertEquals(expectedUserEmailMap, accountService.findUserEmailsByIds(userIdsList),
-                     "Returned map does not match with expected map");
+                     "Returned map does not match with expected map"
+        );
     }
 
     @Test
@@ -465,7 +473,8 @@ class AccountServiceTest {
         expectedUserEmailMap.put(VALID_USER_ID.toString(), Optional.empty());
 
         assertEquals(expectedUserEmailMap, accountService.findUserEmailsByIds(userIdsList),
-                     "Returned map does not match with expected map");
+                     "Returned map does not match with expected map"
+        );
     }
 
     @Test
@@ -486,7 +495,8 @@ class AccountServiceTest {
             .getResourceAsStream("csv/valid.csv")) {
             MultipartFile multipartFile = new MockMultipartFile("file", "TestFileName",
                                                                 "text/plain",
-                                                                IOUtils.toByteArray(inputStream));
+                                                                IOUtils.toByteArray(inputStream)
+            );
 
             assertEquals(2, accountService.uploadMediaFromCsv(multipartFile, EMAIL)
                 .get(CreationEnum.CREATED_ACCOUNTS).size(), "Created account size should match");
@@ -501,11 +511,13 @@ class AccountServiceTest {
             .getResourceAsStream("csv/invalidCsv.txt")) {
             MultipartFile multipartFile = new MockMultipartFile("file", "TestFileName",
                                                                 "text/plain",
-                                                                IOUtils.toByteArray(inputStream));
+                                                                IOUtils.toByteArray(inputStream)
+            );
 
             CsvParseException ex = assertThrows(CsvParseException.class, () ->
-                accountService.uploadMediaFromCsv(multipartFile, EMAIL),
-                                                "Should throw CsvParseException");
+                                                    accountService.uploadMediaFromCsv(multipartFile, EMAIL),
+                                                "Should throw CsvParseException"
+            );
             assertTrue(ex.getMessage().contains("Failed to parse CSV File due to"), MESSAGES_MATCH);
 
         }
@@ -513,15 +525,21 @@ class AccountServiceTest {
 
     @Test
     void testMiEndpoint() {
+
+        when(userRepository.getAccManDataForMI()).thenReturn(EXAMPLE_CSV);
         String testString = accountService.getAccManDataForMiReporting();
-        String[] splitLineString = testString.split("\r\n|\r|\n");
+        assertThat(testString)
+            .as("Json parsing has probably failed")
+            .contains("CTSC")
+            .hasLineCount(2);
+        String[] splitLineString = testString.split("(\r\n|\r|\n)");
         long countLine1 = splitLineString[0].chars().filter(character -> character == ',').count();
         assertThat(testString)
             .as("Header row missing")
             .contains("provenance_user_id");
-        assertThat(splitLineString)
+        assertThat(splitLineString.length)
             .as("Only one line exists - data must be missing, as only headers are printing")
-            .hasSizeGreaterThanOrEqualTo(1);
+            .isGreaterThanOrEqualTo(2);
         assertThat(splitLineString)
             .allSatisfy(
                 e -> assertThat(e.chars().filter(character -> character == ',').count()).isEqualTo(countLine1))
