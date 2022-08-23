@@ -8,5 +8,5 @@ def component = "account-management"
 
 withPipeline(type, product, component) {
 
-    enableSlackNotifications('#pip-build-notices')
+  enableSlackNotifications('#pip-build-notices')
 }

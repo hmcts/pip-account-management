@@ -29,6 +29,7 @@ public class ErroredPiUser extends PiUser {
               user.getProvenanceUserId(),
               user.getEmail(),
               user.getRoles(),
-              user.getCreatedDate());
+              user.getCreatedDate(),
+              user.getLastVerifiedDate());
     }
 }

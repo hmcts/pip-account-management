@@ -5,6 +5,7 @@
 def type = "java"
 def product = "pip"
 def component = "account-management"
+def kv = product + '-ss-kv'
 
 def setupTestSecrets() {
   def bootstap_env = env.ENV == "prod" || env.ENV == "demo" || env.ENV == "sbox" ? env.ENV : "stg"
@@ -15,6 +16,7 @@ def setupTestSecrets() {
       secret('app-pip-account-management-id', 'CLIENT_ID'),
       secret('app-pip-account-management-pwd', 'CLIENT_SECRET'),
       secret('app-pip-publication-services-scope', 'PUBLICATION_SERVICES_AZ_API'),
+      secret('app-pip-subscription-management-scope', 'SUBSCRIPTION_MANAGEMENT_AZ_API'),
       secret('app-tenant', 'TENANT_ID'),
 
     ]) {
@@ -22,6 +24,7 @@ def setupTestSecrets() {
     env.CLIENT_ID = "${CLIENT_ID}"
     env.CLIENT_SECRET = "${CLIENT_SECRET}"
     env.PUBLICATION_SERVICES_AZ_API = "${PUBLICATION_SERVICES_AZ_API}"
+    env.SUBSCRIPTION_MANAGEMENT_AZ_API = "${SUBSCRIPTION_MANAGEMENT_AZ_API}"
     env.TENANT_ID = "${TENANT_ID}"
   }
 }
@@ -36,7 +39,6 @@ static LinkedHashMap<String, Object> secret(String secretName, String envVar) {
 }
 
 withPipeline(type, product, component) {
-
   onMaster() {
     env.ENV = 'stg'
   }
@@ -52,7 +54,9 @@ withPipeline(type, product, component) {
   onIthc {
     env.ENV = 'ithc'
   }
+
   setupTestSecrets()
+  enableDbMigration(kv)
   enableSlackNotifications('#pip-build-notices')
   enableAksStagingDeployment()
   disableLegacyDeployment()

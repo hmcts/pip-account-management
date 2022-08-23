@@ -105,4 +105,17 @@ public class AzureUserService {
         }
     }
 
+    /**
+     * Delete an account from the Azure active directory.
+     * @param userId The userId of the account to delete.
+     * @return The deleted user if it was successful.
+     * @throws AzureCustomException thrown if there is an error with communicating with Azure.
+     */
+    public User deleteUser(String userId) throws AzureCustomException {
+        try {
+            return graphClient.users(userId).buildRequest().delete();
+        } catch (GraphServiceException e) {
+            throw new AzureCustomException("Error when deleting account in Azure.");
+        }
+    }
 }
