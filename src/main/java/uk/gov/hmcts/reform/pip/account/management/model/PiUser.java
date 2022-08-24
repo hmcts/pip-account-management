@@ -21,6 +21,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -53,13 +54,15 @@ public class PiUser {
     /**
      * The user id of the user as per their provenance system.
      */
-    @NotNull
-    @NotBlank
+    @NotNull(message = "provenance user id must not be null")
+    @NotBlank(message = "provenance user id must not be blank")
     private String provenanceUserId;
 
     /**
      * Email of the user.
      */
+    @NotNull(message = "Email field must not be null")
+    @NotBlank(message = "Email field must not be blank")
     private String email;
 
     /**
