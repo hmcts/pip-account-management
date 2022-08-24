@@ -133,12 +133,12 @@ public class AccountController {
     }
 
     @ApiResponses({
-        @ApiResponse(code = 202, message = "Account Management - MI Data request accepted.")
+        @ApiResponse(code = 200, message = "Account Management - MI Data request accepted.")
     })
     @ApiOperation("Returns a list of (anonymized) account data for MI reporting.")
     @GetMapping("/mi-data")
     public ResponseEntity<String> getMiData() {
-        return ResponseEntity.status(HttpStatus.ACCEPTED).body(accountService.getAccManDataForMiReporting());
+        return ResponseEntity.status(HttpStatus.OK).body(accountService.getAccManDataForMiReporting());
     }
 
     @ApiResponses({

@@ -200,11 +200,11 @@ class AccountControllerTest {
 
     @Test
     void testMiDataReturnsOk() {
-        assertEquals(HttpStatus.ACCEPTED,
+        assertEquals(HttpStatus.OK,
                      accountController.getMiData().getStatusCode(),
                      STATUS_CODE_MATCH);
     }
-    
+
     @Test
     void testUpdateAccountVerification() {
         String expectedString = "Account with provenance id 0b8968b4-5c79-4e4e-8f66-f6a552d9fa67 has been verified";
