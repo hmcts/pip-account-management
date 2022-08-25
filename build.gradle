@@ -26,9 +26,9 @@ allprojects {
 }
 
 repositories {
-    mavenLocal()
-    mavenCentral()
-    maven { url 'https://jitpack.io' }
+  mavenLocal()
+  mavenCentral()
+  maven { url 'https://jitpack.io' }
 }
 
 sourceSets {
@@ -111,26 +111,26 @@ pmd {
 }
 
 jacoco {
-    toolVersion = "0.8.6"
+  toolVersion = "0.8.6"
 }
 
 jacocoTestReport {
-    executionData(test)
-    reports {
-        xml.required = true
-        csv.required = false
-        xml.destination file("${buildDir}/reports/jacoco/test/jacocoTestReport.xml")
-    }
+  executionData(test)
+  reports {
+    xml.required = true
+    csv.required = false
+    xml.destination file("${buildDir}/reports/jacoco/test/jacocoTestReport.xml")
+  }
 }
 
 jacocoTestCoverageVerification {
-    violationRules {
-        rule {
-            limit {
-                minimum = 0.8
-            }
-        }
+  violationRules {
+    rule {
+      limit {
+        minimum = 0.8
+      }
     }
+  }
 }
 
 project.tasks['sonarqube'].dependsOn jacocoTestReport
@@ -139,12 +139,12 @@ def sonarExclusions = ["**/WebClientConfig.java"]
 
 sonarqube {
   properties {
-        property "sonar.projectKey", "pip-account-management"
-        property "sonar.exclusions", sonarExclusions.join(', ')
-        property "sonar.dynamicAnalysis", "reuseReports"
-        property "sonar.java.coveragePlugin", "jacoco"
-        property "sonar.coverage.jacoco.xmlReportPaths", "${jacocoTestReport.reports.xml.destination.path}"
-        property "sonar.dependencyCheck.reportPath", "${project.buildDir}/reports/dependency-check-report.xml"
+    property "sonar.projectKey", "pip-account-management"
+    property "sonar.exclusions", sonarExclusions.join(', ')
+    property "sonar.dynamicAnalysis", "reuseReports"
+    property "sonar.java.coveragePlugin", "jacoco"
+    property "sonar.coverage.jacoco.xmlReportPaths", "${jacocoTestReport.reports.xml.destination.path}"
+    property "sonar.dependencyCheck.reportPath", "${project.buildDir}/reports/dependency-check-report.xml"
   }
 }
 
@@ -176,7 +176,7 @@ dependencies {
   implementation group: 'org.postgresql', name: 'postgresql', version: '42.4.1'
   implementation 'com.azure.spring:spring-cloud-azure-starter-active-directory:4.0.0'
   implementation group: 'org.springframework.boot', name: 'spring-boot-starter-oauth2-resource-server'
-  implementation group: 'org.springframework.boot', name:'spring-boot-starter-webflux'
+  implementation group: 'org.springframework.boot', name: 'spring-boot-starter-webflux'
   implementation group: 'org.springframework.boot', name: 'spring-boot-starter-validation'
   implementation group: 'org.springframework.boot', name: 'spring-boot-starter-jdbc'
   implementation group: 'org.springframework.boot', name: 'spring-boot-starter-data-jpa'
@@ -185,6 +185,7 @@ dependencies {
   implementation group: 'com.squareup.okhttp3', name: 'okhttp', version: '4.9.3'
   implementation group: 'com.opencsv', name: 'opencsv', version: '5.5.2'
   implementation group: 'org.springframework.boot', name: 'spring-boot-starter-oauth2-client'
+  implementation group: 'commons-validator', name: 'commons-validator', version: '1.7'
 
   // Include the sdk as a dependency
   implementation group: 'com.microsoft.graph', name: 'microsoft-graph', version: '5.17.0'
@@ -237,7 +238,7 @@ rootProject.tasks.named("processFunctionalTestResources") {
 }
 
 wrapper {
-    distributionType = Wrapper.DistributionType.ALL
+  distributionType = Wrapper.DistributionType.ALL
 }
 
 ext['log4j2.version'] = '2.17.1'
