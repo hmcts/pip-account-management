@@ -15,7 +15,7 @@ import javax.validation.Payload;
 @Target({ElementType.METHOD, ElementType.FIELD, ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface AzureEmail {
-    String message() default "{Email}";
+    String message() default "{must be a well-formed email address}";
 
     Class<?>[] groups() default {};
 
