@@ -31,7 +31,7 @@ import javax.validation.constraints.NotNull;
 @AllArgsConstructor
 @NoArgsConstructor
 @ValidProvenanceUserId
-@PiEmailConditionalValidation(message = "Invalid email provided.")
+@PiEmailConditionalValidation
 @EntityListeners(AuditingEntityListener.class)
 public class PiUser {
 
@@ -58,10 +58,8 @@ public class PiUser {
     private String provenanceUserId;
 
     /**
-     * Email of the user.
+     * Email of the user. Validated at the class level by PiEmailConditionalValidation interface.
      */
-    @NotNull(message = "Email field must not be null")
-    @NotBlank(message = "Email field must not be blank")
     private String email;
 
     /**

@@ -16,7 +16,7 @@ import javax.validation.Payload;
 @Target({ElementType.METHOD, ElementType.FIELD, ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface PiEmailConditionalValidation {
-    String message() default "{Email}";
+    String message() default "Invalid email provided. Should not be null, empty or badly formed.";
 
     Class<?>[] groups() default {};
 
