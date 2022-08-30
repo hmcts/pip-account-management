@@ -4,6 +4,7 @@ package uk.gov.hmcts.reform.pip.account.management.model;
 public enum ListType {
     SJP_PUBLIC_LIST(UserProvenances.PI_AAD),
     SJP_PRESS_LIST(UserProvenances.PI_AAD),
+    SJP_PRESS_REGISTER(UserProvenances.PI_AAD),
     CROWN_DAILY_LIST(UserProvenances.CRIME_IDAM),
     CROWN_FIRM_LIST(UserProvenances.CRIME_IDAM),
     CROWN_WARNED_LIST(UserProvenances.CRIME_IDAM),
