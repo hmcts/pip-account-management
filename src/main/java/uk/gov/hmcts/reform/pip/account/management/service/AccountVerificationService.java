@@ -37,7 +37,7 @@ public class AccountVerificationService {
      */
     @Scheduled(cron = "${cron.media-account-verification-check}")
     public void processEligibleMediaUsersForVerification() {
-        findAccountsForDeletion();
+        findMediaAccountsForDeletion();
         sendMediaUsersForVerification();
     }
 
@@ -46,7 +46,7 @@ public class AccountVerificationService {
      * Method that gets all media users who last verified at least 350 days ago.
      * Then send their details on to publication services to send them a verification email.
      */
-    private void sendMediaUsersForVerification() {
+    public void sendMediaUsersForVerification() {
         userRepository.findVerifiedUsersByLastVerifiedDate(mediaAccountVerificationDays).forEach(user -> {
             try {
                 log.info(publicationService.sendAccountVerificationEmail(
@@ -63,7 +63,7 @@ public class AccountVerificationService {
      * Method that gets all media users who have not verified their account in 365 days.
      * Account service handles the deletion of their AAD, P&I user and subscriptions.
      */
-    private void findAccountsForDeletion() {
+    public void findMediaAccountsForDeletion() {
         userRepository.findVerifiedUsersByLastVerifiedDate(mediaAccountDeletionDays).forEach(user -> {
             log.info(accountService.deleteAccount(user.getEmail()));
         });

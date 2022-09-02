@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import uk.gov.hmcts.reform.pip.account.management.authentication.roles.IsAdmin;
@@ -26,6 +28,7 @@ import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
 import uk.gov.hmcts.reform.pip.account.management.model.Sensitivity;
 import uk.gov.hmcts.reform.pip.account.management.model.UserProvenances;
 import uk.gov.hmcts.reform.pip.account.management.service.AccountService;
+import uk.gov.hmcts.reform.pip.account.management.service.AccountVerificationService;
 
 import java.util.List;
 import java.util.Map;
@@ -42,6 +45,10 @@ public class AccountController {
     @Autowired
     private AccountService accountService;
 
+    @Autowired
+    private AccountVerificationService accountVerificationService;
+
+    private static final String NO_CONTENT_MESSAGE = "The request has been successfully fulfilled";
     private static final String NOT_AUTHORIZED_MESSAGE = "User has not been authorized";
 
     /**
@@ -141,5 +148,29 @@ public class AccountController {
     @PutMapping("/verification/{provenanceUserId}")
     public ResponseEntity<String> updateAccountVerification(@PathVariable String provenanceUserId) {
         return ResponseEntity.ok(accountService.updateAccountVerification(provenanceUserId));
+    }
+
+    @ApiResponses({
+        @ApiResponse(code = 204, message = NO_CONTENT_MESSAGE),
+        @ApiResponse(code = 403, message = NO_CONTENT_MESSAGE)
+    })
+    @ApiOperation("Notify inactive media users to verify their accounts")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PostMapping("/media/inactive/notify")
+    public ResponseEntity<Void> notifyInactiveMediaAccounts() {
+        accountVerificationService.sendMediaUsersForVerification();
+        return ResponseEntity.noContent().build();
+    }
+
+    @ApiResponses({
+        @ApiResponse(code = 204, message = NO_CONTENT_MESSAGE),
+        @ApiResponse(code = 403, message = NOT_AUTHORIZED_MESSAGE)
+    })
+    @ApiOperation("Delete all expired inactive accounts")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @DeleteMapping("/media/inactive")
+    public ResponseEntity<Void> deleteExpiredMediaAccounts() {
+        accountVerificationService.findMediaAccountsForDeletion();
+        return ResponseEntity.noContent().build();
     }
 }

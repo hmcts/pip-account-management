@@ -149,21 +149,26 @@ public class MediaApplicationService {
      * Scheduled job that gets all media applications & sends them to publication services.
      */
     @Scheduled(cron = "${cron.media-application-reporting}")
-    public void processApplicationsForReporting() {
-        List<MediaApplication> mediaApplications = getApplications();
-        log.info(publicationService.sendMediaApplicationReportingEmail(mediaApplications));
-        processApplicationsForDeleting(mediaApplications);
+    public void processApplications() {
+        processApplicationsForReporting();
+        processApplicationsForDeleting();
     }
 
     /**
-     * Take in a list of applications.
-     * Delete the records that have APPROVED or REJECTED status.
-     *
-     * @param applicationList The list of applications to filter by and delete.
+     * Collate media applications and send them for reporting.
      */
-    private void processApplicationsForDeleting(List<MediaApplication> applicationList) {
+    public void processApplicationsForReporting() {
+        List<MediaApplication> mediaApplications = getApplications();
+        log.info(publicationService.sendMediaApplicationReportingEmail(mediaApplications));
+    }
+
+    /**
+     * Delete media applications that have APPROVED or REJECTED status.
+     */
+    public void processApplicationsForDeleting() {
+        List<MediaApplication> mediaApplications = getApplications();
         mediaApplicationRepository.deleteAllInBatch(
-            applicationList.stream().filter(app -> app.getStatus().equals(MediaApplicationStatus.APPROVED)
+            mediaApplications.stream().filter(app -> app.getStatus().equals(MediaApplicationStatus.APPROVED)
                 || app.getStatus().equals(MediaApplicationStatus.REJECTED))
                 .collect(Collectors.toList()));
 

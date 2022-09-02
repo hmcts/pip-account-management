@@ -7,6 +7,7 @@ import io.swagger.annotations.ApiResponses;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import uk.gov.hmcts.reform.pip.account.management.authentication.roles.IsAdmin;
@@ -39,6 +41,7 @@ public class MediaApplicationController {
 
     private final MediaApplicationService mediaApplicationService;
 
+    private static final String NO_CONTENT_MESSAGE = "The request has been successfully fulfilled";
     private static final String NOT_AUTHORIZED_MESSAGE = "User has not been authorized";
 
     @Autowired
@@ -124,5 +127,29 @@ public class MediaApplicationController {
     public ResponseEntity<String> deleteApplication(@PathVariable UUID id) {
         mediaApplicationService.deleteApplication(id);
         return ResponseEntity.ok("Application deleted");
+    }
+
+    @ApiResponses({
+        @ApiResponse(code = 204, message = NO_CONTENT_MESSAGE),
+        @ApiResponse(code = 403, message = NOT_AUTHORIZED_MESSAGE)
+    })
+    @ApiOperation("Report all media applications")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PostMapping("/reporting")
+    public ResponseEntity<Void> reportApplications() {
+        mediaApplicationService.processApplicationsForReporting();
+        return ResponseEntity.noContent().build();
+    }
+
+    @ApiResponses({
+        @ApiResponse(code = 204, message = NO_CONTENT_MESSAGE),
+        @ApiResponse(code = 403, message = NOT_AUTHORIZED_MESSAGE)
+    })
+    @ApiOperation("Delete all media applications which have been processed (approved or rejected)")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @DeleteMapping("/processed")
+    public ResponseEntity<Void> deleteProcessedApplications() {
+        mediaApplicationService.processApplicationsForDeleting();
+        return ResponseEntity.noContent().build();
     }
 }
