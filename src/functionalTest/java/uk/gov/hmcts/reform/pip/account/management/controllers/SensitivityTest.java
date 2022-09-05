@@ -40,6 +40,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 @WithMockUser(username = "admin", authorities = { "APPROLE_api.request.admin" })
+@SuppressWarnings("PMD.TooManyMethods")
 class SensitivityTest {
 
     @Autowired
@@ -84,15 +85,7 @@ class SensitivityTest {
         user.setUserProvenance(UserProvenances.PI_AAD);
         user.setRoles(Roles.VERIFIED);
 
-        String createdUserId = createUserAndGetId(user);
-
-        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
-            .get(String.format(URL_FORMAT, ROOT_URL, createdUserId, ListType.SJP_PRESS_LIST,
-                               Sensitivity.PUBLIC
-            ));
-
-        MvcResult response = mockMvc.perform(request).andExpect(status().isOk()).andReturn();
-
+        MvcResult response = callIsAuthorised(user, Sensitivity.PUBLIC);
         assertTrue(Boolean.parseBoolean(response.getResponse().getContentAsString()), TRUE_MESSAGE);
     }
 
@@ -101,15 +94,16 @@ class SensitivityTest {
         user.setUserProvenance(UserProvenances.PI_AAD);
         user.setRoles(Roles.INTERNAL_ADMIN_CTSC);
 
-        String createdUserId = createUserAndGetId(user);
+        MvcResult response = callIsAuthorised(user, Sensitivity.PUBLIC);
+        assertTrue(Boolean.parseBoolean(response.getResponse().getContentAsString()), TRUE_MESSAGE);
+    }
 
-        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
-            .get(String.format(URL_FORMAT, ROOT_URL, createdUserId, ListType.SJP_PRESS_LIST,
-                               Sensitivity.PUBLIC
-            ));
+    @Test
+    void testIsUserAuthenticatedReturnsTrueWhenPublicListAndThirdParty() throws Exception {
+        user.setUserProvenance(UserProvenances.THIRD_PARTY);
+        user.setRoles(Roles.VERIFIED_THIRD_PARTY_ALL);
 
-        MvcResult response = mockMvc.perform(request).andExpect(status().isOk()).andReturn();
-
+        MvcResult response = callIsAuthorised(user, Sensitivity.PUBLIC);
         assertTrue(Boolean.parseBoolean(response.getResponse().getContentAsString()), TRUE_MESSAGE);
     }
 
@@ -118,15 +112,7 @@ class SensitivityTest {
         user.setUserProvenance(UserProvenances.PI_AAD);
         user.setRoles(Roles.VERIFIED);
 
-        String createdUserId = createUserAndGetId(user);
-
-        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
-            .get(String.format(URL_FORMAT, ROOT_URL, createdUserId, ListType.SJP_PRESS_LIST,
-                               Sensitivity.PRIVATE
-            ));
-
-        MvcResult response = mockMvc.perform(request).andExpect(status().isOk()).andReturn();
-
+        MvcResult response = callIsAuthorised(user, Sensitivity.PRIVATE);
         assertTrue(Boolean.parseBoolean(response.getResponse().getContentAsString()), TRUE_MESSAGE);
     }
 
@@ -135,16 +121,17 @@ class SensitivityTest {
         user.setUserProvenance(UserProvenances.PI_AAD);
         user.setRoles(Roles.INTERNAL_ADMIN_CTSC);
 
-        String createdUserId = createUserAndGetId(user);
-
-        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
-            .get(String.format(URL_FORMAT, ROOT_URL, createdUserId, ListType.SJP_PRESS_LIST,
-                               Sensitivity.PRIVATE
-            ));
-
-        MvcResult response = mockMvc.perform(request).andExpect(status().isOk()).andReturn();
-
+        MvcResult response = callIsAuthorised(user, Sensitivity.PRIVATE);
         assertFalse(Boolean.parseBoolean(response.getResponse().getContentAsString()), FALSE_MESSAGE);
+    }
+
+    @Test
+    void testIsUserAuthenticatedReturnsTrueWhenPrivateListAndThirdParty() throws Exception {
+        user.setUserProvenance(UserProvenances.THIRD_PARTY);
+        user.setRoles(Roles.GENERAL_THIRD_PARTY);
+
+        MvcResult response = callIsAuthorised(user, Sensitivity.PRIVATE);
+        assertTrue(Boolean.parseBoolean(response.getResponse().getContentAsString()), TRUE_MESSAGE);
     }
 
     @Test
@@ -152,15 +139,7 @@ class SensitivityTest {
         user.setUserProvenance(UserProvenances.PI_AAD);
         user.setRoles(Roles.VERIFIED);
 
-        String createdUserId = createUserAndGetId(user);
-
-        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
-            .get(String.format(URL_FORMAT, ROOT_URL, createdUserId, ListType.SJP_PRESS_LIST,
-                               Sensitivity.CLASSIFIED
-            ));
-
-        MvcResult response = mockMvc.perform(request).andExpect(status().isOk()).andReturn();
-
+        MvcResult response = callIsAuthorised(user, Sensitivity.CLASSIFIED);
         assertTrue(Boolean.parseBoolean(response.getResponse().getContentAsString()), TRUE_MESSAGE);
     }
 
@@ -169,15 +148,7 @@ class SensitivityTest {
         user.setUserProvenance(UserProvenances.CFT_IDAM);
         user.setRoles(Roles.VERIFIED);
 
-        String createdUserId = createUserAndGetId(user);
-
-        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
-            .get(String.format(URL_FORMAT, ROOT_URL, createdUserId, ListType.SJP_PRESS_LIST,
-                               Sensitivity.CLASSIFIED
-            ));
-
-        MvcResult response = mockMvc.perform(request).andExpect(status().isOk()).andReturn();
-
+        MvcResult response = callIsAuthorised(user, Sensitivity.CLASSIFIED);
         assertFalse(Boolean.parseBoolean(response.getResponse().getContentAsString()), FALSE_MESSAGE);
     }
 
@@ -186,16 +157,34 @@ class SensitivityTest {
         user.setUserProvenance(UserProvenances.CFT_IDAM);
         user.setRoles(Roles.INTERNAL_ADMIN_CTSC);
 
-        String createdUserId = createUserAndGetId(user);
-
-        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
-            .get(String.format(URL_FORMAT, ROOT_URL, createdUserId, ListType.SJP_PRESS_LIST,
-                               Sensitivity.CLASSIFIED
-            ));
-
-        MvcResult response = mockMvc.perform(request).andExpect(status().isOk()).andReturn();
-
+        MvcResult response = callIsAuthorised(user, Sensitivity.CLASSIFIED);
         assertFalse(Boolean.parseBoolean(response.getResponse().getContentAsString()), FALSE_MESSAGE);
     }
 
+    @Test
+    void testIsUserAuthenticatedReturnsTrueWhenClassifiedListAndThirdPartyPressRole() throws Exception {
+        user.setUserProvenance(UserProvenances.THIRD_PARTY);
+        user.setRoles(Roles.VERIFIED_THIRD_PARTY_PRESS);
+
+        MvcResult response = callIsAuthorised(user, Sensitivity.CLASSIFIED);
+        assertTrue(Boolean.parseBoolean(response.getResponse().getContentAsString()), TRUE_MESSAGE);
+    }
+
+    @Test
+    void testIsUserAuthenticatedReturnsFalseWhenClassifiedListAndThirdPartyNonPressRole() throws Exception {
+        user.setUserProvenance(UserProvenances.THIRD_PARTY);
+        user.setRoles(Roles.VERIFIED_THIRD_PARTY_CRIME_CFT);
+
+        MvcResult response = callIsAuthorised(user, Sensitivity.CLASSIFIED);
+        assertFalse(Boolean.parseBoolean(response.getResponse().getContentAsString()), FALSE_MESSAGE);
+    }
+
+    private MvcResult callIsAuthorised(PiUser user, Sensitivity sensitivity) throws Exception {
+        String createdUserId = createUserAndGetId(user);
+
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+            .get(String.format(URL_FORMAT, ROOT_URL, createdUserId, ListType.SJP_PRESS_LIST, sensitivity));
+
+        return mockMvc.perform(request).andExpect(status().isOk()).andReturn();
+    }
 }
