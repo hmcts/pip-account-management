@@ -39,19 +39,8 @@ class ConditionalEmailValidatorTest {
 
     @ParameterizedTest
     @NullAndEmptySource
-    @ValueSource(strings = {"test@email.com", ""})
-    void testTechnicalUserReturnsTrueRegardless(String email) {
-        piUser.setRoles(Roles.TECHNICAL);
-        piUser.setEmail(email);
-        assertThat(conditionalEmailValidator.isValid(piUser, null))
-            .as("Tech users should be valid regardless of email status")
-            .isTrue();
-    }
-
-    @ParameterizedTest
-    @NullAndEmptySource
     @ValueSource(strings = {"d.f@x", "d@x.", "b@b@", "test", "河蟹"})
-    void testNonTechnicalUserValidationBehavesProperlyForFails(String email) {
+    void testUserValidationBehavesProperlyForFails(String email) {
         piUser.setRoles(Roles.INTERNAL_ADMIN_CTSC);
         piUser.setEmail(email);
         assertThat(conditionalEmailValidator.isValid(piUser, null))
@@ -61,7 +50,7 @@ class ConditionalEmailValidatorTest {
 
     @ParameterizedTest
     @ValueSource(strings = {"d.f@x.co", "d-f-x@x.ph", "wilfred_owen@x.su", "test.for+google@gmail.com"})
-    void testNonTechnicalUserValidationBehavesProperlyForPasses(String email) {
+    void testUserValidationBehavesProperlyForPasses(String email) {
         piUser.setRoles(Roles.VERIFIED);
         piUser.setEmail(email);
         assertThat(conditionalEmailValidator.isValid(piUser, null))
