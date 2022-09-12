@@ -98,13 +98,13 @@ class AccountControllerTest {
         when(accountService.isUserAuthorisedForPublication(any(), any(), any())).thenReturn(true);
         assertEquals(
             HttpStatus.OK,
-            accountController.checkUserAuthorised(UUID.randomUUID(), ListType.MAGS_PUBLIC_LIST,
+            accountController.checkUserAuthorised(UUID.randomUUID(), ListType.MAGISTRATES_PUBLIC_LIST,
                                                   Sensitivity.PUBLIC).getStatusCode(),
             STATUS_CODE_MATCH
         );
         assertEquals(
             true,
-            accountController.checkUserAuthorised(UUID.randomUUID(), ListType.MAGS_PUBLIC_LIST,
+            accountController.checkUserAuthorised(UUID.randomUUID(), ListType.MAGISTRATES_PUBLIC_LIST,
                                                   Sensitivity.PUBLIC).getBody(),
             "Should return boolean value"
         );

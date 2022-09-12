@@ -143,13 +143,14 @@ class SensitivityServiceTest {
             Arguments.of(ListType.CROWN_DAILY_LIST, Roles.VERIFIED_THIRD_PARTY_ALL, true),
             Arguments.of(ListType.CROWN_FIRM_LIST, Roles.VERIFIED_THIRD_PARTY_CRIME, true),
             Arguments.of(ListType.CROWN_WARNED_LIST, Roles.VERIFIED_THIRD_PARTY_CRIME_PRESS, true),
-            Arguments.of(ListType.MAGS_PUBLIC_LIST, Roles.VERIFIED_THIRD_PARTY_CFT, false),
-            Arguments.of(ListType.MAGS_STANDARD_LIST, Roles.VERIFIED_THIRD_PARTY_CFT_PRESS, false),
+            Arguments.of(ListType.MAGISTRATES_PUBLIC_LIST, Roles.VERIFIED_THIRD_PARTY_CFT, false),
+            Arguments.of(ListType.MAGISTRATES_STANDARD_LIST, Roles.VERIFIED_THIRD_PARTY_CFT_PRESS, false),
             Arguments.of(ListType.CIVIL_DAILY_CAUSE_LIST, Roles.VERIFIED_THIRD_PARTY_ALL, true),
             Arguments.of(ListType.FAMILY_DAILY_CAUSE_LIST, Roles.VERIFIED_THIRD_PARTY_CFT, true),
             Arguments.of(ListType.CIVIL_AND_FAMILY_DAILY_CAUSE_LIST, Roles.VERIFIED_THIRD_PARTY_CRIME_CFT, true),
             Arguments.of(ListType.COP_DAILY_CAUSE_LIST, Roles.VERIFIED_THIRD_PARTY_CRIME, false),
-            Arguments.of(ListType.SSCS_DAILY_LIST, Roles.VERIFIED_THIRD_PARTY_CRIME_PRESS, false)
+            Arguments.of(ListType.SSCS_DAILY_LIST, Roles.VERIFIED_THIRD_PARTY_CRIME_PRESS, false),
+            Arguments.of(ListType.IAC_DAILY_LIST, Roles.VERIFIED_THIRD_PARTY_CRIME_PRESS, false)
         );
     }
 }
