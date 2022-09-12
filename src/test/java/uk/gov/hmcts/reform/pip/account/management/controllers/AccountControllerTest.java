@@ -98,13 +98,13 @@ class AccountControllerTest {
         when(accountService.isUserAuthorisedForPublication(any(), any(), any())).thenReturn(true);
         assertEquals(
             HttpStatus.OK,
-            accountController.checkUserAuthorised(UUID.randomUUID(), ListType.MAGS_PUBLIC_LIST,
+            accountController.checkUserAuthorised(UUID.randomUUID(), ListType.MAGISTRATES_PUBLIC_LIST,
                                                   Sensitivity.PUBLIC).getStatusCode(),
             STATUS_CODE_MATCH
         );
         assertEquals(
             true,
-            accountController.checkUserAuthorised(UUID.randomUUID(), ListType.MAGS_PUBLIC_LIST,
+            accountController.checkUserAuthorised(UUID.randomUUID(), ListType.MAGISTRATES_PUBLIC_LIST,
                                                   Sensitivity.PUBLIC).getBody(),
             "Should return boolean value"
         );
@@ -198,4 +198,14 @@ class AccountControllerTest {
         }
     }
 
+    @Test
+    void testUpdateAccountVerification() {
+        String expectedString = "Account with provenance id 0b8968b4-5c79-4e4e-8f66-f6a552d9fa67 has been verified";
+        when(accountService.updateAccountVerification(TEST_ID_STRING_1)).thenReturn(expectedString);
+
+        ResponseEntity<String> response = accountController.updateAccountVerification(TEST_ID_STRING_1);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode(), STATUS_CODE_MATCH);
+        assertEquals(expectedString, response.getBody(), "Body does not match expected");
+    }
 }

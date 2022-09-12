@@ -1,5 +1,10 @@
 service-to-service:
   publication-services: localhost:8081
+  subscription-management: localhost:4550
 
 cron:
   media-application-reporting: "*/10 * * * * *"
+  media-account-verification-check: "*/10 * * * * *"
+
+dbMigration:
+  runOnStartup: true
