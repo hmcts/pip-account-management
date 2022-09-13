@@ -79,4 +79,9 @@ public class PiUser {
      * The timestamp of when the user was last verified.
      */
     private LocalDateTime lastVerifiedDate;
+
+    /**
+     * The timestamp when the user was last signed in.
+     */
+    private LocalDateTime lastSignedInDate;
 }

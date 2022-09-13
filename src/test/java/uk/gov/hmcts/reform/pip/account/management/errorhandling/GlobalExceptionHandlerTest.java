@@ -106,4 +106,14 @@ class GlobalExceptionHandlerTest {
         );
     }
 
+    @Test
+    void testIllegalArgumentException() {
+        IllegalArgumentException illegalArgumentException = new IllegalArgumentException(ERROR_MESSAGE, null);
+        ResponseEntity<ExceptionResponse> responseEntity = globalExceptionHandler.handle(illegalArgumentException);
+
+        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode(),
+                     "Should be bad request exception");
+        assertNotNull(responseEntity.getBody(), NOT_NULL_MESSAGE);
+        assertTrue(responseEntity.getBody().getMessage().contains(ERROR_MESSAGE), EXCEPTION_BODY_NOT_MATCH);
+    }
 }
