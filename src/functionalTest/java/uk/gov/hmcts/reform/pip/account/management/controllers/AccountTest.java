@@ -117,9 +117,8 @@ class AccountTest {
     private static final String CREATE_MEDIA_USER_URL = "/application";
     private static final String GET_PROVENANCE_USER_URL = ROOT_URL + "/provenance/";
     private static final String UPDATE_ACCOUNT_URL = ROOT_URL + "/provenance/";
-    private static final String UPDATE_ACCOUNT_VERIFICATION_URL = ROOT_URL + "/verification/";
     private static final String NOTIFY_INACTIVE_MEDIA_ACCOUNTS_URL = ROOT_URL + "/media/inactive/notify";
-    private static final String DELETE_EXPIRED_MEDIA_ACCOUNTS_URL = ROOT_URL + "/media/inactive"
+    private static final String DELETE_EXPIRED_MEDIA_ACCOUNTS_URL = ROOT_URL + "/media/inactive";
     private static final String EMAIL_URL = ROOT_URL + "/emails";
     private static final String EMAIL = "test_account_admin@hmcts.net";
     private static final String INVALID_EMAIL = "ab";

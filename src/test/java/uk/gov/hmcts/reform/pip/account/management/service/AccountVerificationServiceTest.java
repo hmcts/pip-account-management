@@ -30,6 +30,7 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
+@SuppressWarnings("PMD.TooManyMethods")
 class AccountVerificationServiceTest {
     private static final String MEDIA_USER_EMAIL = "media@test.com";
     private static final String AAD_ADMIN_USER_EMAIL = "aad_admin@test.com";
@@ -233,7 +234,7 @@ class AccountVerificationServiceTest {
             .thenReturn(Collections.singletonList(MEDIA_USER));
 
         accountVerificationService.findMediaAccountsForDeletion();
-        verify(accountService).deleteAccount(MEDIA_USER_EMAIL);
+        verify(accountService).deleteAccount(MEDIA_USER_EMAIL, true);
     }
 
     @Test
