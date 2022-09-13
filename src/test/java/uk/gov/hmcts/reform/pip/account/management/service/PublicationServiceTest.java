@@ -35,6 +35,7 @@ class PublicationServiceTest {
     private static final String MESSAGES_MATCH = "Returned messages should match";
     private static final String EMAIL = "test@email.com";
     private static final String FULL_NAME = "FULL_NAME";
+    private static final String LAST_SIGNED_IN_DATE = "15 July 2022";
 
     @Autowired
     PublicationService publicationService;
@@ -154,4 +155,21 @@ class PublicationServiceTest {
                    "No error was sent back");
     }
 
+    @Test
+    void testSendAccountSignInNotificationEmail() {
+        mockPublicationServicesEndpoint.enqueue(new MockResponse().setBody(SENT_MESSAGE));
+
+        assertEquals(SENT_MESSAGE, publicationService.sendInactiveAccountSignInNotificationEmail(EMAIL, FULL_NAME,
+                                                                                                 LAST_SIGNED_IN_DATE),
+                     "Notification email not sent");
+    }
+
+    @Test
+    void testFailedAccountSignInNotificationEmail() {
+        mockPublicationServicesEndpoint.enqueue(new MockResponse().setResponseCode(400));
+
+        assertTrue(publicationService.sendInactiveAccountSignInNotificationEmail(EMAIL, FULL_NAME, LAST_SIGNED_IN_DATE)
+                       .contains("Inactive user sign-in notification email failed to send with error:"),
+                   "No error was sent back");
+    }
 }

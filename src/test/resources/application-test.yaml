@@ -4,7 +4,7 @@ service-to-service:
 
 cron:
   media-application-reporting: "*/10 * * * * *"
-  media-account-verification-check: "*/10 * * * * *"
+  account-verification-check: "*/10 * * * * *"
 
 dbMigration:
   runOnStartup: true
