@@ -34,7 +34,7 @@ spring:
     parser:
       STRICT_DUPLICATE_DETECTION: true
   application:
-    name: Account Management
+    name: PIP Account Management
   datasource:
     driver-class-name: org.postgresql.Driver
 
