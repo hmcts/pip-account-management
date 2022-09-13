@@ -267,23 +267,4 @@ class AccountVerificationServiceTest {
         verifyNoInteractions(publicationService);
         verifyNoInteractions(azureUserService);
     }
-
-    @Test
-    void testMediaUserNotificationWithAzureException() throws AzureCustomException {
-        when(userRepository.findVerifiedUsersByLastVerifiedDate(anyInt()))
-            .thenReturn(Collections.singletonList(MEDIA_USER));
-        when(azureUserService.getUser(MEDIA_USER_EMAIL)).thenThrow(new AzureCustomException("error"));
-
-        try (LogCaptor logCaptor = LogCaptor.forClass(AccountVerificationService.class)) {
-            accountVerificationService.sendMediaUsersForVerification();
-            assertThat(logCaptor.getErrorLogs())
-                .as("Incorrect error message")
-                .hasSize(1)
-                .first()
-                .asString()
-                .contains("Error when getting user from azure");
-        }
-
-        verifyNoInteractions(publicationService);
-    }
 }

@@ -128,9 +128,8 @@ public class AccountVerificationService {
      * Account service handles the deletion of their AAD, P&I user and subscriptions.
      */
     public void findMediaAccountsForDeletion() {
-        userRepository.findVerifiedUsersByLastVerifiedDate(mediaAccountDeletionDays).forEach(user -> {
-            log.info(accountService.deleteAccount(user.getEmail()));
-        });
+        userRepository.findVerifiedUsersByLastVerifiedDate(mediaAccountDeletionDays)
+            .forEach(user -> log.info(writeLog(accountService.deleteAccount(user.getEmail()))));
     }
 }
 
