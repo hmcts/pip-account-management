@@ -129,7 +129,7 @@ public class AccountVerificationService {
      */
     public void findMediaAccountsForDeletion() {
         userRepository.findVerifiedUsersByLastVerifiedDate(mediaAccountDeletionDays)
-            .forEach(user -> log.info(writeLog(accountService.deleteAccount(user.getEmail()))));
+            .forEach(user -> log.info(writeLog(accountService.deleteAccount(user.getEmail(), true))));
     }
 }
 
