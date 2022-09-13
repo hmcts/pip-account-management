@@ -28,6 +28,7 @@ public class PublicationService {
     private static final String WELCOME_EMAIL_URL = "/notify/welcome-email";
     private static final String EMAIL = "email";
     private static final String FULL_NAME = "fullName";
+    private static final String LAST_SIGNED_IN_DATE = "lastSignedInDate";
 
     @Autowired
     WebClient webClient;
@@ -127,6 +128,22 @@ public class PublicationService {
                 .bodyToMono(String.class).block();
         } catch (WebClientException ex) {
             return String.format("Media account verification email failed to send with error: %s", ex.getMessage());
+        }
+    }
+
+    public String sendInactiveAccountSignInNotificationEmail(String emailAddress, String fullName,
+                                                             String lastSignedInDate) {
+        try {
+            JSONObject body = new JSONObject();
+            body.put(EMAIL, emailAddress);
+            body.put(FULL_NAME, fullName);
+            body.put(LAST_SIGNED_IN_DATE, lastSignedInDate);
+            return webClient.post().uri(url + "/notify/user/sign-in")
+                .body(BodyInserters.fromValue(body)).retrieve()
+                .bodyToMono(String.class).block();
+        } catch (WebClientException ex) {
+            return String.format("Inactive user sign-in notification email failed to send with error: %s",
+                                 ex.getMessage());
         }
     }
 }

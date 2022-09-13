@@ -22,12 +22,14 @@ import uk.gov.hmcts.reform.pip.account.management.model.Sensitivity;
 import uk.gov.hmcts.reform.pip.account.management.model.UserProvenances;
 import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredAzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredPiUser;
+import uk.gov.hmcts.reform.pip.account.management.service.helpers.DateTimeHelper;
 import uk.gov.hmcts.reform.pip.model.enums.UserActions;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -164,6 +166,7 @@ public class AccountService {
 
         for (PiUser user : users) {
             user.setLastVerifiedDate(LocalDateTime.now());
+            user.setLastSignedInDate(LocalDateTime.now());
             Set<ConstraintViolation<PiUser>> constraintViolationSet = validator.validate(user);
             if (!constraintViolationSet.isEmpty()) {
                 ErroredPiUser erroredUser = new ErroredPiUser(user);
@@ -316,37 +319,58 @@ public class AccountService {
      * @param email The email of the user to delete.
      * @return Confirmation message that account has been deleted.
      */
-    public String deleteAccount(String email) {
+    public String deleteAccount(String email, boolean isAadAccount) {
         String returnMessage = "";
         PiUser userToDelete = userRepository.findByEmail(email)
             .orElseThrow(() -> new NotFoundException("User with supplied email could not be found"));
         try {
-            azureUserService.deleteUser(userToDelete.getProvenanceUserId());
-            log.info(subscriptionService.sendSubscriptionDeletionRequest(userToDelete.getUserId().toString()));
+            if (isAadAccount) {
+                azureUserService.deleteUser(userToDelete.getProvenanceUserId());
+            }
+            log.info(writeLog(
+                subscriptionService.sendSubscriptionDeletionRequest(userToDelete.getUserId().toString()))
+            );
             userRepository.delete(userToDelete);
             returnMessage = String.format("User with ID %s has been deleted", userToDelete.getUserId());
         } catch (AzureCustomException ex) {
-            log.error("Error when deleting an account from azure with Provenance user id: %s and error: %s",
-                      userToDelete.getProvenanceUserId(), ex.getMessage());
+            log.error(writeLog(String.format("Error when deleting an account from azure with Provenance user id: "
+                                                 + "%s and error: %s",
+                                             userToDelete.getProvenanceUserId(), ex.getMessage())));
         }
         return returnMessage;
     }
 
     /**
-     * Update an accounts last verified date to the current date by the supplied provenance id.
+     * Update an user account by the supplied provenance id.
      *
+     * @param userProvenance The user provenance of the user to update.
      * @param provenanceUserId The provenance id of the user to update.
-     * @return Confirmation message that media account verification has been updated.
+     * @return Confirmation message that the user account has been updated.
      */
-    public String updateAccountVerification(String provenanceUserId) {
-        PiUser userToUpdate = userRepository.findByProvenanceUserIdAndUserProvenance(provenanceUserId,
-                                                                                     UserProvenances.PI_AAD)
+    public String updateAccount(UserProvenances userProvenance, String provenanceUserId, Map<String, String> params) {
+        PiUser userToUpdate = userRepository.findByProvenanceUserIdAndUserProvenance(provenanceUserId, userProvenance)
             .orElseThrow(() -> new NotFoundException(String.format(
                 "User with supplied provenance id: %s could not be found", provenanceUserId)));
 
-        userToUpdate.setLastVerifiedDate(LocalDateTime.now());
-        userRepository.save(userToUpdate);
+        params.forEach((k, v) -> {
+            try {
+                switch (k) {
+                    case "lastVerifiedDate":
+                        userToUpdate.setLastVerifiedDate(DateTimeHelper.zonedDateTimeStringToLocalDateTime(v));
+                        break;
+                    case "lastSignedInDate":
+                        userToUpdate.setLastSignedInDate(DateTimeHelper.zonedDateTimeStringToLocalDateTime(v));
+                        break;
+                    default:
+                        throw new IllegalArgumentException(String.format("The field '%s' could not be updated", k));
+                }
+            } catch (DateTimeParseException e) {
+                throw new IllegalArgumentException(String.format("Date time value '%s' not in expected format", v));
+            }
+        });
 
-        return String.format("Account with provenance id %s has been verified", provenanceUserId);
+        userRepository.save(userToUpdate);
+        return String.format("Account with provenance %s and provenance id %s has been updated",
+                             userProvenance.name(), provenanceUserId);
     }
 }
