@@ -117,6 +117,10 @@ class AccountTest {
     private static final String CREATE_MEDIA_USER_URL = "/application";
     private static final String GET_PROVENANCE_USER_URL = ROOT_URL + "/provenance/";
     private static final String UPDATE_ACCOUNT_URL = ROOT_URL + "/provenance/";
+    private static final String NOTIFY_INACTIVE_ADMIN_ACCOUNTS_URL = ROOT_URL + "/admin/inactive/notify";
+    private static final String DELETE_EXPIRED_ADMIN_ACCOUNTS_URL = ROOT_URL + "/admin/inactive";
+    private static final String NOTIFY_INACTIVE_IDAM_ACCOUNTS_URL = ROOT_URL + "/idam/inactive/notify";
+    private static final String DELETE_EXPIRED_IDAM_ACCOUNTS_URL = ROOT_URL + "/idam/inactive";
     private static final String EMAIL_URL = ROOT_URL + "/emails";
     private static final String EMAIL = "test_account_admin@hmcts.net";
     private static final String INVALID_EMAIL = "ab";
@@ -1044,5 +1048,37 @@ class AccountTest {
         mockMvc.perform(mockHttpServletRequestBuilder)
             .andExpect(status().isBadRequest())
             .andExpect(content().string(containsString("The field 'email' could not be updated")));
+    }
+
+    @Test
+    void testNotifyInactiveAdminAccountsSuccess() throws Exception {
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+            .post(NOTIFY_INACTIVE_ADMIN_ACCOUNTS_URL);
+
+        mockMvc.perform(request).andExpect(status().isNoContent());
+    }
+
+    @Test
+    void testDeleteExpiredAdminAccountsSuccess() throws Exception {
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+            .delete(DELETE_EXPIRED_ADMIN_ACCOUNTS_URL);
+
+        mockMvc.perform(request).andExpect(status().isNoContent());
+    }
+
+    @Test
+    void testNotifyInactiveIdamAccountsSuccess() throws Exception {
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+            .post(NOTIFY_INACTIVE_IDAM_ACCOUNTS_URL);
+
+        mockMvc.perform(request).andExpect(status().isNoContent());
+    }
+
+    @Test
+    void testDeleteExpiredIdamAccountsSuccess() throws Exception {
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+            .delete(DELETE_EXPIRED_IDAM_ACCOUNTS_URL);
+
+        mockMvc.perform(request).andExpect(status().isNoContent());
     }
 }
