@@ -57,4 +57,17 @@ class ConditionalEmailValidatorTest {
             .as("All of the parameters should return valid.")
             .isTrue();
     }
+
+
+    @Test
+    void testWipeDataOnRedundantEmail() {
+        piUser.setRoles(Roles.GENERAL_THIRD_PARTY);
+        piUser.setEmail("test@email.com");
+        assertThat(conditionalEmailValidator.isValid(piUser, null))
+            .as("Should return valid")
+            .isTrue();
+        assertThat(piUser.getEmail())
+            .as("this value should have been wiped but hasn't.")
+            .isNull();
+    }
 }
