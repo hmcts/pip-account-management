@@ -4,8 +4,8 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import uk.gov.hmcts.reform.pip.account.management.validation.annotations.AzureEmail;
 
-import javax.validation.constraints.Email;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 
@@ -26,7 +26,9 @@ public class AzureAccount {
     /**
      * The email address for the account.
      */
-    @Email
+    @NotNull
+    @NotEmpty
+    @AzureEmail
     private String email;
 
     /**
