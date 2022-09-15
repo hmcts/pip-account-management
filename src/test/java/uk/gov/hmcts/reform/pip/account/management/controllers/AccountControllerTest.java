@@ -199,6 +199,13 @@ class AccountControllerTest {
     }
 
     @Test
+    void testMiDataReturnsOk() {
+        assertEquals(HttpStatus.OK,
+                     accountController.getMiData().getStatusCode(),
+                     STATUS_CODE_MATCH);
+    }
+
+    @Test
     void testUpdateAccount() {
         Map<String, String> updateParameters = Map.of(
             "key1", "value1",

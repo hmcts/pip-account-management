@@ -312,6 +312,16 @@ public class AccountService {
         return isSuccessful;
     }
 
+    public String getAccManDataForMiReporting() {
+        List<String> data = userRepository.getAccManDataForMI();
+        StringBuilder builder = new StringBuilder(54);
+        builder.append("user_id, provenance_user_id, user_provenance, roles\n");
+        for (String line : data) {
+            builder.append(line).append('\n');
+        }
+        return builder.toString();
+    }
+
     /**
      * Delete a user account by the supplied email.
      * This deletes the user from AAD, our user table and subscriptions.

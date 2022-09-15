@@ -18,6 +18,11 @@ public interface UserRepository extends JpaRepository<PiUser, Long> {
 
     Optional<PiUser> findByUserId(UUID userId);
 
+    @Query(value = "SELECT cast(USER_ID as text), PROVENANCE_USER_ID, USER_PROVENANCE, ROLES FROM pi_user",
+        nativeQuery = true)
+    List<String> getAccManDataForMI();
+
+
     @Query(value = "SELECT * FROM pi_user WHERE CAST(last_verified_date AS DATE) = CURRENT_DATE - (interval '1' day)"
         + " * :daysAgo AND roles = 'VERIFIED'", nativeQuery = true)
     List<PiUser> findVerifiedUsersByLastVerifiedDate(@Param("daysAgo") int daysSinceLastVerified);
