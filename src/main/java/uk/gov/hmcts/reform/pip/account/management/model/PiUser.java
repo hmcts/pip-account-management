@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Type;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import uk.gov.hmcts.reform.pip.account.management.validation.annotations.PiEmailConditionalValidation;
 import uk.gov.hmcts.reform.pip.account.management.validation.annotations.ValidProvenanceUserId;
 
 import java.time.LocalDateTime;
@@ -19,7 +20,6 @@ import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
@@ -31,6 +31,7 @@ import javax.validation.constraints.NotNull;
 @AllArgsConstructor
 @NoArgsConstructor
 @ValidProvenanceUserId
+@PiEmailConditionalValidation
 @EntityListeners(AuditingEntityListener.class)
 public class PiUser {
 
@@ -52,14 +53,13 @@ public class PiUser {
     /**
      * The user id of the user as per their provenance system.
      */
-    @NotNull
-    @NotBlank
+    @NotNull(message = "provenance user id must not be null")
+    @NotBlank(message = "provenance user id must not be blank")
     private String provenanceUserId;
 
     /**
-     * Email of the user.
+     * Email of the user. Validated at the class level by PiEmailConditionalValidation interface.
      */
-    @Email
     private String email;
 
     /**
@@ -79,4 +79,9 @@ public class PiUser {
      * The timestamp of when the user was last verified.
      */
     private LocalDateTime lastVerifiedDate;
+
+    /**
+     * The timestamp when the user was last signed in.
+     */
+    private LocalDateTime lastSignedInDate;
 }
