@@ -199,7 +199,6 @@ class AccountControllerTest {
     }
 
     @Test
-<<<<<<< HEAD
     void testMiDataReturnsOk() {
         assertEquals(HttpStatus.OK,
                      accountController.getMiData().getStatusCode(),
@@ -207,10 +206,6 @@ class AccountControllerTest {
     }
 
     @Test
-    void testUpdateAccountVerification() {
-        String expectedString = "Account with provenance id 0b8968b4-5c79-4e4e-8f66-f6a552d9fa67 has been verified";
-        when(accountService.updateAccountVerification(TEST_ID_STRING_1)).thenReturn(expectedString);
-=======
     void testUpdateAccount() {
         Map<String, String> updateParameters = Map.of(
             "key1", "value1",
@@ -220,7 +215,6 @@ class AccountControllerTest {
             + "has been updated";
         when(accountService.updateAccount(UserProvenances.PI_AAD, TEST_ID_STRING_1, updateParameters))
             .thenReturn(expectedString);
->>>>>>> master
 
         ResponseEntity<String> response = accountController.updateAccount(UserProvenances.PI_AAD,
                                                                           TEST_ID_STRING_1, updateParameters);
