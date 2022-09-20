@@ -140,6 +140,15 @@ public class AccountController {
     }
 
     @ApiResponses({
+        @ApiResponse(code = 200, message = "Account Management - MI Data request accepted.")
+    })
+    @ApiOperation("Returns a list of (anonymized) account data for MI reporting.")
+    @GetMapping("/mi-data")
+    public ResponseEntity<String> getMiData() {
+        return ResponseEntity.status(HttpStatus.OK).body(accountService.getAccManDataForMiReporting());
+    }
+
+    @ApiResponses({
         @ApiResponse(code = 200, message = "Account with provenance {userProvenance} and provenance id "
             + "{provenanceUserId} has been updated"),
         @ApiResponse(code = 403, message = NOT_AUTHORIZED_MESSAGE),
