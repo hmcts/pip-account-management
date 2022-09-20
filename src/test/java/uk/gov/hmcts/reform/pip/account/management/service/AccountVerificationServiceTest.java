@@ -30,6 +30,7 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
+@SuppressWarnings("PMD.TooManyMethods")
 class AccountVerificationServiceTest {
     private static final String MEDIA_USER_EMAIL = "media@test.com";
     private static final String AAD_ADMIN_USER_EMAIL = "aad_admin@test.com";
@@ -225,5 +226,46 @@ class AccountVerificationServiceTest {
 
         verifyNoInteractions(accountService);
         verifyNoInteractions(publicationService);
+    }
+
+    @Test
+    void testMediaAccountDeletion() {
+        when(userRepository.findVerifiedUsersByLastVerifiedDate(anyInt()))
+            .thenReturn(Collections.singletonList(MEDIA_USER));
+
+        accountVerificationService.findMediaAccountsForDeletion();
+        verify(accountService).deleteAccount(MEDIA_USER_EMAIL, true);
+    }
+
+    @Test
+    void testNoMediaAccountForDeletion() {
+        when(userRepository.findVerifiedUsersByLastVerifiedDate(anyInt()))
+            .thenReturn(Collections.emptyList());
+
+        accountVerificationService.findMediaAccountsForDeletion();
+        verifyNoInteractions(accountService);
+    }
+
+    @Test
+    void testSendMediaUsersForVerification() throws AzureCustomException {
+        User azureMediaUser = new User();
+        azureMediaUser.givenName = AZURE_MEDIA_USER_NAME;
+
+        when(userRepository.findVerifiedUsersByLastVerifiedDate(anyInt()))
+            .thenReturn(Collections.singletonList(MEDIA_USER));
+        when(azureUserService.getUser(MEDIA_USER_EMAIL)).thenReturn(azureMediaUser);
+
+        accountVerificationService.sendMediaUsersForVerification();
+        verify(publicationService).sendAccountVerificationEmail(MEDIA_USER_EMAIL, AZURE_MEDIA_USER_NAME);
+    }
+
+    @Test
+    void testNoMediaUsersForVerification() {
+        when(userRepository.findVerifiedUsersByLastVerifiedDate(anyInt()))
+            .thenReturn(Collections.emptyList());
+
+        accountVerificationService.sendMediaUsersForVerification();
+        verifyNoInteractions(publicationService);
+        verifyNoInteractions(azureUserService);
     }
 }

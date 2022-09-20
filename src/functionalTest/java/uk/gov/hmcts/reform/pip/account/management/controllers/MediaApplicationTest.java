@@ -35,6 +35,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -45,6 +46,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 @WithMockUser(username = "admin", authorities = { "APPROLE_api.request.admin" })
+@SuppressWarnings({"PMD.TooManyMethods", "PMD.JUnitTestsShouldIncludeAssert"})
 class MediaApplicationTest {
 
     @Autowired
@@ -61,6 +63,8 @@ class MediaApplicationTest {
     private static final String PUT_URL = ROOT_URL + "/{id}/{status}";
     private static final String DELETE_URL = ROOT_URL + "/{id}";
     private static final String GET_BY_ID_URL = ROOT_URL + "/{id}";
+    private static final String REPORT_APPLICATIONS_URL = ROOT_URL + "/reporting";
+    private static final String DELETE_PROCESSED_APPLICATIONS_URL = ROOT_URL + "/processed";
 
     private ObjectMapper objectMapper;
     private static final String FULL_NAME = "Test user";
@@ -222,5 +226,17 @@ class MediaApplicationTest {
             .andReturn();
 
         assertTrue(mvcResult.getResponse().getContentAsString().contains(String.valueOf(TEST_ID)), NOT_FOUND_ERROR);
+    }
+
+    @Test
+    void testReportApplicationsSuccess() throws Exception {
+        mockMvc.perform(post(REPORT_APPLICATIONS_URL))
+            .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void testDeleteProcessedApplicationsSuccess() throws Exception {
+        mockMvc.perform(delete(DELETE_PROCESSED_APPLICATIONS_URL))
+            .andExpect(status().isNoContent());
     }
 }

@@ -14,7 +14,9 @@ import uk.gov.hmcts.reform.pip.account.management.service.MediaApplicationServic
 
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static uk.gov.hmcts.reform.pip.account.management.helper.MediaApplicationHelper.FILE;
 import static uk.gov.hmcts.reform.pip.account.management.helper.MediaApplicationHelper.STATUS;
@@ -117,5 +119,21 @@ class MediaApplicationControllerTest {
         assertEquals(HttpStatus.OK, response.getStatusCode(), STATUS_CODE_MATCH);
 
         assertEquals("Application deleted", response.getBody(), "Should return expected deletion message");
+    }
+
+    @Test
+    void testReportApplications() {
+        doNothing().when(mediaApplicationService).processApplicationsForReporting();
+        assertThat(mediaApplicationController.reportApplications().getStatusCode())
+            .as(STATUS_CODE_MATCH)
+            .isEqualTo(HttpStatus.NO_CONTENT);
+    }
+
+    @Test
+    void testDeleteProcessedApplications() {
+        doNothing().when(mediaApplicationService).processApplicationsForDeleting();
+        assertThat(mediaApplicationController.deleteProcessedApplications().getStatusCode())
+            .as(STATUS_CODE_MATCH)
+            .isEqualTo(HttpStatus.NO_CONTENT);
     }
 }

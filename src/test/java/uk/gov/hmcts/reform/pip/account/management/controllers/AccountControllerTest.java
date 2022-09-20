@@ -18,6 +18,7 @@ import uk.gov.hmcts.reform.pip.account.management.model.Roles;
 import uk.gov.hmcts.reform.pip.account.management.model.Sensitivity;
 import uk.gov.hmcts.reform.pip.account.management.model.UserProvenances;
 import uk.gov.hmcts.reform.pip.account.management.service.AccountService;
+import uk.gov.hmcts.reform.pip.account.management.service.AccountVerificationService;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -28,13 +29,16 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
+@SuppressWarnings("PMD.TooManyMethods")
 class AccountControllerTest {
 
     private static final String EMAIL = "a@b.com";
@@ -49,6 +53,9 @@ class AccountControllerTest {
 
     @Mock
     private AccountService accountService;
+
+    @Mock
+    private AccountVerificationService accountVerificationService;
 
     @InjectMocks
     private AccountController accountController;
@@ -221,5 +228,21 @@ class AccountControllerTest {
 
         assertEquals(HttpStatus.OK, response.getStatusCode(), STATUS_CODE_MATCH);
         assertEquals(expectedString, response.getBody(), "Body does not match expected");
+    }
+
+    @Test
+    void testNotifyInactiveMediaAccounts() {
+        doNothing().when(accountVerificationService).sendMediaUsersForVerification();
+        assertThat(accountController.notifyInactiveMediaAccounts().getStatusCode())
+            .as(STATUS_CODE_MATCH)
+            .isEqualTo(HttpStatus.NO_CONTENT);
+    }
+
+    @Test
+    void testDeleteExpiredAccounts() {
+        doNothing().when(accountVerificationService).findMediaAccountsForDeletion();
+        assertThat(accountController.deleteExpiredMediaAccounts().getStatusCode())
+            .as(STATUS_CODE_MATCH)
+            .isEqualTo(HttpStatus.NO_CONTENT);
     }
 }

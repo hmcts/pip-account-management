@@ -67,7 +67,7 @@ public class AccountVerificationService {
      * Method that gets all media users who last verified at least 350 days ago.
      * Then send their details on to publication services to send them a verification email.
      */
-    private void sendMediaUsersForVerification() {
+    public void sendMediaUsersForVerification() {
         userRepository.findVerifiedUsersByLastVerifiedDate(mediaAccountVerificationDays).forEach(user -> {
             try {
                 log.info(writeLog(publicationService.sendAccountVerificationEmail(
@@ -121,6 +121,15 @@ public class AccountVerificationService {
                 user -> log.info(writeLog(accountService.deleteAccount(user.getEmail(),
                                                               PI_AAD.equals(user.getUserProvenance()))))
             );
+    }
+
+    /**
+     * Method that gets all media users who have not verified their account in 365 days.
+     * Account service handles the deletion of their AAD, P&I user and subscriptions.
+     */
+    public void findMediaAccountsForDeletion() {
+        userRepository.findVerifiedUsersByLastVerifiedDate(mediaAccountDeletionDays)
+            .forEach(user -> log.info(writeLog(accountService.deleteAccount(user.getEmail(), true))));
     }
 }
 
