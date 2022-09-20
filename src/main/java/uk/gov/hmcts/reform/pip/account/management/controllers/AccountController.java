@@ -40,6 +40,7 @@ import java.util.UUID;
 @RequestMapping("/account")
 @Validated
 @IsAdmin
+@SuppressWarnings("PMD.TooManyMethods")
 public class AccountController {
 
     @Autowired
