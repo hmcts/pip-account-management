@@ -166,6 +166,30 @@ public class AccountController {
         @ApiResponse(code = 204, message = NO_CONTENT_MESSAGE),
         @ApiResponse(code = 403, message = NO_CONTENT_MESSAGE)
     })
+    @ApiOperation("Notify inactive media users to verify their accounts")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PostMapping("/media/inactive/notify")
+    public ResponseEntity<Void> notifyInactiveMediaAccounts() {
+        accountVerificationService.sendMediaUsersForVerification();
+        return ResponseEntity.noContent().build();
+    }
+
+    @ApiResponses({
+        @ApiResponse(code = 204, message = NO_CONTENT_MESSAGE),
+        @ApiResponse(code = 403, message = NOT_AUTHORIZED_MESSAGE)
+    })
+    @ApiOperation("Delete all expired inactive accounts")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @DeleteMapping("/media/inactive")
+    public ResponseEntity<Void> deleteExpiredMediaAccounts() {
+        accountVerificationService.findMediaAccountsForDeletion();
+        return ResponseEntity.noContent().build();
+    }
+
+    @ApiResponses({
+        @ApiResponse(code = 204, message = NO_CONTENT_MESSAGE),
+        @ApiResponse(code = 403, message = NO_CONTENT_MESSAGE)
+    })
     @ApiOperation("Notify inactive admin users to verify their accounts")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PostMapping("/admin/inactive/notify")

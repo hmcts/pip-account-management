@@ -231,6 +231,22 @@ class AccountControllerTest {
     }
 
     @Test
+    void testNotifyInactiveMediaAccounts() {
+        doNothing().when(accountVerificationService).sendMediaUsersForVerification();
+        assertThat(accountController.notifyInactiveMediaAccounts().getStatusCode())
+            .as(STATUS_CODE_MATCH)
+            .isEqualTo(HttpStatus.NO_CONTENT);
+    }
+
+    @Test
+    void testDeleteExpiredAccounts() {
+        doNothing().when(accountVerificationService).findMediaAccountsForDeletion();
+        assertThat(accountController.deleteExpiredMediaAccounts().getStatusCode())
+            .as(STATUS_CODE_MATCH)
+            .isEqualTo(HttpStatus.NO_CONTENT);
+    }
+
+    @Test
     void testNotifyInactiveAdminAccounts() {
         doNothing().when(accountVerificationService).notifyAdminUsersToSignIn();
         assertThat(accountController.notifyInactiveAdminAccounts().getStatusCode())
