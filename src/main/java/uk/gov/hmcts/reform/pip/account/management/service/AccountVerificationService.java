@@ -81,6 +81,37 @@ public class AccountVerificationService {
     }
 
     /**
+     * Method that gets all admin users who last signed in at least 76 days ago.
+     * Then send their details on to publication services to send them a notification email.
+     */
+    public void notifyAdminUsersToSignIn() {
+        userRepository.findAadAdminUsersByLastSignedInDate(aadAdminAccountSignInNotificationDays)
+            .forEach(user -> {
+                try {
+                    log.info(writeLog(publicationService.sendInactiveAccountSignInNotificationEmail(
+                        user.getEmail(),
+                        azureUserService.getUser(user.getEmail()).givenName,
+                        DateTimeHelper.localDateTimeToDateString(user.getLastSignedInDate()))));
+                } catch (AzureCustomException ex) {
+                    log.error(writeLog("Error when getting user from azure: " + ex.getMessage()));
+                }
+            });
+    }
+
+    /**
+     * Method that gets all idam users who last signed in at least 118 days ago.
+     * Then send their details on to publication services to send them a notification email.
+     */
+    public void notifyIdamUsersToSignIn() {
+        userRepository.findIdamUsersByLastSignedInDate(idamAccountSignInNotificationDays)
+            .forEach(user -> log.info(writeLog(publicationService.sendInactiveAccountSignInNotificationEmail(
+                user.getEmail(),
+                PLACEHOLDER_IDAM_USER_NAME,
+                DateTimeHelper.localDateTimeToDateString(user.getLastSignedInDate()))))
+            );
+    }
+
+    /**
      * Method that gets all AAD admin users who last signed in at least 76 days (by default) ago, and gets all
      * IDAM users who last signed in at least 118 days (by default) ago.
      * Then send their details on to publication services to send them a notification email.
@@ -124,12 +155,36 @@ public class AccountVerificationService {
     }
 
     /**
-     * Method that gets all media users who have not verified their account in 365 days.
+     * Method that gets all media users who have not verified their account (default to 365 days).
      * Account service handles the deletion of their AAD, P&I user and subscriptions.
      */
     public void findMediaAccountsForDeletion() {
         userRepository.findVerifiedUsersByLastVerifiedDate(mediaAccountDeletionDays)
-            .forEach(user -> log.info(writeLog(accountService.deleteAccount(user.getEmail(), true))));
+            .forEach(user -> log.info(writeLog(accountService.deleteAccount(
+                user.getEmail(), PI_AAD.equals(user.getUserProvenance())
+            ))));
+    }
+
+    /**
+     * Method that gets all admin users who have not signed in to their account (default to 90 days).
+     * Account service handles the deletion of their AAD, P&I user and subscriptions.
+     */
+    public void findAdminAccountsForDeletion() {
+        userRepository.findAadAdminUsersByLastSignedInDate(aadAdminAccountDeletionDays)
+            .forEach(user -> log.info(writeLog(accountService.deleteAccount(
+                user.getEmail(), PI_AAD.equals(user.getUserProvenance())
+            ))));
+    }
+
+    /**
+     * Method that gets all idam users who have not signed in their account (default to 132 days).
+     * Account service handles the deletion of their P&I user and subscriptions.
+     */
+    public void findIdamAccountsForDeletion() {
+        userRepository.findIdamUsersByLastSignedInDate(idamAccountDeletionDays)
+            .forEach(user -> log.info(writeLog(accountService.deleteAccount(
+                user.getEmail(), PI_AAD.equals(user.getUserProvenance())
+            ))));
     }
 }
 

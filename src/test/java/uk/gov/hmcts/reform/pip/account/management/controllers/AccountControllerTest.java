@@ -245,4 +245,36 @@ class AccountControllerTest {
             .as(STATUS_CODE_MATCH)
             .isEqualTo(HttpStatus.NO_CONTENT);
     }
+
+    @Test
+    void testNotifyInactiveAdminAccounts() {
+        doNothing().when(accountVerificationService).notifyAdminUsersToSignIn();
+        assertThat(accountController.notifyInactiveAdminAccounts().getStatusCode())
+            .as(STATUS_CODE_MATCH)
+            .isEqualTo(HttpStatus.NO_CONTENT);
+    }
+
+    @Test
+    void testDeleteExpiredAdminAccounts() {
+        doNothing().when(accountVerificationService).findAdminAccountsForDeletion();
+        assertThat(accountController.deleteExpiredAdminAccounts().getStatusCode())
+            .as(STATUS_CODE_MATCH)
+            .isEqualTo(HttpStatus.NO_CONTENT);
+    }
+
+    @Test
+    void testNotifyInactiveIdamAccounts() {
+        doNothing().when(accountVerificationService).notifyIdamUsersToSignIn();
+        assertThat(accountController.notifyInactiveIdamAccounts().getStatusCode())
+            .as(STATUS_CODE_MATCH)
+            .isEqualTo(HttpStatus.NO_CONTENT);
+    }
+
+    @Test
+    void testDeleteExpiredIdamAccounts() {
+        doNothing().when(accountVerificationService).findIdamAccountsForDeletion();
+        assertThat(accountController.deleteExpiredIdamAccounts().getStatusCode())
+            .as(STATUS_CODE_MATCH)
+            .isEqualTo(HttpStatus.NO_CONTENT);
+    }
 }

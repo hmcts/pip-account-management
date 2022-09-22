@@ -40,6 +40,7 @@ import java.util.UUID;
 @RequestMapping("/account")
 @Validated
 @IsAdmin
+@SuppressWarnings("PMD.TooManyMethods")
 public class AccountController {
 
     @Autowired
@@ -183,6 +184,54 @@ public class AccountController {
     @DeleteMapping("/media/inactive")
     public ResponseEntity<Void> deleteExpiredMediaAccounts() {
         accountVerificationService.findMediaAccountsForDeletion();
+        return ResponseEntity.noContent().build();
+    }
+
+    @ApiResponses({
+        @ApiResponse(code = 204, message = NO_CONTENT_MESSAGE),
+        @ApiResponse(code = 403, message = NO_CONTENT_MESSAGE)
+    })
+    @ApiOperation("Notify inactive admin users to verify their accounts")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PostMapping("/admin/inactive/notify")
+    public ResponseEntity<Void> notifyInactiveAdminAccounts() {
+        accountVerificationService.notifyAdminUsersToSignIn();
+        return ResponseEntity.noContent().build();
+    }
+
+    @ApiResponses({
+        @ApiResponse(code = 204, message = NO_CONTENT_MESSAGE),
+        @ApiResponse(code = 403, message = NOT_AUTHORIZED_MESSAGE)
+    })
+    @ApiOperation("Delete all expired inactive admin accounts")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @DeleteMapping("/admin/inactive")
+    public ResponseEntity<Void> deleteExpiredAdminAccounts() {
+        accountVerificationService.findAdminAccountsForDeletion();
+        return ResponseEntity.noContent().build();
+    }
+
+    @ApiResponses({
+        @ApiResponse(code = 204, message = NO_CONTENT_MESSAGE),
+        @ApiResponse(code = 403, message = NO_CONTENT_MESSAGE)
+    })
+    @ApiOperation("Notify inactive idam users to verify their accounts")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PostMapping("/idam/inactive/notify")
+    public ResponseEntity<Void> notifyInactiveIdamAccounts() {
+        accountVerificationService.notifyIdamUsersToSignIn();
+        return ResponseEntity.noContent().build();
+    }
+
+    @ApiResponses({
+        @ApiResponse(code = 204, message = NO_CONTENT_MESSAGE),
+        @ApiResponse(code = 403, message = NOT_AUTHORIZED_MESSAGE)
+    })
+    @ApiOperation("Delete all expired inactive idam accounts")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @DeleteMapping("/idam/inactive")
+    public ResponseEntity<Void> deleteExpiredIdamAccounts() {
+        accountVerificationService.findIdamAccountsForDeletion();
         return ResponseEntity.noContent().build();
     }
 }
