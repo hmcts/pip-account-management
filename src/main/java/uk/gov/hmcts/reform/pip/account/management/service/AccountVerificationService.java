@@ -18,8 +18,6 @@ import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
 @Slf4j
 @Service
 public class AccountVerificationService {
-    // TODO: Needs to be replaced with actual user name from IDAM after it is implemented
-    private static final String PLACEHOLDER_IDAM_USER_NAME = "IdamUserName";
 
     private final UserRepository userRepository;
     private final AzureUserService azureUserService;
@@ -91,6 +89,7 @@ public class AccountVerificationService {
                     log.info(writeLog(publicationService.sendInactiveAccountSignInNotificationEmail(
                         user.getEmail(),
                         azureUserService.getUser(user.getEmail()).givenName,
+                        user.getUserProvenance(),
                         DateTimeHelper.localDateTimeToDateString(user.getLastSignedInDate()))));
                 } catch (AzureCustomException ex) {
                     log.error(writeLog("Error when getting user from azure: " + ex.getMessage()));
@@ -106,7 +105,8 @@ public class AccountVerificationService {
         userRepository.findIdamUsersByLastSignedInDate(idamAccountSignInNotificationDays)
             .forEach(user -> log.info(writeLog(publicationService.sendInactiveAccountSignInNotificationEmail(
                 user.getEmail(),
-                PLACEHOLDER_IDAM_USER_NAME,
+                user.getForenames() + " " + user.getSurname(),
+                user.getUserProvenance(),
                 DateTimeHelper.localDateTimeToDateString(user.getLastSignedInDate()))))
             );
     }
@@ -125,10 +125,11 @@ public class AccountVerificationService {
                 try {
                     String name = PI_AAD.equals(user.getUserProvenance())
                         ? azureUserService.getUser(user.getEmail()).givenName
-                        : PLACEHOLDER_IDAM_USER_NAME;
+                        : user.getForenames() + " " + user.getSurname();
                     log.info(writeLog(publicationService.sendInactiveAccountSignInNotificationEmail(
                         user.getEmail(),
                         name,
+                        user.getUserProvenance(),
                         DateTimeHelper.localDateTimeToDateString(user.getLastSignedInDate()
                     ))));
                 } catch (AzureCustomException ex) {

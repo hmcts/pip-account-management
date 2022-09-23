@@ -39,7 +39,6 @@ class AccountVerificationServiceTest {
     private static final String CRIME_IDAM_USER_EMAIL = "crime_idam@test.com";
     private static final String AZURE_MEDIA_USER_NAME = "MediaUserName";
     private static final String AZURE_ADMIN_USER_NAME = "AdminUserName";
-    private static final String IDAM_USER_NAME = "IdamUserName";
     private static final LocalDateTime LAST_SIGNED_IN_DATE = LocalDateTime.of(2022, 8, 1, 10, 0, 0);
     private static final String LAST_SIGNED_IN_DATE_STRING = "01 August 2022";
     private static final String FORENAME = "Test";
@@ -54,7 +53,7 @@ class AccountVerificationServiceTest {
     private static final PiUser CFT_IDAM_USER = new PiUser(UUID.randomUUID(), UserProvenances.CFT_IDAM,
                                                            "3", CFT_IDAM_USER_EMAIL, Roles.INTERNAL_ADMIN_CTSC,
                                                            FORENAME, SURNAME, null, null, LAST_SIGNED_IN_DATE);
-    private static final PiUser CRIME_IDAM_USER = new PiUser(UUID.randomUUID(), UserProvenances.CFT_IDAM,
+    private static final PiUser CRIME_IDAM_USER = new PiUser(UUID.randomUUID(), UserProvenances.CRIME_IDAM,
                                                              "4", CRIME_IDAM_USER_EMAIL, Roles.INTERNAL_ADMIN_CTSC,
                                                              FORENAME, SURNAME, null, null, LAST_SIGNED_IN_DATE);
 
@@ -197,12 +196,15 @@ class AccountVerificationServiceTest {
         verify(publicationService).sendAccountVerificationEmail(MEDIA_USER_EMAIL, AZURE_MEDIA_USER_NAME);
         verify(publicationService).sendInactiveAccountSignInNotificationEmail(AAD_ADMIN_USER_EMAIL,
                                                                               AZURE_ADMIN_USER_NAME,
+                                                                              UserProvenances.PI_AAD,
                                                                               LAST_SIGNED_IN_DATE_STRING);
         verify(publicationService).sendInactiveAccountSignInNotificationEmail(CFT_IDAM_USER_EMAIL,
-                                                                              IDAM_USER_NAME,
+                                                                              FORENAME + " " + SURNAME,
+                                                                              UserProvenances.CFT_IDAM,
                                                                               LAST_SIGNED_IN_DATE_STRING);
         verify(publicationService).sendInactiveAccountSignInNotificationEmail(CRIME_IDAM_USER_EMAIL,
-                                                                              IDAM_USER_NAME,
+                                                                              FORENAME + " " + SURNAME,
+                                                                              UserProvenances.CRIME_IDAM,
                                                                               LAST_SIGNED_IN_DATE_STRING);
     }
 
@@ -259,7 +261,7 @@ class AccountVerificationServiceTest {
 
         accountVerificationService.notifyAdminUsersToSignIn();
         verify(publicationService).sendInactiveAccountSignInNotificationEmail(
-            AAD_ADMIN_USER_EMAIL, AZURE_ADMIN_USER_NAME, LAST_SIGNED_IN_DATE_STRING
+            AAD_ADMIN_USER_EMAIL, AZURE_ADMIN_USER_NAME, UserProvenances.PI_AAD, LAST_SIGNED_IN_DATE_STRING
         );
     }
 
@@ -280,10 +282,10 @@ class AccountVerificationServiceTest {
 
         accountVerificationService.notifyIdamUsersToSignIn();
         verify(publicationService).sendInactiveAccountSignInNotificationEmail(
-            CFT_IDAM_USER_EMAIL, IDAM_USER_NAME, LAST_SIGNED_IN_DATE_STRING
+            CFT_IDAM_USER_EMAIL, FORENAME + " " + SURNAME, UserProvenances.CFT_IDAM, LAST_SIGNED_IN_DATE_STRING
         );
         verify(publicationService).sendInactiveAccountSignInNotificationEmail(
-            CRIME_IDAM_USER_EMAIL, IDAM_USER_NAME, LAST_SIGNED_IN_DATE_STRING
+            CRIME_IDAM_USER_EMAIL, FORENAME + " " + SURNAME, UserProvenances.CRIME_IDAM, LAST_SIGNED_IN_DATE_STRING
         );
     }
 
