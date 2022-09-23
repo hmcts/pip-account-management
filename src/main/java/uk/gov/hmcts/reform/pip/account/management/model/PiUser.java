@@ -69,6 +69,16 @@ public class PiUser {
     private Roles roles;
 
     /**
+     * The forenames of the user.
+     */
+    private String forenames;
+
+    /**
+     * The surnames of the user.
+     */
+    private String surname;
+
+    /**
      * The timestamp of when the user was created.
      */
     @CreatedDate

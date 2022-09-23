@@ -42,19 +42,21 @@ class AccountVerificationServiceTest {
     private static final String IDAM_USER_NAME = "IdamUserName";
     private static final LocalDateTime LAST_SIGNED_IN_DATE = LocalDateTime.of(2022, 8, 1, 10, 0, 0);
     private static final String LAST_SIGNED_IN_DATE_STRING = "01 August 2022";
+    private static final String FORENAME = "Test";
+    private static final String SURNAME = "Surname";
 
     private static final PiUser MEDIA_USER = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD,
                                                         "1", MEDIA_USER_EMAIL, Roles.VERIFIED,
-                                                        null, null, null);
+                                                        FORENAME, SURNAME, null, null, null);
     private static final PiUser AAD_ADMIN_USER = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD,
                                                             "2", AAD_ADMIN_USER_EMAIL, Roles.INTERNAL_SUPER_ADMIN_CTSC,
-                                                            null, null, LAST_SIGNED_IN_DATE);
+                                                            FORENAME, SURNAME, null, null, LAST_SIGNED_IN_DATE);
     private static final PiUser CFT_IDAM_USER = new PiUser(UUID.randomUUID(), UserProvenances.CFT_IDAM,
                                                            "3", CFT_IDAM_USER_EMAIL, Roles.INTERNAL_ADMIN_CTSC,
-                                                           null, null, LAST_SIGNED_IN_DATE);
+                                                           FORENAME, SURNAME, null, null, LAST_SIGNED_IN_DATE);
     private static final PiUser CRIME_IDAM_USER = new PiUser(UUID.randomUUID(), UserProvenances.CFT_IDAM,
                                                              "4", CRIME_IDAM_USER_EMAIL, Roles.INTERNAL_ADMIN_CTSC,
-                                                             null, null, LAST_SIGNED_IN_DATE);
+                                                             FORENAME, SURNAME, null, null, LAST_SIGNED_IN_DATE);
 
     private static User azureMediaUser = new User();
     private static User azureAdminUser = new User();

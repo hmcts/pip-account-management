@@ -107,6 +107,8 @@ class AccountServiceTest {
     private static final boolean FALSE = false;
     private static final boolean TRUE = true;
     private static final String SHOULD_CONTAIN = "Should contain ";
+    private static final String FORENAME = "Firstname";
+    private static final String SURNAME = "Surname";
     public static final List<String> EXAMPLE_CSV = List.of(
         "2fe899ff-96ed-435a-bcad-1411bbe96d2a,string,CFT_IDAM,INTERNAL_ADMIN_CTSC");
 
@@ -345,7 +347,7 @@ class AccountServiceTest {
     void testAddUsers() {
         Map<CreationEnum, List<?>> expected = new ConcurrentHashMap<>();
         PiUser user = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, ID, EMAIL, Roles.INTERNAL_ADMIN_CTSC,
-                                 null, null, null);
+                                 FORENAME, SURNAME, null, null, null);
         expected.put(CreationEnum.CREATED_ACCOUNTS, List.of(user.getUserId()));
         expected.put(CreationEnum.ERRORED_ACCOUNTS, List.of());
 
@@ -358,10 +360,10 @@ class AccountServiceTest {
     @Test
     void testAddDuplicateUsers() {
         PiUser user1 = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, ID, EMAIL,
-                                  Roles.INTERNAL_ADMIN_CTSC, null, null, null);
+                                  Roles.INTERNAL_ADMIN_CTSC, FORENAME, SURNAME, null, null, null);
         PiUser user2 = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, "567", "test@test.com",
 
-                                 Roles.INTERNAL_ADMIN_CTSC, null, null, null);
+                                 Roles.INTERNAL_ADMIN_CTSC, FORENAME, SURNAME, null, null, null);
         List<PiUser> users = new ArrayList<>();
         users.add(user1);
         users.add(user2);
@@ -386,7 +388,7 @@ class AccountServiceTest {
     @Test
     void testAddUsersBuildsErrored() {
         PiUser user = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, ID, INVALID_EMAIL,
-                                 Roles.INTERNAL_ADMIN_CTSC, null, null, null);
+                                 Roles.INTERNAL_ADMIN_CTSC, FORENAME, SURNAME, null, null, null);
         ErroredPiUser erroredUser = new ErroredPiUser(user);
         erroredUser.setErrorMessages(List.of(VALIDATION_MESSAGE));
         Map<CreationEnum, List<?>> expected = new ConcurrentHashMap<>();
@@ -406,7 +408,7 @@ class AccountServiceTest {
     @Test
     void testFindUserByProvenanceId() {
         PiUser user = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, ID, EMAIL, Roles.INTERNAL_ADMIN_CTSC,
-                                 null, null, null);
+                                 FORENAME, SURNAME, null, null, null);
         when(userRepository.findExistingByProvenanceId(user.getProvenanceUserId(), user.getUserProvenance().name()))
             .thenReturn(List.of(user));
         assertEquals(user, accountService.findUserByProvenanceId(user.getUserProvenance(), user.getProvenanceUserId()),
@@ -491,10 +493,10 @@ class AccountServiceTest {
 
     @Test
     void testUploadMediaFromCsv() throws AzureCustomException, IOException {
-        PiUser user1 = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, ID, EMAIL, Roles.VERIFIED, null,
-                                  null, null);
-        PiUser user2 = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, ID, EMAIL, Roles.VERIFIED, null,
-                                  null, null);
+        PiUser user1 = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, ID, EMAIL, Roles.VERIFIED, "Test", "User",
+                                  null,null, null);
+        PiUser user2 = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, ID, EMAIL, Roles.VERIFIED, "Test", "User",
+                                  null, null, null);
 
         when(validator.validate(any())).thenReturn(Set.of());
         when(azureUserService.createUser(any())).thenReturn(expectedUser);

@@ -29,6 +29,8 @@ public class ErroredPiUser extends PiUser {
               user.getProvenanceUserId(),
               user.getEmail(),
               user.getRoles(),
+              user.getForenames(),
+              user.getSurname(),
               user.getCreatedDate(),
               user.getLastVerifiedDate(),
               user.getLastSignedInDate());
