@@ -147,19 +147,15 @@ public class MediaApplicationService {
 
     /**
      * Scheduled job that gets all media applications & sends them to publication services.
+     * Then calls a method to get the applications deleted
      */
     @Scheduled(cron = "${cron.media-application-reporting}")
-    public void processApplications() {
-        processApplicationsForReporting();
-        processApplicationsForDeleting();
-    }
-
-    /**
-     * Collate media applications and send them for reporting.
-     */
     public void processApplicationsForReporting() {
         List<MediaApplication> mediaApplications = getApplications();
-        log.info(publicationService.sendMediaApplicationReportingEmail(mediaApplications));
+        if (!mediaApplications.isEmpty()) {
+            log.info(publicationService.sendMediaApplicationReportingEmail(mediaApplications));
+            processApplicationsForDeleting();
+        }
     }
 
     /**

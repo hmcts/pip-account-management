@@ -239,7 +239,7 @@ class MediaApplicationServiceTest {
         when(publicationService.sendMediaApplicationReportingEmail(List.of(mediaApplicationExample)))
             .thenReturn("Email sent");
 
-        mediaApplicationService.processApplications();
+        mediaApplicationService.processApplicationsForReporting();
 
         assertTrue("Email sent".equals(logCaptor.getInfoLogs().get(0)),
                    "Publication service response logs not being captured.");
