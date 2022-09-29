@@ -233,10 +233,4 @@ class MediaApplicationTest {
         mockMvc.perform(post(REPORT_APPLICATIONS_URL))
             .andExpect(status().isNoContent());
     }
-
-    @Test
-    void testDeleteProcessedApplicationsSuccess() throws Exception {
-        mockMvc.perform(delete(DELETE_PROCESSED_APPLICATIONS_URL))
-            .andExpect(status().isNoContent());
-    }
 }
