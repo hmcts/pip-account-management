@@ -15,11 +15,9 @@ import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.NotFo
 import uk.gov.hmcts.reform.pip.account.management.model.MediaApplication;
 import uk.gov.hmcts.reform.pip.account.management.model.MediaApplicationStatus;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -255,20 +253,5 @@ class MediaApplicationServiceTest {
 
         mediaApplicationService.processApplicationsForReporting();
         verify(publicationService).sendMediaApplicationReportingEmail(mediaApplications);
-    }
-
-    @Test
-    void testProcessApplicationsForDeleting() {
-        when(mediaApplicationRepository.findAll()).thenReturn(List.of(mediaApplicationExample));
-
-        mediaApplicationService.processApplicationsForDeleting();
-        verify(mediaApplicationRepository).deleteAllInBatch(Collections.emptyList());
-
-        assertThat(logCaptor.getInfoLogs())
-            .as("Incorrect info message")
-            .hasSize(1)
-            .first()
-            .asString()
-            .contains("Approved and Rejected media applications deleted");
     }
 }

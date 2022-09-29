@@ -161,7 +161,7 @@ public class MediaApplicationService {
     /**
      * Delete media applications that have APPROVED or REJECTED status.
      */
-    public void processApplicationsForDeleting() {
+    private void processApplicationsForDeleting() {
         List<MediaApplication> mediaApplications = getApplications();
         mediaApplicationRepository.deleteAllInBatch(
             mediaApplications.stream().filter(app -> app.getStatus().equals(MediaApplicationStatus.APPROVED)
