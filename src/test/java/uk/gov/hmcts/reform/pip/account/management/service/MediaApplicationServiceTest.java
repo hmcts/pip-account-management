@@ -234,21 +234,6 @@ class MediaApplicationServiceTest {
     }
 
     @Test
-    void testProcessApplicationForReporting() {
-        when(mediaApplicationRepository.findAll()).thenReturn(List.of(mediaApplicationExample));
-        when(publicationService.sendMediaApplicationReportingEmail(List.of(mediaApplicationExample)))
-            .thenReturn("Email sent");
-
-        mediaApplicationService.processApplications();
-
-        assertTrue("Email sent".equals(logCaptor.getInfoLogs().get(0)),
-                   "Publication service response logs not being captured.");
-
-        assertTrue("Approved and Rejected media applications deleted".equals(logCaptor.getInfoLogs().get(1)),
-                   "Application deletion logs not being captured");
-    }
-
-    @Test
     void testProcessApplicationsForReporting() {
         List<MediaApplication> mediaApplications = List.of(mediaApplicationExample);
         when(mediaApplicationRepository.findAll()).thenReturn(mediaApplications);
