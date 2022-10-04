@@ -66,6 +66,10 @@ spring:
     hibernate:
       # this ensures the db persists after spring boot connection drops.
       ddl-auto: update
+  servlet:
+    multipart:
+      max-file-size: 2MB
+      max-request-size: 2MB
 
 service-to-service:
   publication-services: ${PUBLICATION_SERVICES_URL:https://pip-publication-services.staging.platform.hmcts.net}
