@@ -46,9 +46,6 @@ public class WebClientConfig {
             new ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager);
         oauth2Client.setDefaultClientRegistrationId("publicationServicesApi");
         return WebClient.builder()
-            .exchangeStrategies(ExchangeStrategies.builder()
-                                    .codecs(clientCodecConfigurer -> clientCodecConfigurer
-                                        .defaultCodecs().maxInMemorySize(2 * 1024 * 1024)).build())
             .apply(oauth2Client.oauth2Configuration())
             .build();
     }
@@ -56,7 +53,6 @@ public class WebClientConfig {
     @Bean
     @Profile("dev")
     WebClient webClientInsecure() {
-        return WebClient.builder().codecs(clientCodecConfigurer -> clientCodecConfigurer
-            .defaultCodecs().maxInMemorySize(2 * 1024 * 1024)).build();
+        return WebClient.builder().build();
     }
 }
