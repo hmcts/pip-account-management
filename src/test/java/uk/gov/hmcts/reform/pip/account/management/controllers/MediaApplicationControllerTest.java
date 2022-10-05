@@ -128,12 +128,4 @@ class MediaApplicationControllerTest {
             .as(STATUS_CODE_MATCH)
             .isEqualTo(HttpStatus.NO_CONTENT);
     }
-
-    @Test
-    void testDeleteProcessedApplications() {
-        doNothing().when(mediaApplicationService).processApplicationsForDeleting();
-        assertThat(mediaApplicationController.deleteProcessedApplications().getStatusCode())
-            .as(STATUS_CODE_MATCH)
-            .isEqualTo(HttpStatus.NO_CONTENT);
-    }
 }
