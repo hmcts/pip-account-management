@@ -133,23 +133,11 @@ public class MediaApplicationController {
         @ApiResponse(code = 204, message = NO_CONTENT_MESSAGE),
         @ApiResponse(code = 403, message = NOT_AUTHORIZED_MESSAGE)
     })
-    @ApiOperation("Report all media applications")
+    @ApiOperation("Reports all media applications and deletes approved and rejected applications")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PostMapping("/reporting")
     public ResponseEntity<Void> reportApplications() {
         mediaApplicationService.processApplicationsForReporting();
-        return ResponseEntity.noContent().build();
-    }
-
-    @ApiResponses({
-        @ApiResponse(code = 204, message = NO_CONTENT_MESSAGE),
-        @ApiResponse(code = 403, message = NOT_AUTHORIZED_MESSAGE)
-    })
-    @ApiOperation("Delete all media applications which have been processed (approved or rejected)")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    @DeleteMapping("/processed")
-    public ResponseEntity<Void> deleteProcessedApplications() {
-        mediaApplicationService.processApplicationsForDeleting();
         return ResponseEntity.noContent().build();
     }
 }

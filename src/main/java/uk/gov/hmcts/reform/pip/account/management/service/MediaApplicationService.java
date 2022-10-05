@@ -147,25 +147,21 @@ public class MediaApplicationService {
 
     /**
      * Scheduled job that gets all media applications & sends them to publication services.
+     * Then calls a method to get the applications deleted
      */
     @Scheduled(cron = "${cron.media-application-reporting}")
-    public void processApplications() {
-        processApplicationsForReporting();
-        processApplicationsForDeleting();
-    }
-
-    /**
-     * Collate media applications and send them for reporting.
-     */
     public void processApplicationsForReporting() {
         List<MediaApplication> mediaApplications = getApplications();
-        log.info(publicationService.sendMediaApplicationReportingEmail(mediaApplications));
+        if (!mediaApplications.isEmpty()) {
+            log.info(publicationService.sendMediaApplicationReportingEmail(mediaApplications));
+            processApplicationsForDeleting();
+        }
     }
 
     /**
      * Delete media applications that have APPROVED or REJECTED status.
      */
-    public void processApplicationsForDeleting() {
+    private void processApplicationsForDeleting() {
         List<MediaApplication> mediaApplications = getApplications();
         mediaApplicationRepository.deleteAllInBatch(
             mediaApplications.stream().filter(app -> app.getStatus().equals(MediaApplicationStatus.APPROVED)
