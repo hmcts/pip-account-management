@@ -71,7 +71,6 @@ public class PiUser {
     /**
      * The timestamp of when the user was created.
      */
-    @CreatedDate
     @ApiModelProperty(hidden = true)
     private LocalDateTime createdDate;
 
