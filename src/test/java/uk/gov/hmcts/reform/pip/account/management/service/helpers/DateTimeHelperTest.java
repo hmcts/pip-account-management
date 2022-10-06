@@ -20,7 +20,7 @@ class DateTimeHelperTest {
     void testFormatValidDateTimeStringInBst() {
         assertThat(DateTimeHelper.zonedDateTimeStringToLocalDateTime("2022-08-01T10:21:10.912Z"))
             .as("Incorrect date time conversion")
-            .isEqualTo("2022-08-01T11:21:10.912");
+            .isEqualTo("2022-08-01T10:21:10.912");
     }
 
     @Test
