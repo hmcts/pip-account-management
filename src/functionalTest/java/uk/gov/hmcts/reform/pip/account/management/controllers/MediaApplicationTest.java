@@ -64,7 +64,6 @@ class MediaApplicationTest {
     private static final String DELETE_URL = ROOT_URL + "/{id}";
     private static final String GET_BY_ID_URL = ROOT_URL + "/{id}";
     private static final String REPORT_APPLICATIONS_URL = ROOT_URL + "/reporting";
-    private static final String DELETE_PROCESSED_APPLICATIONS_URL = ROOT_URL + "/processed";
 
     private ObjectMapper objectMapper;
     private static final String FULL_NAME = "Test user";
@@ -231,12 +230,6 @@ class MediaApplicationTest {
     @Test
     void testReportApplicationsSuccess() throws Exception {
         mockMvc.perform(post(REPORT_APPLICATIONS_URL))
-            .andExpect(status().isNoContent());
-    }
-
-    @Test
-    void testDeleteProcessedApplicationsSuccess() throws Exception {
-        mockMvc.perform(delete(DELETE_PROCESSED_APPLICATIONS_URL))
             .andExpect(status().isNoContent());
     }
 }

@@ -30,7 +30,7 @@ class SchedulerTest {
     @Test
     void testSchedulerApplicationReportingRuns() {
         await().atMost(Duration.ONE_MINUTE).untilAsserted(() ->
-            verify(mediaApplicationService, times(1)).processApplications());
+            verify(mediaApplicationService, times(1)).processApplicationsForReporting());
     }
 
     @Test
