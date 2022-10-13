@@ -33,9 +33,13 @@ import static org.mockito.Mockito.when;
 @MockitoSettings(strictness = Strictness.LENIENT)
 @SuppressWarnings("PMD.TooManyMethods")
 class AccountVerificationServiceTest {
+    private static final UUID MEDIA_USER_UUID = UUID.randomUUID();
     private static final String MEDIA_USER_EMAIL = "media@test.com";
+    private static final UUID AAD_ADMIN_UUID = UUID.randomUUID();
     private static final String AAD_ADMIN_USER_EMAIL = "aad_admin@test.com";
+    private static final UUID CFT_IDAM_UUID = UUID.randomUUID();
     private static final String CFT_IDAM_USER_EMAIL = "cft_idam@test.com";
+    private static final UUID CRIME_IDAM_UUID = UUID.randomUUID();
     private static final String CRIME_IDAM_USER_EMAIL = "crime_idam@test.com";
     private static final String AZURE_MEDIA_USER_NAME = "MediaUserName";
     private static final String AZURE_ADMIN_USER_NAME = "AdminUserName";
@@ -44,16 +48,16 @@ class AccountVerificationServiceTest {
     private static final String FORENAME = "Test";
     private static final String SURNAME = "Surname";
 
-    private static final PiUser MEDIA_USER = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD,
+    private static final PiUser MEDIA_USER = new PiUser(MEDIA_USER_UUID, UserProvenances.PI_AAD,
                                                         "1", MEDIA_USER_EMAIL, Roles.VERIFIED,
                                                         FORENAME, SURNAME, null, null, null);
-    private static final PiUser AAD_ADMIN_USER = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD,
+    private static final PiUser AAD_ADMIN_USER = new PiUser(AAD_ADMIN_UUID, UserProvenances.PI_AAD,
                                                             "2", AAD_ADMIN_USER_EMAIL, Roles.INTERNAL_SUPER_ADMIN_CTSC,
                                                             FORENAME, SURNAME, null, null, LAST_SIGNED_IN_DATE);
-    private static final PiUser CFT_IDAM_USER = new PiUser(UUID.randomUUID(), UserProvenances.CFT_IDAM,
+    private static final PiUser CFT_IDAM_USER = new PiUser(CFT_IDAM_UUID, UserProvenances.CFT_IDAM,
                                                            "3", CFT_IDAM_USER_EMAIL, Roles.INTERNAL_ADMIN_CTSC,
                                                            FORENAME, SURNAME, null, null, LAST_SIGNED_IN_DATE);
-    private static final PiUser CRIME_IDAM_USER = new PiUser(UUID.randomUUID(), UserProvenances.CRIME_IDAM,
+    private static final PiUser CRIME_IDAM_USER = new PiUser(CRIME_IDAM_UUID, UserProvenances.CRIME_IDAM,
                                                              "4", CRIME_IDAM_USER_EMAIL, Roles.INTERNAL_ADMIN_CTSC,
                                                              FORENAME, SURNAME, null, null, LAST_SIGNED_IN_DATE);
 
@@ -109,7 +113,7 @@ class AccountVerificationServiceTest {
 
         accountVerificationService.processEligibleUsersForVerification();
 
-        verify(accountService).deleteAccount(MEDIA_USER_EMAIL, true);
+        verify(accountService).deleteAccount(MEDIA_USER_UUID, true);
         verifyNoMoreInteractions(accountService);
         verifyNoInteractions(publicationService);
         verifyNoInteractions(azureUserService);
@@ -128,8 +132,8 @@ class AccountVerificationServiceTest {
 
         accountVerificationService.processEligibleUsersForVerification();
 
-        verify(accountService).deleteAccount(AAD_ADMIN_USER_EMAIL, true);
-        verify(accountService).deleteAccount(CRIME_IDAM_USER_EMAIL, false);
+        verify(accountService).deleteAccount(AAD_ADMIN_UUID, true);
+        verify(accountService).deleteAccount(CRIME_IDAM_UUID, false);
         verifyNoMoreInteractions(accountService);
         verifyNoInteractions(publicationService);
         verifyNoInteractions(azureUserService);
@@ -149,10 +153,10 @@ class AccountVerificationServiceTest {
 
         accountVerificationService.processEligibleUsersForVerification();
 
-        verify(accountService).deleteAccount(MEDIA_USER_EMAIL, true);
-        verify(accountService).deleteAccount(AAD_ADMIN_USER_EMAIL, true);
-        verify(accountService).deleteAccount(CFT_IDAM_USER_EMAIL, false);
-        verify(accountService).deleteAccount(CRIME_IDAM_USER_EMAIL, false);
+        verify(accountService).deleteAccount(MEDIA_USER_UUID, true);
+        verify(accountService).deleteAccount(AAD_ADMIN_UUID, true);
+        verify(accountService).deleteAccount(CFT_IDAM_UUID, false);
+        verify(accountService).deleteAccount(CRIME_IDAM_UUID, false);
         verifyNoInteractions(publicationService);
         verifyNoInteractions(azureUserService);
     }
@@ -171,7 +175,7 @@ class AccountVerificationServiceTest {
 
         accountVerificationService.processEligibleUsersForVerification();
 
-        verify(accountService).deleteAccount(CFT_IDAM_USER_EMAIL, false);
+        verify(accountService).deleteAccount(CFT_IDAM_UUID, false);
         verifyNoMoreInteractions(accountService);
         verify(publicationService).sendAccountVerificationEmail(MEDIA_USER_EMAIL, AZURE_MEDIA_USER_NAME);
     }
@@ -304,7 +308,7 @@ class AccountVerificationServiceTest {
             .thenReturn(Collections.singletonList(MEDIA_USER));
 
         accountVerificationService.findMediaAccountsForDeletion();
-        verify(accountService).deleteAccount(MEDIA_USER_EMAIL, true);
+        verify(accountService).deleteAccount(MEDIA_USER_UUID, true);
     }
 
     @Test
@@ -322,7 +326,7 @@ class AccountVerificationServiceTest {
             .thenReturn(Collections.singletonList(AAD_ADMIN_USER));
 
         accountVerificationService.findAdminAccountsForDeletion();
-        verify(accountService).deleteAccount(AAD_ADMIN_USER_EMAIL, true);
+        verify(accountService).deleteAccount(AAD_ADMIN_UUID, true);
     }
 
     @Test
@@ -340,8 +344,8 @@ class AccountVerificationServiceTest {
             .thenReturn(List.of(CFT_IDAM_USER, CRIME_IDAM_USER));
 
         accountVerificationService.findIdamAccountsForDeletion();
-        verify(accountService).deleteAccount(CFT_IDAM_USER_EMAIL, false);
-        verify(accountService).deleteAccount(CRIME_IDAM_USER_EMAIL, false);
+        verify(accountService).deleteAccount(CFT_IDAM_UUID, false);
+        verify(accountService).deleteAccount(CRIME_IDAM_UUID, false);
     }
 
     @Test

@@ -95,6 +95,7 @@ class AccountServiceTest {
     private static final String FULL_NAME = "Full name";
     private static final String ISSUER_ID = "abcdef";
     private static final String EMAIL = "a@b.com";
+    private static final UUID USER_UUID = UUID.randomUUID();
     private static final String INVALID_EMAIL = "ab.com";
     private static final String ID = "1234";
     private static final String EMAIL_PATH = "Email";
@@ -540,7 +541,7 @@ class AccountServiceTest {
 
     @Test
     void testDeleteAadAccount() throws AzureCustomException {
-        when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.of(piUser));
+        when(userRepository.findByUserId(USER_UUID)).thenReturn(Optional.of(piUser));
 
         doNothing().when(userRepository).delete(piUser);
         when(azureUserService.deleteUser(piUser.getProvenanceUserId()))
@@ -548,7 +549,7 @@ class AccountServiceTest {
         when(subscriptionService.sendSubscriptionDeletionRequest(VALID_USER_ID.toString()))
             .thenReturn("Subscriptions deleted");
 
-        accountService.deleteAccount(EMAIL, true);
+        accountService.deleteAccount(USER_UUID, true);
 
         verify(azureUserService, times(1)).deleteUser(piUser.getProvenanceUserId());
         verify(subscriptionService, times(1))
@@ -558,13 +559,13 @@ class AccountServiceTest {
 
     @Test
     void testDeleteIdamAccount() {
-        when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.of(piUser));
+        when(userRepository.findByUserId(USER_UUID)).thenReturn(Optional.of(piUser));
 
         doNothing().when(userRepository).delete(piUser);
         when(subscriptionService.sendSubscriptionDeletionRequest(VALID_USER_ID.toString()))
             .thenReturn("Subscriptions deleted");
 
-        accountService.deleteAccount(EMAIL, false);
+        accountService.deleteAccount(USER_UUID, false);
 
         verifyNoInteractions(azureUserService);
         verify(subscriptionService).sendSubscriptionDeletionRequest(VALID_USER_ID.toString());
@@ -574,16 +575,16 @@ class AccountServiceTest {
     @Test
     void testDeleteAccountNotFound() {
         NotFoundException notFoundException = assertThrows(NotFoundException.class, () ->
-            accountService.deleteAccount(EMAIL, true), "Expected NotFoundException to be thrown");
+            accountService.deleteAccount(UUID.randomUUID(), true), "Expected NotFoundException to be thrown");
 
         assertTrue(notFoundException.getMessage()
-                       .contains("User with supplied email could not be found"),
+                       .contains("User with supplied ID could not be found"),
                    "Not found error missing");
     }
 
     @Test
     void testDeleteAccountThrows() throws AzureCustomException {
-        when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.of(piUser));
+        when(userRepository.findByUserId(USER_UUID)).thenReturn(Optional.of(piUser));
 
         doNothing().when(userRepository).delete(piUser);
         when(azureUserService.deleteUser(piUser.getProvenanceUserId()))
@@ -592,7 +593,7 @@ class AccountServiceTest {
             .thenReturn("Subscriptions deleted");
 
         try (LogCaptor logCaptor = LogCaptor.forClass(AccountService.class)) {
-            accountService.deleteAccount(EMAIL, true);
+            accountService.deleteAccount(USER_UUID, true);
             assertEquals(1, logCaptor.getErrorLogs().size(),
                          "No logs were thrown");
         }

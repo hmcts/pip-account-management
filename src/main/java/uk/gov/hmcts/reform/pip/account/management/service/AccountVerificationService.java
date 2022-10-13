@@ -150,7 +150,7 @@ public class AccountVerificationService {
                 userRepository.findIdamUsersByLastSignedInDate(idamAccountDeletionDays))
             .flatMap(Collection::stream)
             .forEach(
-                user -> log.info(writeLog(accountService.deleteAccount(user.getEmail(),
+                user -> log.info(writeLog(accountService.deleteAccount(user.getUserId(),
                                                               PI_AAD.equals(user.getUserProvenance()))))
             );
     }
@@ -162,7 +162,7 @@ public class AccountVerificationService {
     public void findMediaAccountsForDeletion() {
         userRepository.findVerifiedUsersByLastVerifiedDate(mediaAccountDeletionDays)
             .forEach(user -> log.info(writeLog(accountService.deleteAccount(
-                user.getEmail(), PI_AAD.equals(user.getUserProvenance())
+                user.getUserId(), PI_AAD.equals(user.getUserProvenance())
             ))));
     }
 
@@ -173,7 +173,7 @@ public class AccountVerificationService {
     public void findAdminAccountsForDeletion() {
         userRepository.findAadAdminUsersByLastSignedInDate(aadAdminAccountDeletionDays)
             .forEach(user -> log.info(writeLog(accountService.deleteAccount(
-                user.getEmail(), PI_AAD.equals(user.getUserProvenance())
+                user.getUserId(), PI_AAD.equals(user.getUserProvenance())
             ))));
     }
 
@@ -184,7 +184,7 @@ public class AccountVerificationService {
     public void findIdamAccountsForDeletion() {
         userRepository.findIdamUsersByLastSignedInDate(idamAccountDeletionDays)
             .forEach(user -> log.info(writeLog(accountService.deleteAccount(
-                user.getEmail(), PI_AAD.equals(user.getUserProvenance())
+                user.getUserId(), PI_AAD.equals(user.getUserProvenance())
             ))));
     }
 }

@@ -326,13 +326,13 @@ public class AccountService {
      * Delete a user account by the supplied email.
      * This deletes the user from AAD, our user table and subscriptions.
      *
-     * @param email The email of the user to delete.
+     * @param userId The ID of the user to delete.
      * @return Confirmation message that account has been deleted.
      */
-    public String deleteAccount(String email, boolean isAadAccount) {
+    public String deleteAccount(UUID userId, boolean isAadAccount) {
         String returnMessage = "";
-        PiUser userToDelete = userRepository.findByEmail(email)
-            .orElseThrow(() -> new NotFoundException("User with supplied email could not be found"));
+        PiUser userToDelete = userRepository.findByUserId(userId)
+            .orElseThrow(() -> new NotFoundException("User with supplied ID could not be found"));
         try {
             if (isAadAccount) {
                 azureUserService.deleteUser(userToDelete.getProvenanceUserId());
