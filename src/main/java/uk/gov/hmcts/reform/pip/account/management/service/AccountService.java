@@ -29,6 +29,7 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
@@ -165,8 +166,10 @@ public class AccountService {
         List<ErroredPiUser> erroredAccounts = new ArrayList<>();
 
         for (PiUser user : users) {
-            user.setLastVerifiedDate(LocalDateTime.now());
-            user.setLastSignedInDate(LocalDateTime.now());
+            LocalDateTime localDateTime = LocalDateTime.now(ZoneId.of("UTC"));
+            user.setLastVerifiedDate(localDateTime);
+            user.setLastSignedInDate(localDateTime);
+            user.setCreatedDate(localDateTime);
             Set<ConstraintViolation<PiUser>> constraintViolationSet = validator.validate(user);
             if (!constraintViolationSet.isEmpty()) {
                 ErroredPiUser erroredUser = new ErroredPiUser(user);

@@ -99,9 +99,9 @@
   </suppress>
   <suppress>
     <notes><![CDATA[
-   file name: spring-cloud-azure-starter-active-directory-4.0.0.jar
+   file name: spring-cloud-azure-starter-active-directory-4.4.0.jar
    ]]></notes>
-    <packageUrl regex="true">^pkg:maven/com.azure.spring/spring-cloud-azure-starter-active-directory@4.0.0</packageUrl>
+    <packageUrl regex="true">^pkg:maven/com.azure.spring/spring-cloud-azure-starter-active-directory@4.4.0</packageUrl>
     <cve>CVE-2021-42306</cve>
   </suppress>
   <suppress>
@@ -182,8 +182,4 @@
     <cve>CVE-2022-42003</cve>
     <cve>CVE-2022-42004</cve>
   </suppress>
-  <suppress>
-    <notes>same as above</notes>
-    <packageUrl regex="true">^pkg:maven/com.fasterxml.jackson.core/jackson-databind@2.12.6.1</packageUrl>
-    <cve>CVE-2022-42004</cve></suppress>
 </suppressions>

@@ -174,7 +174,7 @@ dependencies {
     exclude group: 'org.springframework.boot', module: 'spring-boot-starter-data-jpa'
   }
   implementation group: 'org.postgresql', name: 'postgresql', version: '42.4.1'
-  implementation 'com.azure.spring:spring-cloud-azure-starter-active-directory:4.0.0'
+  implementation 'com.azure.spring:spring-cloud-azure-starter-active-directory:4.4.0'
   implementation group: 'org.springframework.boot', name: 'spring-boot-starter-oauth2-resource-server'
   implementation group: 'org.springframework.boot', name: 'spring-boot-starter-webflux'
   implementation group: 'org.springframework.boot', name: 'spring-boot-starter-validation'
