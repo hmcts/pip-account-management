@@ -12,7 +12,7 @@ public final class DateTimeHelper {
 
     public static LocalDateTime zonedDateTimeStringToLocalDateTime(String str) {
         Instant instant = Instant.parse(str);
-        ZonedDateTime zonedDateTime = instant.atZone(ZoneId.of("Europe/London"));
+        ZonedDateTime zonedDateTime = instant.atZone(ZoneId.of("UTC"));
         return zonedDateTime.toLocalDateTime();
     }
 

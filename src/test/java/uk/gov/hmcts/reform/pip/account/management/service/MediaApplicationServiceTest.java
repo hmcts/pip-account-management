@@ -15,11 +15,9 @@ import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.NotFo
 import uk.gov.hmcts.reform.pip.account.management.model.MediaApplication;
 import uk.gov.hmcts.reform.pip.account.management.model.MediaApplicationStatus;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -234,26 +232,20 @@ class MediaApplicationServiceTest {
     }
 
     @Test
-    void testProcessApplicationsForReporting() {
-        List<MediaApplication> mediaApplications = List.of(mediaApplicationExample);
-        when(mediaApplicationRepository.findAll()).thenReturn(mediaApplications);
+    void testProcessApplicationForReporting() {
+        when(mediaApplicationRepository.findAll()).thenReturn(List.of(mediaApplicationExample));
+        when(publicationService.sendMediaApplicationReportingEmail(List.of(mediaApplicationExample)))
+            .thenReturn("Email sent");
 
         mediaApplicationService.processApplicationsForReporting();
-        verify(publicationService).sendMediaApplicationReportingEmail(mediaApplications);
+
+        assertTrue("Email sent".equals(logCaptor.getInfoLogs().get(0)),
+                   "Publication service response logs not being captured.");
+
+        assertTrue("Approved and Rejected media applications deleted".equals(logCaptor.getInfoLogs().get(1)),
+                   "Application deletion logs not being captured");
+
+        verify(publicationService).sendMediaApplicationReportingEmail(List.of(mediaApplicationExample));
     }
 
-    @Test
-    void testProcessApplicationsForDeleting() {
-        when(mediaApplicationRepository.findAll()).thenReturn(List.of(mediaApplicationExample));
-
-        mediaApplicationService.processApplicationsForDeleting();
-        verify(mediaApplicationRepository).deleteAllInBatch(Collections.emptyList());
-
-        assertThat(logCaptor.getInfoLogs())
-            .as("Incorrect info message")
-            .hasSize(1)
-            .first()
-            .asString()
-            .contains("Approved and Rejected media applications deleted");
-    }
 }

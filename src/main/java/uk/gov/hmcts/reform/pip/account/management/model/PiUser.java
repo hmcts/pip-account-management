@@ -5,7 +5,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Type;
-import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import uk.gov.hmcts.reform.pip.account.management.validation.annotations.PiEmailConditionalValidation;
 import uk.gov.hmcts.reform.pip.account.management.validation.annotations.ValidProvenanceUserId;
@@ -71,7 +70,6 @@ public class PiUser {
     /**
      * The timestamp of when the user was created.
      */
-    @CreatedDate
     @ApiModelProperty(hidden = true)
     private LocalDateTime createdDate;
 

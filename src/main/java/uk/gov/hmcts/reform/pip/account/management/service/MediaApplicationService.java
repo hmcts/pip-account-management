@@ -149,13 +149,16 @@ public class MediaApplicationService {
      */
     public void processApplicationsForReporting() {
         List<MediaApplication> mediaApplications = getApplications();
-        log.info(publicationService.sendMediaApplicationReportingEmail(mediaApplications));
+        if (!mediaApplications.isEmpty()) {
+            log.info(publicationService.sendMediaApplicationReportingEmail(mediaApplications));
+            processApplicationsForDeleting();
+        }
     }
 
     /**
      * Delete media applications that have APPROVED or REJECTED status.
      */
-    public void processApplicationsForDeleting() {
+    private void processApplicationsForDeleting() {
         List<MediaApplication> mediaApplications = getApplications();
         mediaApplicationRepository.deleteAllInBatch(
             mediaApplications.stream().filter(app -> app.getStatus().equals(MediaApplicationStatus.APPROVED)
