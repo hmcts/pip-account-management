@@ -316,12 +316,10 @@ public class AccountService {
     }
 
     public String getAccManDataForMiReporting() {
-        List<String> data = userRepository.getAccManDataForMI();
         StringBuilder builder = new StringBuilder(54);
-        builder.append("user_id, provenance_user_id, user_provenance, roles\n");
-        for (String line : data) {
-            builder.append(line).append('\n');
-        }
+        builder.append("user_id,provenance_user_id,user_provenance,roles").append(System.lineSeparator());
+        userRepository.getAccManDataForMI()
+            .forEach(line -> builder.append(line).append(System.lineSeparator()));
         return builder.toString();
     }
 
