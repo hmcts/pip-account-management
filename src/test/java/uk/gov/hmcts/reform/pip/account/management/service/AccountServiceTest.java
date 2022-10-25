@@ -5,6 +5,8 @@ import nl.altindag.log.LogCaptor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -149,8 +151,11 @@ class AccountServiceTest {
         when(path.toString()).thenReturn(EMAIL_PATH);
     }
 
-    @Test
-    void testAccountCreated() throws AzureCustomException {
+    @ParameterizedTest
+    @ValueSource(strings = {"INTERNAL_ADMIN_CTSC", "SYSTEM_ADMIN"})
+    void testAccountCreated(String role) throws AzureCustomException {
+        azureAccount.setRole(Roles.valueOf(role));
+
         when(validator.validate(argThat(sub -> ((AzureAccount) sub).getEmail().equals(azureAccount.getEmail()))))
             .thenReturn(Set.of());
 
@@ -173,12 +178,6 @@ class AccountServiceTest {
         assertEquals(0, createdAccounts.get(CreationEnum.ERRORED_ACCOUNTS).size(),
                      "Map should have no errored accounts"
         );
-    }
-
-    @Test
-    void testSystemAccountCreated() throws AzureCustomException {
-        azureAccount.setRole(Roles.SYSTEM_ADMIN);
-        testAccountCreated();
     }
 
     @Test
