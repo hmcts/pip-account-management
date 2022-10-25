@@ -220,6 +220,7 @@ dependencies {
   testImplementation group: 'io.github.hakky54', name: 'logcaptor', version: '2.7.8'
   testImplementation group: 'io.zonky.test', name: 'embedded-database-spring-test', version: '2.1.1'
   testImplementation group: 'org.awaitility', name: 'awaitility', version: '3.0.0'
+  testImplementation group: 'org.apiguardian', name: 'apiguardian-api', version: '1.1.2'
 
   functionalTestImplementation sourceSets.main.runtimeClasspath
   functionalTestImplementation sourceSets.test.runtimeClasspath
