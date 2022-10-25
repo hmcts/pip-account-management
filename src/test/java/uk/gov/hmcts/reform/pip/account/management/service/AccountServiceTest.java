@@ -176,6 +176,12 @@ class AccountServiceTest {
     }
 
     @Test
+    void testSystemAccountCreated() throws AzureCustomException {
+        azureAccount.setRole(Roles.SYSTEM_ADMIN);
+        testAccountCreated();
+    }
+
+    @Test
     void testAccountCreatedAlreadyExistsNoEmail() throws AzureCustomException {
         when(validator.validate(argThat(sub -> ((AzureAccount) sub).getEmail().equals(azureAccount.getEmail()))))
             .thenReturn(Set.of());
