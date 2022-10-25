@@ -106,3 +106,7 @@ verification:
   aad-admin-account-deletion-days: 90
   idam-account-sign-in-notification-days: 118
   idam-account-deletion-days: 132
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui/
