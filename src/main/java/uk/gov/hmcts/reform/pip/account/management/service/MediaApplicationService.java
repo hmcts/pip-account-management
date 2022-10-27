@@ -4,7 +4,6 @@ import com.azure.storage.blob.models.BlobStorageException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import uk.gov.hmcts.reform.pip.account.management.database.AzureBlobService;
@@ -146,10 +145,8 @@ public class MediaApplicationService {
     }
 
     /**
-     * Scheduled job that gets all media applications & sends them to publication services.
-     * Then calls a method to get the applications deleted
+     * Collate media applications and send them for reporting.
      */
-    @Scheduled(cron = "${cron.media-application-reporting}")
     public void processApplicationsForReporting() {
         List<MediaApplication> mediaApplications = getApplications();
         if (!mediaApplications.isEmpty()) {

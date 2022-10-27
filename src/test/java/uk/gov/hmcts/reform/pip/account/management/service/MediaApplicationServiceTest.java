@@ -244,14 +244,8 @@ class MediaApplicationServiceTest {
 
         assertTrue("Approved and Rejected media applications deleted".equals(logCaptor.getInfoLogs().get(1)),
                    "Application deletion logs not being captured");
+
+        verify(publicationService).sendMediaApplicationReportingEmail(List.of(mediaApplicationExample));
     }
 
-    @Test
-    void testProcessApplicationsForReporting() {
-        List<MediaApplication> mediaApplications = List.of(mediaApplicationExample);
-        when(mediaApplicationRepository.findAll()).thenReturn(mediaApplications);
-
-        mediaApplicationService.processApplicationsForReporting();
-        verify(publicationService).sendMediaApplicationReportingEmail(mediaApplications);
-    }
 }

@@ -92,10 +92,6 @@ azure:
     connection-string: ${CONNECTION_STRING}
     container-name: files
 
-cron:
-  media-application-reporting: "0 0 0 * * MON"
-  account-verification-check: "00 01 08 * * *"
-
 dbMigration:
   runOnStartup: ${RUN_DB_MIGRATION_ON_STARTUP:true}
 
