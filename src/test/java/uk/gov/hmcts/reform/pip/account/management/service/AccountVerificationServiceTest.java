@@ -1,7 +1,6 @@
 package uk.gov.hmcts.reform.pip.account.management.service;
 
 import com.microsoft.graph.models.User;
-import nl.altindag.log.LogCaptor;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,16 +16,13 @@ import uk.gov.hmcts.reform.pip.account.management.model.Roles;
 import uk.gov.hmcts.reform.pip.account.management.model.UserProvenances;
 
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.anyInt;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -78,155 +74,6 @@ class AccountVerificationServiceTest {
     static void setup() {
         azureMediaUser.givenName = AZURE_MEDIA_USER_NAME;
         azureAdminUser.givenName = AZURE_ADMIN_USER_NAME;
-    }
-
-    @Test
-    void testNoAccountDeletionAndNotification() {
-        when(userRepository.findVerifiedUsersByLastVerifiedDate(anyInt()))
-            .thenReturn(Collections.emptyList());
-        when(userRepository.findAadAdminUsersByLastSignedInDate(anyInt()))
-            .thenReturn(Collections.emptyList());
-        when(userRepository.findIdamUsersByLastSignedInDate(anyInt()))
-            .thenReturn(Collections.emptyList());
-
-        accountVerificationService.processEligibleUsersForVerification();
-
-        verifyNoInteractions(accountService);
-        verifyNoInteractions(publicationService);
-        verifyNoInteractions(azureUserService);
-    }
-
-    @Test
-    void testAccountDeletionOfMediaUserOnly() {
-        when(userRepository.findVerifiedUsersByLastVerifiedDate(anyInt()))
-            .thenReturn(Collections.singletonList(MEDIA_USER))
-            .thenReturn(Collections.emptyList());
-        when(userRepository.findAadAdminUsersByLastSignedInDate(anyInt()))
-            .thenReturn(Collections.emptyList());
-        when(userRepository.findIdamUsersByLastSignedInDate(anyInt()))
-            .thenReturn(Collections.emptyList());
-
-        accountVerificationService.processEligibleUsersForVerification();
-
-        verify(accountService).deleteAccount(MEDIA_USER_EMAIL, true);
-        verifyNoMoreInteractions(accountService);
-        verifyNoInteractions(publicationService);
-        verifyNoInteractions(azureUserService);
-    }
-
-    @Test
-    void testAccountDeletionOfAadAdminAndIdamUsersOnly() {
-        when(userRepository.findVerifiedUsersByLastVerifiedDate(anyInt()))
-            .thenReturn(Collections.emptyList());
-        when(userRepository.findAadAdminUsersByLastSignedInDate(anyInt()))
-            .thenReturn(Collections.singletonList(AAD_ADMIN_USER))
-            .thenReturn(Collections.emptyList());
-        when(userRepository.findIdamUsersByLastSignedInDate(anyInt()))
-            .thenReturn(Collections.singletonList(CRIME_IDAM_USER))
-            .thenReturn(Collections.emptyList());
-
-        accountVerificationService.processEligibleUsersForVerification();
-
-        verify(accountService).deleteAccount(AAD_ADMIN_USER_EMAIL, true);
-        verify(accountService).deleteAccount(CRIME_IDAM_USER_EMAIL, false);
-        verifyNoMoreInteractions(accountService);
-        verifyNoInteractions(publicationService);
-        verifyNoInteractions(azureUserService);
-    }
-
-    @Test
-    void testAccountDeletionOfAllUsers() {
-        when(userRepository.findVerifiedUsersByLastVerifiedDate(anyInt()))
-            .thenReturn(Collections.singletonList(MEDIA_USER))
-            .thenReturn(Collections.emptyList());
-        when(userRepository.findAadAdminUsersByLastSignedInDate(anyInt()))
-            .thenReturn(Collections.singletonList(AAD_ADMIN_USER))
-            .thenReturn(Collections.emptyList());
-        when(userRepository.findIdamUsersByLastSignedInDate(anyInt()))
-            .thenReturn(Arrays.asList(CFT_IDAM_USER, CRIME_IDAM_USER))
-            .thenReturn(Collections.emptyList());
-
-        accountVerificationService.processEligibleUsersForVerification();
-
-        verify(accountService).deleteAccount(MEDIA_USER_EMAIL, true);
-        verify(accountService).deleteAccount(AAD_ADMIN_USER_EMAIL, true);
-        verify(accountService).deleteAccount(CFT_IDAM_USER_EMAIL, false);
-        verify(accountService).deleteAccount(CRIME_IDAM_USER_EMAIL, false);
-        verifyNoInteractions(publicationService);
-        verifyNoInteractions(azureUserService);
-    }
-
-    @Test
-    void testAccountDeletionOfCftIdamUserAndNotificationOfMediaUser() throws AzureCustomException {
-        when(userRepository.findVerifiedUsersByLastVerifiedDate(anyInt()))
-            .thenReturn(Collections.emptyList())
-            .thenReturn(Collections.singletonList(MEDIA_USER));
-        when(userRepository.findAadAdminUsersByLastSignedInDate(anyInt()))
-            .thenReturn(Collections.emptyList());
-        when(userRepository.findIdamUsersByLastSignedInDate(anyInt()))
-            .thenReturn(Collections.singletonList(CFT_IDAM_USER))
-            .thenReturn(Collections.emptyList());
-        when(azureUserService.getUser(MEDIA_USER_EMAIL)).thenReturn(azureMediaUser);
-
-        accountVerificationService.processEligibleUsersForVerification();
-
-        verify(accountService).deleteAccount(CFT_IDAM_USER_EMAIL, false);
-        verifyNoMoreInteractions(accountService);
-        verify(publicationService).sendAccountVerificationEmail(MEDIA_USER_EMAIL, AZURE_MEDIA_USER_NAME);
-    }
-
-    @Test
-    void testNotificationOfAllUsers() throws AzureCustomException {
-        when(userRepository.findVerifiedUsersByLastVerifiedDate(anyInt()))
-            .thenReturn(Collections.emptyList())
-            .thenReturn(Collections.singletonList(MEDIA_USER));
-        when(userRepository.findAadAdminUsersByLastSignedInDate(anyInt()))
-            .thenReturn(Collections.emptyList())
-            .thenReturn(Collections.singletonList(AAD_ADMIN_USER));
-        when(userRepository.findIdamUsersByLastSignedInDate(anyInt()))
-            .thenReturn(Collections.emptyList())
-            .thenReturn(Arrays.asList(CFT_IDAM_USER, CRIME_IDAM_USER));
-        when(azureUserService.getUser(MEDIA_USER_EMAIL)).thenReturn(azureMediaUser);
-        when(azureUserService.getUser(AAD_ADMIN_USER_EMAIL)).thenReturn(azureAdminUser);
-
-        accountVerificationService.processEligibleUsersForVerification();
-
-        verifyNoInteractions(accountService);
-        verify(publicationService).sendAccountVerificationEmail(MEDIA_USER_EMAIL, AZURE_MEDIA_USER_NAME);
-        verify(publicationService).sendInactiveAccountSignInNotificationEmail(AAD_ADMIN_USER_EMAIL,
-                                                                              AZURE_ADMIN_USER_NAME,
-                                                                              LAST_SIGNED_IN_DATE_STRING);
-        verify(publicationService).sendInactiveAccountSignInNotificationEmail(CFT_IDAM_USER_EMAIL,
-                                                                              IDAM_USER_NAME,
-                                                                              LAST_SIGNED_IN_DATE_STRING);
-        verify(publicationService).sendInactiveAccountSignInNotificationEmail(CRIME_IDAM_USER_EMAIL,
-                                                                              IDAM_USER_NAME,
-                                                                              LAST_SIGNED_IN_DATE_STRING);
-    }
-
-    @Test
-    void testMediaUserNotificationWithAzureException() throws AzureCustomException {
-        when(userRepository.findVerifiedUsersByLastVerifiedDate(anyInt()))
-            .thenReturn(Collections.emptyList())
-            .thenReturn(Collections.singletonList(MEDIA_USER));
-        when(userRepository.findAadAdminUsersByLastSignedInDate(anyInt()))
-            .thenReturn(Collections.emptyList());
-        when(userRepository.findIdamUsersByLastSignedInDate(anyInt()))
-            .thenReturn(Collections.emptyList());
-        when(azureUserService.getUser(MEDIA_USER_EMAIL)).thenThrow(new AzureCustomException("error"));
-
-        try (LogCaptor logCaptor = LogCaptor.forClass(AccountVerificationService.class)) {
-            accountVerificationService.processEligibleUsersForVerification();
-            assertThat(logCaptor.getErrorLogs())
-                .as("Incorrect error message")
-                .hasSize(1)
-                .first()
-                .asString()
-                .contains("Error when getting user from azure");
-        }
-
-        verifyNoInteractions(accountService);
-        verifyNoInteractions(publicationService);
     }
 
     @Test
