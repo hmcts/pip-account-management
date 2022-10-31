@@ -1,5 +1,5 @@
 # Publication & Information Account Management Microservice
- 
+
 ## Purpose
 
 The purpose of this template is to speed up the creation of new Spring applications within HMCTS
@@ -267,3 +267,9 @@ an enum for the different roles available to P&I.
 `INTERNAL_ADMIN_CTSC` - admin privileges for CTSC
 
 `INTERNAL_ADMIN_LOCAL` - admin privileges for local courts
+
+## Materialised View
+
+There is a materialised view created for the PI User table, which contains a subset of the fields.
+
+This view is implemented via Flyway.
