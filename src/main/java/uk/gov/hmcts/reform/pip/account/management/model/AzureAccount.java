@@ -1,6 +1,6 @@
 package uk.gov.hmcts.reform.pip.account.management.model;
 
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -20,7 +20,7 @@ public class AzureAccount {
     /**
      * The is the object ID that is returned from azure.
      */
-    @ApiModelProperty(hidden = true)
+    @Schema(hidden = true)
     private String azureAccountId;
 
     /**
