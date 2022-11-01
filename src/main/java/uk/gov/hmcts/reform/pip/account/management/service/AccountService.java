@@ -295,6 +295,7 @@ public class AccountService {
                                                boolean isExisting) {
         boolean isSuccessful;
         switch (createdAccount.getRole()) {
+            case SYSTEM_ADMIN:
             case INTERNAL_ADMIN_CTSC:
             case INTERNAL_ADMIN_LOCAL:
             case INTERNAL_SUPER_ADMIN_CTSC:
