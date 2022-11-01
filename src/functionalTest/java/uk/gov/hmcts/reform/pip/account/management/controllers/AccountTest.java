@@ -1102,7 +1102,7 @@ class AccountTest {
     }
 
     @Test
-    void testMIAccountDataRequestSuccess() throws Exception {
+    void testMiAccountDataRequestSuccess() throws Exception {
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .get(MI_REPORTING_ACCOUNT_DATA_URL);
 
