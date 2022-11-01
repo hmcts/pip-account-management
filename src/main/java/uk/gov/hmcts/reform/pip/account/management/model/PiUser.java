@@ -1,6 +1,6 @@
 package uk.gov.hmcts.reform.pip.account.management.model;
 
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -70,7 +70,7 @@ public class PiUser {
     /**
      * The timestamp of when the user was created.
      */
-    @ApiModelProperty(hidden = true)
+    @Schema(hidden = true)
     private LocalDateTime createdDate;
 
     /**
