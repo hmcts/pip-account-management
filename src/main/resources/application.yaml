@@ -71,6 +71,10 @@ spring:
       max-file-size: 2MB
       max-request-size: 2MB
 
+  # This is needed as locally, all tables are in a single schema. Flyway is only enabled on the clusters by default
+  flyway:
+    enabled: ${ENABLE_FLYWAY:false}
+
 service-to-service:
   publication-services: ${PUBLICATION_SERVICES_URL:https://pip-publication-services.staging.platform.hmcts.net}
   subscription-management: ${SUBSCRIPTION_MANAGEMENT_URL:https://pip-subscription-management.staging.platform.hmcts.net}

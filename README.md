@@ -268,6 +268,15 @@ an enum for the different roles available to P&I.
 
 `INTERNAL_ADMIN_LOCAL` - admin privileges for local courts
 
+## Flyway
+
+Flyway is integrated with Account Management.
+
+- On the pipeline flyway is enabled but run on start up switched off
+- Locally, flyway is disabled. This is due to all tables existing in a single database locally which causes flyway to fail startup due to mismatching scripts
+
+If you want to test the scripts locally, you will first need to clear the "flyway_schema_history' table, and then set the 'ENABLE_FLYWAY' environment variable to 'true'.
+
 ## Materialised View
 
 There is a materialised view created for the PI User table, which contains a subset of the fields.
