@@ -123,6 +123,7 @@ class AccountTest {
     private static final String DELETE_EXPIRED_ADMIN_ACCOUNTS_URL = ROOT_URL + "/admin/inactive";
     private static final String NOTIFY_INACTIVE_IDAM_ACCOUNTS_URL = ROOT_URL + "/idam/inactive/notify";
     private static final String DELETE_EXPIRED_IDAM_ACCOUNTS_URL = ROOT_URL + "/idam/inactive";
+    private static final String MI_REPORTING_ACCOUNT_DATA_URL = ROOT_URL + "/mi-data";
     private static final String EMAIL_URL = ROOT_URL + "/emails";
     private static final String EMAIL = "test_account_admin@hmcts.net";
     private static final String INVALID_EMAIL = "ab";
@@ -1098,5 +1099,13 @@ class AccountTest {
             .delete(DELETE_EXPIRED_IDAM_ACCOUNTS_URL);
 
         mockMvc.perform(request).andExpect(status().isNoContent());
+    }
+
+    @Test
+    void testMiAccountDataRequestSuccess() throws Exception {
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+            .get(MI_REPORTING_ACCOUNT_DATA_URL);
+
+        mockMvc.perform(request).andExpect(status().isOk());
     }
 }
