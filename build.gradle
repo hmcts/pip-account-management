@@ -1,7 +1,7 @@
 plugins {
   id 'application'
   id 'checkstyle'
-  id 'com.github.ben-manes.versions' version '0.39.0'
+  id 'com.github.ben-manes.versions' version '0.43.0'
   id 'io.spring.dependency-management' version '1.0.11.RELEASE'
   id 'jacoco'
   id 'org.springframework.boot' version '2.7.5'
@@ -215,9 +215,9 @@ dependencies {
   testImplementation group: 'org.springframework.security', name: 'spring-security-test'
   testImplementation "io.zonky.test:embedded-database-spring-test:2.1.1"
   testImplementation group: 'com.squareup.okhttp3', name: 'mockwebserver', version: '4.9.3'
-  testImplementation group: 'io.github.hakky54', name: 'logcaptor', version: '2.7.8'
+  testImplementation group: 'io.github.hakky54', name: 'logcaptor', version: '2.7.10'
   testImplementation group: 'io.zonky.test', name: 'embedded-database-spring-test', version: '2.1.1'
-  testImplementation group: 'org.awaitility', name: 'awaitility', version: '3.0.0'
+  testImplementation group: 'org.awaitility', name: 'awaitility', version: '4.2.0'
   testImplementation group: 'org.apiguardian', name: 'apiguardian-api', version: '1.1.2'
 
   functionalTestImplementation sourceSets.main.runtimeClasspath
