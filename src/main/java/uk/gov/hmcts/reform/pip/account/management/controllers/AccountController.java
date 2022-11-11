@@ -5,6 +5,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -16,6 +19,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
@@ -25,6 +29,7 @@ import uk.gov.hmcts.reform.pip.account.management.model.AzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.ListType;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
+import uk.gov.hmcts.reform.pip.account.management.model.Roles;
 import uk.gov.hmcts.reform.pip.account.management.model.Sensitivity;
 import uk.gov.hmcts.reform.pip.account.management.model.UserProvenances;
 import uk.gov.hmcts.reform.pip.account.management.service.AccountService;
@@ -240,5 +245,20 @@ public class AccountController {
     public ResponseEntity<Void> deleteExpiredIdamAccounts() {
         accountVerificationService.findIdamAccountsForDeletion();
         return ResponseEntity.noContent().build();
+    }
+
+    // NEW
+    @GetMapping("/all")
+    public ResponseEntity<Page<PiUser>> getAllAccountsExceptThirdParty(
+        @RequestParam(name = "pageNumber") int pageNumber,
+        @RequestParam(name = "pageSize") int pageSize,
+        @RequestParam(name = "email", defaultValue = "", required = false) String email,
+        @RequestParam(name = "userProvenanceId", defaultValue = "", required = false) String userProvenanceId,
+        @RequestParam(name = "provenances", defaultValue = "", required = false) List<UserProvenances> provenances,
+        @RequestParam(name = "roles", defaultValue = "", required = false) List<Roles> roles,
+        @RequestParam(name = "userId", defaultValue = "", required = false) String userId) {
+        Pageable pageable = PageRequest.of(pageNumber, pageSize);
+        return ResponseEntity.ok(accountService.findAllAccountsExceptThirdParty(pageable, email, userProvenanceId,
+                                                                                provenances, roles, userId));
     }
 }

@@ -5,6 +5,8 @@ import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 import uk.gov.hmcts.reform.pip.account.management.database.UserRepository;
@@ -43,6 +45,8 @@ import java.util.stream.Stream;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
 
+import static uk.gov.hmcts.reform.pip.account.management.model.Roles.ALL_NON_THIRD_PARTY_ROLES;
+import static uk.gov.hmcts.reform.pip.account.management.model.UserProvenances.ALL_NON_THIRD_PARTY_PROVENANCES;
 import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
 
 /**
@@ -384,5 +388,51 @@ public class AccountService {
         userRepository.save(userToUpdate);
         return String.format("Account with provenance %s and provenance id %s has been updated",
                              userProvenance.name(), provenanceUserId);
+    }
+
+    /**
+     * TODO
+     * @param pageable
+     * @param email
+     * @param userProvenanceId
+     * @param userProvenances
+     * @param roles
+     * @param userId
+     * @return
+     */
+    public Page<PiUser> findAllAccountsExceptThirdParty(Pageable pageable, String email, String userProvenanceId,
+                                                     List<UserProvenances> userProvenances, List<Roles> roles,
+                                                     String userId) {
+
+        // If a user ID is supplied then only find by that
+        if(!userId.isBlank()) {
+            return userRepository.findByUserIdPageable(userId, pageable);
+        }
+
+        //  If a list of user provenances are supplied then use that else use all non third party user provenances
+        List<UserProvenances> userProvenancesToQuery = ALL_NON_THIRD_PARTY_PROVENANCES;
+        if(!userProvenances.isEmpty()) {
+            userProvenancesToQuery = userProvenances;
+        }
+
+        // If a list of roles are supplied then use that else use all non third party roles
+        List<Roles> rolesToQuery = ALL_NON_THIRD_PARTY_ROLES;
+        if(!roles.isEmpty()) {
+            rolesToQuery = roles;
+        }
+
+        // If user provenance id is supplied then find by an exact match
+        String userProvenanceIdToQuery = "%%";
+        if(!userProvenanceId.isBlank()) {
+            userProvenanceIdToQuery = userProvenanceId;
+        }
+
+        return userRepository.findAllByEmailLikeAndUserProvenanceInAndRolesInAndProvenanceUserIdLike(
+            "%" + email + "%",
+            userProvenancesToQuery,
+            rolesToQuery,
+            userProvenanceIdToQuery,
+            pageable
+        );
     }
 }
