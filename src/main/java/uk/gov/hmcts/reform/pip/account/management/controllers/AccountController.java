@@ -241,4 +241,15 @@ public class AccountController {
         accountVerificationService.findIdamAccountsForDeletion();
         return ResponseEntity.noContent().build();
     }
+
+    @ApiResponses({
+        @ApiResponse(responseCode = OK_CODE, description = "List of thord party accounts"),
+        @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
+    })
+    @Operation(summary = "Get all third party accounts")
+    @ResponseStatus(HttpStatus.OK)
+    @GetMapping("/third-party")
+    public ResponseEntity<List<PiUser>> getAccountsByThirdPartyRole() {
+        return ResponseEntity.ok(accountService.findAllThirdPartyAccounts());
+    }
 }

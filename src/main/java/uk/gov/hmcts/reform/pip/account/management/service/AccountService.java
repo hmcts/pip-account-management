@@ -385,4 +385,14 @@ public class AccountService {
         return String.format("Account with provenance %s and provenance id %s has been updated",
                              userProvenance.name(), provenanceUserId);
     }
+
+    /**
+     * Method which will retrieve all accounts which are third party. This method has been created due to
+     * there being many third party roles.
+     *
+     * @return The list of found PiUser accounts.
+     */
+    public List<PiUser> findAllThirdPartyAccounts() {
+        return userRepository.findAllByRolesContaining("THIRD_PARTY");
+    }
 }
