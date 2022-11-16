@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import uk.gov.hmcts.reform.pip.account.management.authentication.roles.IsAdmin;
+import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.AzureCustomException;
 import uk.gov.hmcts.reform.pip.account.management.model.AzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.ListType;
@@ -260,5 +261,21 @@ public class AccountController {
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
         return ResponseEntity.ok(accountService.findAllAccountsExceptThirdParty(pageable, email, userProvenanceId,
                                                                                 provenances, roles, userId));
+    }
+
+    @GetMapping("/{userId}")
+    public ResponseEntity<PiUser> getUserById(@PathVariable UUID userId) {
+        return ResponseEntity.ok(accountService.getUserById(userId));
+    }
+
+    @DeleteMapping("/delete/{userId}")
+    public ResponseEntity<String> deleteAccount(@PathVariable UUID userId) {
+        accountService.processManualAccountDeletion(userId);
+        return ResponseEntity.ok("User deleted");
+    }
+
+    @PutMapping("/update/{userId}/{role}")
+    public ResponseEntity<String> deleteAccount(@PathVariable UUID userId, @PathVariable Roles role) {
+        return ResponseEntity.ok(accountService.updateAccountRole(userId, role));
     }
 }
