@@ -727,7 +727,4 @@ class AccountServiceTest {
                    "Exception message thrown does not contain the user ID");
     }
 
-
-
-
 }
