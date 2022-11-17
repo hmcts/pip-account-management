@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
@@ -94,6 +95,18 @@ public class AccountController {
         @RequestHeader("x-issuer-id") String issuerId,
         @RequestBody List<PiUser> users) {
         return ResponseEntity.status(HttpStatus.CREATED).body(accountService.addUsers(users, issuerId));
+    }
+
+    @ApiResponses({
+        @ApiResponse(responseCode = OK_CODE, description = "{PiUser}"),
+        @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE),
+        @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description = "No user found with the "
+            + "user Id: {userId}")
+    })
+    @Operation(summary = "Get a user based on their user ID")
+    @GetMapping("/{userId}")
+    public ResponseEntity<PiUser> getUserById(@PathVariable UUID userId) {
+        return ResponseEntity.ok(accountService.getUserById(userId));
     }
 
     @ApiResponses({
@@ -248,7 +261,7 @@ public class AccountController {
     })
     @Operation(summary = "Get all third party accounts")
     @ResponseStatus(HttpStatus.OK)
-    @GetMapping("/third-party")
+    @GetMapping("/all/third-party")
     public ResponseEntity<List<PiUser>> getAccountsByThirdPartyRole() {
         return ResponseEntity.ok(accountService.findAllThirdPartyAccounts());
     }

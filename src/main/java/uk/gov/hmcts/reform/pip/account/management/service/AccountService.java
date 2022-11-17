@@ -393,6 +393,17 @@ public class AccountService {
      * @return The list of found PiUser accounts.
      */
     public List<PiUser> findAllThirdPartyAccounts() {
-        return userRepository.findAllByRolesContaining("THIRD_PARTY");
+        return userRepository.findAllByRolesIn(Roles.ALL_THIRD_PARTY_ROLES);
+    }
+
+    /**
+     * This method retrieves a user by their ID.
+     * @param userId The user ID to retrieve
+     * @return The user ID that is found.
+     * @throws NotFoundException if a user is not found.
+     */
+    public PiUser getUserById(UUID userId) {
+        return userRepository.findByUserId(userId).orElseThrow(() -> new NotFoundException(String.format(
+            "User with supplied user id: %s could not be found", userId)));
     }
 }
