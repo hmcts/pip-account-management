@@ -685,4 +685,49 @@ class AccountServiceTest {
                        .contains("Date time value '2022-08-14' not in expected format"),
                    "Illegal argument error mismatch");
     }
+
+    @Test
+    void testFindAllThirdPartyAccounts() {
+
+        PiUser thirdPartyUser = new PiUser();
+        thirdPartyUser.setUserId(UUID.randomUUID());
+        List<PiUser> usersList = List.of(thirdPartyUser);
+
+        when(userRepository.findAllByRolesIn(Roles.ALL_THIRD_PARTY_ROLES)).thenReturn(usersList);
+
+        List<PiUser> returnedUsers = accountService.findAllThirdPartyAccounts();
+
+        assertEquals(usersList, returnedUsers, "Returned users does not match expected users");
+    }
+
+    @Test
+    void testGetUserById() {
+        UUID userId = UUID.randomUUID();
+
+        PiUser user = new PiUser();
+        user.setUserId(userId);
+
+        when(userRepository.findByUserId(userId)).thenReturn(Optional.of(user));
+
+        PiUser returnedUser = accountService.getUserById(userId);
+        assertEquals(user, returnedUser, "Returned user does not match expected user");
+    }
+
+    @Test
+    void testGetUserNotFoundById() {
+        UUID userId = UUID.randomUUID();
+
+        when(userRepository.findByUserId(userId)).thenReturn(Optional.empty());
+
+        NotFoundException notFoundException = assertThrows(NotFoundException.class, () -> {
+            accountService.getUserById(userId);
+        }, "The exception when a user has not been found has been thrown");
+
+        assertTrue(notFoundException.getMessage().contains(userId.toString()),
+                   "Exception message thrown does not contain the user ID");
+    }
+
+
+
+
 }

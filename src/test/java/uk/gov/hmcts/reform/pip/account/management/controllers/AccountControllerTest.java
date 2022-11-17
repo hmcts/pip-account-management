@@ -277,4 +277,35 @@ class AccountControllerTest {
             .as(STATUS_CODE_MATCH)
             .isEqualTo(HttpStatus.NO_CONTENT);
     }
+
+    @Test
+    void testRetrieveUserById() {
+        UUID uuid = UUID.randomUUID();
+        PiUser piUser = new PiUser();
+        piUser.setUserId(uuid);
+
+        when(accountService.getUserById(uuid)).thenReturn(piUser);
+
+        ResponseEntity<PiUser> response = accountController.getUserById(uuid);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode(), "Expected status code does not match");
+
+        assertEquals(piUser, response.getBody(), "Expected PI user does not match");
+    }
+
+    @Test
+    void testRetrieveThirdPartyAccounts() {
+        UUID uuid = UUID.randomUUID();
+        PiUser piUser = new PiUser();
+        piUser.setUserId(uuid);
+
+        List<PiUser> users = List.of(piUser);
+        when(accountService.findAllThirdPartyAccounts()).thenReturn(users);
+
+        ResponseEntity<List<PiUser>> response = accountController.getAccountsByThirdPartyRole();
+
+        assertEquals(HttpStatus.OK, response.getStatusCode(), "Expected status code does not match");
+
+        assertEquals(users, response.getBody(), "Expected users do not match");
+    }
 }
