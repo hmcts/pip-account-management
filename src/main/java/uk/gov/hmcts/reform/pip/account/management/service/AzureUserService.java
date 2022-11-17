@@ -119,7 +119,13 @@ public class AzureUserService {
         }
     }
 
-    // NEW TODO
+    /**
+     * Updates an account in the Azure active directory.
+     * @param provenanceUserId The provenanceUserId of the account to update.
+     * @param role The updated role for the user.
+     * @return The update user if it was successful.
+     * @throws AzureCustomException thrown if there is an error with communicating with Azure.
+     */
     public User updateUserRole(String provenanceUserId, String role) throws AzureCustomException {
         try {
             User user = new User();
