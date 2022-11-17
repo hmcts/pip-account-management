@@ -1,7 +1,6 @@
 package uk.gov.hmcts.reform.pip.account.management.service;
 
 import com.google.gson.JsonPrimitive;
-import com.microsoft.applicationinsights.core.dependencies.google.common.graph.Graphs;
 import com.microsoft.applicationinsights.web.dependencies.apachecommons.lang3.RandomStringUtils;
 import com.microsoft.graph.http.GraphServiceException;
 import com.microsoft.graph.models.ObjectIdentity;
@@ -91,7 +90,6 @@ public class AzureUserService {
         try {
             UserCollectionPage users = graphClient.users()
                 .buildRequest()
-                .select("extension_" + clientConfiguration.getExtensionId().replace("-", "") + "_UserRole")
                 .filter(String.format("identities/any(c:c/issuerAssignedId eq '%s' and c/issuer eq '%s')", email,
                                       clientConfiguration.getB2cUrl()))
                 .get();

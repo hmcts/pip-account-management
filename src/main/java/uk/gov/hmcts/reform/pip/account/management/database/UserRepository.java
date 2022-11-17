@@ -42,11 +42,12 @@ public interface UserRepository extends JpaRepository<PiUser, Long> {
 
     Optional<PiUser> findByProvenanceUserIdAndUserProvenance(String provenanceUserId, UserProvenances userProvenance);
 
-    Page<PiUser> findAllByEmailLikeAndUserProvenanceInAndRolesInAndProvenanceUserIdLike(String email,
-                                                                                        List<UserProvenances> provenance,
-                                                                                        List<Roles> roles,
-                                                                                        String provenanceUserId,
-                                                                                        Pageable pageable);
+    Page<PiUser> findAllByEmailLikeAndUserProvenanceInAndRolesInAndProvenanceUserIdLike(
+        String email,
+        List<UserProvenances> provenance,
+        List<Roles> roles,
+        String provenanceUserId,
+        Pageable pageable);
 
     @Query(value = "SELECT * FROM pi_user WHERE CAST(user_id AS TEXT) = :userId", nativeQuery = true)
     Page<PiUser> findByUserIdPageable(@Param("userId") String userId, Pageable pageable);

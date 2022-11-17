@@ -1,6 +1,5 @@
 package uk.gov.hmcts.reform.pip.account.management.service;
 
-import com.microsoft.graph.http.GraphServiceException;
 import com.microsoft.graph.models.User;
 import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
@@ -56,7 +55,7 @@ import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
  */
 @Slf4j
 @Component
-@SuppressWarnings("PMD.LawOfDemeter")
+@SuppressWarnings({"PMD.LawOfDemeter", "PMD.ExcessiveImports", "PMD.TooManyMethods"})
 public class AccountService {
 
     @Autowired
@@ -105,8 +104,8 @@ public class AccountService {
 
                 ErroredAzureAccount erroredSubscriber = new ErroredAzureAccount(azureAccount);
                 erroredSubscriber.setErrorMessages(constraintViolationSet
-                                                       .stream().map(constraint -> constraint.getPropertyPath() + ": " + constraint.getMessage())
-                                                       .collect(Collectors.toList()));
+                                                       .stream().map(constraint -> constraint.getPropertyPath()
+                        + ": " + constraint.getMessage()).collect(Collectors.toList()));
                 erroredAccounts.add(erroredSubscriber);
                 continue;
             }
@@ -403,15 +402,15 @@ public class AccountService {
     }
 
     /**
-     * TODO
+     * TODO.
      *
-     * @param pageable
-     * @param email
-     * @param userProvenanceId
-     * @param userProvenances
-     * @param roles
-     * @param userId
-     * @return
+     * @param pageable The pageable object.
+     * @param email The email to query by.
+     * @param userProvenanceId The user provenance id to query by.
+     * @param userProvenances A list of user provenances to query by.
+     * @param roles A list of roles to query by.
+     * @param userId The user id to query by.
+     * @return A page with a list of piUsers.
      */
     public Page<PiUser> findAllAccountsExceptThirdParty(Pageable pageable, String email, String userProvenanceId,
                                                         List<UserProvenances> userProvenances, List<Roles> roles,
@@ -476,7 +475,7 @@ public class AccountService {
             "User with supplied user id: %s could not be found", userId)));
 
         // If they are a PI AAD user then try update the users role in B2C
-        if(UserProvenances.PI_AAD.equals(userToUpdate.getUserProvenance())) {
+        if (UserProvenances.PI_AAD.equals(userToUpdate.getUserProvenance())) {
             try {
                 azureUserService.updateUserRole(userToUpdate.getProvenanceUserId(), updatedRole.toString());
             } catch (AzureCustomException ex) {

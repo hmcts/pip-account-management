@@ -596,8 +596,9 @@ class AccountServiceTest {
 
         try (LogCaptor logCaptor = LogCaptor.forClass(AccountService.class)) {
             accountService.deleteAccount(EMAIL, true);
-            assertEquals(1, logCaptor.getErrorLogs().size(),
-                         "No logs were thrown");
+            assertTrue(logCaptor.getInfoLogs().get(0).contains("Error when deleting an account"
+                                                                   + " from azure with Provenance user id: 1234"),
+                       "No logs thrown");
         }
     }
 
