@@ -247,7 +247,11 @@ public class AccountController {
         return ResponseEntity.noContent().build();
     }
 
-    // NEW
+    @ApiResponses({
+        @ApiResponse(responseCode = OK_CODE, description = "Page data with a list of Pi User objects"),
+        @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
+    })
+    @Operation(summary = "Get all accounts except third party in a page with filtering")
     @GetMapping("/all")
     public ResponseEntity<Page<PiUser>> getAllAccountsExceptThirdParty(
         @RequestParam(name = "pageNumber") int pageNumber,
@@ -262,19 +266,37 @@ public class AccountController {
                                                                                 provenances, roles, userId));
     }
 
+    @ApiResponses({
+        @ApiResponse(responseCode = OK_CODE, description = "A Pi user object"),
+        @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE),
+        @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description = "User not found")
+    })
+    @Operation(summary = "Get a user by their id")
     @GetMapping("/{userId}")
     public ResponseEntity<PiUser> getUserById(@PathVariable UUID userId) {
         return ResponseEntity.ok(accountService.getUserById(userId));
     }
 
+    @ApiResponses({
+        @ApiResponse(responseCode = OK_CODE, description = "String confirming deletion"),
+        @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE),
+        @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description = "User not found")
+    })
+    @Operation(summary = "Delete a user by their id")
     @DeleteMapping("/delete/{userId}")
     public ResponseEntity<String> deleteAccount(@PathVariable UUID userId) {
         accountService.processManualAccountDeletion(userId);
         return ResponseEntity.ok("User deleted");
     }
 
+    @ApiResponses({
+        @ApiResponse(responseCode = OK_CODE, description = "String confirming update"),
+        @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE),
+        @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description = "User not found")
+    })
+    @Operation(summary = "Update a users role by their id")
     @PutMapping("/update/{userId}/{role}")
-    public ResponseEntity<String> deleteAccount(@PathVariable UUID userId, @PathVariable Roles role) {
+    public ResponseEntity<String> updateAccountById(@PathVariable UUID userId, @PathVariable Roles role) {
         return ResponseEntity.ok(accountService.updateAccountRole(userId, role));
     }
 }

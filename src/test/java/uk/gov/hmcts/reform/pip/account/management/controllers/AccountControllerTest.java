@@ -277,4 +277,34 @@ class AccountControllerTest {
             .as(STATUS_CODE_MATCH)
             .isEqualTo(HttpStatus.NO_CONTENT);
     }
+
+    @Test
+    void testGetAllAccountsExceptThirdParty() {
+        assertThat(accountController.getAllAccountsExceptThirdParty(
+            0, 25, "test", "1234",
+            List.of(UserProvenances.PI_AAD), List.of(Roles.VERIFIED), "1234").getStatusCode())
+            .as(STATUS_CODE_MATCH)
+            .isEqualTo(HttpStatus.OK);
+    }
+
+    @Test
+    void testGetUserById() {
+        assertThat(accountController.getUserById(UUID.randomUUID()).getStatusCode())
+            .as(STATUS_CODE_MATCH)
+            .isEqualTo(HttpStatus.OK);
+    }
+
+    @Test
+    void testDeleteAccount() {
+        assertThat(accountController.deleteAccount(UUID.randomUUID()).getStatusCode())
+            .as(STATUS_CODE_MATCH)
+            .isEqualTo(HttpStatus.OK);
+    }
+
+    @Test
+    void testUpdateAccountById() {
+        assertThat(accountController.updateAccountById(UUID.randomUUID(), Roles.SYSTEM_ADMIN).getStatusCode())
+            .as(STATUS_CODE_MATCH)
+            .isEqualTo(HttpStatus.OK);
+    }
 }
