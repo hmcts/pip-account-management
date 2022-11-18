@@ -12,6 +12,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 import org.testcontainers.shaded.org.apache.commons.io.IOUtils;
@@ -61,7 +65,7 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
-@SuppressWarnings({"PMD.TooManyMethods", "PMD.ExcessiveImports"})
+@SuppressWarnings({"PMD.TooManyMethods", "PMD.ExcessiveImports", "PMD.LawOfDemeter"})
 class AccountServiceTest {
 
     @Mock
@@ -109,6 +113,7 @@ class AccountServiceTest {
     private static final boolean FALSE = false;
     private static final boolean TRUE = true;
     private static final String SHOULD_CONTAIN = "Should contain ";
+    private static final String SUBSCRIPTIONS_DELETED = "subscriptions deleted";
     public static final List<String> EXAMPLE_CSV = List.of(
         "2fe899ff-96ed-435a-bcad-1411bbe96d2a,string,CFT_IDAM,INTERNAL_ADMIN_CTSC");
 
@@ -549,7 +554,7 @@ class AccountServiceTest {
         when(azureUserService.deleteUser(piUser.getProvenanceUserId()))
             .thenReturn(expectedUser);
         when(subscriptionService.sendSubscriptionDeletionRequest(VALID_USER_ID.toString()))
-            .thenReturn("Subscriptions deleted");
+            .thenReturn(SUBSCRIPTIONS_DELETED);
 
         accountService.deleteAccount(EMAIL, true);
 
@@ -565,7 +570,7 @@ class AccountServiceTest {
 
         doNothing().when(userRepository).delete(piUser);
         when(subscriptionService.sendSubscriptionDeletionRequest(VALID_USER_ID.toString()))
-            .thenReturn("Subscriptions deleted");
+            .thenReturn(SUBSCRIPTIONS_DELETED);
 
         accountService.deleteAccount(EMAIL, false);
 
@@ -592,7 +597,7 @@ class AccountServiceTest {
         when(azureUserService.deleteUser(piUser.getProvenanceUserId()))
             .thenThrow(new AzureCustomException(TEST));
         when(subscriptionService.sendSubscriptionDeletionRequest(VALID_USER_ID.toString()))
-            .thenReturn("Subscriptions deleted");
+            .thenReturn(SUBSCRIPTIONS_DELETED);
 
         try (LogCaptor logCaptor = LogCaptor.forClass(AccountService.class)) {
             accountService.deleteAccount(EMAIL, true);
@@ -685,5 +690,181 @@ class AccountServiceTest {
         assertTrue(illegalArgumentException.getMessage()
                        .contains("Date time value '2022-08-14' not in expected format"),
                    "Illegal argument error mismatch");
+    }
+
+    @Test
+    void testGetUserById() {
+        UUID userId = UUID.randomUUID();
+
+        PiUser user = new PiUser();
+        user.setUserId(userId);
+
+        when(userRepository.findByUserId(userId)).thenReturn(Optional.of(user));
+
+        PiUser returnedUser = accountService.getUserById(userId);
+        assertEquals(user, returnedUser, "Returned user does not match expected user");
+    }
+
+    @Test
+    void testGetUserByIdNotFound() {
+        UUID userId = UUID.randomUUID();
+
+        when(userRepository.findByUserId(userId)).thenReturn(Optional.empty());
+
+        NotFoundException notFoundException = assertThrows(NotFoundException.class, () -> {
+            accountService.getUserById(userId);
+        }, "The exception when a user has not been found has been thrown");
+
+        assertTrue(notFoundException.getMessage().contains(userId.toString()),
+                   "Exception message thrown does not contain the user ID");
+    }
+
+    @Test
+    void testUpdateUserAccountRolePiAad() throws AzureCustomException {
+        UUID userId = UUID.randomUUID();
+
+        PiUser user = new PiUser();
+        user.setUserId(userId);
+        user.setUserProvenance(UserProvenances.PI_AAD);
+        user.setProvenanceUserId(ID);
+
+        User azUser = new User();
+        azUser.id = ID;
+        azUser.givenName = FULL_NAME;
+
+        when(userRepository.findByUserId(userId)).thenReturn(Optional.of(user));
+        when(azureUserService.updateUserRole(ID, Roles.SYSTEM_ADMIN.toString())).thenReturn(azUser);
+
+        String response = accountService.updateAccountRole(userId, Roles.SYSTEM_ADMIN);
+        assertEquals(String.format("User with ID %s has been updated to a SYSTEM_ADMIN", userId),
+                     response, "Returned user does not match expected user");
+    }
+
+    @Test
+    void testUpdateUserAccountRoleCftIdam() {
+        UUID userId = UUID.randomUUID();
+
+        PiUser user = new PiUser();
+        user.setUserId(userId);
+        user.setUserProvenance(UserProvenances.CFT_IDAM);
+        user.setProvenanceUserId(ID);
+
+        when(userRepository.findByUserId(userId)).thenReturn(Optional.of(user));
+
+        String response = accountService.updateAccountRole(userId, Roles.SYSTEM_ADMIN);
+        assertEquals(String.format("User with ID %s has been updated to a SYSTEM_ADMIN", userId),
+                     response, "Returned user does not match expected user");
+    }
+
+    @Test
+    void testUpdateUserAccountRoleNotFound() {
+        UUID userId = UUID.randomUUID();
+
+        when(userRepository.findByUserId(userId)).thenReturn(Optional.empty());
+
+        NotFoundException notFoundException = assertThrows(NotFoundException.class, () -> {
+            accountService.updateAccountRole(userId, Roles.SYSTEM_ADMIN);
+        }, "The exception when a user has not been found has been thrown");
+
+        assertTrue(notFoundException.getMessage().contains(userId.toString()),
+                   "Exception message thrown does not contain the user ID");
+    }
+
+    @Test
+    void testProcessManualAccountDeletion() throws AzureCustomException {
+        UUID userId = UUID.randomUUID();
+
+        PiUser user = new PiUser();
+        user.setUserId(userId);
+        user.setUserProvenance(UserProvenances.PI_AAD);
+        user.setEmail("a@b.com");
+        user.setProvenanceUserId(ID);
+
+        when(userRepository.findByUserId(userId)).thenReturn(Optional.of(user));
+        when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.of(user));
+        doNothing().when(userRepository).delete(piUser);
+        when(azureUserService.deleteUser(user.getProvenanceUserId())).thenReturn(expectedUser);
+        when(subscriptionService.sendSubscriptionDeletionRequest(user.getUserId().toString()))
+            .thenReturn(SUBSCRIPTIONS_DELETED);
+
+        try (LogCaptor logCaptor = LogCaptor.forClass(AccountService.class)) {
+            accountService.processManualAccountDeletion(userId);
+            assertTrue(logCaptor.getInfoLogs().get(0).contains("Track: subscriptions deleted, at"),
+                       "Logs did not contain correct message");
+        }
+    }
+
+    @Test
+    void testProcessManualAccountDeletionNotFound() {
+        UUID userId = UUID.randomUUID();
+
+        when(userRepository.findByUserId(userId)).thenReturn(Optional.empty());
+
+        NotFoundException notFoundException = assertThrows(NotFoundException.class, () -> {
+            accountService.processManualAccountDeletion(userId);
+        }, "The exception when a user has not been found has been thrown");
+
+        assertTrue(notFoundException.getMessage().contains(userId.toString()),
+                   "Exception message thrown does not contain the user ID");
+    }
+
+    @Test
+    void testFindAllAccountsExceptThirdPartyEmptyParams() {
+        Pageable pageable = PageRequest.of(0, 25);
+        List<UserProvenances> emptyUserProvenancesList = new ArrayList<>();
+        List<Roles> emptyRoleList = new ArrayList<>();
+        Page<PiUser> page = new PageImpl<>(List.of(piUser), pageable, List.of(piUser).size());
+        when(userRepository.findAllByEmailLikeAndUserProvenanceInAndRolesInAndProvenanceUserIdLike(
+            argThat(arg -> "%%".equals(arg)),
+            any(),
+            any(),
+            any(),
+            any()
+        )).thenReturn(page);
+
+        Page<PiUser> response = accountService.findAllAccountsExceptThirdParty(pageable, "", "",
+                                                                               emptyUserProvenancesList, emptyRoleList,
+                                                                               "");
+
+        assertEquals(page, response, "Returned page did not match expected");
+
+    }
+
+    @Test
+    void testFindAllAccountsExceptThirdPartyFullParams() {
+        Pageable pageable = PageRequest.of(0, 25);
+        List<UserProvenances> userProvenancesList = List.of(UserProvenances.PI_AAD);
+        List<Roles> roleList = List.of(Roles.VERIFIED);
+        Page<PiUser> page = new PageImpl<>(List.of(piUser), pageable, List.of(piUser).size());
+        when(userRepository.findAllByEmailLikeAndUserProvenanceInAndRolesInAndProvenanceUserIdLike(
+            any(),
+            any(),
+            any(),
+            any(),
+            any()
+        )).thenReturn(page);
+
+        Page<PiUser> response = accountService.findAllAccountsExceptThirdParty(pageable, "test", ID,
+                                                                               userProvenancesList, roleList, "");
+
+        assertEquals(page, response, "Returned page did not match expected");
+
+    }
+
+    @Test
+    void testFindAllAccountsExceptThirdPartyOnlyUserId() {
+        Pageable pageable = PageRequest.of(0, 25);
+        PiUser user = new PiUser();
+        user.setUserId(UUID.randomUUID());
+        List<UserProvenances> emptyUserProvenancesList = new ArrayList<>();
+        List<Roles> emptyRoleList = new ArrayList<>();
+        Page<PiUser> page = new PageImpl<>(List.of(user), pageable, List.of(user).size());
+
+        when(userRepository.findByUserIdPageable(user.getUserId().toString(), pageable)).thenReturn(page);
+
+        Page<PiUser> response = accountService.findAllAccountsExceptThirdParty(pageable, "", "",
+            emptyUserProvenancesList, emptyRoleList, user.getUserId().toString());
+
+        assertEquals(page, response, "Returned page did not match expected");
     }
 }

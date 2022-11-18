@@ -402,7 +402,7 @@ public class AccountService {
     }
 
     /**
-     * TODO.
+     * Request a page of users that can be filtered down with the supplied parameters.
      *
      * @param pageable The pageable object.
      * @param email The email to query by.
@@ -448,6 +448,11 @@ public class AccountService {
         );
     }
 
+    /**
+     * Get a user by a user id.
+     * @param userId The users id to search by.
+     * @return A pi user object.
+     */
     public PiUser getUserById(UUID userId) {
         return userRepository.findByUserId(userId).orElseThrow(() -> new NotFoundException(String.format(
             "User with supplied user id: %s could not be found", userId)));
