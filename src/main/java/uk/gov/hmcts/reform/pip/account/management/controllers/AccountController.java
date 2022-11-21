@@ -261,7 +261,7 @@ public class AccountController {
     @Operation(summary = "Get all third party accounts")
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("/all/third-party")
-    public ResponseEntity<List<PiUser>> getAccountsByThirdPartyRole() {
+    public ResponseEntity<List<PiUser>> getAllThirdPartyAccounts() {
         return ResponseEntity.ok(accountService.findAllThirdPartyAccounts());
     }
 }

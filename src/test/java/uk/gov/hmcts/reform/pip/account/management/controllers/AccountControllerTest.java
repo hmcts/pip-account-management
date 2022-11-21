@@ -302,7 +302,7 @@ class AccountControllerTest {
         List<PiUser> users = List.of(piUser);
         when(accountService.findAllThirdPartyAccounts()).thenReturn(users);
 
-        ResponseEntity<List<PiUser>> response = accountController.getAccountsByThirdPartyRole();
+        ResponseEntity<List<PiUser>> response = accountController.getAllThirdPartyAccounts();
 
         assertEquals(HttpStatus.OK, response.getStatusCode(), "Expected status code does not match");
 

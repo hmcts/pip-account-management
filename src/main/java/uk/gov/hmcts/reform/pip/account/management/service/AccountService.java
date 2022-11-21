@@ -387,13 +387,12 @@ public class AccountService {
     }
 
     /**
-     * Method which will retrieve all accounts which are third party. This method has been created due to
-     * there being many third party roles.
+     * Method which will retrieve all accounts which are third party.
      *
      * @return The list of found PiUser accounts.
      */
     public List<PiUser> findAllThirdPartyAccounts() {
-        return userRepository.findAllByRolesIn(Roles.ALL_THIRD_PARTY_ROLES);
+        return userRepository.findAllByUserProvenance(UserProvenances.THIRD_PARTY);
     }
 
     /**

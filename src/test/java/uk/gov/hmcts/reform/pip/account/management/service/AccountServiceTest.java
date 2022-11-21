@@ -693,7 +693,7 @@ class AccountServiceTest {
         thirdPartyUser.setUserId(UUID.randomUUID());
         List<PiUser> usersList = List.of(thirdPartyUser);
 
-        when(userRepository.findAllByRolesIn(Roles.ALL_THIRD_PARTY_ROLES)).thenReturn(usersList);
+        when(userRepository.findAllByUserProvenance(UserProvenances.THIRD_PARTY)).thenReturn(usersList);
 
         List<PiUser> returnedUsers = accountService.findAllThirdPartyAccounts();
 
