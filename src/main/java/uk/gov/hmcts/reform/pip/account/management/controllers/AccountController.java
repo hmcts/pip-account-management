@@ -254,8 +254,8 @@ public class AccountController {
     @Operation(summary = "Get all accounts except third party in a page with filtering")
     @GetMapping("/all")
     public ResponseEntity<Page<PiUser>> getAllAccountsExceptThirdParty(
-        @RequestParam(name = "pageNumber") int pageNumber,
-        @RequestParam(name = "pageSize") int pageSize,
+        @RequestParam(name = "pageNumber", defaultValue = "0") int pageNumber,
+        @RequestParam(name = "pageSize", defaultValue = "25") int pageSize,
         @RequestParam(name = "email", defaultValue = "", required = false) String email,
         @RequestParam(name = "userProvenanceId", defaultValue = "", required = false) String userProvenanceId,
         @RequestParam(name = "provenances", defaultValue = "", required = false) List<UserProvenances> provenances,

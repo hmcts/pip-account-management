@@ -58,6 +58,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -826,6 +827,9 @@ class AccountServiceTest {
                                                                                emptyUserProvenancesList, emptyRoleList,
                                                                                "");
 
+        verify(userRepository, never()).findByUserIdPageable(
+            any(), any());
+
         assertEquals(page, response, "Returned page did not match expected");
 
     }
@@ -847,6 +851,9 @@ class AccountServiceTest {
         Page<PiUser> response = accountService.findAllAccountsExceptThirdParty(pageable, "test", ID,
                                                                                userProvenancesList, roleList, "");
 
+        verify(userRepository, never()).findByUserIdPageable(
+            any(), any());
+
         assertEquals(page, response, "Returned page did not match expected");
 
     }
@@ -865,6 +872,9 @@ class AccountServiceTest {
         Page<PiUser> response = accountService.findAllAccountsExceptThirdParty(pageable, "", "",
             emptyUserProvenancesList, emptyRoleList, user.getUserId().toString());
 
+        verify(userRepository, never()).findAllByEmailLikeAndUserProvenanceInAndRolesInAndProvenanceUserIdLike(
+            any(), any(), any(), any(), any());
+        
         assertEquals(page, response, "Returned page did not match expected");
     }
 }

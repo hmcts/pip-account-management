@@ -474,6 +474,8 @@ public class AccountService {
      * Process updating a role for an account.
      *
      * @param userId The ID of the user to update.
+     * @param updatedRole The updated role of the user.
+     * @return A confirmation string that the user has been updated with the new role.
      */
     public String updateAccountRole(UUID userId, Roles updatedRole) {
         PiUser userToUpdate = userRepository.findByUserId(userId).orElseThrow(() -> new NotFoundException(String.format(
