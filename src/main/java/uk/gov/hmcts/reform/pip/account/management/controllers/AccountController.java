@@ -255,7 +255,7 @@ public class AccountController {
     }
 
     @ApiResponses({
-        @ApiResponse(responseCode = OK_CODE, description = "List of thord party accounts"),
+        @ApiResponse(responseCode = OK_CODE, description = "List of third party accounts"),
         @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
     })
     @Operation(summary = "Get all third party accounts")
