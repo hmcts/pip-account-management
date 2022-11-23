@@ -1323,6 +1323,7 @@ class AccountTest {
 
     @Test
     void testDeleteAccount() throws Exception {
+        validUser.setUserProvenance(UserProvenances.CFT_IDAM);
         MockHttpServletRequestBuilder createRequest =
             MockMvcRequestBuilders
                 .post(PI_URL)
