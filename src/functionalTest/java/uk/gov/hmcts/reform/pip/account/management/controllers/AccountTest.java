@@ -1345,7 +1345,7 @@ class AccountTest {
         MockHttpServletRequestBuilder deleteRequest = MockMvcRequestBuilders
             .delete(ROOT_URL + "/delete/" + createdUserId);
 
-        mockMvc.perform(deleteRequest).andExpect(status().isNoContent());
+        mockMvc.perform(deleteRequest).andExpect(status().isOk());
     }
 
     @Test
