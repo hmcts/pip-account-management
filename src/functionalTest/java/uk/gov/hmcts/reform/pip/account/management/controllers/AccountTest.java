@@ -1345,7 +1345,9 @@ class AccountTest {
         MockHttpServletRequestBuilder deleteRequest = MockMvcRequestBuilders
             .delete(ROOT_URL + "/delete/" + createdUserId);
 
-        mockMvc.perform(deleteRequest).andExpect(status().isOk());
+        MvcResult mvcResult = mockMvc.perform(deleteRequest).andExpect(status().isOk()).andReturn();
+        assertEquals("User deleted",mvcResult.getResponse().getContentAsString(),
+                     "Failed to delete user");
     }
 
     @Test
