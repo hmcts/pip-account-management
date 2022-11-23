@@ -815,7 +815,7 @@ class AccountServiceTest {
         List<UserProvenances> emptyUserProvenancesList = new ArrayList<>();
         List<Roles> emptyRoleList = new ArrayList<>();
         Page<PiUser> page = new PageImpl<>(List.of(piUser), pageable, List.of(piUser).size());
-        when(userRepository.findAllByEmailLikeAndUserProvenanceInAndRolesInAndProvenanceUserIdLike(
+        when(userRepository.findAllByEmailLikeIgnoreCaseAndUserProvenanceInAndRolesInAndProvenanceUserIdLike(
             argThat(arg -> "%%".equals(arg)),
             any(),
             any(),
@@ -840,7 +840,7 @@ class AccountServiceTest {
         List<UserProvenances> userProvenancesList = List.of(UserProvenances.PI_AAD);
         List<Roles> roleList = List.of(Roles.VERIFIED);
         Page<PiUser> page = new PageImpl<>(List.of(piUser), pageable, List.of(piUser).size());
-        when(userRepository.findAllByEmailLikeAndUserProvenanceInAndRolesInAndProvenanceUserIdLike(
+        when(userRepository.findAllByEmailLikeIgnoreCaseAndUserProvenanceInAndRolesInAndProvenanceUserIdLike(
             any(),
             any(),
             any(),
@@ -872,9 +872,10 @@ class AccountServiceTest {
         Page<PiUser> response = accountService.findAllAccountsExceptThirdParty(pageable, "", "",
             emptyUserProvenancesList, emptyRoleList, user.getUserId().toString());
 
-        verify(userRepository, never()).findAllByEmailLikeAndUserProvenanceInAndRolesInAndProvenanceUserIdLike(
-            any(), any(), any(), any(), any());
-        
+        verify(userRepository, never())
+            .findAllByEmailLikeIgnoreCaseAndUserProvenanceInAndRolesInAndProvenanceUserIdLike(
+                any(), any(), any(), any(), any());
+
         assertEquals(page, response, "Returned page did not match expected");
     }
 }

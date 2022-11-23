@@ -439,7 +439,7 @@ public class AccountService {
             userProvenanceIdToQuery = userProvenanceId;
         }
 
-        return userRepository.findAllByEmailLikeAndUserProvenanceInAndRolesInAndProvenanceUserIdLike(
+        return userRepository.findAllByEmailLikeIgnoreCaseAndUserProvenanceInAndRolesInAndProvenanceUserIdLike(
             "%" + email + "%",
             userProvenancesToQuery,
             rolesToQuery,

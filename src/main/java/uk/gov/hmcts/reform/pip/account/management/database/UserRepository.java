@@ -42,7 +42,7 @@ public interface UserRepository extends JpaRepository<PiUser, Long> {
 
     Optional<PiUser> findByProvenanceUserIdAndUserProvenance(String provenanceUserId, UserProvenances userProvenance);
 
-    Page<PiUser> findAllByEmailLikeAndUserProvenanceInAndRolesInAndProvenanceUserIdLike(
+    Page<PiUser> findAllByEmailLikeIgnoreCaseAndUserProvenanceInAndRolesInAndProvenanceUserIdLike(
         String email,
         List<UserProvenances> provenance,
         List<Roles> roles,
