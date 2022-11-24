@@ -61,4 +61,13 @@ public enum Roles {
             Collections.singletonList(VERIFIED))
         .flatMap(Collection::stream)
         .collect(Collectors.toList());
+
+    public static final List<Roles> ALL_NON_THIRD_PARTY_ROLES = List.of(
+        VERIFIED,
+        INTERNAL_SUPER_ADMIN_CTSC,
+        INTERNAL_SUPER_ADMIN_LOCAL,
+        INTERNAL_ADMIN_CTSC,
+        INTERNAL_ADMIN_LOCAL,
+        SYSTEM_ADMIN
+    );
 }

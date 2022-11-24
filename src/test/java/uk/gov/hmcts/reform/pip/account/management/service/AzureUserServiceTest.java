@@ -37,7 +37,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-@SuppressWarnings("PMD.LawOfDemeter")
+@SuppressWarnings({"PMD.LawOfDemeter", "PMD.TooManyMethods"})
 class AzureUserServiceTest {
 
     @Mock
@@ -74,6 +74,8 @@ class AzureUserServiceTest {
     private static final String EXTENSION_ID = "1234-1234";
     private static final String DISPLAY_NAME = "Display Name";
     private static final String B2C_URL = "URL";
+    private static final String ERROR_MESSAGE = "Error message should be present when failing to communicate with the"
+        + " AD service";
 
     AzureAccount azureAccount;
 
@@ -115,7 +117,7 @@ class AzureUserServiceTest {
         assertEquals("Error when persisting account into Azure. "
                          + "Check that the user doesn't already exist in the directory",
                      azureCustomException.getMessage(),
-                     "Error message should be present when failing to communicate with the AD service");
+                     ERROR_MESSAGE);
     }
 
     @Test
@@ -260,7 +262,7 @@ class AzureUserServiceTest {
 
         assertEquals("Error when checking account into Azure.",
                      azureCustomException.getMessage(),
-                     "Error message should be present when failing to communicate with the AD service");
+                     ERROR_MESSAGE);
     }
 
     @Test
@@ -291,6 +293,40 @@ class AzureUserServiceTest {
 
         assertEquals("Error when deleting account in Azure.",
                      azureCustomException.getMessage(),
-                     "Error message should be present when failing to communicate with the AD service");
+                     ERROR_MESSAGE);
     }
+
+    @Test
+    void testUpdateUser() throws AzureCustomException {
+        User userToReturn = new User();
+        userToReturn.id = ID;
+
+        when(clientConfiguration.getExtensionId()).thenReturn(EXTENSION_ID);
+        when(graphClient.users(userToReturn.id)).thenReturn(userRequestBuilder);
+        when(userRequestBuilder.buildRequest()).thenReturn(userRequest);
+        when(userRequest.patch(any())).thenReturn(userToReturn);
+
+        assertEquals(userToReturn, azureUserService.updateUserRole(userToReturn.id, Roles.SYSTEM_ADMIN.toString()),
+                     "Returned user does not match expected");
+    }
+
+    @Test
+    void testUpdateUserError() {
+        User userToReturn = new User();
+        userToReturn.id = ID;
+
+        when(clientConfiguration.getExtensionId()).thenReturn(EXTENSION_ID);
+        when(graphClient.users(userToReturn.id)).thenReturn(userRequestBuilder);
+        when(userRequestBuilder.buildRequest()).thenReturn(userRequest);
+        when(userRequest.patch(any())).thenThrow(graphServiceException);
+
+        AzureCustomException azureCustomException = assertThrows(AzureCustomException.class, () -> {
+            azureUserService.updateUserRole(userToReturn.id, Roles.SYSTEM_ADMIN.toString());
+        });
+
+        assertEquals("Error when updating account in Azure.",
+                     azureCustomException.getMessage(),
+                     ERROR_MESSAGE);
+    }
+
 }
