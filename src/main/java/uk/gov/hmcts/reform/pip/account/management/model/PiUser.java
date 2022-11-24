@@ -1,5 +1,6 @@
 package uk.gov.hmcts.reform.pip.account.management.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -71,15 +72,18 @@ public class PiUser {
      * The timestamp of when the user was created.
      */
     @Schema(hidden = true)
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'")
     private LocalDateTime createdDate;
 
     /**
      * The timestamp of when the user was last verified.
      */
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'")
     private LocalDateTime lastVerifiedDate;
 
     /**
      * The timestamp when the user was last signed in.
      */
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'")
     private LocalDateTime lastSignedInDate;
 }

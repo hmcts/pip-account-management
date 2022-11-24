@@ -118,4 +118,27 @@ public class AzureUserService {
             throw new AzureCustomException("Error when deleting account in Azure.");
         }
     }
+
+    /**
+     * Updates an account in the Azure active directory.
+     * @param provenanceUserId The provenanceUserId of the account to update.
+     * @param role The updated role for the user.
+     * @return The update user if it was successful.
+     * @throws AzureCustomException thrown if there is an error with communicating with Azure.
+     */
+    public User updateUserRole(String provenanceUserId, String role) throws AzureCustomException {
+        try {
+            User user = new User();
+            user.additionalDataManager().put(
+                "extension_" + clientConfiguration.getExtensionId().replace("-", "") + "_UserRole",
+                new JsonPrimitive(role)
+            );
+
+            return graphClient.users(provenanceUserId)
+                .buildRequest()
+                .patch(user);
+        } catch (GraphServiceException e) {
+            throw new AzureCustomException("Error when updating account in Azure.");
+        }
+    }
 }
