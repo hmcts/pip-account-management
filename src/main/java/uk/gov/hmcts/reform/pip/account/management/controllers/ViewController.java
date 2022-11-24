@@ -5,7 +5,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -18,7 +17,6 @@ import uk.gov.hmcts.reform.pip.account.management.service.ViewService;
 @RestController
 @Tag(name = "Account Management - API for dealing with views")
 @RequestMapping("/view")
-@Validated
 @IsAdmin
 public class ViewController {
 
