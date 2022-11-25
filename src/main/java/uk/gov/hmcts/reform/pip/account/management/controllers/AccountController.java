@@ -105,6 +105,18 @@ public class AccountController {
         @ApiResponse(responseCode = OK_CODE, description = "{PiUser}"),
         @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE),
         @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description = "No user found with the "
+            + "user Id: {userId}")
+    })
+    @Operation(summary = "Get a user based on their user ID")
+    @GetMapping("/{userId}")
+    public ResponseEntity<PiUser> getUserById(@PathVariable UUID userId) {
+        return ResponseEntity.ok(accountService.getUserById(userId));
+    }
+
+    @ApiResponses({
+        @ApiResponse(responseCode = OK_CODE, description = "{PiUser}"),
+        @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE),
+        @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description = "No user found with the "
             + "provenance user Id: {provenanceUserId}")
     })
     @Operation(summary = "Get a user based on their provenance user Id and provenance")
@@ -248,9 +260,16 @@ public class AccountController {
     }
 
     @ApiResponses({
-        @ApiResponse(responseCode = OK_CODE, description = "Page data with a list of Pi User objects"),
+        @ApiResponse(responseCode = OK_CODE, description = "List of third party accounts"),
         @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
     })
+    @Operation(summary = "Get all third party accounts")
+    @ResponseStatus(HttpStatus.OK)
+    @GetMapping("/all/third-party")
+    public ResponseEntity<List<PiUser>> getAllThirdPartyAccounts() {
+        return ResponseEntity.ok(accountService.findAllThirdPartyAccounts());
+    }
+
     @Operation(summary = "Get all accounts except third party in a page with filtering")
     @GetMapping("/all")
     public ResponseEntity<Page<PiUser>> getAllAccountsExceptThirdParty(
@@ -264,17 +283,6 @@ public class AccountController {
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
         return ResponseEntity.ok(accountService.findAllAccountsExceptThirdParty(pageable, email, userProvenanceId,
                                                                                 provenances, roles, userId));
-    }
-
-    @ApiResponses({
-        @ApiResponse(responseCode = OK_CODE, description = "A Pi user object"),
-        @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE),
-        @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description = "User not found")
-    })
-    @Operation(summary = "Get a user by their id")
-    @GetMapping("/{userId}")
-    public ResponseEntity<PiUser> getUserById(@PathVariable UUID userId) {
-        return ResponseEntity.ok(accountService.getUserById(userId));
     }
 
     @ApiResponses({

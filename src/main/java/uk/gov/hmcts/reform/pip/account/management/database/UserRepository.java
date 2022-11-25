@@ -42,6 +42,8 @@ public interface UserRepository extends JpaRepository<PiUser, Long> {
 
     Optional<PiUser> findByProvenanceUserIdAndUserProvenance(String provenanceUserId, UserProvenances userProvenance);
 
+    List<PiUser> findAllByUserProvenance(UserProvenances userProvenances);
+
     Page<PiUser> findAllByEmailLikeIgnoreCaseAndUserProvenanceInAndRolesInAndProvenanceUserIdLike(
         String email,
         List<UserProvenances> provenance,

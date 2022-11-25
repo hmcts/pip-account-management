@@ -279,6 +279,22 @@ class AccountControllerTest {
     }
 
     @Test
+    void testRetrieveThirdPartyAccounts() {
+        UUID uuid = UUID.randomUUID();
+        PiUser piUser = new PiUser();
+        piUser.setUserId(uuid);
+
+        List<PiUser> users = List.of(piUser);
+        when(accountService.findAllThirdPartyAccounts()).thenReturn(users);
+
+        ResponseEntity<List<PiUser>> response = accountController.getAllThirdPartyAccounts();
+
+        assertEquals(HttpStatus.OK, response.getStatusCode(), "Expected status code does not match");
+
+        assertEquals(users, response.getBody(), "Expected users do not match");
+    }
+
+    @Test
     void testGetAllAccountsExceptThirdParty() {
         assertThat(accountController.getAllAccountsExceptThirdParty(
             0, 25, "test", "1234",
@@ -288,10 +304,18 @@ class AccountControllerTest {
     }
 
     @Test
-    void testGetUserById() {
-        assertThat(accountController.getUserById(UUID.randomUUID()).getStatusCode())
-            .as(STATUS_CODE_MATCH)
-            .isEqualTo(HttpStatus.OK);
+    void testRetrieveUserById() {
+        UUID uuid = UUID.randomUUID();
+        PiUser piUser = new PiUser();
+        piUser.setUserId(uuid);
+
+        when(accountService.getUserById(uuid)).thenReturn(piUser);
+
+        ResponseEntity<PiUser> response = accountController.getUserById(uuid);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode(), "Expected status code does not match");
+
+        assertEquals(piUser, response.getBody(), "Expected PI user does not match");
     }
 
     @Test

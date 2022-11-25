@@ -1214,6 +1214,45 @@ class AccountTest {
     }
 
     @Test
+    void testGetAllThirdPartyAccounts() throws Exception {
+        validUser.setProvenanceUserId("THIRD_PARTY");
+        validUser.setUserProvenance(UserProvenances.THIRD_PARTY);
+        validUser.setRoles(Roles.GENERAL_THIRD_PARTY);
+
+        MockHttpServletRequestBuilder createRequest =
+            MockMvcRequestBuilders
+                .post(PI_URL)
+                .content(objectMapper.writeValueAsString(List.of(validUser)))
+                .header(ISSUER_HEADER, ISSUER_ID)
+                .contentType(MediaType.APPLICATION_JSON);
+
+        MvcResult responseCreateUser = mockMvc.perform(createRequest)
+            .andExpect(status().isCreated()).andReturn();
+        ConcurrentHashMap<CreationEnum, List<Object>> mappedResponse =
+            objectMapper.readValue(
+                responseCreateUser.getResponse().getContentAsString(),
+                new TypeReference<>() {
+                }
+            );
+
+        String createdUserId = mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).get(0).toString();
+
+        MockHttpServletRequestBuilder getRequest = MockMvcRequestBuilders
+            .get(ROOT_URL + "/all/third-party");
+
+        MvcResult responseGetUser =
+            mockMvc.perform(getRequest).andExpect(status().isOk()).andReturn();
+
+        PiUser[] users = objectMapper.readValue(
+            responseGetUser.getResponse().getContentAsString(),
+            PiUser[].class
+        );
+
+        assertEquals(1, users.length, "Correct number of users should return");
+        assertEquals(createdUserId, users[0].getUserId().toString(), "Users should match");
+    }
+
+    @Test
     void testGetAllAccountsExceptThirdParty() throws Exception {
         PiUser validUser1 = createUser(true, UUID.randomUUID().toString());
         PiUser validUser2 = createUser(true, UUID.randomUUID().toString());
@@ -1294,6 +1333,19 @@ class AccountTest {
             PiUser.class
         );
         assertEquals(createdUserId, returnedUser.getUserId().toString(), "Users should match");
+    }
+
+    @Test
+    @WithMockUser(username = "unauthorized_account", authorities = { "APPROLE_unknown.account" })
+    void testUnauthorizedGetAllThirdPartyAccounts() throws Exception {
+        MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
+            .get(ROOT_URL + "/all/third-party");
+
+        MvcResult mvcResult =
+            mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isForbidden()).andReturn();
+
+        assertEquals(HttpStatus.FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
+                     FORBIDDEN_STATUS_CODE);
     }
 
     @Test
