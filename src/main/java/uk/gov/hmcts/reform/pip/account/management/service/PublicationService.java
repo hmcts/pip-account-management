@@ -11,6 +11,8 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import uk.gov.hmcts.reform.pip.account.management.model.MediaApplication;
+import uk.gov.hmcts.reform.pip.account.management.model.SystemAdminAccount;
+import uk.gov.hmcts.reform.pip.model.system.admin.SystemAdminAction;
 
 import java.util.List;
 
@@ -146,4 +148,22 @@ public class PublicationService {
                                  ex.getMessage());
         }
     }
+
+    /**
+     * Publishing of the system admin account action
+     * @param systemAdminAction The system admin account action to publish.
+     * @return A string of the email ID that was sent, or the error message.
+     */
+    public String sendSystemAdminAccountAction(SystemAdminAction systemAdminAction) {
+        try {
+            return webClient.post().uri(url + "/notify/system-admin")
+                .body(BodyInserters.fromValue(systemAdminAction)).retrieve()
+                .bodyToMono(String.class).block();
+        } catch (WebClientException ex) {
+            return String.format("Publishing of system admin account action failed with error: %s",
+                                 ex.getMessage());
+        }
+    }
+
+
 }

@@ -4,11 +4,15 @@ import com.microsoft.graph.models.User;
 import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
 import lombok.extern.slf4j.Slf4j;
+import net.minidev.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.reactive.function.BodyInserters;
+import org.springframework.web.reactive.function.client.WebClientException;
 import uk.gov.hmcts.reform.pip.account.management.database.UserRepository;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.AzureCustomException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.CsvParseException;
@@ -16,16 +20,21 @@ import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.NotFo
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.UserNotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.model.AzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
+import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredSystemAdminAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.ListType;
 import uk.gov.hmcts.reform.pip.account.management.model.MediaCsv;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
 import uk.gov.hmcts.reform.pip.account.management.model.Roles;
 import uk.gov.hmcts.reform.pip.account.management.model.Sensitivity;
+import uk.gov.hmcts.reform.pip.account.management.model.SystemAdminAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.UserProvenances;
 import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredAzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredPiUser;
 import uk.gov.hmcts.reform.pip.account.management.service.helpers.DateTimeHelper;
 import uk.gov.hmcts.reform.pip.model.enums.UserActions;
+import uk.gov.hmcts.reform.pip.model.system.admin.ActionResult;
+import uk.gov.hmcts.reform.pip.model.system.admin.CreateSystemAdminAction;
+import uk.gov.hmcts.reform.pip.model.system.admin.SystemAdminAction;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -78,6 +87,9 @@ public class AccountService {
 
     @Autowired
     SubscriptionService subscriptionService;
+
+    @Value("admin.max-system-admin")
+    private int maxSystemAdminValue;
 
     private static final String EMAIL_NOT_SENT_MESSAGE =
         "Account has been successfully created, however email has failed to send.";
@@ -508,4 +520,75 @@ public class AccountService {
         return userRepository.findByUserId(userId).orElseThrow(() -> new NotFoundException(String.format(
             "User with supplied user id: %s could not be found", userId)));
     }
+
+    /**
+     * This method deals with the creation of a system admin account
+     * @param account The system admin account to be created.
+     * @param issuerId The ID of the user creating the account.
+     * @return  The PiUser of the created system admin account.
+     */
+    public PiUser addSystemAdminAccount(SystemAdminAccount account, String issuerId) {
+        Set<ConstraintViolation<SystemAdminAccount>> constraintViolationSet = validator.validate(account);
+
+        if (!constraintViolationSet.isEmpty()) {
+            var erroredSystemAdminAccount = new ErroredSystemAdminAccount(account);
+            erroredSystemAdminAccount.setErrorMessages(constraintViolationSet
+                                                   .stream().map(constraint -> constraint.getPropertyPath()
+                    + ": " + constraint.getMessage()).collect(Collectors.toList()));
+
+            handleNewSystemAdminAccountAction(account, issuerId, ActionResult.FAILED);
+            return erroredSystemAdminAccount;
+        }
+
+        if (userRepository.findByEmailAndUserProvenance(account.getEmail(), UserProvenances.PI_AAD).isPresent()) {
+            var erroredSystemAdminAccount = new ErroredSystemAdminAccount(account);
+            erroredSystemAdminAccount.setDuplicate(true);
+            handleNewSystemAdminAccountAction(account, issuerId, ActionResult.FAILED);
+            return erroredSystemAdminAccount;
+        }
+
+        List<PiUser> systemAdminusers = userRepository.findByRoles(Roles.SYSTEM_ADMIN);
+
+        if (systemAdminusers.size() > maxSystemAdminValue) {
+            var erroredSystemAdminAccount = new ErroredSystemAdminAccount(account);
+            erroredSystemAdminAccount.setAboveMaxSystemAdmin(true);
+            handleNewSystemAdminAccountAction(account, issuerId, ActionResult.ATTEMPTED);
+            return erroredSystemAdminAccount;
+        }
+
+        try {
+            User user = azureUserService.createUser(account.convertToAzureAccount());
+            PiUser createdUser = userRepository.save(account.convertToPiUser(user.id));
+            handleNewSystemAdminAccountAction(account, issuerId, ActionResult.SUCCEEDED);
+            return createdUser;
+        } catch (AzureCustomException e) {
+            var erroredSystemAdminAccount = new ErroredSystemAdminAccount(account);
+            erroredSystemAdminAccount.setErrorMessages(List.of(e.getLocalizedMessage()));
+            handleNewSystemAdminAccountAction(account, issuerId, ActionResult.FAILED);
+            return erroredSystemAdminAccount;
+        }
+    }
+
+    /**
+     * This method handles the logging and publishing that a new system admin account has been created
+     * @param systemAdminAccount The system admin account that has been created
+     * @param adminId The ID of the admin user who is creating the account.
+     * @return
+     */
+    public void handleNewSystemAdminAccountAction(SystemAdminAccount systemAdminAccount, String adminId, ActionResult result) {
+        List<String> existingAdminEmails = userRepository.findByRoles(Roles.SYSTEM_ADMIN)
+            .stream().map(PiUser::getEmail).collect(Collectors.toList());
+
+        log.info(writeLog(UUID.fromString(adminId), " has attempted to create a System Admin account, which has been: " + result.toString()));
+
+        var createSystemAdminAction = new CreateSystemAdminAction();
+        createSystemAdminAction.setAccountEmail(systemAdminAccount.getEmail());
+        createSystemAdminAction.setRequesterName(systemAdminAccount.getFirstName() + " " + systemAdminAccount.getSurname());
+        createSystemAdminAction.setEmailList(existingAdminEmails);
+        createSystemAdminAction.setRequesterName(adminId);
+        createSystemAdminAction.setActionResult(result);
+
+        publicationService.sendSystemAdminAccountAction(createSystemAdminAction);
+    }
+
 }

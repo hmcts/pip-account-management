@@ -31,6 +31,7 @@ import uk.gov.hmcts.reform.pip.account.management.model.ListType;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
 import uk.gov.hmcts.reform.pip.account.management.model.Roles;
 import uk.gov.hmcts.reform.pip.account.management.model.Sensitivity;
+import uk.gov.hmcts.reform.pip.account.management.model.SystemAdminAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.UserProvenances;
 import uk.gov.hmcts.reform.pip.account.management.service.AccountService;
 import uk.gov.hmcts.reform.pip.account.management.service.AccountVerificationService;
@@ -61,6 +62,26 @@ public class AccountController {
     private static final String OK_CODE = "200";
     private static final String NOT_FOUND_ERROR_CODE = "404";
     private static final String NO_CONTENT_CODE = "204";
+
+    /**
+     * POST endpoint that deals with creating a new System Admin Account (including PI and Azure)
+     *
+     * This will also trigger any welcome emails.
+     *
+     * @param issuerId The id of the user creating the accounts.
+     * @param account The account to add.
+     * @return The PiUser that's been added, or an ErroredPiUser if it failed to add.
+     */
+    @ApiResponses({
+        @ApiResponse(responseCode = OK_CODE, description = "{PiUser}"),
+        @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE),
+    })
+    @PostMapping("/add/system-admin")
+    public ResponseEntity<? extends PiUser> createAccount(
+        @RequestHeader("x-issuer-id") String issuerId,
+        @RequestBody SystemAdminAccount account) {
+        return ResponseEntity.ok(accountService.addSystemAdminAccount(account, issuerId));
+    }
 
     /**
      * POST endpoint to create a new azure account.
