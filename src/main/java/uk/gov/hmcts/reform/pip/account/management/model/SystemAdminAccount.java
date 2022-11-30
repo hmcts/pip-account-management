@@ -1,6 +1,5 @@
 package uk.gov.hmcts.reform.pip.account.management.model;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -13,11 +12,14 @@ import java.time.ZoneId;
 /**
  * Model which represents a system admin account request
  */
-@AllArgsConstructor
 @NoArgsConstructor
 @Getter
 @Setter
-public class SystemAdminAccount extends PiUser {
+public class SystemAdminAccount {
+
+    @NotEmpty
+    @NotNull
+    private String email;
 
     @NotEmpty
     @NotNull
@@ -30,7 +32,7 @@ public class SystemAdminAccount extends PiUser {
     public SystemAdminAccount(String email, String firstName, String surname) {
         this.firstName = firstName;
         this.surname = surname;
-        this.setEmail(email);
+        this.email = email;
     }
 
     public AzureAccount convertToAzureAccount() {
@@ -38,6 +40,7 @@ public class SystemAdminAccount extends PiUser {
         azureAccount.setEmail(this.getEmail());
         azureAccount.setFirstName(firstName);
         azureAccount.setSurname(surname);
+        azureAccount.setRole(Roles.SYSTEM_ADMIN);
         return azureAccount;
     }
 

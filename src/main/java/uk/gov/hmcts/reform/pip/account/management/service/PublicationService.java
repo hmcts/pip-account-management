@@ -156,7 +156,7 @@ public class PublicationService {
      */
     public String sendSystemAdminAccountAction(SystemAdminAction systemAdminAction) {
         try {
-            return webClient.post().uri(url + "/notify/system-admin")
+            return webClient.post().uri(url + "/notify/sysadmin/update")
                 .body(BodyInserters.fromValue(systemAdminAction)).retrieve()
                 .bodyToMono(String.class).block();
         } catch (WebClientException ex) {
