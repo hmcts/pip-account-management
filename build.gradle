@@ -162,7 +162,7 @@ dependencyCheck {
 }
 
 ext {
-  reformLoggingVersion = "5.1.9"
+  reformLoggingVersion = "6.0.1"
 }
 
 dependencies {
@@ -195,6 +195,8 @@ dependencies {
 
   implementation group: 'com.github.hmcts.java-logging', name: 'logging', version: reformLoggingVersion
   implementation group: 'com.github.hmcts.java-logging', name: 'logging-appinsights', version: reformLoggingVersion
+  implementation group: 'net.logstash.logback', name: 'logstash-logback-encoder', version: '7.2'
+
   // Force upgrade commons version for CVE-2022-42889
   implementation( group: 'org.apache.commons', name: 'commons-text').version {
     strictly("1.10.0")
