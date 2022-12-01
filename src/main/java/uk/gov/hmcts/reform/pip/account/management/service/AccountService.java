@@ -449,16 +449,6 @@ public class AccountService {
     }
 
     /**
-     * Get a user by a user id.
-     * @param userId The users id to search by.
-     * @return A pi user object.
-     */
-    public PiUser getUserById(UUID userId) {
-        return userRepository.findByUserId(userId).orElseThrow(() -> new NotFoundException(String.format(
-            "User with supplied user id: %s could not be found", userId)));
-    }
-
-    /**
      * Process a manual user deletion request.
      *
      * @param userId The ID of the user to delete.
@@ -497,5 +487,25 @@ public class AccountService {
         log.info(returnMessage);
 
         return returnMessage;
+    }
+
+    /**
+     * Method which will retrieve all accounts which are third party.
+     *
+     * @return The list of found PiUser accounts.
+     */
+    public List<PiUser> findAllThirdPartyAccounts() {
+        return userRepository.findAllByUserProvenance(UserProvenances.THIRD_PARTY);
+    }
+
+    /**
+     * This method retrieves a user by their ID.
+     * @param userId The user ID to retrieve
+     * @return The user that is found.
+     * @throws NotFoundException if a user is not found.
+     */
+    public PiUser getUserById(UUID userId) {
+        return userRepository.findByUserId(userId).orElseThrow(() -> new NotFoundException(String.format(
+            "User with supplied user id: %s could not be found", userId)));
     }
 }

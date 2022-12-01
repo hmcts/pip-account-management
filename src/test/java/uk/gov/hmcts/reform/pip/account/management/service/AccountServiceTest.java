@@ -694,6 +694,20 @@ class AccountServiceTest {
     }
 
     @Test
+    void testFindAllThirdPartyAccounts() {
+
+        PiUser thirdPartyUser = new PiUser();
+        thirdPartyUser.setUserId(UUID.randomUUID());
+        List<PiUser> usersList = List.of(thirdPartyUser);
+
+        when(userRepository.findAllByUserProvenance(UserProvenances.THIRD_PARTY)).thenReturn(usersList);
+
+        List<PiUser> returnedUsers = accountService.findAllThirdPartyAccounts();
+
+        assertEquals(usersList, returnedUsers, "Returned users does not match expected users");
+    }
+
+    @Test
     void testGetUserById() {
         UUID userId = UUID.randomUUID();
 
