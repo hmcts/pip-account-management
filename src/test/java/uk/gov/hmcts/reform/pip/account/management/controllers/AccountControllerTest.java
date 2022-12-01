@@ -277,4 +277,58 @@ class AccountControllerTest {
             .as(STATUS_CODE_MATCH)
             .isEqualTo(HttpStatus.NO_CONTENT);
     }
+
+    @Test
+    void testRetrieveThirdPartyAccounts() {
+        UUID uuid = UUID.randomUUID();
+        PiUser piUser = new PiUser();
+        piUser.setUserId(uuid);
+
+        List<PiUser> users = List.of(piUser);
+        when(accountService.findAllThirdPartyAccounts()).thenReturn(users);
+
+        ResponseEntity<List<PiUser>> response = accountController.getAllThirdPartyAccounts();
+
+        assertEquals(HttpStatus.OK, response.getStatusCode(), "Expected status code does not match");
+
+        assertEquals(users, response.getBody(), "Expected users do not match");
+    }
+
+    @Test
+    void testGetAllAccountsExceptThirdParty() {
+        assertThat(accountController.getAllAccountsExceptThirdParty(
+            0, 25, "test", "1234",
+            List.of(UserProvenances.PI_AAD), List.of(Roles.VERIFIED), "1234").getStatusCode())
+            .as(STATUS_CODE_MATCH)
+            .isEqualTo(HttpStatus.OK);
+    }
+
+    @Test
+    void testRetrieveUserById() {
+        UUID uuid = UUID.randomUUID();
+        PiUser piUser = new PiUser();
+        piUser.setUserId(uuid);
+
+        when(accountService.getUserById(uuid)).thenReturn(piUser);
+
+        ResponseEntity<PiUser> response = accountController.getUserById(uuid);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode(), "Expected status code does not match");
+
+        assertEquals(piUser, response.getBody(), "Expected PI user does not match");
+    }
+
+    @Test
+    void testDeleteAccount() {
+        assertThat(accountController.deleteAccount(UUID.randomUUID()).getStatusCode())
+            .as(STATUS_CODE_MATCH)
+            .isEqualTo(HttpStatus.OK);
+    }
+
+    @Test
+    void testUpdateAccountById() {
+        assertThat(accountController.updateAccountById(UUID.randomUUID(), Roles.SYSTEM_ADMIN).getStatusCode())
+            .as(STATUS_CODE_MATCH)
+            .isEqualTo(HttpStatus.OK);
+    }
 }

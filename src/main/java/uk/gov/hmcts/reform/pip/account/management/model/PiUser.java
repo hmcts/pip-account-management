@@ -1,11 +1,11 @@
 package uk.gov.hmcts.reform.pip.account.management.model;
 
-import io.swagger.annotations.ApiModelProperty;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Type;
-import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import uk.gov.hmcts.reform.pip.account.management.validation.annotations.PiEmailConditionalValidation;
 import uk.gov.hmcts.reform.pip.account.management.validation.annotations.ValidProvenanceUserId;
@@ -81,17 +81,19 @@ public class PiUser {
     /**
      * The timestamp of when the user was created.
      */
-    @CreatedDate
-    @ApiModelProperty(hidden = true)
+    @Schema(hidden = true)
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'")
     private LocalDateTime createdDate;
 
     /**
      * The timestamp of when the user was last verified.
      */
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'")
     private LocalDateTime lastVerifiedDate;
 
     /**
      * The timestamp when the user was last signed in.
      */
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'")
     private LocalDateTime lastSignedInDate;
 }

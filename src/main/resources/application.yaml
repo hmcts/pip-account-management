@@ -66,6 +66,14 @@ spring:
     hibernate:
       # this ensures the db persists after spring boot connection drops.
       ddl-auto: update
+  servlet:
+    multipart:
+      max-file-size: 2MB
+      max-request-size: 2MB
+
+  # This is needed as locally, all tables are in a single schema. Flyway is only enabled on the clusters by default
+  flyway:
+    enabled: ${ENABLE_FLYWAY:false}
 
 service-to-service:
   publication-services: ${PUBLICATION_SERVICES_URL:https://pip-publication-services.staging.platform.hmcts.net}
@@ -88,10 +96,6 @@ azure:
     connection-string: ${CONNECTION_STRING}
     container-name: files
 
-cron:
-  media-application-reporting: "0 0 0 * * MON"
-  account-verification-check: "00 01 08 * * *"
-
 dbMigration:
   runOnStartup: ${RUN_DB_MIGRATION_ON_STARTUP:true}
 
@@ -102,3 +106,7 @@ verification:
   aad-admin-account-deletion-days: 90
   idam-account-sign-in-notification-days: 118
   idam-account-deletion-days: 132
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui/

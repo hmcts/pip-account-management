@@ -72,7 +72,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles(profiles = "functional")
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-@WithMockUser(username = "admin", authorities = { "APPROLE_api.request.admin" })
+@WithMockUser(username = "admin", authorities = {"APPROLE_api.request.admin"})
 @SuppressWarnings({"PMD.TooManyMethods", "PMD.LawOfDemeter", "PMD.ExcessiveImports",
     "PMD.JUnitTestsShouldIncludeAssert", "PMD.ExcessiveClassLength"})
 class AccountTest {
@@ -123,6 +123,8 @@ class AccountTest {
     private static final String DELETE_EXPIRED_ADMIN_ACCOUNTS_URL = ROOT_URL + "/admin/inactive";
     private static final String NOTIFY_INACTIVE_IDAM_ACCOUNTS_URL = ROOT_URL + "/idam/inactive/notify";
     private static final String DELETE_EXPIRED_IDAM_ACCOUNTS_URL = ROOT_URL + "/idam/inactive";
+    private static final String MI_REPORTING_ACCOUNT_DATA_URL = ROOT_URL + "/mi-data";
+    private static final String GET_ALL_ACCOUNTS_EXCEPT_THIRD_PARTY = ROOT_URL + "/all";
     private static final String EMAIL_URL = ROOT_URL + "/emails";
     private static final String EMAIL = "test_account_admin@hmcts.net";
     private static final String INVALID_EMAIL = "ab";
@@ -135,6 +137,8 @@ class AccountTest {
     private static final String MEDIA_LIST = "mediaList";
     private static final String GIVEN_NAME = "Given Name";
     private static final String B2C_URL = "URL";
+    private static final String UNAUTHORIZED_ROLE = "APPROLE_unknown.authorized";
+    private static final String UNAUTHORIZED_USERNAME = "unauthorized_isAuthorized";
 
     private static final String ID = "1234";
     private static final String ADDITIONAL_ID = "4321";
@@ -153,6 +157,7 @@ class AccountTest {
     private static final String SINGLE_ERRORED_ACCOUNT = "1 errored account should be returned";
     private static final String ERROR_RESPONSE_USER_PROVENANCE = "No user found with the provenanceUserId: 1234";
     private static final String FORBIDDEN_STATUS_CODE = "Status code does not match forbidden";
+    private static final String NOT_FOUND_STATUS_CODE_MESSAGE = "Status code does not match not found";
     private static final String TEST_UUID_STRING = UUID.randomUUID().toString();
     private static final String MAP_SIZE_MESSAGE = "Map size should match";
 
@@ -220,13 +225,18 @@ class AccountTest {
 
 
         ConcurrentHashMap<CreationEnum, List<AzureAccount>> accounts =
-            objectMapper.readValue(response.getResponse().getContentAsString(),
-                                   new TypeReference<>() {});
+            objectMapper.readValue(
+                response.getResponse().getContentAsString(),
+                new TypeReference<>() {
+                }
+            );
 
         assertEquals(0, accounts.get(CreationEnum.ERRORED_ACCOUNTS).size(),
-                     "No errored account should be returned");
+                     "No errored account should be returned"
+        );
         assertEquals(1, accounts.get(CreationEnum.CREATED_ACCOUNTS).size(),
-                     "1 Created account should be returned");
+                     "1 Created account should be returned"
+        );
 
         AzureAccount returnedAzureAccount = accounts.get(CreationEnum.CREATED_ACCOUNTS).get(0);
 
@@ -271,13 +281,18 @@ class AccountTest {
             .andExpect(status().isOk()).andReturn();
 
         ConcurrentHashMap<CreationEnum, List<Object>> accounts =
-            objectMapper.readValue(response.getResponse().getContentAsString(),
-                                   new TypeReference<>() {});
+            objectMapper.readValue(
+                response.getResponse().getContentAsString(),
+                new TypeReference<>() {
+                }
+            );
 
         assertEquals(0, accounts.get(CreationEnum.ERRORED_ACCOUNTS).size(),
-                     SINGLE_ERRORED_ACCOUNT);
+                     SINGLE_ERRORED_ACCOUNT
+        );
         assertEquals(0, accounts.get(CreationEnum.CREATED_ACCOUNTS).size(),
-                     ZERO_CREATED_ACCOUNTS);
+                     ZERO_CREATED_ACCOUNTS
+        );
     }
 
     @Test
@@ -300,17 +315,24 @@ class AccountTest {
             .andExpect(status().isOk()).andReturn();
 
         ConcurrentHashMap<CreationEnum, List<Object>> accounts =
-            objectMapper.readValue(response.getResponse().getContentAsString(),
-                                   new TypeReference<>() {});
+            objectMapper.readValue(
+                response.getResponse().getContentAsString(),
+                new TypeReference<>() {
+                }
+            );
 
         assertEquals(1, accounts.get(CreationEnum.ERRORED_ACCOUNTS).size(),
-                     SINGLE_ERRORED_ACCOUNT);
+                     SINGLE_ERRORED_ACCOUNT
+        );
         assertEquals(0, accounts.get(CreationEnum.CREATED_ACCOUNTS).size(),
-                     ZERO_CREATED_ACCOUNTS);
+                     ZERO_CREATED_ACCOUNTS
+        );
 
         List<Object> accountList = accounts.get(CreationEnum.ERRORED_ACCOUNTS);
-        ErroredAzureAccount erroredAccount = objectMapper.convertValue(accountList.get(0),
-                                                                          ErroredAzureAccount.class);
+        ErroredAzureAccount erroredAccount = objectMapper.convertValue(
+            accountList.get(0),
+            ErroredAzureAccount.class
+        );
 
         assertNull(erroredAccount.getAzureAccountId(), TEST_MESSAGE_ID);
         assertEquals("ab", erroredAccount.getEmail(), TEST_MESSAGE_EMAIL);
@@ -318,7 +340,8 @@ class AccountTest {
         assertEquals(SURNAME, erroredAccount.getSurname(), TEST_MESSAGE_SURNAME);
         assertEquals(Roles.INTERNAL_ADMIN_CTSC, erroredAccount.getRole(), TEST_MESSAGE_ROLE);
         assertEquals(EMAIL_VALIDATION_MESSAGE, erroredAccount.getErrorMessages().get(0),
-                   "Error message is displayed for an invalid email");
+                     "Error message is displayed for an invalid email"
+        );
 
     }
 
@@ -341,25 +364,33 @@ class AccountTest {
             .andExpect(status().isOk()).andReturn();
 
         ConcurrentHashMap<CreationEnum, List<Object>> accounts =
-            objectMapper.readValue(response.getResponse().getContentAsString(),
-                                   new TypeReference<>() {});
+            objectMapper.readValue(
+                response.getResponse().getContentAsString(),
+                new TypeReference<>() {
+                }
+            );
 
         assertEquals(1, accounts.get(CreationEnum.ERRORED_ACCOUNTS).size(),
-                     SINGLE_ERRORED_ACCOUNT);
+                     SINGLE_ERRORED_ACCOUNT
+        );
         assertEquals(0, accounts.get(CreationEnum.CREATED_ACCOUNTS).size(),
-                     ZERO_CREATED_ACCOUNTS);
+                     ZERO_CREATED_ACCOUNTS
+        );
 
         List<Object> accountList = accounts.get(CreationEnum.ERRORED_ACCOUNTS);
-        ErroredAzureAccount erroredAccount = objectMapper.convertValue(accountList.get(0),
-                                                                          ErroredAzureAccount.class);
+        ErroredAzureAccount erroredAccount = objectMapper.convertValue(
+            accountList.get(0),
+            ErroredAzureAccount.class
+        );
 
-        assertNull(erroredAccount.getAzureAccountId(),  TEST_MESSAGE_ID);
+        assertNull(erroredAccount.getAzureAccountId(), TEST_MESSAGE_ID);
         assertNull(erroredAccount.getEmail(), "Email has not been sent");
         assertEquals(FIRST_NAME, erroredAccount.getFirstName(), TEST_MESSAGE_FIRST_NAME);
         assertEquals(SURNAME, erroredAccount.getSurname(), TEST_MESSAGE_SURNAME);
         assertEquals(Roles.INTERNAL_ADMIN_CTSC, erroredAccount.getRole(), TEST_MESSAGE_ROLE);
         assertEquals(EMAIL_VALIDATION_MESSAGE, erroredAccount.getErrorMessages().get(0),
-                     "Error message is displayed for an invalid email");
+                     "Error message is displayed for an invalid email"
+        );
     }
 
     @Test
@@ -381,17 +412,24 @@ class AccountTest {
             .andExpect(status().isOk()).andReturn();
 
         ConcurrentHashMap<CreationEnum, List<Object>> accounts =
-            objectMapper.readValue(response.getResponse().getContentAsString(),
-                                   new TypeReference<>() {});
+            objectMapper.readValue(
+                response.getResponse().getContentAsString(),
+                new TypeReference<>() {
+                }
+            );
 
         assertEquals(1, accounts.get(CreationEnum.ERRORED_ACCOUNTS).size(),
-                     SINGLE_ERRORED_ACCOUNT);
+                     SINGLE_ERRORED_ACCOUNT
+        );
         assertEquals(0, accounts.get(CreationEnum.CREATED_ACCOUNTS).size(),
-                     ZERO_CREATED_ACCOUNTS);
+                     ZERO_CREATED_ACCOUNTS
+        );
 
         List<Object> accountList = accounts.get(CreationEnum.ERRORED_ACCOUNTS);
-        ErroredAzureAccount erroredAccount = objectMapper.convertValue(accountList.get(0),
-                                                                          ErroredAzureAccount.class);
+        ErroredAzureAccount erroredAccount = objectMapper.convertValue(
+            accountList.get(0),
+            ErroredAzureAccount.class
+        );
 
         assertNull(erroredAccount.getAzureAccountId(), TEST_MESSAGE_ID);
         assertEquals(EMAIL, erroredAccount.getEmail(), TEST_MESSAGE_EMAIL);
@@ -399,7 +437,8 @@ class AccountTest {
         assertEquals(SURNAME, erroredAccount.getSurname(), TEST_MESSAGE_SURNAME);
         assertEquals(Roles.INTERNAL_ADMIN_CTSC, erroredAccount.getRole(), TEST_MESSAGE_ROLE);
         assertEquals(INVALID_FIRST_NAME_MESSAGE, erroredAccount.getErrorMessages().get(0),
-                     "Error message is displayed for an invalid name");
+                     "Error message is displayed for an invalid name"
+        );
     }
 
     @Test
@@ -437,13 +476,18 @@ class AccountTest {
             .andExpect(status().isOk()).andReturn();
 
         ConcurrentHashMap<CreationEnum, List<Object>> accounts =
-            objectMapper.readValue(response.getResponse().getContentAsString(),
-                                   new TypeReference<>() {});
+            objectMapper.readValue(
+                response.getResponse().getContentAsString(),
+                new TypeReference<>() {
+                }
+            );
 
         assertEquals(0, accounts.get(CreationEnum.ERRORED_ACCOUNTS).size(),
-                     SINGLE_ERRORED_ACCOUNT);
+                     SINGLE_ERRORED_ACCOUNT
+        );
         assertEquals(1, accounts.get(CreationEnum.CREATED_ACCOUNTS).size(),
-                     ZERO_CREATED_ACCOUNTS);
+                     ZERO_CREATED_ACCOUNTS
+        );
     }
 
     @Test
@@ -465,17 +509,24 @@ class AccountTest {
             .andExpect(status().isOk()).andReturn();
 
         ConcurrentHashMap<CreationEnum, List<Object>> accounts =
-            objectMapper.readValue(response.getResponse().getContentAsString(),
-                                   new TypeReference<>() {});
+            objectMapper.readValue(
+                response.getResponse().getContentAsString(),
+                new TypeReference<>() {
+                }
+            );
 
         assertEquals(1, accounts.get(CreationEnum.ERRORED_ACCOUNTS).size(),
-                     SINGLE_ERRORED_ACCOUNT);
+                     SINGLE_ERRORED_ACCOUNT
+        );
         assertEquals(0, accounts.get(CreationEnum.CREATED_ACCOUNTS).size(),
-                     ZERO_CREATED_ACCOUNTS);
+                     ZERO_CREATED_ACCOUNTS
+        );
 
         List<Object> acccountList = accounts.get(CreationEnum.ERRORED_ACCOUNTS);
-        ErroredAzureAccount erroredAccount = objectMapper.convertValue(acccountList.get(0),
-                                                                          ErroredAzureAccount.class);
+        ErroredAzureAccount erroredAccount = objectMapper.convertValue(
+            acccountList.get(0),
+            ErroredAzureAccount.class
+        );
 
         assertNull(erroredAccount.getAzureAccountId(), TEST_MESSAGE_ID);
         assertEquals(EMAIL, erroredAccount.getEmail(), TEST_MESSAGE_EMAIL);
@@ -483,7 +534,8 @@ class AccountTest {
         assertEquals(SURNAME, erroredAccount.getSurname(), TEST_MESSAGE_SURNAME);
         assertNull(erroredAccount.getRole(), "Role is not null");
         assertEquals(INVALID_ROLE_MESSAGE, erroredAccount.getErrorMessages().get(0),
-                     "Error message is displayed for an invalid name");
+                     "Error message is displayed for an invalid name"
+        );
     }
 
     @Test
@@ -516,8 +568,11 @@ class AccountTest {
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isOk()).andReturn();
 
         ConcurrentHashMap<CreationEnum, List<Object>> accounts =
-            objectMapper.readValue(response.getResponse().getContentAsString(),
-                                   new TypeReference<>() {});
+            objectMapper.readValue(
+                response.getResponse().getContentAsString(),
+                new TypeReference<>() {
+                }
+            );
 
         assertEquals(1, accounts.get(CreationEnum.ERRORED_ACCOUNTS).size(), "1 errored account returned");
         assertEquals(0, accounts.get(CreationEnum.CREATED_ACCOUNTS).size(), "0 created account returned");
@@ -531,7 +586,8 @@ class AccountTest {
         assertEquals(SURNAME, erroredAccount.getSurname(), TEST_MESSAGE_SURNAME);
         assertEquals(Roles.INTERNAL_ADMIN_CTSC, erroredAccount.getRole(), TEST_MESSAGE_ROLE);
         assertEquals(DIRECTORY_ERROR, erroredAccount.getErrorMessages().get(0),
-                     "Error message matches directory message");
+                     "Error message matches directory message"
+        );
     }
 
     @Test
@@ -595,13 +651,18 @@ class AccountTest {
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isOk()).andReturn();
 
         ConcurrentHashMap<CreationEnum, List<Object>> accounts =
-            objectMapper.readValue(response.getResponse().getContentAsString(),
-                                   new TypeReference<>() {});
+            objectMapper.readValue(
+                response.getResponse().getContentAsString(),
+                new TypeReference<>() {
+                }
+            );
 
         assertEquals(1, accounts.get(CreationEnum.ERRORED_ACCOUNTS).size(),
-                     "1 Errored account should be returned");
+                     "1 Errored account should be returned"
+        );
         assertEquals(1, accounts.get(CreationEnum.CREATED_ACCOUNTS).size(),
-                     "1 Created account should be returned");
+                     "1 Created account should be returned"
+        );
 
         AzureAccount returnedValidAzureAccount = objectMapper.convertValue(
             accounts.get(CreationEnum.CREATED_ACCOUNTS).get(0), AzureAccount.class);
@@ -621,7 +682,8 @@ class AccountTest {
         assertEquals(SURNAME, returnedInvalidAccount.getSurname(), TEST_MESSAGE_SURNAME);
         assertEquals(Roles.INTERNAL_ADMIN_CTSC, returnedInvalidAccount.getRole(), TEST_MESSAGE_ROLE);
         assertEquals(EMAIL_VALIDATION_MESSAGE, returnedInvalidAccount.getErrorMessages().get(0),
-                     "Error message is displayed for an invalid email");
+                     "Error message is displayed for an invalid email"
+        );
     }
 
     @Test
@@ -634,8 +696,11 @@ class AccountTest {
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isCreated()).andReturn();
         ConcurrentHashMap<CreationEnum, List<Object>> mappedResponse =
-            objectMapper.readValue(response.getResponse().getContentAsString(),
-                                   new TypeReference<>() {});
+            objectMapper.readValue(
+                response.getResponse().getContentAsString(),
+                new TypeReference<>() {
+                }
+            );
 
         assertEquals(1, mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).size(), "1 User should be created");
     }
@@ -662,15 +727,18 @@ class AccountTest {
 
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder =
             MockMvcRequestBuilders
-            .post(PI_URL)
-            .content(objectMapper.writeValueAsString(List.of(validUser1, validUser2)))
-            .header(ISSUER_HEADER, ISSUER_ID)
-            .contentType(MediaType.APPLICATION_JSON);
+                .post(PI_URL)
+                .content(objectMapper.writeValueAsString(List.of(validUser1, validUser2)))
+                .header(ISSUER_HEADER, ISSUER_ID)
+                .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isCreated()).andReturn();
         ConcurrentHashMap<CreationEnum, List<Object>> mappedResponse =
-            objectMapper.readValue(response.getResponse().getContentAsString(),
-                                   new TypeReference<>() {});
+            objectMapper.readValue(
+                response.getResponse().getContentAsString(),
+                new TypeReference<>() {
+                }
+            );
 
         assertEquals(2, mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).size(), "1 Users should be created");
     }
@@ -707,8 +775,11 @@ class AccountTest {
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isCreated()).andReturn();
         ConcurrentHashMap<CreationEnum, List<Object>> mappedResponse =
-            objectMapper.readValue(response.getResponse().getContentAsString(),
-                                   new TypeReference<>() {});
+            objectMapper.readValue(
+                response.getResponse().getContentAsString(),
+                new TypeReference<>() {
+                }
+            );
 
         assertEquals(2, mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).size(), "2 Users should be created");
     }
@@ -725,8 +796,11 @@ class AccountTest {
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isCreated()).andReturn();
         ConcurrentHashMap<CreationEnum, List<Object>> mappedResponse =
-            objectMapper.readValue(response.getResponse().getContentAsString(),
-                                   new TypeReference<>() {});
+            objectMapper.readValue(
+                response.getResponse().getContentAsString(),
+                new TypeReference<>() {
+                }
+            );
 
         assertEquals(1, mappedResponse.get(CreationEnum.ERRORED_ACCOUNTS).size(), "1 User should be errored");
     }
@@ -744,8 +818,11 @@ class AccountTest {
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isCreated()).andReturn();
         ConcurrentHashMap<CreationEnum, List<Object>> mappedResponse =
-            objectMapper.readValue(response.getResponse().getContentAsString(),
-                                   new TypeReference<>() {});
+            objectMapper.readValue(
+                response.getResponse().getContentAsString(),
+                new TypeReference<>() {
+                }
+            );
 
         assertEquals(2, mappedResponse.get(CreationEnum.ERRORED_ACCOUNTS).size(), "2 Users should be errored");
     }
@@ -762,8 +839,11 @@ class AccountTest {
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isCreated()).andReturn();
         ConcurrentHashMap<CreationEnum, List<Object>> mappedResponse =
-            objectMapper.readValue(response.getResponse().getContentAsString(),
-                                   new TypeReference<>() {});
+            objectMapper.readValue(
+                response.getResponse().getContentAsString(),
+                new TypeReference<>() {
+                }
+            );
 
         assertEquals(1, mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).size(), "1 User should be created");
         assertEquals(1, mappedResponse.get(CreationEnum.ERRORED_ACCOUNTS).size(), "1 User should be errored");
@@ -781,12 +861,15 @@ class AccountTest {
 
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .get(String.format("%s/%s/%s", GET_PROVENANCE_USER_URL, validUser.getUserProvenance(),
-                               validUser.getProvenanceUserId()))
+                               validUser.getProvenanceUserId()
+            ))
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isOk()).andReturn();
-        PiUser returnedUser = objectMapper.readValue(response.getResponse().getContentAsString(),
-                                                     PiUser.class);
+        PiUser returnedUser = objectMapper.readValue(
+            response.getResponse().getContentAsString(),
+            PiUser.class
+        );
         assertEquals(validUser.getProvenanceUserId(), returnedUser.getProvenanceUserId(), "Users should match");
         assertThat(returnedUser.getCreatedDate()).as("Created date must not be null").isNotNull();
     }
@@ -800,12 +883,14 @@ class AccountTest {
         MvcResult response =
             mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isNotFound()).andReturn();
         assertEquals(404, response.getResponse().getStatus(), "Status codes should match");
-        assertTrue(response.getResponse().getContentAsString().contains(ERROR_RESPONSE_USER_PROVENANCE),
-                   "Should contain error message");
+        assertTrue(
+            response.getResponse().getContentAsString().contains(ERROR_RESPONSE_USER_PROVENANCE),
+            "Should contain error message"
+        );
     }
 
     @Test
-    @WithMockUser(username = "unauthorized_account", authorities = { "APPROLE_unknown.account" })
+    @WithMockUser(username = "unauthorized_account", authorities = {"APPROLE_unknown.account"})
     void testUnauthorizedCreateAccount() throws Exception {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(AZURE_URL)
@@ -817,11 +902,12 @@ class AccountTest {
             mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isForbidden()).andReturn();
 
         assertEquals(HttpStatus.FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
-                     FORBIDDEN_STATUS_CODE);
+                     FORBIDDEN_STATUS_CODE
+        );
     }
 
     @Test
-    @WithMockUser(username = "unauthroized_user", authorities = { "APPROLE_unknown.user" })
+    @WithMockUser(username = "unauthroized_user", authorities = {"APPROLE_unknown.user"})
     void testUnauthorizedCreateUser() throws Exception {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(PI_URL)
@@ -833,11 +919,12 @@ class AccountTest {
             mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isForbidden()).andReturn();
 
         assertEquals(HttpStatus.FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
-                     FORBIDDEN_STATUS_CODE);
+                     FORBIDDEN_STATUS_CODE
+        );
     }
 
     @Test
-    @WithMockUser(username = "unauthorized_provenance", authorities = { "APPROLE_unknown.provenance" })
+    @WithMockUser(username = "unauthorized_provenance", authorities = {"APPROLE_unknown.provenance"})
     void testUnauthorizedGetUserByProvenance() throws Exception {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .get(String.format("%s/%s/%s", GET_PROVENANCE_USER_URL, UserProvenances.CFT_IDAM, ID))
@@ -847,20 +934,23 @@ class AccountTest {
             mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isForbidden()).andReturn();
 
         assertEquals(HttpStatus.FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
-                     FORBIDDEN_STATUS_CODE);
+                     FORBIDDEN_STATUS_CODE
+        );
     }
 
     @Test
-    @WithMockUser(username = "unauthorized_isAuthorized", authorities = { "APPROLE_unknown.authorized" })
+    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testUnauthorizedGetUserIsAuthorized() throws Exception {
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .get(String.format("%s/isAuthorised/%s/%s/%s", ROOT_URL, UUID.randomUUID(),
-                               ListType.SJP_PRESS_LIST, Sensitivity.PUBLIC));
+                               ListType.SJP_PRESS_LIST, Sensitivity.PUBLIC
+            ));
 
         MvcResult mvcResult = mockMvc.perform(request).andExpect(status().isForbidden()).andReturn();
 
         assertEquals(HttpStatus.FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
-                     FORBIDDEN_STATUS_CODE);
+                     FORBIDDEN_STATUS_CODE
+        );
     }
 
     @Test
@@ -874,7 +964,8 @@ class AccountTest {
             mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isOk()).andReturn();
 
         assertEquals(HttpStatus.OK.value(), mvcResult.getResponse().getStatus(),
-                     "Status codes does match OK");
+                     "Status codes does match OK"
+        );
     }
 
     @Test
@@ -891,15 +982,19 @@ class AccountTest {
         try (InputStream inputStream = Thread.currentThread().getContextClassLoader()
             .getResourceAsStream("csv/valid.csv")) {
 
-            MockMultipartFile multipartFile = new MockMultipartFile(MEDIA_LIST,
-                                                                IOUtils.toByteArray(inputStream));
+            MockMultipartFile multipartFile = new MockMultipartFile(
+                MEDIA_LIST,
+                IOUtils.toByteArray(inputStream)
+            );
 
             MvcResult mvcResult = mockMvc.perform(multipart(BULK_UPLOAD).file(multipartFile)
                                                       .header(ISSUER_HEADER, ISSUER_ID))
                 .andExpect(status().isOk()).andReturn();
             ConcurrentHashMap<CreationEnum, List<?>> users = objectMapper.readValue(
                 mvcResult.getResponse().getContentAsString(),
-                new TypeReference<>() {});
+                new TypeReference<>() {
+                }
+            );
 
             assertEquals(2, users.get(CreationEnum.CREATED_ACCOUNTS).size(), MAP_SIZE_MESSAGE);
             assertEquals(0, users.get(CreationEnum.ERRORED_ACCOUNTS).size(), MAP_SIZE_MESSAGE);
@@ -917,8 +1012,10 @@ class AccountTest {
             MvcResult result = mockMvc.perform(multipart(BULK_UPLOAD).file(csvFile).header(ISSUER_HEADER, ISSUER_ID))
                 .andExpect(status().isBadRequest()).andReturn();
 
-            assertTrue(result.getResponse().getContentAsString().contains("Failed to parse CSV File"),
-                       "Should contain error");
+            assertTrue(
+                result.getResponse().getContentAsString().contains("Failed to parse CSV File"),
+                "Should contain error"
+            );
         }
     }
 
@@ -935,15 +1032,19 @@ class AccountTest {
         try (InputStream inputStream = Thread.currentThread().getContextClassLoader()
             .getResourceAsStream("csv/mediaEmailOnly.csv")) {
 
-            MockMultipartFile multipartFile = new MockMultipartFile(MEDIA_LIST,
-                                                                    IOUtils.toByteArray(inputStream));
+            MockMultipartFile multipartFile = new MockMultipartFile(
+                MEDIA_LIST,
+                IOUtils.toByteArray(inputStream)
+            );
 
             MvcResult mvcResult = mockMvc.perform(multipart(BULK_UPLOAD).file(multipartFile)
                                                       .header(ISSUER_HEADER, ISSUER_ID))
                 .andExpect(status().isOk()).andReturn();
             ConcurrentHashMap<CreationEnum, List<?>> users = objectMapper.readValue(
                 mvcResult.getResponse().getContentAsString(),
-                new TypeReference<>() {});
+                new TypeReference<>() {
+                }
+            );
 
             assertEquals(2, users.get(CreationEnum.CREATED_ACCOUNTS).size(), MAP_SIZE_MESSAGE);
             assertEquals(0, users.get(CreationEnum.ERRORED_ACCOUNTS).size(), MAP_SIZE_MESSAGE);
@@ -956,15 +1057,19 @@ class AccountTest {
         try (InputStream inputStream = Thread.currentThread().getContextClassLoader()
             .getResourceAsStream("csv/invalidEmail.csv")) {
 
-            MockMultipartFile multipartFile = new MockMultipartFile(MEDIA_LIST,
-                                                                    IOUtils.toByteArray(inputStream));
+            MockMultipartFile multipartFile = new MockMultipartFile(
+                MEDIA_LIST,
+                IOUtils.toByteArray(inputStream)
+            );
 
             MvcResult mvcResult = mockMvc.perform(multipart(BULK_UPLOAD).file(multipartFile)
                                                       .header(ISSUER_HEADER, ISSUER_ID))
                 .andExpect(status().isOk()).andReturn();
             ConcurrentHashMap<CreationEnum, List<?>> users = objectMapper.readValue(
                 mvcResult.getResponse().getContentAsString(),
-                new TypeReference<>() {});
+                new TypeReference<>() {
+                }
+            );
 
             assertEquals(0, users.get(CreationEnum.CREATED_ACCOUNTS).size(), MAP_SIZE_MESSAGE);
             assertEquals(1, users.get(CreationEnum.ERRORED_ACCOUNTS).size(), MAP_SIZE_MESSAGE);
@@ -1015,7 +1120,7 @@ class AccountTest {
         mockMvc.perform(mockHttpServletRequestBuilder)
             .andExpect(status().isOk())
             .andExpect(content().string(containsString(
-            "has been updated")));
+                "has been updated")));
     }
 
     @Test
@@ -1044,7 +1149,7 @@ class AccountTest {
 
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .put(UPDATE_ACCOUNT_URL + validUser.getUserProvenance() + "/"
-                + validUser.getProvenanceUserId())
+                     + validUser.getProvenanceUserId())
             .content(objectMapper.writeValueAsString(Collections.singletonMap(
                 "email", "test@test.com")))
             .contentType(MediaType.APPLICATION_JSON);
@@ -1101,4 +1206,285 @@ class AccountTest {
 
         mockMvc.perform(request).andExpect(status().isNoContent());
     }
+
+    @Test
+    void testMiAccountDataRequestSuccess() throws Exception {
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+            .get(MI_REPORTING_ACCOUNT_DATA_URL);
+
+        mockMvc.perform(request).andExpect(status().isOk());
+    }
+
+    @Test
+    void testGetAllThirdPartyAccounts() throws Exception {
+        validUser.setProvenanceUserId("THIRD_PARTY");
+        validUser.setUserProvenance(UserProvenances.THIRD_PARTY);
+        validUser.setRoles(Roles.GENERAL_THIRD_PARTY);
+
+        MockHttpServletRequestBuilder createRequest =
+            MockMvcRequestBuilders
+                .post(PI_URL)
+                .content(objectMapper.writeValueAsString(List.of(validUser)))
+                .header(ISSUER_HEADER, ISSUER_ID)
+                .contentType(MediaType.APPLICATION_JSON);
+
+        MvcResult responseCreateUser = mockMvc.perform(createRequest)
+            .andExpect(status().isCreated()).andReturn();
+        ConcurrentHashMap<CreationEnum, List<Object>> mappedResponse =
+            objectMapper.readValue(
+                responseCreateUser.getResponse().getContentAsString(),
+                new TypeReference<>() {
+                }
+            );
+
+        String createdUserId = mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).get(0).toString();
+
+        MockHttpServletRequestBuilder getRequest = MockMvcRequestBuilders
+            .get(ROOT_URL + "/all/third-party");
+
+        MvcResult responseGetUser =
+            mockMvc.perform(getRequest).andExpect(status().isOk()).andReturn();
+
+        PiUser[] users = objectMapper.readValue(
+            responseGetUser.getResponse().getContentAsString(),
+            PiUser[].class
+        );
+
+        assertEquals(1, users.length, "Correct number of users should return");
+        assertEquals(createdUserId, users[0].getUserId().toString(), "Users should match");
+    }
+
+    @Test
+    void testGetAllAccountsExceptThirdParty() throws Exception {
+        PiUser validUser1 = createUser(true, UUID.randomUUID().toString());
+        PiUser validUser2 = createUser(true, UUID.randomUUID().toString());
+
+        MockHttpServletRequestBuilder mockHttpServletRequestBuilder =
+            MockMvcRequestBuilders
+                .post(PI_URL)
+                .content(objectMapper.writeValueAsString(List.of(validUser1, validUser2)))
+                .header(ISSUER_HEADER, ISSUER_ID)
+                .contentType(MediaType.APPLICATION_JSON);
+        MvcResult responseCreateUser = mockMvc.perform(mockHttpServletRequestBuilder)
+            .andExpect(status().isCreated()).andReturn();
+
+        ConcurrentHashMap<CreationEnum, List<Object>> mappedResponse =
+            objectMapper.readValue(
+                responseCreateUser.getResponse().getContentAsString(),
+                new TypeReference<>() {
+                }
+            );
+
+        String createdUserId = mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).get(0).toString();
+
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+            .get(GET_ALL_ACCOUNTS_EXCEPT_THIRD_PARTY);
+
+        MvcResult response =
+            mockMvc.perform(request).andExpect(status().isOk()).andReturn();
+
+        assertTrue(
+            response.getResponse().getContentAsString().contains(createdUserId),
+            "Failed to get all accounts"
+        );
+
+
+    }
+
+    @Test
+    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
+    void testUnauthorizedGetAllAccountsExceptThirdParty() throws Exception {
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+            .get(GET_ALL_ACCOUNTS_EXCEPT_THIRD_PARTY);
+
+        MvcResult mvcResult = mockMvc.perform(request).andExpect(status().isForbidden()).andReturn();
+
+        assertEquals(HttpStatus.FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
+                     FORBIDDEN_STATUS_CODE
+        );
+    }
+
+    @Test
+    void testGetUserById() throws Exception {
+        MockHttpServletRequestBuilder createRequest =
+            MockMvcRequestBuilders
+                .post(PI_URL)
+                .content(objectMapper.writeValueAsString(List.of(validUser)))
+                .header(ISSUER_HEADER, ISSUER_ID)
+                .contentType(MediaType.APPLICATION_JSON);
+
+        MvcResult responseCreateUser = mockMvc.perform(createRequest)
+            .andExpect(status().isCreated()).andReturn();
+        ConcurrentHashMap<CreationEnum, List<Object>> mappedResponse =
+            objectMapper.readValue(
+                responseCreateUser.getResponse().getContentAsString(),
+                new TypeReference<>() {
+                }
+            );
+
+        String createdUserId = mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).get(0).toString();
+
+        MockHttpServletRequestBuilder getRequest = MockMvcRequestBuilders
+            .get(ROOT_URL + "/" + createdUserId);
+
+        MvcResult responseGetUser =
+            mockMvc.perform(getRequest).andExpect(status().isOk()).andReturn();
+
+        PiUser returnedUser = objectMapper.readValue(
+            responseGetUser.getResponse().getContentAsString(),
+            PiUser.class
+        );
+        assertEquals(createdUserId, returnedUser.getUserId().toString(), "Users should match");
+    }
+
+    @Test
+    @WithMockUser(username = "unauthorized_account", authorities = { "APPROLE_unknown.account" })
+    void testUnauthorizedGetAllThirdPartyAccounts() throws Exception {
+        MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
+            .get(ROOT_URL + "/all/third-party");
+
+        MvcResult mvcResult =
+            mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isForbidden()).andReturn();
+
+        assertEquals(HttpStatus.FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
+                     FORBIDDEN_STATUS_CODE);
+    }
+
+    @Test
+    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
+    void testUnauthorizedGetUserById() throws Exception {
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+            .get(ROOT_URL + "/" + UUID.randomUUID().toString());
+
+        MvcResult mvcResult = mockMvc.perform(request).andExpect(status().isForbidden()).andReturn();
+
+        assertEquals(HttpStatus.FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
+                     FORBIDDEN_STATUS_CODE
+        );
+    }
+
+    @Test
+    void testGetUserByIdNotFound() throws Exception {
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+            .get(ROOT_URL + "/" + UUID.randomUUID().toString());
+
+        MvcResult mvcResult = mockMvc.perform(request).andExpect(status().isNotFound()).andReturn();
+
+        assertEquals(HttpStatus.NOT_FOUND.value(), mvcResult.getResponse().getStatus(),
+                     NOT_FOUND_STATUS_CODE_MESSAGE
+        );
+    }
+
+    @Test
+    void testDeleteAccount() throws Exception {
+        validUser.setUserProvenance(UserProvenances.CFT_IDAM);
+        MockHttpServletRequestBuilder createRequest =
+            MockMvcRequestBuilders
+                .post(PI_URL)
+                .content(objectMapper.writeValueAsString(List.of(validUser)))
+                .header(ISSUER_HEADER, ISSUER_ID)
+                .contentType(MediaType.APPLICATION_JSON);
+
+        MvcResult responseCreateUser = mockMvc.perform(createRequest)
+            .andExpect(status().isCreated()).andReturn();
+        ConcurrentHashMap<CreationEnum, List<Object>> mappedResponse =
+            objectMapper.readValue(
+                responseCreateUser.getResponse().getContentAsString(),
+                new TypeReference<>() {
+                }
+            );
+
+        String createdUserId = mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).get(0).toString();
+
+        MockHttpServletRequestBuilder deleteRequest = MockMvcRequestBuilders
+            .delete(ROOT_URL + "/delete/" + createdUserId);
+
+        MvcResult mvcResult = mockMvc.perform(deleteRequest).andExpect(status().isOk()).andReturn();
+        assertEquals("User deleted",mvcResult.getResponse().getContentAsString(),
+                     "Failed to delete user");
+    }
+
+    @Test
+    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
+    void testUnauthorizedDeleteAccount() throws Exception {
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+            .delete(ROOT_URL + "/delete/" + UUID.randomUUID());
+
+        MvcResult mvcResult = mockMvc.perform(request).andExpect(status().isForbidden()).andReturn();
+
+        assertEquals(HttpStatus.FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
+                     FORBIDDEN_STATUS_CODE
+        );
+    }
+
+    @Test
+    void testDeleteAccountNotFound() throws Exception {
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+            .delete(ROOT_URL + "/delete/" + UUID.randomUUID());
+
+        MvcResult mvcResult = mockMvc.perform(request).andExpect(status().isNotFound()).andReturn();
+
+        assertEquals(HttpStatus.NOT_FOUND.value(), mvcResult.getResponse().getStatus(),
+                     NOT_FOUND_STATUS_CODE_MESSAGE
+        );
+    }
+
+    @Test
+    void testUpdateUpdateAccountById() throws Exception {
+        validUser.setUserProvenance(UserProvenances.CFT_IDAM);
+        MockHttpServletRequestBuilder createRequest =
+            MockMvcRequestBuilders
+                .post(PI_URL)
+                .content(objectMapper.writeValueAsString(List.of(validUser)))
+                .header(ISSUER_HEADER, ISSUER_ID)
+                .contentType(MediaType.APPLICATION_JSON);
+
+        MvcResult responseCreateUser = mockMvc.perform(createRequest)
+            .andExpect(status().isCreated()).andReturn();
+        ConcurrentHashMap<CreationEnum, List<Object>> mappedResponse =
+            objectMapper.readValue(
+                responseCreateUser.getResponse().getContentAsString(),
+                new TypeReference<>() {
+                }
+            );
+
+        String createdUserId = mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).get(0).toString();
+
+        MockHttpServletRequestBuilder updateRequest = MockMvcRequestBuilders
+            .put(ROOT_URL + "/update/" + createdUserId + "/" + Roles.INTERNAL_ADMIN_LOCAL);
+
+        MvcResult responseUpdatedUser = mockMvc.perform(updateRequest)
+            .andExpect(status().isOk()).andReturn();
+
+        assertEquals(
+            "User with ID " + createdUserId + " has been updated to a " + Roles.INTERNAL_ADMIN_LOCAL,
+            responseUpdatedUser.getResponse().getContentAsString(), "Failed to update account"
+        );
+    }
+
+    @Test
+    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
+    void testUnauthorizedUpdateAccountById() throws Exception {
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+            .put(ROOT_URL + "/update/" + UUID.randomUUID() + "/" + Roles.INTERNAL_ADMIN_LOCAL);
+
+        MvcResult mvcResult = mockMvc.perform(request).andExpect(status().isForbidden()).andReturn();
+
+        assertEquals(HttpStatus.FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
+                     FORBIDDEN_STATUS_CODE
+        );
+    }
+
+    @Test
+    void testUpdateAccountByIdNotFound() throws Exception {
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+            .put(ROOT_URL + "/update/" + UUID.randomUUID() + "/" + Roles.INTERNAL_ADMIN_LOCAL);
+
+        MvcResult mvcResult = mockMvc.perform(request).andExpect(status().isNotFound()).andReturn();
+
+        assertEquals(HttpStatus.NOT_FOUND.value(), mvcResult.getResponse().getStatus(),
+                     NOT_FOUND_STATUS_CODE_MESSAGE
+        );
+    }
+
 }

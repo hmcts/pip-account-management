@@ -1,9 +1,12 @@
 package uk.gov.hmcts.reform.pip.account.management.database;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
+import uk.gov.hmcts.reform.pip.account.management.model.Roles;
 import uk.gov.hmcts.reform.pip.account.management.model.UserProvenances;
 
 import java.util.List;
@@ -38,4 +41,16 @@ public interface UserRepository extends JpaRepository<PiUser, Long> {
     Optional<PiUser> findByEmail(String email);
 
     Optional<PiUser> findByProvenanceUserIdAndUserProvenance(String provenanceUserId, UserProvenances userProvenance);
+
+    List<PiUser> findAllByUserProvenance(UserProvenances userProvenances);
+
+    Page<PiUser> findAllByEmailLikeIgnoreCaseAndUserProvenanceInAndRolesInAndProvenanceUserIdLike(
+        String email,
+        List<UserProvenances> provenance,
+        List<Roles> roles,
+        String provenanceUserId,
+        Pageable pageable);
+
+    @Query(value = "SELECT * FROM pi_user WHERE CAST(user_id AS TEXT) = :userId", nativeQuery = true)
+    Page<PiUser> findByUserIdPageable(@Param("userId") String userId, Pageable pageable);
 }

@@ -5,6 +5,8 @@ import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 import uk.gov.hmcts.reform.pip.account.management.database.UserRepository;
@@ -29,6 +31,7 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
@@ -42,6 +45,8 @@ import java.util.stream.Stream;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
 
+import static uk.gov.hmcts.reform.pip.account.management.model.Roles.ALL_NON_THIRD_PARTY_ROLES;
+import static uk.gov.hmcts.reform.pip.account.management.model.UserProvenances.ALL_NON_THIRD_PARTY_PROVENANCES;
 import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
 
 /**
@@ -50,7 +55,7 @@ import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
  */
 @Slf4j
 @Component
-@SuppressWarnings("PMD.LawOfDemeter")
+@SuppressWarnings({"PMD.LawOfDemeter", "PMD.ExcessiveImports", "PMD.TooManyMethods"})
 public class AccountService {
 
     @Autowired
@@ -81,8 +86,7 @@ public class AccountService {
      * Method to create new accounts in azure.
      *
      * @param azureAccounts The accounts to be created.
-     * @param issuerId The id of the user who created the accounts.
-     *
+     * @param issuerId      The id of the user who created the accounts.
      * @return Returns a map which contains two lists, Errored and Created accounts. Created will have object ID set.
      **/
     public Map<CreationEnum, List<? extends AzureAccount>> addAzureAccounts(
@@ -100,8 +104,8 @@ public class AccountService {
 
                 ErroredAzureAccount erroredSubscriber = new ErroredAzureAccount(azureAccount);
                 erroredSubscriber.setErrorMessages(constraintViolationSet
-                             .stream().map(constraint -> constraint.getPropertyPath() + ": " + constraint.getMessage())
-                                                       .collect(Collectors.toList()));
+                                                       .stream().map(constraint -> constraint.getPropertyPath()
+                        + ": " + constraint.getMessage()).collect(Collectors.toList()));
                 erroredAccounts.add(erroredSubscriber);
                 continue;
             }
@@ -114,8 +118,10 @@ public class AccountService {
                     && !userAzure.givenName.isEmpty()
                     && azureAccount.getRole().equals(Roles.VERIFIED)) {
                     boolean emailSent = publicationService
-                        .sendNotificationEmailForDuplicateMediaAccount(azureAccount.getEmail(),
-                                                                       userAzure.givenName);
+                        .sendNotificationEmailForDuplicateMediaAccount(
+                            azureAccount.getEmail(),
+                            userAzure.givenName
+                        );
                     if (!emailSent) {
                         ErroredAzureAccount softErroredAccount = new ErroredAzureAccount(azureAccount);
                         softErroredAccount.setErrorMessages(
@@ -156,7 +162,8 @@ public class AccountService {
     /**
      * Method to add users to P&I database, loops through the list and validates the email provided then adds them to
      * success or failure lists.
-     * @param users the list of users to be added.
+     *
+     * @param users    the list of users to be added.
      * @param issuerId the id of the admin adding the users for logging purposes.
      * @return Map of Created and Errored accounts, created has UUID's and errored has user objects.
      */
@@ -165,8 +172,10 @@ public class AccountService {
         List<ErroredPiUser> erroredAccounts = new ArrayList<>();
 
         for (PiUser user : users) {
-            user.setLastVerifiedDate(LocalDateTime.now());
-            user.setLastSignedInDate(LocalDateTime.now());
+            LocalDateTime localDateTime = LocalDateTime.now(ZoneId.of("UTC"));
+            user.setLastVerifiedDate(localDateTime);
+            user.setLastSignedInDate(localDateTime);
+            user.setCreatedDate(localDateTime);
             Set<ConstraintViolation<PiUser>> constraintViolationSet = validator.validate(user);
             if (!constraintViolationSet.isEmpty()) {
                 ErroredPiUser erroredUser = new ErroredPiUser(user);
@@ -192,8 +201,9 @@ public class AccountService {
     /**
      * Used to check if a user can see a given publication based on the provenances of the user,
      * and list type / sensitivity of the publication.
-     * @param userId  the user id of the user to check permissions for.
-     * @param listType the list type of the publication.
+     *
+     * @param userId      the user id of the user to check permissions for.
+     * @param listType    the list type of the publication.
      * @param sensitivity the sensitivity of the publication.
      * @return bool of true if user can see it, else exception is thrown
      */
@@ -205,7 +215,8 @@ public class AccountService {
 
     /**
      * Checks that the user was found.
-     * @param user an optional of the user returned from the database.
+     *
+     * @param user   an optional of the user returned from the database.
      * @param userID the user Id of the user being searched for, for error message purposes.
      * @return the user object if present.
      */
@@ -218,7 +229,8 @@ public class AccountService {
 
     /**
      * Find a user by their provenance and their provenance user id.
-     * @param userProvenance the provenance to match
+     *
+     * @param userProvenance   the provenance to match
      * @param provenanceUserId the id to search for
      * @return the found user
      */
@@ -236,7 +248,7 @@ public class AccountService {
             Optional<PiUser> returnedUser = userRepository.findByUserId(UUID.fromString(userId));
 
             returnedUser.ifPresent(value ->
-                emailMap.put(userId, Optional.ofNullable(value.getEmail()))
+                                       emailMap.put(userId, Optional.ofNullable(value.getEmail()))
             );
 
             emailMap.computeIfAbsent(userId, v -> Optional.empty());
@@ -268,11 +280,13 @@ public class AccountService {
         Map<CreationEnum, List<?>> completedAccounts = new ConcurrentHashMap<>();
 
         azureAccounts = addAzureAccounts(accountModelMapperService.createAzureUsersFromCsv(accounts),
-                                         issuerId, true);
+                                         issuerId, true
+        );
         piUserAccounts = addUsers(
             accountModelMapperService
                 .createPiUsersFromAzureAccounts(azureAccounts.get(CreationEnum.CREATED_ACCOUNTS)),
-            issuerId);
+            issuerId
+        );
 
 
         completedAccounts.put(
@@ -284,7 +298,8 @@ public class AccountService {
             Stream.concat(
                 azureAccounts.get(CreationEnum.ERRORED_ACCOUNTS).stream(),
                 piUserAccounts.get(CreationEnum.ERRORED_ACCOUNTS).stream()
-            ).distinct().collect(Collectors.toList()));
+            ).distinct().collect(Collectors.toList())
+        );
         return completedAccounts;
     }
 
@@ -292,17 +307,21 @@ public class AccountService {
                                                boolean isExisting) {
         boolean isSuccessful;
         switch (createdAccount.getRole()) {
+            case SYSTEM_ADMIN:
             case INTERNAL_ADMIN_CTSC:
             case INTERNAL_ADMIN_LOCAL:
             case INTERNAL_SUPER_ADMIN_CTSC:
             case INTERNAL_SUPER_ADMIN_LOCAL:
-                isSuccessful = publicationService.sendNotificationEmail(createdAccount.getEmail(),
-                                                                  createdAccount.getFirstName(),
-                                                                  createdAccount.getSurname());
+                isSuccessful = publicationService.sendNotificationEmail(
+                    createdAccount.getEmail(),
+                    createdAccount.getFirstName(),
+                    createdAccount.getSurname()
+                );
                 break;
             case VERIFIED:
                 isSuccessful = publicationService.sendMediaNotificationEmail(createdAccount.getEmail(),
-                                                                             fullName, isExisting);
+                                                                             fullName, isExisting
+                );
                 break;
 
             default:
@@ -313,12 +332,10 @@ public class AccountService {
     }
 
     public String getAccManDataForMiReporting() {
-        List<String> data = userRepository.getAccManDataForMI();
         StringBuilder builder = new StringBuilder(54);
-        builder.append("user_id, provenance_user_id, user_provenance, roles\n");
-        for (String line : data) {
-            builder.append(line).append('\n');
-        }
+        builder.append("user_id,provenance_user_id,user_provenance,roles").append(System.lineSeparator());
+        userRepository.getAccManDataForMI()
+            .forEach(line -> builder.append(line).append(System.lineSeparator()));
         return builder.toString();
     }
 
@@ -329,31 +346,31 @@ public class AccountService {
      * @param userId The ID of the user to delete.
      * @return Confirmation message that account has been deleted.
      */
-    public String deleteAccount(UUID userId, boolean isAadAccount) {
-        String returnMessage = "";
+    public String deleteAccount(UUID userId) {
         PiUser userToDelete = userRepository.findByUserId(userId)
             .orElseThrow(() -> new NotFoundException("User with supplied ID could not be found"));
+
         try {
-            if (isAadAccount) {
+            if (UserProvenances.PI_AAD.equals(userToDelete.getUserProvenance())) {
                 azureUserService.deleteUser(userToDelete.getProvenanceUserId());
             }
-            log.info(writeLog(
-                subscriptionService.sendSubscriptionDeletionRequest(userToDelete.getUserId().toString()))
-            );
-            userRepository.delete(userToDelete);
-            returnMessage = String.format("User with ID %s has been deleted", userToDelete.getUserId());
         } catch (AzureCustomException ex) {
-            log.error(writeLog(String.format("Error when deleting an account from azure with Provenance user id: "
-                                                 + "%s and error: %s",
-                                             userToDelete.getProvenanceUserId(), ex.getMessage())));
+            log.info(writeLog(String.format("Error when deleting an account from azure with Provenance user id: "
+                                                + "%s and error: %s",
+                                            userToDelete.getProvenanceUserId(), ex.getMessage())));
         }
-        return returnMessage;
+
+        log.info(writeLog(
+            subscriptionService.sendSubscriptionDeletionRequest(userToDelete.getUserId().toString()))
+        );
+        userRepository.delete(userToDelete);
+        return String.format("User with ID %s has been deleted", userToDelete.getUserId());
     }
 
     /**
      * Update an user account by the supplied provenance id.
      *
-     * @param userProvenance The user provenance of the user to update.
+     * @param userProvenance   The user provenance of the user to update.
      * @param provenanceUserId The provenance id of the user to update.
      * @return Confirmation message that the user account has been updated.
      */
@@ -381,6 +398,103 @@ public class AccountService {
 
         userRepository.save(userToUpdate);
         return String.format("Account with provenance %s and provenance id %s has been updated",
-                             userProvenance.name(), provenanceUserId);
+                             userProvenance.name(), provenanceUserId
+        );
+    }
+
+    /**
+     * Request a page of users that can be filtered down with the supplied parameters.
+     *
+     * @param pageable The pageable object.
+     * @param email The email to query by.
+     * @param userProvenanceId The user provenance id to query by.
+     * @param userProvenances A list of user provenances to query by.
+     * @param roles A list of roles to query by.
+     * @param userId The user id to query by.
+     * @return A page with a list of piUsers.
+     */
+    public Page<PiUser> findAllAccountsExceptThirdParty(Pageable pageable, String email, String userProvenanceId,
+                                                        List<UserProvenances> userProvenances, List<Roles> roles,
+                                                        String userId) {
+
+        // If a user ID is supplied then only find by that
+        if (!userId.isBlank()) {
+            return userRepository.findByUserIdPageable(userId, pageable);
+        }
+
+        //  If a list of user provenances are supplied then use that else use all non third party user provenances
+        List<UserProvenances> userProvenancesToQuery = ALL_NON_THIRD_PARTY_PROVENANCES;
+        if (!userProvenances.isEmpty()) {
+            userProvenancesToQuery = userProvenances;
+        }
+
+        // If a list of roles are supplied then use that else use all non third party roles
+        List<Roles> rolesToQuery = ALL_NON_THIRD_PARTY_ROLES;
+        if (!roles.isEmpty()) {
+            rolesToQuery = roles;
+        }
+
+        // If user provenance id is supplied then find by an exact match
+        String userProvenanceIdToQuery = "%%";
+        if (!userProvenanceId.isBlank()) {
+            userProvenanceIdToQuery = userProvenanceId;
+        }
+
+        return userRepository.findAllByEmailLikeIgnoreCaseAndUserProvenanceInAndRolesInAndProvenanceUserIdLike(
+            "%" + email + "%",
+            userProvenancesToQuery,
+            rolesToQuery,
+            userProvenanceIdToQuery,
+            pageable
+        );
+    }
+
+    /**
+     * Process updating a role for an account.
+     *
+     * @param userId The ID of the user to update.
+     * @param updatedRole The updated role of the user.
+     * @return A confirmation string that the user has been updated with the new role.
+     */
+    public String updateAccountRole(UUID userId, Roles updatedRole) {
+        PiUser userToUpdate = userRepository.findByUserId(userId).orElseThrow(() -> new NotFoundException(String.format(
+            "User with supplied user id: %s could not be found", userId)));
+
+        // If they are a PI AAD user then try update the users role in B2C
+        if (UserProvenances.PI_AAD.equals(userToUpdate.getUserProvenance())) {
+            try {
+                azureUserService.updateUserRole(userToUpdate.getProvenanceUserId(), updatedRole.toString());
+            } catch (AzureCustomException ex) {
+                log.info(String.format("Failed to update user with ID %s in Azure", userId));
+            }
+        }
+
+        userToUpdate.setRoles(updatedRole);
+        userRepository.save(userToUpdate);
+
+        String returnMessage = String.format("User with ID %s has been updated to a %s", userId, updatedRole);
+        log.info(returnMessage);
+
+        return returnMessage;
+    }
+
+    /**
+     * Method which will retrieve all accounts which are third party.
+     *
+     * @return The list of found PiUser accounts.
+     */
+    public List<PiUser> findAllThirdPartyAccounts() {
+        return userRepository.findAllByUserProvenance(UserProvenances.THIRD_PARTY);
+    }
+
+    /**
+     * This method retrieves a user by their ID.
+     * @param userId The user ID to retrieve
+     * @return The user that is found.
+     * @throws NotFoundException if a user is not found.
+     */
+    public PiUser getUserById(UUID userId) {
+        return userRepository.findByUserId(userId).orElseThrow(() -> new NotFoundException(String.format(
+            "User with supplied user id: %s could not be found", userId)));
     }
 }

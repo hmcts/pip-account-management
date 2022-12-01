@@ -3,16 +3,11 @@ package uk.gov.hmcts.reform.pip.account.management.service;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import uk.gov.hmcts.reform.pip.account.management.database.UserRepository;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.AzureCustomException;
 import uk.gov.hmcts.reform.pip.account.management.service.helpers.DateTimeHelper;
 
-import java.util.Collection;
-import java.util.stream.Stream;
-
-import static uk.gov.hmcts.reform.pip.account.management.model.UserProvenances.PI_AAD;
 import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
 
 @Slf4j
@@ -49,16 +44,6 @@ public class AccountVerificationService {
         this.azureUserService = azureUserService;
         this.publicationService = publicationService;
         this.accountService = accountService;
-    }
-
-    /**
-     * Scheduled job that handles the email verification and sign in notification flow.
-     */
-    @Scheduled(cron = "${cron.account-verification-check}")
-    public void processEligibleUsersForVerification() {
-        findAccountsForDeletion();
-        sendMediaUsersForVerification();
-        notifyAadAdminAndIdamUsersToSignIn();
     }
 
     /**
@@ -112,58 +97,14 @@ public class AccountVerificationService {
     }
 
     /**
-     * Method that gets all AAD admin users who last signed in at least 76 days (by default) ago, and gets all
-     * IDAM users who last signed in at least 118 days (by default) ago.
-     * Then send their details on to publication services to send them a notification email.
-     */
-    private void notifyAadAdminAndIdamUsersToSignIn() {
-        Stream.of(
-                userRepository.findAadAdminUsersByLastSignedInDate(aadAdminAccountSignInNotificationDays),
-                userRepository.findIdamUsersByLastSignedInDate(idamAccountSignInNotificationDays))
-            .flatMap(Collection::stream)
-            .forEach(user -> {
-                try {
-                    String name = PI_AAD.equals(user.getUserProvenance())
-                        ? azureUserService.getUser(user.getEmail()).givenName
-                        : user.getForenames() + " " + user.getSurname();
-                    log.info(writeLog(publicationService.sendInactiveAccountSignInNotificationEmail(
-                        user.getEmail(),
-                        name,
-                        user.getUserProvenance(),
-                        DateTimeHelper.localDateTimeToDateString(user.getLastSignedInDate()
-                    ))));
-                } catch (AzureCustomException ex) {
-                    log.error(writeLog("Error when getting user from azure: " + ex.getMessage()));
-                }
-            });
-    }
-
-    /**
-     * Method that gets all media users who have not verified their account (default to 365 days), and AAD admin and
-     * IDAM users who have not signed in to their account (default to 90 days for AAD admin and 128 days for IDAM).
-     * Account service handles the deletion of their AAD, P&I user and subscriptions.
-     */
-    private void findAccountsForDeletion() {
-        Stream.of(
-                userRepository.findVerifiedUsersByLastVerifiedDate(mediaAccountDeletionDays),
-                userRepository.findAadAdminUsersByLastSignedInDate(aadAdminAccountDeletionDays),
-                userRepository.findIdamUsersByLastSignedInDate(idamAccountDeletionDays))
-            .flatMap(Collection::stream)
-            .forEach(
-                user -> log.info(writeLog(accountService.deleteAccount(user.getUserId(),
-                                                              PI_AAD.equals(user.getUserProvenance()))))
-            );
-    }
-
-    /**
      * Method that gets all media users who have not verified their account (default to 365 days).
      * Account service handles the deletion of their AAD, P&I user and subscriptions.
      */
     public void findMediaAccountsForDeletion() {
         userRepository.findVerifiedUsersByLastVerifiedDate(mediaAccountDeletionDays)
             .forEach(user -> log.info(writeLog(accountService.deleteAccount(
-                user.getUserId(), PI_AAD.equals(user.getUserProvenance())
-            ))));
+                user.getUserId())
+            )));
     }
 
     /**
@@ -173,8 +114,8 @@ public class AccountVerificationService {
     public void findAdminAccountsForDeletion() {
         userRepository.findAadAdminUsersByLastSignedInDate(aadAdminAccountDeletionDays)
             .forEach(user -> log.info(writeLog(accountService.deleteAccount(
-                user.getUserId(), PI_AAD.equals(user.getUserProvenance())
-            ))));
+                user.getUserId())
+            )));
     }
 
     /**
@@ -184,8 +125,8 @@ public class AccountVerificationService {
     public void findIdamAccountsForDeletion() {
         userRepository.findIdamUsersByLastSignedInDate(idamAccountDeletionDays)
             .forEach(user -> log.info(writeLog(accountService.deleteAccount(
-                user.getUserId(), PI_AAD.equals(user.getUserProvenance())
-            ))));
+                user.getUserId())
+            )));
     }
 }
 
