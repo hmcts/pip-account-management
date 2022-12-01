@@ -15,6 +15,7 @@ import java.util.Optional;
 import java.util.UUID;
 import javax.transaction.Transactional;
 
+@SuppressWarnings("PMD.TooManyMethods")
 public interface UserRepository extends JpaRepository<PiUser, Long> {
     @Query(value = "SELECT * FROM pi_user WHERE provenance_user_id=:provUserId AND user_provenance=:userProv",
         nativeQuery = true)
