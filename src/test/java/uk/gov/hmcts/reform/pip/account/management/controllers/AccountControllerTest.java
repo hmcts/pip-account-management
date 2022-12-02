@@ -339,19 +339,21 @@ class AccountControllerTest {
 
     @Test
     void testCreateSystemAdminAccount() {
-        SystemAdminAccount testAccount = new SystemAdminAccount(TEST_EMAIL_1,
-                                                                "Test", "User");
-        String testIssuerId = "1234";
         PiUser testUser = new PiUser();
         testUser.setEmail(TEST_EMAIL_1);
         testUser.setRoles(Roles.SYSTEM_ADMIN);
         testUser.setUserProvenance(UserProvenances.PI_AAD);
+
+        SystemAdminAccount testAccount = new SystemAdminAccount(TEST_EMAIL_1,
+                                                                "Test", "User");
+
+        String testIssuerId = "1234";
         when(systemAdminAccountService.addSystemAdminAccount(testAccount, testIssuerId)).thenReturn(testUser);
 
-       ResponseEntity<? extends PiUser> response = accountController.createSystemAdminAccount(testIssuerId,
-                                                                                              testAccount);
+        ResponseEntity<? extends PiUser> response =
+            accountController.createSystemAdminAccount(testIssuerId, testAccount);
 
-       assertEquals(HttpStatus.OK, response.getStatusCode(), STATUS_CODE_MATCH);
-       assertEquals(testUser, response.getBody(), "Should return the created piUser");
+        assertEquals(HttpStatus.OK, response.getStatusCode(), STATUS_CODE_MATCH);
+        assertEquals(testUser, response.getBody(), "Should return the created piUser");
     }
 }

@@ -16,13 +16,13 @@ import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredSystemAdm
 import uk.gov.hmcts.reform.pip.model.system.admin.ActionResult;
 import uk.gov.hmcts.reform.pip.model.system.admin.CreateSystemAdminAction;
 
-import javax.validation.ConstraintViolation;
-import javax.validation.Validator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import javax.validation.ConstraintViolation;
+import javax.validation.Validator;
 
 import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
 
@@ -53,7 +53,7 @@ public class SystemAdminAccountService {
     }
 
     /**
-     * This method deals with the creation of a system admin account
+     * This method deals with the creation of a system admin account.
      * @param account The system admin account to be created.
      * @param issuerId The ID of the user creating the account.
      * @return  The PiUser of the created system admin account.
@@ -82,16 +82,18 @@ public class SystemAdminAccountService {
     }
 
     /**
-     * This method handles the logging and publishing that a new system admin account has been created
+     * This method handles the logging and publishing that a new system admin account has been created.
      * @param systemAdminAccount The system admin account that has been created
      * @param adminId The ID of the admin user who is creating the account.
      * @param name The name of the admin user who is creating the account
      */
-    public void handleNewSystemAdminAccountAction(SystemAdminAccount systemAdminAccount, String adminId, ActionResult result, String name) {
+    public void handleNewSystemAdminAccountAction(SystemAdminAccount systemAdminAccount, String adminId,
+                                                  ActionResult result, String name) {
+        log.info(writeLog(UUID.fromString(adminId),
+                          "has attempted to create a System Admin account, which has: " + result.toString()));
+
         List<String> existingAdminEmails = userRepository.findByRoles(Roles.SYSTEM_ADMIN)
             .stream().map(PiUser::getEmail).collect(Collectors.toList());
-
-        log.info(writeLog(UUID.fromString(adminId), "has attempted to create a System Admin account, which has: " + result.toString()));
 
         var createSystemAdminAction = new CreateSystemAdminAction();
         createSystemAdminAction.setAccountEmail(systemAdminAccount.getEmail());
@@ -138,7 +140,7 @@ public class SystemAdminAccountService {
     }
 
     /**
-     * Method to retrieve the name of the admin user, and also throw an exception if the user is not a SYSTEM_ADMIN
+     * Method to retrieve the name of the admin user, and also throw an exception if the user is not a SYSTEM_ADMIN.
      * @param issuerId The ID of the admin user
      * @return The name of the admin user.
      */
@@ -148,8 +150,7 @@ public class SystemAdminAccountService {
         try {
             if (adminUser.isPresent() && adminUser.get().getRoles().equals(Roles.SYSTEM_ADMIN)) {
                 String email = adminUser.get().getEmail();
-                User user = azureUserService.getUser(email);
-                return user.displayName;
+                return azureUserService.getUser(email).displayName;
             }
         } catch (AzureCustomException e) {
             log.error(writeLog(UUID.fromString(issuerId), "Error while retrieving system admin users details"));

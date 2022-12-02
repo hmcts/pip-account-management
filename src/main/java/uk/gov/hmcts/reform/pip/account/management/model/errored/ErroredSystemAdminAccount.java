@@ -1,7 +1,6 @@
 package uk.gov.hmcts.reform.pip.account.management.model.errored;
 
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
