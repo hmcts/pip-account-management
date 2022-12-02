@@ -14,6 +14,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import uk.gov.hmcts.reform.pip.account.management.Application;
 import uk.gov.hmcts.reform.pip.account.management.config.AzureConfigurationClientTest;
+import uk.gov.hmcts.reform.pip.model.system.admin.ActionResult;
+import uk.gov.hmcts.reform.pip.model.system.admin.CreateSystemAdminAction;
+import uk.gov.hmcts.reform.pip.model.system.admin.SystemAdminAction;
 
 import java.io.IOException;
 
@@ -171,5 +174,27 @@ class PublicationServiceTest {
         assertTrue(publicationService.sendInactiveAccountSignInNotificationEmail(EMAIL, FULL_NAME, LAST_SIGNED_IN_DATE)
                        .contains("Inactive user sign-in notification email failed to send with error:"),
                    "No error was sent back");
+    }
+
+    @Test
+    void testSendSystemAdminAccountAction() {
+        var testSystemAdminAction = new CreateSystemAdminAction();
+        testSystemAdminAction.setAccountEmail("test@email.com");
+        testSystemAdminAction.setActionResult(ActionResult.SUCCEEDED);
+        mockPublicationServicesEndpoint.enqueue(new MockResponse().setBody(SENT_MESSAGE));
+
+        assertEquals(SENT_MESSAGE, publicationService.sendSystemAdminAccountAction(testSystemAdminAction),
+                     "Notification email not sent");
+    }
+
+    @Test
+    void testFailedSendSystemAdminAccountAction() {
+        var testSystemAdminAction = new CreateSystemAdminAction();
+        testSystemAdminAction.setAccountEmail("test@email.com");
+        testSystemAdminAction.setActionResult(ActionResult.FAILED);
+        mockPublicationServicesEndpoint.enqueue(new MockResponse().setResponseCode(400));
+
+        assertTrue(publicationService.sendSystemAdminAccountAction(testSystemAdminAction).contains(
+            "Publishing of system admin account action failed with error:"), "No error was sent back");
     }
 }
