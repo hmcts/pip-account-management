@@ -158,7 +158,7 @@ class AccountServiceTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"INTERNAL_ADMIN_CTSC", "SYSTEM_ADMIN"})
+    @ValueSource(strings = {"INTERNAL_ADMIN_CTSC", "INTERNAL_SUPER_ADMIN_CTSC"})
     void testAccountCreated(String role) throws AzureCustomException {
         azureAccount.setRole(Roles.valueOf(role));
 
@@ -270,6 +270,35 @@ class AccountServiceTest {
                      "Account should have error message set when failed"
         );
         assertEquals(0, createdAccounts.get(CreationEnum.CREATED_ACCOUNTS).size(),
+                     "Map should have no created accounts"
+        );
+    }
+
+    @Test
+    void testAccountNotCreatedEmailNotSentWhenSystemAdmin() throws AzureCustomException {
+        azureAccount.setRole(Roles.SYSTEM_ADMIN);
+        when(validator.validate(argThat(sub -> ((AzureAccount) sub).getEmail().equals(azureAccount.getEmail()))))
+            .thenReturn(Set.of());
+
+        when(azureUserService.getUser(EMAIL)).thenReturn(null);
+
+        when(azureUserService.createUser(argThat(user -> user.getEmail().equals(azureAccount.getEmail()))))
+            .thenReturn(expectedUser);
+
+        Map<CreationEnum, List<? extends AzureAccount>> createdAccounts =
+            accountService.addAzureAccounts(List.of(azureAccount), ISSUER_ID, FALSE);
+
+        assertTrue(createdAccounts.containsKey(CreationEnum.ERRORED_ACCOUNTS), ERRORED_ACCOUNTS_VALIDATION_MESSAGE);
+        List<? extends AzureAccount> accounts = createdAccounts.get(CreationEnum.ERRORED_ACCOUNTS);
+        assertEquals(azureAccount.getEmail(), accounts.get(0).getEmail(), EMAIL_VALIDATION_MESSAGE);
+        assertEquals("Account has been successfully created, however email has failed to send.",
+                     ((ErroredAzureAccount) accounts.get(0)).getErrorMessages().get(0),
+                     "Account should have error message set when failed"
+        );
+
+        //Currently the existing process puts errored emails into both created + errored, which is why the count here
+        //is 1
+        assertEquals(1, createdAccounts.get(CreationEnum.CREATED_ACCOUNTS).size(),
                      "Map should have no created accounts"
         );
     }

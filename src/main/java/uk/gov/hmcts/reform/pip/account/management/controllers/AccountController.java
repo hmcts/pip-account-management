@@ -59,6 +59,8 @@ public class AccountController {
     @Autowired
     private AccountVerificationService accountVerificationService;
 
+    private static final String ISSUER_ID = "x-issuer-id";
+
     private static final String NO_CONTENT_MESSAGE = "The request has been successfully fulfilled";
     private static final String NOT_AUTHORIZED_MESSAGE = "User has not been authorized";
 
@@ -81,7 +83,7 @@ public class AccountController {
     })
     @PostMapping("/add/azure")
     public ResponseEntity<Map<CreationEnum, List<? extends AzureAccount>>> createAzureAccount(
-        @RequestHeader("x-issuer-id") String issuerId,
+        @RequestHeader(ISSUER_ID) String issuerId,
         @RequestBody List<AzureAccount> azureAccounts) {
         return ResponseEntity.ok(accountService.addAzureAccounts(azureAccounts, issuerId, false));
     }
@@ -101,7 +103,7 @@ public class AccountController {
     @Operation(summary = "Add a user to the P&I postgres database")
     @PostMapping("/add/pi")
     public ResponseEntity<Map<CreationEnum, List<?>>> createUsers(
-        @RequestHeader("x-issuer-id") String issuerId,
+        @RequestHeader(ISSUER_ID) String issuerId,
         @RequestBody List<PiUser> users) {
         return ResponseEntity.status(HttpStatus.CREATED).body(accountService.addUsers(users, issuerId));
     }
@@ -164,7 +166,7 @@ public class AccountController {
     @Operation(summary = "Create media accounts via CSV upload")
     @PostMapping("/media-bulk-upload")
     public ResponseEntity<Map<CreationEnum, List<?>>> createMediaAccountsBulk(
-        @RequestHeader("x-issuer-id") String issuerId, @RequestPart MultipartFile mediaList) {
+        @RequestHeader(ISSUER_ID) String issuerId, @RequestPart MultipartFile mediaList) {
         return ResponseEntity.ok(accountService.uploadMediaFromCsv(mediaList, issuerId));
     }
 
@@ -315,7 +317,6 @@ public class AccountController {
 
     /**
      * POST endpoint that deals with creating a new System Admin Account (including PI and Azure)
-     *
      * This will also trigger any welcome emails.
      *
      * @param issuerId The id of the user creating the accounts.
@@ -328,7 +329,7 @@ public class AccountController {
     })
     @PostMapping("/add/system-admin")
     public ResponseEntity<? extends PiUser> createSystemAdminAccount(
-        @RequestHeader("x-issuer-id") String issuerId,
+        @RequestHeader(ISSUER_ID) String issuerId,
         @RequestBody SystemAdminAccount account) {
         return ResponseEntity.ok(systemAdminAccountService.addSystemAdminAccount(account, issuerId));
     }
