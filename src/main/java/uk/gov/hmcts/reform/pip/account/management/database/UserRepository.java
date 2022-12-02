@@ -3,6 +3,7 @@ package uk.gov.hmcts.reform.pip.account.management.database;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
@@ -12,7 +13,9 @@ import uk.gov.hmcts.reform.pip.account.management.model.UserProvenances;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import javax.transaction.Transactional;
 
+@SuppressWarnings("PMD.TooManyMethods")
 public interface UserRepository extends JpaRepository<PiUser, Long> {
     @Query(value = "SELECT * FROM pi_user WHERE provenance_user_id=:provUserId AND user_provenance=:userProv",
         nativeQuery = true)
@@ -57,4 +60,10 @@ public interface UserRepository extends JpaRepository<PiUser, Long> {
 
     @Query(value = "SELECT * FROM pi_user WHERE CAST(user_id AS TEXT) = :userId", nativeQuery = true)
     Page<PiUser> findByUserIdPageable(@Param("userId") String userId, Pageable pageable);
+
+    @Modifying
+    @Transactional
+    @Query(value = "REFRESH MATERIALIZED VIEW sdp_mat_view_pi_user", nativeQuery = true)
+    void refreshAccountView();
+
 }
