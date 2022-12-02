@@ -191,7 +191,7 @@ dependencies {
   // Include Azure identity for authentication
   implementation group: 'com.azure', name: 'azure-identity', version: '1.7.1'
 
-  implementation group: 'org.springdoc', name: 'springdoc-openapi-ui', version: '1.6.12'
+  implementation group: 'org.springdoc', name: 'springdoc-openapi-ui', version: '1.6.13'
 
   implementation group: 'com.github.hmcts.java-logging', name: 'logging', version: reformLoggingVersion
   implementation group: 'com.github.hmcts.java-logging', name: 'logging-appinsights', version: reformLoggingVersion
