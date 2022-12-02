@@ -17,13 +17,13 @@ import uk.gov.hmcts.reform.pip.account.management.model.UserProvenances;
 import uk.gov.hmcts.reform.pip.model.system.admin.ActionResult;
 import uk.gov.hmcts.reform.pip.model.system.admin.CreateSystemAdminAction;
 
-import javax.validation.ConstraintViolation;
-import javax.validation.Path;
-import javax.validation.Validator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import javax.validation.ConstraintViolation;
+import javax.validation.Path;
+import javax.validation.Validator;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -86,7 +86,7 @@ class SystemAdminAccountServiceTest {
 
     @Test
     void testAddSystemAdminAccount() throws AzureCustomException {
-        when(azureUserService.createUser(argThat(user -> user.getEmail().equals(EMAIL))))
+        when(azureUserService.createUser(argThat(user -> EMAIL.equals(user.getEmail()))))
             .thenReturn(expectedUser);
         when(userRepository.save(any())).thenReturn(expectedPiUser);
         when(publicationService.sendNotificationEmail(EMAIL, FORENAME, SURNAME)).thenReturn(Boolean.TRUE);
@@ -105,7 +105,7 @@ class SystemAdminAccountServiceTest {
         when(userRepository.findByUserId(any()))
             .thenReturn(Optional.ofNullable(expectedPiUser));
         when(azureUserService.getUser(EMAIL)).thenReturn(expectedUser);
-        when(azureUserService.createUser(argThat(user -> user.getEmail().equals(EMAIL))))
+        when(azureUserService.createUser(argThat(user -> EMAIL.equals(user.getEmail()))))
             .thenThrow(new AzureCustomException("Test error"));
 
         SystemAdminAccountException systemAdminAccountException =

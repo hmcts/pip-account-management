@@ -35,11 +35,11 @@ import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
 public class SystemAdminAccountService {
 
 
-    private Validator validator;
-    private AzureUserService azureUserService;
-    private UserRepository userRepository;
-    private PublicationService publicationService;
-    private Integer maxSystemAdminValue;
+    private final Validator validator;
+    private final AzureUserService azureUserService;
+    private final UserRepository userRepository;
+    private final PublicationService publicationService;
+    private final Integer maxSystemAdminValue;
 
     @Autowired
     public SystemAdminAccountService(Validator validator, AzureUserService azureUserService,
