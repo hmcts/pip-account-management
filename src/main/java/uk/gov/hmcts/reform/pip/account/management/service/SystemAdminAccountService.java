@@ -34,20 +34,23 @@ import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
 @Slf4j
 public class SystemAdminAccountService {
 
-    @Autowired
-    Validator validator;
+
+    private final Validator validator;
+    private final AzureUserService azureUserService;
+    private final UserRepository userRepository;
+    private final PublicationService publicationService;
+    private final Integer maxSystemAdminValue;
 
     @Autowired
-    AzureUserService azureUserService;
-
-    @Autowired
-    UserRepository userRepository;
-
-    @Autowired
-    PublicationService publicationService;
-
-    @Value("${admin.max-system-admin}")
-    private Integer maxSystemAdminValue;
+    public SystemAdminAccountService(Validator validator, AzureUserService azureUserService,
+                                     UserRepository userRepository, PublicationService publicationService,
+                                     @Value("${admin.max-system-admin}")Integer maxSystemAdminValue) {
+        this.validator = validator;
+        this.azureUserService = azureUserService;
+        this.userRepository = userRepository;
+        this.publicationService = publicationService;
+        this.maxSystemAdminValue = maxSystemAdminValue;
+    }
 
     /**
      * This method deals with the creation of a system admin account.
@@ -94,8 +97,6 @@ public class SystemAdminAccountService {
 
         var createSystemAdminAction = new CreateSystemAdminAction();
         createSystemAdminAction.setAccountEmail(systemAdminAccount.getEmail());
-        createSystemAdminAction.setRequesterName(
-            systemAdminAccount.getFirstName() + " " + systemAdminAccount.getSurname());
         createSystemAdminAction.setEmailList(existingAdminEmails);
         createSystemAdminAction.setRequesterName(name);
         createSystemAdminAction.setActionResult(result);
@@ -129,8 +130,8 @@ public class SystemAdminAccountService {
             throw new SystemAdminAccountException(erroredSystemAdminAccount);
         }
 
-        List<PiUser> systemAdminusers = userRepository.findByRoles(Roles.SYSTEM_ADMIN);
-        if (systemAdminusers.size() > maxSystemAdminValue) {
+        List<PiUser> systemAdminUsers = userRepository.findByRoles(Roles.SYSTEM_ADMIN);
+        if (systemAdminUsers.size() >= maxSystemAdminValue) {
             var erroredSystemAdminAccount = new ErroredSystemAdminAccount(account);
             erroredSystemAdminAccount.setAboveMaxSystemAdmin(true);
             handleNewSystemAdminAccountAction(account, issuerId, ActionResult.ATTEMPTED, name);
