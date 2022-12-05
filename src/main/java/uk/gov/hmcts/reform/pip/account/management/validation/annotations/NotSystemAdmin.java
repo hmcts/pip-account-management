@@ -1,7 +1,6 @@
 package uk.gov.hmcts.reform.pip.account.management.validation.annotations;
 
 import uk.gov.hmcts.reform.pip.account.management.validation.validator.NotSystemAdminValidatorAzureAccount;
-import uk.gov.hmcts.reform.pip.account.management.validation.validator.NotSystemAdminValidatorPiUser;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -15,7 +14,7 @@ import javax.validation.Payload;
  */
 @Target({ElementType.METHOD, ElementType.FIELD, ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
-@Constraint(validatedBy = {NotSystemAdminValidatorPiUser.class, NotSystemAdminValidatorAzureAccount.class})
+@Constraint(validatedBy = {NotSystemAdminValidatorAzureAccount.class})
 public @interface NotSystemAdmin {
 
     String message() default "System admins must be created via the /account/add/system-admin endpoint";

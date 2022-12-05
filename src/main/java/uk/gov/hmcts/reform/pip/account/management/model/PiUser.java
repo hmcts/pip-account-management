@@ -7,7 +7,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Type;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-import uk.gov.hmcts.reform.pip.account.management.validation.annotations.NotSystemAdmin;
 import uk.gov.hmcts.reform.pip.account.management.validation.annotations.PiEmailConditionalValidation;
 import uk.gov.hmcts.reform.pip.account.management.validation.annotations.ValidProvenanceUserId;
 
@@ -34,7 +33,6 @@ import javax.validation.constraints.NotNull;
 @ValidProvenanceUserId
 @PiEmailConditionalValidation
 @EntityListeners(AuditingEntityListener.class)
-@NotSystemAdmin
 public class PiUser {
 
     /**

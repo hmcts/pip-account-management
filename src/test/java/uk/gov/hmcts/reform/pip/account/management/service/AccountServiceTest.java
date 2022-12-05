@@ -921,4 +921,18 @@ class AccountServiceTest {
 
         assertEquals(page, response, "Returned page did not match expected");
     }
+
+    @Test
+    void shouldNotCreateSystemAdminAccountViaPiService() {
+        piUser.setRoles(Roles.SYSTEM_ADMIN);
+        Map<CreationEnum, List<?>> returnedUsers = accountService.addUsers(List.of(piUser), ISSUER_ID);
+        assertEquals(0, returnedUsers.get(CreationEnum.CREATED_ACCOUNTS).size(),
+                     "Number of successful accounts does not match");
+        assertEquals(1, returnedUsers.get(CreationEnum.ERRORED_ACCOUNTS).size(),
+                     "Number of errored accounts does not match");
+
+        ErroredPiUser erroredPiUser = (ErroredPiUser) returnedUsers.get(CreationEnum.ERRORED_ACCOUNTS).get(0);
+        assertEquals("System admins must be created via the /account/add/system-admin endpoint",
+                     erroredPiUser.getErrorMessages().get(0), "Error message is not correct");
+    }
 }

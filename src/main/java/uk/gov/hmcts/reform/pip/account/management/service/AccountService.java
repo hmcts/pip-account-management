@@ -174,6 +174,15 @@ public class AccountService {
             user.setLastSignedInDate(localDateTime);
             user.setCreatedDate(localDateTime);
             Set<ConstraintViolation<PiUser>> constraintViolationSet = validator.validate(user);
+
+            if (user.getRoles().equals(Roles.SYSTEM_ADMIN)) {
+                ErroredPiUser erroredUser = new ErroredPiUser(user);
+                erroredUser.setErrorMessages(List.of(
+                    "System admins must be created via the /account/add/system-admin endpoint"));
+                erroredAccounts.add(erroredUser);
+                continue;
+            }
+
             if (!constraintViolationSet.isEmpty()) {
                 ErroredPiUser erroredUser = new ErroredPiUser(user);
                 erroredUser.setErrorMessages(constraintViolationSet
