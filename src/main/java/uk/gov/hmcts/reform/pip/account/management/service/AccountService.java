@@ -343,22 +343,23 @@ public class AccountService {
      * Delete a user account by the supplied email.
      * This deletes the user from AAD, our user table and subscriptions.
      *
-     * @param email The email of the user to delete.
+     * @param userId The ID of the user to delete.
      * @return Confirmation message that account has been deleted.
      */
-    public String deleteAccount(String email, boolean isAadAccount) {
-        PiUser userToDelete = userRepository.findByEmail(email)
-            .orElseThrow(() -> new NotFoundException("User with supplied email could not be found"));
+    public String deleteAccount(UUID userId) {
+        PiUser userToDelete = userRepository.findByUserId(userId)
+            .orElseThrow(() -> new NotFoundException("User with supplied ID could not be found"));
 
-        if (isAadAccount) {
-            try {
+        try {
+            if (UserProvenances.PI_AAD.equals(userToDelete.getUserProvenance())) {
                 azureUserService.deleteUser(userToDelete.getProvenanceUserId());
-            } catch (AzureCustomException ex) {
-                log.info(writeLog(String.format("Error when deleting an account from azure with Provenance user id: "
-                                                    + "%s and error: %s",
-                                                userToDelete.getProvenanceUserId(), ex.getMessage())));
             }
+        } catch (AzureCustomException ex) {
+            log.info(writeLog(String.format("Error when deleting an account from azure with Provenance user id: "
+                                                + "%s and error: %s",
+                                            userToDelete.getProvenanceUserId(), ex.getMessage())));
         }
+
         log.info(writeLog(
             subscriptionService.sendSubscriptionDeletionRequest(userToDelete.getUserId().toString()))
         );
@@ -446,18 +447,6 @@ public class AccountService {
             userProvenanceIdToQuery,
             pageable
         );
-    }
-
-    /**
-     * Process a manual user deletion request.
-     *
-     * @param userId The ID of the user to delete.
-     */
-    public void processManualAccountDeletion(UUID userId) {
-        PiUser userToDelete = userRepository.findByUserId(userId).orElseThrow(() -> new NotFoundException(String.format(
-            "User with supplied user id: %s could not be found", userId)));
-
-        deleteAccount(userToDelete.getEmail(), UserProvenances.PI_AAD.equals(userToDelete.getUserProvenance()));
     }
 
     /**

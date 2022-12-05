@@ -8,14 +8,11 @@ import uk.gov.hmcts.reform.pip.account.management.database.UserRepository;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.AzureCustomException;
 import uk.gov.hmcts.reform.pip.account.management.service.helpers.DateTimeHelper;
 
-import static uk.gov.hmcts.reform.pip.account.management.model.UserProvenances.PI_AAD;
 import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
 
 @Slf4j
 @Service
 public class AccountVerificationService {
-    // TODO: Needs to be replaced with actual user name from IDAM after it is implemented
-    private static final String PLACEHOLDER_IDAM_USER_NAME = "IdamUserName";
 
     private final UserRepository userRepository;
     private final AzureUserService azureUserService;
@@ -77,6 +74,7 @@ public class AccountVerificationService {
                     log.info(writeLog(publicationService.sendInactiveAccountSignInNotificationEmail(
                         user.getEmail(),
                         azureUserService.getUser(user.getEmail()).givenName,
+                        user.getUserProvenance(),
                         DateTimeHelper.localDateTimeToDateString(user.getLastSignedInDate()))));
                 } catch (AzureCustomException ex) {
                     log.error(writeLog("Error when getting user from azure: " + ex.getMessage()));
@@ -92,7 +90,8 @@ public class AccountVerificationService {
         userRepository.findIdamUsersByLastSignedInDate(idamAccountSignInNotificationDays)
             .forEach(user -> log.info(writeLog(publicationService.sendInactiveAccountSignInNotificationEmail(
                 user.getEmail(),
-                PLACEHOLDER_IDAM_USER_NAME,
+                user.getForenames() + " " + user.getSurname(),
+                user.getUserProvenance(),
                 DateTimeHelper.localDateTimeToDateString(user.getLastSignedInDate()))))
             );
     }
@@ -104,8 +103,8 @@ public class AccountVerificationService {
     public void findMediaAccountsForDeletion() {
         userRepository.findVerifiedUsersByLastVerifiedDate(mediaAccountDeletionDays)
             .forEach(user -> log.info(writeLog(accountService.deleteAccount(
-                user.getEmail(), PI_AAD.equals(user.getUserProvenance())
-            ))));
+                user.getUserId())
+            )));
     }
 
     /**
@@ -115,8 +114,8 @@ public class AccountVerificationService {
     public void findAdminAccountsForDeletion() {
         userRepository.findAadAdminUsersByLastSignedInDate(aadAdminAccountDeletionDays)
             .forEach(user -> log.info(writeLog(accountService.deleteAccount(
-                user.getEmail(), PI_AAD.equals(user.getUserProvenance())
-            ))));
+                user.getUserId())
+            )));
     }
 
     /**
@@ -126,8 +125,8 @@ public class AccountVerificationService {
     public void findIdamAccountsForDeletion() {
         userRepository.findIdamUsersByLastSignedInDate(idamAccountDeletionDays)
             .forEach(user -> log.info(writeLog(accountService.deleteAccount(
-                user.getEmail(), PI_AAD.equals(user.getUserProvenance())
-            ))));
+                user.getUserId())
+            )));
     }
 }
 

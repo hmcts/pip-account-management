@@ -30,7 +30,7 @@ public interface UserRepository extends JpaRepository<PiUser, Long> {
 
 
     @Query(value = "SELECT * FROM pi_user WHERE CAST(last_verified_date AS DATE) = CURRENT_DATE - (interval '1' day)"
-        + " * :daysAgo AND roles = 'VERIFIED'", nativeQuery = true)
+        + " * :daysAgo AND user_provenance = 'PI_AAD' AND roles = 'VERIFIED'", nativeQuery = true)
     List<PiUser> findVerifiedUsersByLastVerifiedDate(@Param("daysAgo") int daysSinceLastVerified);
 
     @Query(value = "SELECT * FROM pi_user WHERE CAST(last_signed_in_date AS DATE) = CURRENT_DATE - (interval '1' day)"
