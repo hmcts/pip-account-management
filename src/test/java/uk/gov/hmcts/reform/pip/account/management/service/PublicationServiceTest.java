@@ -14,6 +14,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import uk.gov.hmcts.reform.pip.account.management.Application;
 import uk.gov.hmcts.reform.pip.account.management.config.AzureConfigurationClientTest;
+import uk.gov.hmcts.reform.pip.account.management.model.UserProvenances;
 import uk.gov.hmcts.reform.pip.model.system.admin.ActionResult;
 import uk.gov.hmcts.reform.pip.model.system.admin.CreateSystemAdminAction;
 
@@ -162,6 +163,7 @@ class PublicationServiceTest {
         mockPublicationServicesEndpoint.enqueue(new MockResponse().setBody(SENT_MESSAGE));
 
         assertEquals(SENT_MESSAGE, publicationService.sendInactiveAccountSignInNotificationEmail(EMAIL, FULL_NAME,
+                                                                                                 UserProvenances.PI_AAD,
                                                                                                  LAST_SIGNED_IN_DATE),
                      "Notification email not sent");
     }
@@ -170,7 +172,9 @@ class PublicationServiceTest {
     void testFailedAccountSignInNotificationEmail() {
         mockPublicationServicesEndpoint.enqueue(new MockResponse().setResponseCode(400));
 
-        assertTrue(publicationService.sendInactiveAccountSignInNotificationEmail(EMAIL, FULL_NAME, LAST_SIGNED_IN_DATE)
+        assertTrue(publicationService.sendInactiveAccountSignInNotificationEmail(EMAIL, FULL_NAME,
+                                                                                 UserProvenances.PI_AAD,
+                                                                                 LAST_SIGNED_IN_DATE)
                        .contains("Inactive user sign-in notification email failed to send with error:"),
                    "No error was sent back");
     }

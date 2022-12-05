@@ -300,7 +300,7 @@ public class AccountController {
     @Operation(summary = "Delete a user by their id")
     @DeleteMapping("/delete/{userId}")
     public ResponseEntity<String> deleteAccount(@PathVariable UUID userId) {
-        accountService.processManualAccountDeletion(userId);
+        accountService.deleteAccount(userId);
         return ResponseEntity.ok("User deleted");
     }
 
