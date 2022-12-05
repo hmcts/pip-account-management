@@ -11,6 +11,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import uk.gov.hmcts.reform.pip.account.management.model.MediaApplication;
+import uk.gov.hmcts.reform.pip.account.management.model.UserProvenances;
 
 import java.util.List;
 
@@ -28,6 +29,7 @@ public class PublicationService {
     private static final String WELCOME_EMAIL_URL = "/notify/welcome-email";
     private static final String EMAIL = "email";
     private static final String FULL_NAME = "fullName";
+    private static final String USER_PROVENANCE = "userProvenance";
     private static final String LAST_SIGNED_IN_DATE = "lastSignedInDate";
 
     @Autowired
@@ -132,11 +134,12 @@ public class PublicationService {
     }
 
     public String sendInactiveAccountSignInNotificationEmail(String emailAddress, String fullName,
-                                                             String lastSignedInDate) {
+                                                             UserProvenances userProvenances, String lastSignedInDate) {
         try {
             JSONObject body = new JSONObject();
             body.put(EMAIL, emailAddress);
             body.put(FULL_NAME, fullName);
+            body.put(USER_PROVENANCE, userProvenances.toString());
             body.put(LAST_SIGNED_IN_DATE, lastSignedInDate);
             return webClient.post().uri(url + "/notify/user/sign-in")
                 .body(BodyInserters.fromValue(body)).retrieve()
