@@ -41,7 +41,8 @@ public interface UserRepository extends JpaRepository<PiUser, Long> {
         + " * :daysAgo AND (user_provenance = 'CFT_IDAM' OR user_provenance = 'CRIME_IDAM')", nativeQuery = true)
     List<PiUser> findIdamUsersByLastSignedInDate(@Param("daysAgo") int daysSinceLastSignedIn);
 
-    Optional<PiUser> findByEmail(String email);
+    Optional<PiUser> findByEmailIgnoreCaseAndUserProvenanceAndRolesIn(String email, UserProvenances userProvenances,
+                                                                      List<Roles> roles);
 
     Optional<PiUser> findByProvenanceUserIdAndUserProvenance(String provenanceUserId, UserProvenances userProvenance);
 

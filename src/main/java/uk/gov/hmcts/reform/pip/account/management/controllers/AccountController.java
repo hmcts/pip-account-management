@@ -307,4 +307,17 @@ public class AccountController {
     public ResponseEntity<String> updateAccountById(@PathVariable UUID userId, @PathVariable Roles role) {
         return ResponseEntity.ok(accountService.updateAccountRole(userId, role));
     }
+
+    @ApiResponses({
+        @ApiResponse(responseCode = OK_CODE, description = "{PiUser}"),
+        @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE),
+        @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description = "No user found with the "
+            + "email: {email} and provenance {provenance}")
+    })
+    @Operation(summary = "Get an Admin user (excluding system admin) based on their email and provenance")
+    @GetMapping("/admin/{email}/{provenance}")
+    public ResponseEntity<PiUser> getAdminUserByEmailAndProvenance(@PathVariable String email,
+                                                              @PathVariable UserProvenances provenance) {
+        return ResponseEntity.ok(accountService.getAdminUserByEmailAndProvenance(email, provenance));
+    }
 }
