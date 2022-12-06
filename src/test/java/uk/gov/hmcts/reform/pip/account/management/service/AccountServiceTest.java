@@ -63,6 +63,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static uk.gov.hmcts.reform.pip.account.management.model.Roles.ALL_NON_RESTRICTED_ADMIN_ROLES;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -855,5 +856,40 @@ class AccountServiceTest {
                 any(), any(), any(), any(), any());
 
         assertEquals(page, response, "Returned page did not match expected");
+    }
+
+    @Test
+    void testGetAdminUserByEmailAndProvenance() {
+        PiUser user = new PiUser();
+        user.setEmail(EMAIL);
+        user.setUserProvenance(UserProvenances.PI_AAD);
+
+        when(userRepository.findByEmailIgnoreCaseAndUserProvenanceAndRolesIn(EMAIL, UserProvenances.PI_AAD,
+                                                                             ALL_NON_RESTRICTED_ADMIN_ROLES))
+            .thenReturn(Optional.of(user));
+
+        PiUser returnedUser = accountService.getAdminUserByEmailAndProvenance(EMAIL, UserProvenances.PI_AAD);
+        assertEquals(user, returnedUser, "Returned user does not match expected user");
+    }
+
+    @Test
+    void testGetAdminUserByEmailAndProvenanceNotFound() {
+        PiUser user = new PiUser();
+        user.setEmail(EMAIL);
+        user.setUserProvenance(UserProvenances.PI_AAD);
+
+        when(userRepository.findByEmailIgnoreCaseAndUserProvenanceAndRolesIn(EMAIL, UserProvenances.PI_AAD,
+                                                                             ALL_NON_RESTRICTED_ADMIN_ROLES))
+            .thenReturn(Optional.empty());
+
+        NotFoundException notFoundException = assertThrows(NotFoundException.class, () -> {
+            accountService.getAdminUserByEmailAndProvenance(EMAIL, UserProvenances.PI_AAD);
+        }, "The exception when a user has not been found has been thrown");
+
+        assertTrue(notFoundException.getMessage().contains(EMAIL),
+                   "Exception message thrown does not contain email");
+
+        assertTrue(notFoundException.getMessage().contains(UserProvenances.PI_AAD.toString()),
+                   "Exception message thrown does not contain provenance");
     }
 }

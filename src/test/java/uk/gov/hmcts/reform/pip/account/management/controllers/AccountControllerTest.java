@@ -331,4 +331,20 @@ class AccountControllerTest {
             .as(STATUS_CODE_MATCH)
             .isEqualTo(HttpStatus.OK);
     }
+
+    @Test
+    void testGetAdminUserByEmailAndProvenance() {
+        PiUser piUser = new PiUser();
+        piUser.setEmail(EMAIL);
+        piUser.setUserProvenance(UserProvenances.PI_AAD);
+
+        when(accountService.getAdminUserByEmailAndProvenance(EMAIL, UserProvenances.PI_AAD)).thenReturn(piUser);
+
+        ResponseEntity<PiUser> response = accountController.getAdminUserByEmailAndProvenance(EMAIL,
+                                                                                             UserProvenances.PI_AAD);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode(), "Expected status code does not match");
+
+        assertEquals(piUser, response.getBody(), "Expected PI user does not match");
+    }
 }
