@@ -69,6 +69,8 @@ public class AccountController {
     private static final String NOT_FOUND_ERROR_CODE = "404";
     private static final String NO_CONTENT_CODE = "204";
 
+    private static final String BAD_REQUEST_CODE = "400";
+
     /**
      * POST endpoint to create a new azure account.
      * This will also trigger any welcome emails.
@@ -325,6 +327,7 @@ public class AccountController {
      */
     @ApiResponses({
         @ApiResponse(responseCode = OK_CODE, description = "{PiUser}"),
+        @ApiResponse(responseCode = BAD_REQUEST_CODE, description = "{ErroredSystemAdminAccount}"),
         @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE),
     })
     @PostMapping("/add/system-admin")
