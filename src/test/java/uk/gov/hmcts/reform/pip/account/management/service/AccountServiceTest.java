@@ -102,6 +102,7 @@ class AccountServiceTest {
     private static final String FULL_NAME = "Full name";
     private static final String ISSUER_ID = "abcdef";
     private static final String EMAIL = "a@b.com";
+    private static final UUID USER_UUID = UUID.randomUUID();
     private static final String INVALID_EMAIL = "ab.com";
     private static final String ID = "1234";
     private static final String EMAIL_PATH = "Email";
@@ -114,6 +115,8 @@ class AccountServiceTest {
     private static final boolean FALSE = false;
     private static final boolean TRUE = true;
     private static final String SHOULD_CONTAIN = "Should contain ";
+    private static final String FORENAME = "Firstname";
+    private static final String SURNAME = "Surname";
     private static final String SUBSCRIPTIONS_DELETED = "subscriptions deleted";
     public static final List<String> EXAMPLE_CSV = List.of(
         "2fe899ff-96ed-435a-bcad-1411bbe96d2a,string,CFT_IDAM,INTERNAL_ADMIN_CTSC");
@@ -356,7 +359,7 @@ class AccountServiceTest {
     void testAddUsers() {
         Map<CreationEnum, List<?>> expected = new ConcurrentHashMap<>();
         PiUser user = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, ID, EMAIL, Roles.INTERNAL_ADMIN_CTSC,
-                                 null, null, null);
+                                 FORENAME, SURNAME, null, null, null);
         expected.put(CreationEnum.CREATED_ACCOUNTS, List.of(user.getUserId()));
         expected.put(CreationEnum.ERRORED_ACCOUNTS, List.of());
 
@@ -369,10 +372,10 @@ class AccountServiceTest {
     @Test
     void testAddDuplicateUsers() {
         PiUser user1 = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, ID, EMAIL,
-                                  Roles.INTERNAL_ADMIN_CTSC, null, null, null);
+                                  Roles.INTERNAL_ADMIN_CTSC, FORENAME, SURNAME, null, null, null);
         PiUser user2 = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, "567", "test@test.com",
 
-                                 Roles.INTERNAL_ADMIN_CTSC, null, null, null);
+                                 Roles.INTERNAL_ADMIN_CTSC, FORENAME, SURNAME, null, null, null);
         List<PiUser> users = new ArrayList<>();
         users.add(user1);
         users.add(user2);
@@ -397,7 +400,7 @@ class AccountServiceTest {
     @Test
     void testAddUsersBuildsErrored() {
         PiUser user = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, ID, INVALID_EMAIL,
-                                 Roles.INTERNAL_ADMIN_CTSC, null, null, null);
+                                 Roles.INTERNAL_ADMIN_CTSC, FORENAME, SURNAME, null, null, null);
         ErroredPiUser erroredUser = new ErroredPiUser(user);
         erroredUser.setErrorMessages(List.of(VALIDATION_MESSAGE));
         Map<CreationEnum, List<?>> expected = new ConcurrentHashMap<>();
@@ -417,7 +420,7 @@ class AccountServiceTest {
     @Test
     void testFindUserByProvenanceId() {
         PiUser user = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, ID, EMAIL, Roles.INTERNAL_ADMIN_CTSC,
-                                 null, null, null);
+                                 FORENAME, SURNAME, null, null, null);
         when(userRepository.findExistingByProvenanceId(user.getProvenanceUserId(), user.getUserProvenance().name()))
             .thenReturn(List.of(user));
         assertEquals(user, accountService.findUserByProvenanceId(user.getUserProvenance(), user.getProvenanceUserId()),
@@ -502,10 +505,10 @@ class AccountServiceTest {
 
     @Test
     void testUploadMediaFromCsv() throws AzureCustomException, IOException {
-        PiUser user1 = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, ID, EMAIL, Roles.VERIFIED, null,
-                                  null, null);
-        PiUser user2 = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, ID, EMAIL, Roles.VERIFIED, null,
-                                  null, null);
+        PiUser user1 = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, ID, EMAIL, Roles.VERIFIED, "Test", "User",
+                                  null,null, null);
+        PiUser user2 = new PiUser(UUID.randomUUID(), UserProvenances.PI_AAD, ID, EMAIL, Roles.VERIFIED, "Test", "User",
+                                  null, null, null);
 
         when(validator.validate(any())).thenReturn(Set.of());
         when(azureUserService.createUser(any())).thenReturn(expectedUser);
@@ -549,7 +552,7 @@ class AccountServiceTest {
 
     @Test
     void testDeleteAadAccount() throws AzureCustomException {
-        when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.of(piUser));
+        when(userRepository.findByUserId(USER_UUID)).thenReturn(Optional.of(piUser));
 
         doNothing().when(userRepository).delete(piUser);
         when(azureUserService.deleteUser(piUser.getProvenanceUserId()))
@@ -557,7 +560,7 @@ class AccountServiceTest {
         when(subscriptionService.sendSubscriptionDeletionRequest(VALID_USER_ID.toString()))
             .thenReturn(SUBSCRIPTIONS_DELETED);
 
-        accountService.deleteAccount(EMAIL, true);
+        accountService.deleteAccount(USER_UUID);
 
         verify(azureUserService, times(1)).deleteUser(piUser.getProvenanceUserId());
         verify(subscriptionService, times(1))
@@ -567,32 +570,32 @@ class AccountServiceTest {
 
     @Test
     void testDeleteIdamAccount() {
-        when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.of(piUser));
+        when(userRepository.findByUserId(VALID_USER_ID_IDAM)).thenReturn(Optional.of(piUserIdam));
 
-        doNothing().when(userRepository).delete(piUser);
-        when(subscriptionService.sendSubscriptionDeletionRequest(VALID_USER_ID.toString()))
+        doNothing().when(userRepository).delete(piUserIdam);
+        when(subscriptionService.sendSubscriptionDeletionRequest(VALID_USER_ID_IDAM.toString()))
             .thenReturn(SUBSCRIPTIONS_DELETED);
 
-        accountService.deleteAccount(EMAIL, false);
+        accountService.deleteAccount(VALID_USER_ID_IDAM);
 
         verifyNoInteractions(azureUserService);
-        verify(subscriptionService).sendSubscriptionDeletionRequest(VALID_USER_ID.toString());
-        verify(userRepository).delete(piUser);
+        verify(subscriptionService).sendSubscriptionDeletionRequest(VALID_USER_ID_IDAM.toString());
+        verify(userRepository).delete(piUserIdam);
     }
 
     @Test
     void testDeleteAccountNotFound() {
         NotFoundException notFoundException = assertThrows(NotFoundException.class, () ->
-            accountService.deleteAccount(EMAIL, true), "Expected NotFoundException to be thrown");
+            accountService.deleteAccount(UUID.randomUUID()), "Expected NotFoundException to be thrown");
 
         assertTrue(notFoundException.getMessage()
-                       .contains("User with supplied email could not be found"),
+                       .contains("User with supplied ID could not be found"),
                    "Not found error missing");
     }
 
     @Test
     void testDeleteAccountThrows() throws AzureCustomException {
-        when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.of(piUser));
+        when(userRepository.findByUserId(VALID_USER_ID)).thenReturn(Optional.of(piUser));
 
         doNothing().when(userRepository).delete(piUser);
         when(azureUserService.deleteUser(piUser.getProvenanceUserId()))
@@ -601,10 +604,9 @@ class AccountServiceTest {
             .thenReturn(SUBSCRIPTIONS_DELETED);
 
         try (LogCaptor logCaptor = LogCaptor.forClass(AccountService.class)) {
-            accountService.deleteAccount(EMAIL, true);
-            assertTrue(logCaptor.getInfoLogs().get(0).contains("Error when deleting an account"
-                                                                   + " from azure with Provenance user id: 1234"),
-                       "No logs thrown");
+            accountService.deleteAccount(VALID_USER_ID);
+            assertEquals(2, logCaptor.getInfoLogs().size(),
+                         "No logs were thrown");
         }
     }
 
@@ -779,44 +781,6 @@ class AccountServiceTest {
 
         NotFoundException notFoundException = assertThrows(NotFoundException.class, () -> {
             accountService.updateAccountRole(userId, Roles.SYSTEM_ADMIN);
-        }, "The exception when a user has not been found has been thrown");
-
-        assertTrue(notFoundException.getMessage().contains(userId.toString()),
-                   "Exception message thrown does not contain the user ID");
-    }
-
-    @Test
-    void testProcessManualAccountDeletion() throws AzureCustomException {
-        UUID userId = UUID.randomUUID();
-
-        PiUser user = new PiUser();
-        user.setUserId(userId);
-        user.setUserProvenance(UserProvenances.PI_AAD);
-        user.setEmail("a@b.com");
-        user.setProvenanceUserId(ID);
-
-        when(userRepository.findByUserId(userId)).thenReturn(Optional.of(user));
-        when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.of(user));
-        doNothing().when(userRepository).delete(piUser);
-        when(azureUserService.deleteUser(user.getProvenanceUserId())).thenReturn(expectedUser);
-        when(subscriptionService.sendSubscriptionDeletionRequest(user.getUserId().toString()))
-            .thenReturn(SUBSCRIPTIONS_DELETED);
-
-        try (LogCaptor logCaptor = LogCaptor.forClass(AccountService.class)) {
-            accountService.processManualAccountDeletion(userId);
-            assertTrue(logCaptor.getInfoLogs().get(0).contains("Track: subscriptions deleted, at"),
-                       "Logs did not contain correct message");
-        }
-    }
-
-    @Test
-    void testProcessManualAccountDeletionNotFound() {
-        UUID userId = UUID.randomUUID();
-
-        when(userRepository.findByUserId(userId)).thenReturn(Optional.empty());
-
-        NotFoundException notFoundException = assertThrows(NotFoundException.class, () -> {
-            accountService.processManualAccountDeletion(userId);
         }, "The exception when a user has not been found has been thrown");
 
         assertTrue(notFoundException.getMessage().contains(userId.toString()),

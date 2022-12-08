@@ -171,6 +171,8 @@ class AccountTest {
         user.setProvenanceUserId(id);
         user.setUserProvenance(PROVENANCE);
         user.setRoles(ROLE);
+        user.setForenames("Forename");
+        user.setSurname("Surname");
 
         return user;
     }
