@@ -38,13 +38,7 @@ import uk.gov.hmcts.reform.pip.account.management.Application;
 import uk.gov.hmcts.reform.pip.account.management.config.AzureConfigurationClientTest;
 import uk.gov.hmcts.reform.pip.account.management.config.ClientConfiguration;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.ExceptionResponse;
-import uk.gov.hmcts.reform.pip.account.management.model.AzureAccount;
-import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
-import uk.gov.hmcts.reform.pip.account.management.model.ListType;
-import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
-import uk.gov.hmcts.reform.pip.account.management.model.Roles;
-import uk.gov.hmcts.reform.pip.account.management.model.Sensitivity;
-import uk.gov.hmcts.reform.pip.account.management.model.UserProvenances;
+import uk.gov.hmcts.reform.pip.account.management.model.*;
 import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredAzureAccount;
 
 import java.io.InputStream;
@@ -125,7 +119,9 @@ class AccountTest {
     private static final String DELETE_EXPIRED_IDAM_ACCOUNTS_URL = ROOT_URL + "/idam/inactive";
     private static final String MI_REPORTING_ACCOUNT_DATA_URL = ROOT_URL + "/mi-data";
     private static final String GET_ALL_ACCOUNTS_EXCEPT_THIRD_PARTY = ROOT_URL + "/all";
+    private static final String CREATE_SYSTEM_ADMIN_URL = ROOT_URL + "/add/system-admin";
     private static final String EMAIL_URL = ROOT_URL + "/emails";
+
     private static final String EMAIL = "test_account_admin@hmcts.net";
     private static final String INVALID_EMAIL = "ab";
     private static final String FIRST_NAME = "First name";
@@ -1338,7 +1334,7 @@ class AccountTest {
     }
 
     @Test
-    @WithMockUser(username = "unauthorized_account", authorities = { "APPROLE_unknown.account" })
+    @WithMockUser(username = "unauthorized_account", authorities = {"APPROLE_unknown.account"})
     void testUnauthorizedGetAllThirdPartyAccounts() throws Exception {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .get(ROOT_URL + "/all/third-party");
@@ -1347,7 +1343,8 @@ class AccountTest {
             mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isForbidden()).andReturn();
 
         assertEquals(HttpStatus.FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
-                     FORBIDDEN_STATUS_CODE);
+                     FORBIDDEN_STATUS_CODE
+        );
     }
 
     @Test
@@ -1400,8 +1397,9 @@ class AccountTest {
             .delete(ROOT_URL + "/delete/" + createdUserId);
 
         MvcResult mvcResult = mockMvc.perform(deleteRequest).andExpect(status().isOk()).andReturn();
-        assertEquals("User deleted",mvcResult.getResponse().getContentAsString(),
-                     "Failed to delete user");
+        assertEquals("User deleted", mvcResult.getResponse().getContentAsString(),
+                     "Failed to delete user"
+        );
     }
 
     @Test
@@ -1484,6 +1482,35 @@ class AccountTest {
 
         assertEquals(HttpStatus.NOT_FOUND.value(), mvcResult.getResponse().getStatus(),
                      NOT_FOUND_STATUS_CODE_MESSAGE
+        );
+    }
+
+    @Test
+    void testcreateSystemAdminAccount() throws Exception {
+
+        SystemAdminAccount systemAdmin = new SystemAdminAccount();
+        systemAdmin.setFirstName("testSysAdminFirstname");
+        systemAdmin.setSurname("testSysAdminSurname");
+        systemAdmin.setEmail("testSysAdminEmail@gmail.com");
+
+        MockHttpServletRequestBuilder createRequest =
+            MockMvcRequestBuilders
+                .post(CREATE_SYSTEM_ADMIN_URL)
+                .content(objectMapper.writeValueAsString(systemAdmin))
+                .header(ISSUER_HEADER, ISSUER_ID)
+                .contentType(MediaType.APPLICATION_JSON);
+
+        MvcResult responseCreateSystemAdminUser = mockMvc.perform(createRequest)
+            .andExpect(status().isOk()).andReturn();
+
+        SystemAdminAccount returnedUser = objectMapper.readValue(
+            responseCreateSystemAdminUser.getResponse().getContentAsString(),
+            SystemAdminAccount.class
+        );
+
+        assertEquals(
+            systemAdmin.getEmail(),returnedUser.getEmail(),
+            "Failed to create user"
         );
     }
 
