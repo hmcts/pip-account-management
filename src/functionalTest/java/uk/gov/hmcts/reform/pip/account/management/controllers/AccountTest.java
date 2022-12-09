@@ -1514,7 +1514,7 @@ class AccountTest {
         SystemAdminAccount systemAdmin = new SystemAdminAccount();
         systemAdmin.setFirstName("testSysAdminFirstname");
         systemAdmin.setSurname("testSysAdminSurname");
-        systemAdmin.setEmail("testSysAdminEmail@gmail.com");
+        systemAdmin.setEmail("testSysAdminEmail@justice.gov.uk");
 
         mockPiUser();
 
@@ -1545,7 +1545,7 @@ class AccountTest {
         SystemAdminAccount systemAdmin = new SystemAdminAccount();
         systemAdmin.setFirstName("testSysAdminFirstname");
         systemAdmin.setSurname("testSysAdminSurname");
-        systemAdmin.setEmail("testSysAdminEmail@gmail.com");
+        systemAdmin.setEmail("testSysAdminEmail@justice.gov.uk");
 
         MockHttpServletRequestBuilder createRequest =
             MockMvcRequestBuilders
@@ -1569,7 +1569,7 @@ class AccountTest {
         SystemAdminAccount systemAdmin1 = new SystemAdminAccount();
         systemAdmin1.setFirstName("testSysAdminFirstname1");
         systemAdmin1.setSurname("testSysAdminSurname1");
-        systemAdmin1.setEmail("testSysAdminEmai1l@gmail.com");
+        systemAdmin1.setEmail("testSysAdminEmai1l@justice.gov.uk");
 
         mockPiUser();
 
@@ -1586,7 +1586,7 @@ class AccountTest {
         SystemAdminAccount systemAdmin2 = new SystemAdminAccount();
         systemAdmin2.setFirstName("testSysAdminFirstname2");
         systemAdmin2.setSurname("testSysAdminSurname2");
-        systemAdmin2.setEmail("testSysAdminEmai12@gmail.com");
+        systemAdmin2.setEmail("testSysAdminEmai12@justice.gov.uk");
 
         MockHttpServletRequestBuilder createRequest2 =
             MockMvcRequestBuilders
