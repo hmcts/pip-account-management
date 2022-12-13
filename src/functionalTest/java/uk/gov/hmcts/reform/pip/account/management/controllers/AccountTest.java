@@ -1338,7 +1338,7 @@ class AccountTest {
     }
 
     @Test
-    @WithMockUser(username = "unauthorized_account", authorities = { "APPROLE_unknown.account" })
+    @WithMockUser(username = "unauthorized_account", authorities = {"APPROLE_unknown.account"})
     void testUnauthorizedGetAllThirdPartyAccounts() throws Exception {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .get(ROOT_URL + "/all/third-party");
@@ -1347,7 +1347,8 @@ class AccountTest {
             mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isForbidden()).andReturn();
 
         assertEquals(HttpStatus.FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
-                     FORBIDDEN_STATUS_CODE);
+                     FORBIDDEN_STATUS_CODE
+        );
     }
 
     @Test
@@ -1400,8 +1401,9 @@ class AccountTest {
             .delete(ROOT_URL + "/delete/" + createdUserId);
 
         MvcResult mvcResult = mockMvc.perform(deleteRequest).andExpect(status().isOk()).andReturn();
-        assertEquals("User deleted",mvcResult.getResponse().getContentAsString(),
-                     "Failed to delete user");
+        assertEquals("User deleted", mvcResult.getResponse().getContentAsString(),
+                     "Failed to delete user"
+        );
     }
 
     @Test
@@ -1479,6 +1481,64 @@ class AccountTest {
     void testUpdateAccountByIdNotFound() throws Exception {
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .put(ROOT_URL + "/update/" + UUID.randomUUID() + "/" + Roles.INTERNAL_ADMIN_LOCAL);
+
+        MvcResult mvcResult = mockMvc.perform(request).andExpect(status().isNotFound()).andReturn();
+
+        assertEquals(HttpStatus.NOT_FOUND.value(), mvcResult.getResponse().getStatus(),
+                     NOT_FOUND_STATUS_CODE_MESSAGE
+        );
+    }
+
+    @Test
+    void testGetAdminUserByEmailAndProvenance() throws Exception {
+        MockHttpServletRequestBuilder createRequest =
+            MockMvcRequestBuilders
+                .post(PI_URL)
+                .content(objectMapper.writeValueAsString(List.of(validUser)))
+                .header(ISSUER_HEADER, ISSUER_ID)
+                .contentType(MediaType.APPLICATION_JSON);
+
+        MvcResult responseCreateUser = mockMvc.perform(createRequest)
+            .andExpect(status().isCreated()).andReturn();
+        ConcurrentHashMap<CreationEnum, List<Object>> mappedResponse =
+            objectMapper.readValue(
+                responseCreateUser.getResponse().getContentAsString(),
+                new TypeReference<>() {
+                }
+            );
+
+        String createdUserId = mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).get(0).toString();
+
+        MockHttpServletRequestBuilder getRequest = MockMvcRequestBuilders
+            .get(ROOT_URL + "/admin/" + validUser.getEmail() + "/" + validUser.getUserProvenance());
+
+        MvcResult responseGetUser =
+            mockMvc.perform(getRequest).andExpect(status().isOk()).andReturn();
+
+        PiUser returnedUser = objectMapper.readValue(
+            responseGetUser.getResponse().getContentAsString(),
+            PiUser.class
+        );
+        assertEquals(createdUserId, returnedUser.getUserId().toString(), "Should return the correct user");
+    }
+
+    @Test
+    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
+    void testUnauthorizedGetAdminUserByEmailAndProvenance() throws Exception {
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+            .get(ROOT_URL + "/admin/" + validUser.getEmail() + "/" + validUser.getUserProvenance());
+
+        MvcResult mvcResult = mockMvc.perform(request).andExpect(status().isForbidden()).andReturn();
+
+        assertEquals(HttpStatus.FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
+                     FORBIDDEN_STATUS_CODE
+        );
+    }
+
+    @Test
+    void testGetAdminUserByEmailAndProvenanceNotFound() throws Exception {
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+            .get(ROOT_URL + "/admin/" + validUser.getEmail() + "/" + validUser.getUserProvenance());
 
         MvcResult mvcResult = mockMvc.perform(request).andExpect(status().isNotFound()).andReturn();
 
