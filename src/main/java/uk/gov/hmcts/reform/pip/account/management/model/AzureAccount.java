@@ -50,7 +50,5 @@ public class AzureAccount {
     @NotNull
     private Roles role;
 
-
-
-
+    private String displayName;
 }

@@ -39,17 +39,20 @@ public class SystemAdminAccountService {
     private final AzureUserService azureUserService;
     private final UserRepository userRepository;
     private final PublicationService publicationService;
+    private final AccountService accountService;
     private final Integer maxSystemAdminValue;
 
     @Autowired
     public SystemAdminAccountService(Validator validator, AzureUserService azureUserService,
                                      UserRepository userRepository, PublicationService publicationService,
-                                     @Value("${admin.max-system-admin}")Integer maxSystemAdminValue) {
+                                     @Value("${admin.max-system-admin}")Integer maxSystemAdminValue,
+                                     AccountService accountService) {
         this.validator = validator;
         this.azureUserService = azureUserService;
         this.userRepository = userRepository;
         this.publicationService = publicationService;
         this.maxSystemAdminValue = maxSystemAdminValue;
+        this.accountService = accountService;
     }
 
     /**
@@ -60,7 +63,11 @@ public class SystemAdminAccountService {
      */
     public PiUser addSystemAdminAccount(SystemAdminAccount account, String issuerId) {
 
-        String displayName = verifyAndRetrieveAdminUser(issuerId);
+        String displayName = "";
+        if (verifyAdminUser(issuerId)) {
+            displayName = accountService.retrieveUser(issuerId).getDisplayName();
+        }
+
         validateSystemAdminAccount(account, issuerId, displayName);
         try {
             User user = azureUserService.createUser(account.convertToAzureAccount());
@@ -144,19 +151,12 @@ public class SystemAdminAccountService {
      * @param issuerId The ID of the admin user
      * @return The name of the admin user.
      */
-    private String verifyAndRetrieveAdminUser(String issuerId) {
+    private Boolean verifyAdminUser(String issuerId) {
         Optional<PiUser> adminUser = userRepository.findByUserId(UUID.fromString(issuerId));
-
-        try {
-            if (adminUser.isPresent() && adminUser.get().getRoles().equals(Roles.SYSTEM_ADMIN)) {
-                String email = adminUser.get().getEmail();
-                return azureUserService.getUser(email).displayName;
-            }
-        } catch (AzureCustomException e) {
-            log.error(writeLog(UUID.fromString(issuerId), "Error while retrieving system admin users details"));
+        if (adminUser.isPresent() && adminUser.get().getRoles().equals(Roles.SYSTEM_ADMIN)) {
+            return true;
         }
 
-        throw new IllegalArgumentException("Error while retrieving system admin users details with ID: " + issuerId);
+        return false;
     }
-
 }

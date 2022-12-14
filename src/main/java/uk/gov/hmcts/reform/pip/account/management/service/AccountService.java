@@ -503,4 +503,27 @@ public class AccountService {
             "User with supplied user id: %s could not be found", userId)));
     }
 
+    public AzureAccount retrieveUser(String issuerId) {
+        try {
+            Optional<PiUser> adminUser = userRepository.findByUserId(UUID.fromString(issuerId));
+            if (adminUser.isPresent()) {
+                AzureAccount azureUser = new AzureAccount();
+                User user = azureUserService.getUser(adminUser.get().getEmail());
+                azureUser.setAzureAccountId(user.id);
+                azureUser.setFirstName(user.givenName);
+                azureUser.setSurname(user.surname);
+                azureUser.setDisplayName(user.displayName);
+                azureUser.setEmail(adminUser.get().getEmail());
+                return azureUser;
+            } else {
+                new NotFoundException(String.format(
+                    "User with supplied issuer id: %s could not be found", issuerId));
+            }
+        } catch (AzureCustomException e) {
+            log.error(writeLog(UUID.fromString(issuerId), "Error while retrieving users details"));
+        }
+
+        throw new IllegalArgumentException("Error while retrieving user details with ID: " + issuerId);
+    }
+
 }

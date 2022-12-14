@@ -32,7 +32,8 @@ public class ErroredAzureAccount extends AzureAccount {
             azureAccount.getEmail(),
             azureAccount.getFirstName(),
             azureAccount.getSurname(),
-            azureAccount.getRole());
+            azureAccount.getRole(),
+            azureAccount.getDisplayName());
     }
 
 }

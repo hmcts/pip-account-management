@@ -130,6 +130,8 @@ class AccountServiceTest {
     private AzureAccount azureAccount;
     private User expectedUser;
 
+    private static final String RETURN_USER_ERROR = "Returned user does not match expected user";
+
     @BeforeEach
     void setup() {
         piUser.setUserId(VALID_USER_ID);
@@ -748,7 +750,7 @@ class AccountServiceTest {
         when(userRepository.findByUserId(userId)).thenReturn(Optional.of(user));
 
         PiUser returnedUser = accountService.getUserById(userId);
-        assertEquals(user, returnedUser, "Returned user does not match expected user");
+        assertEquals(user, returnedUser, RETURN_USER_ERROR);
     }
 
     @Test
@@ -783,7 +785,7 @@ class AccountServiceTest {
 
         String response = accountService.updateAccountRole(userId, Roles.SYSTEM_ADMIN);
         assertEquals(String.format("User with ID %s has been updated to a SYSTEM_ADMIN", userId),
-                     response, "Returned user does not match expected user");
+                     response, RETURN_USER_ERROR);
     }
 
     @Test
@@ -799,7 +801,7 @@ class AccountServiceTest {
 
         String response = accountService.updateAccountRole(userId, Roles.SYSTEM_ADMIN);
         assertEquals(String.format("User with ID %s has been updated to a SYSTEM_ADMIN", userId),
-                     response, "Returned user does not match expected user");
+                     response, RETURN_USER_ERROR);
     }
 
     @Test
@@ -898,5 +900,40 @@ class AccountServiceTest {
         ErroredPiUser erroredPiUser = (ErroredPiUser) returnedUsers.get(CreationEnum.ERRORED_ACCOUNTS).get(0);
         assertEquals("System admins must be created via the /account/add/system-admin endpoint",
                      erroredPiUser.getErrorMessages().get(0), "Error message is not correct");
+    }
+
+    @Test
+    void testRetrieveUser() throws AzureCustomException {
+        UUID userId = UUID.randomUUID();
+
+        PiUser user = new PiUser();
+        user.setUserId(userId);
+        user.setEmail(EMAIL);
+
+        User azUser = new User();
+        azUser.id = ID;
+        azUser.givenName = FULL_NAME;
+        azUser.displayName = FULL_NAME;
+        azUser.surname = SURNAME;
+
+        when(azureUserService.getUser(EMAIL)).thenReturn(azUser);
+        when(userRepository.findByUserId(userId)).thenReturn(Optional.of(user));
+
+        AzureAccount returnedUser = accountService.retrieveUser(userId.toString());
+        assertEquals(azUser.displayName, returnedUser.getDisplayName(), RETURN_USER_ERROR);
+    }
+
+    @Test
+    void testRetrieveUserNotFound() {
+        UUID userId = UUID.randomUUID();
+
+        when(userRepository.findByUserId(userId)).thenReturn(Optional.empty());
+
+        NotFoundException notFoundException = assertThrows(NotFoundException.class, () -> {
+            accountService.getUserById(userId);
+        }, "The exception when a user has not been found has been thrown");
+
+        assertTrue(notFoundException.getMessage().contains(userId.toString()),
+                   "Exception message thrown does not contain the user ID");
     }
 }

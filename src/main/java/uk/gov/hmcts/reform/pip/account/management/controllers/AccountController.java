@@ -337,4 +337,15 @@ public class AccountController {
         return ResponseEntity.ok(systemAdminAccountService.addSystemAdminAccount(account, issuerId));
     }
 
+    @ApiResponses({
+        @ApiResponse(responseCode = OK_CODE, description = "System Admin Information"),
+        @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE),
+        @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description = "User not found")
+    })
+    @Operation(summary = "Get System Admin info")
+    @ResponseStatus(HttpStatus.OK)
+    @GetMapping("/get-info/{issuerId}")
+    public ResponseEntity<AzureAccount> getUserInfo(@PathVariable String issuerId) {
+        return ResponseEntity.ok(accountService.retrieveUser(issuerId));
+    }
 }

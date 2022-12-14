@@ -10,6 +10,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.hmcts.reform.pip.account.management.database.UserRepository;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.AzureCustomException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.SystemAdminAccountException;
+import uk.gov.hmcts.reform.pip.account.management.model.AzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
 import uk.gov.hmcts.reform.pip.account.management.model.Roles;
 import uk.gov.hmcts.reform.pip.account.management.model.SystemAdminAccount;
@@ -40,6 +41,9 @@ class SystemAdminAccountServiceTest {
 
     @Mock
     private PublicationService publicationService;
+
+    @Mock
+    private AccountService accountService;
 
     @Mock
     private UserRepository userRepository;
@@ -80,18 +84,23 @@ class SystemAdminAccountServiceTest {
         expectedPiUser.setUserProvenance(UserProvenances.PI_AAD);
 
         systemAdminAccountService = new SystemAdminAccountService(validator, azureUserService, userRepository,
-                                                                  publicationService, 4);
+                                                                  publicationService, 4,
+                                                                  accountService);
 
     }
 
     @Test
     void testAddSystemAdminAccount() throws AzureCustomException {
+        AzureAccount azUser = new AzureAccount();
+        azUser.setDisplayName(FORENAME);
+
         when(azureUserService.createUser(argThat(user -> EMAIL.equals(user.getEmail()))))
             .thenReturn(expectedUser);
         when(userRepository.save(any())).thenReturn(expectedPiUser);
+        when(accountService.retrieveUser(any()))
+            .thenReturn(azUser);
         when(publicationService.sendNotificationEmail(EMAIL, FORENAME, SURNAME)).thenReturn(Boolean.TRUE);
         when(userRepository.findByUserId(any())).thenReturn(Optional.ofNullable(expectedPiUser));
-        when(azureUserService.getUser(EMAIL)).thenReturn(expectedUser);
         when(validator.validate(SYSTEM_ADMIN_ACCOUNT)).thenReturn(Set.of());
         when(userRepository.findByRoles(Roles.SYSTEM_ADMIN)).thenReturn(List.of(expectedPiUser));
 
@@ -102,9 +111,13 @@ class SystemAdminAccountServiceTest {
 
     @Test
     void testAddSystemAdminAccountThrowsException() throws AzureCustomException {
+        AzureAccount azUser = new AzureAccount();
+        azUser.setDisplayName(FORENAME);
+
         when(userRepository.findByUserId(any()))
             .thenReturn(Optional.ofNullable(expectedPiUser));
-        when(azureUserService.getUser(EMAIL)).thenReturn(expectedUser);
+        when(accountService.retrieveUser(any()))
+            .thenReturn(azUser);
         when(azureUserService.createUser(argThat(user -> EMAIL.equals(user.getEmail()))))
             .thenThrow(new AzureCustomException("Test error"));
 
@@ -119,10 +132,13 @@ class SystemAdminAccountServiceTest {
 
     @Test
     void testConstraintViolationException() throws AzureCustomException {
+        AzureAccount azUser = new AzureAccount();
+        azUser.setDisplayName(FORENAME);
+
         when(userRepository.findByUserId(any()))
             .thenReturn(Optional.ofNullable(expectedPiUser));
-        when(azureUserService.getUser(EMAIL)).thenReturn(expectedUser);
-
+        when(accountService.retrieveUser(any()))
+            .thenReturn(azUser);
         when(validator.validate(any(), any())).thenReturn(Set.of(constraintViolation));
         when(constraintViolation.getMessage()).thenReturn("This is a message");
         when(constraintViolation.getPropertyPath()).thenReturn(path);
@@ -137,11 +153,14 @@ class SystemAdminAccountServiceTest {
 
     @Test
     void testUserAlreadyExists() throws AzureCustomException {
+        AzureAccount azUser = new AzureAccount();
+        azUser.setDisplayName(FORENAME);
         when(userRepository.findByEmailAndUserProvenance(EMAIL, UserProvenances.PI_AAD))
             .thenReturn(Optional.of(expectedPiUser));
         when(userRepository.findByUserId(any()))
             .thenReturn(Optional.ofNullable(expectedPiUser));
-        when(azureUserService.getUser(EMAIL)).thenReturn(expectedUser);
+        when(accountService.retrieveUser(any()))
+            .thenReturn(azUser);
 
         SystemAdminAccountException systemAdminAccountException =
             assertThrows(SystemAdminAccountException.class, () ->
@@ -153,11 +172,14 @@ class SystemAdminAccountServiceTest {
 
     @Test
     void testAboveMaxAllowsUsers() throws AzureCustomException {
+        AzureAccount azUser = new AzureAccount();
+        azUser.setDisplayName(FORENAME);
         when(userRepository.findByEmailAndUserProvenance(EMAIL, UserProvenances.PI_AAD))
             .thenReturn(Optional.empty());
         when(userRepository.findByUserId(any()))
             .thenReturn(Optional.ofNullable(expectedPiUser));
-        when(azureUserService.getUser(EMAIL)).thenReturn(expectedUser);
+        when(accountService.retrieveUser(any()))
+            .thenReturn(azUser);
         when(userRepository.findByRoles(Roles.SYSTEM_ADMIN)).thenReturn(List.of(expectedPiUser, expectedPiUser,
                                                                                 expectedPiUser, expectedPiUser));
 
