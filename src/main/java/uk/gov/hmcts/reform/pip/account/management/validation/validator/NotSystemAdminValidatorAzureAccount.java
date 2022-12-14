@@ -10,6 +10,7 @@ import javax.validation.ConstraintValidatorContext;
 /**
  * Validator class that checks if an azure account is a system admin.
  */
+@SuppressWarnings({"PMD.LawOfDemeter"})
 public class NotSystemAdminValidatorAzureAccount implements ConstraintValidator<NotSystemAdmin, AzureAccount> {
 
     @Override
