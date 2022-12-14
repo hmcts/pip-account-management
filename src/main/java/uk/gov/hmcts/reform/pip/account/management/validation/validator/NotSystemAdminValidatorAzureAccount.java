@@ -14,6 +14,6 @@ public class NotSystemAdminValidatorAzureAccount implements ConstraintValidator<
 
     @Override
     public boolean isValid(AzureAccount azureAccount, ConstraintValidatorContext constraintValidatorContext) {
-        return !azureAccount.getRole().equals(Roles.SYSTEM_ADMIN);
+        return azureAccount.getRole() == null || !azureAccount.getRole().equals(Roles.SYSTEM_ADMIN);
     }
 }
