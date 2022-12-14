@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.CsvParseException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.ForbiddenPermissionsException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.NotFoundException;
+import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.SystemAdminAccountException;
+import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredSystemAdminAccount;
 
 import java.time.LocalDateTime;
 import javax.validation.ConstraintViolationException;
@@ -108,5 +110,11 @@ public class GlobalExceptionHandler {
         exceptionResponse.setTimestamp(LocalDateTime.now());
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exceptionResponse);
+    }
+
+    @ExceptionHandler(SystemAdminAccountException.class)
+    public ResponseEntity<ErroredSystemAdminAccount> handle(SystemAdminAccountException ex) {
+        log.error(writeLog("400, Error while creating a system admin account"));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getErroredSystemAdminAccount());
     }
 }

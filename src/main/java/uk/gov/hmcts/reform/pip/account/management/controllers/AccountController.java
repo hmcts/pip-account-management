@@ -31,9 +31,11 @@ import uk.gov.hmcts.reform.pip.account.management.model.ListType;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
 import uk.gov.hmcts.reform.pip.account.management.model.Roles;
 import uk.gov.hmcts.reform.pip.account.management.model.Sensitivity;
+import uk.gov.hmcts.reform.pip.account.management.model.SystemAdminAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.UserProvenances;
 import uk.gov.hmcts.reform.pip.account.management.service.AccountService;
 import uk.gov.hmcts.reform.pip.account.management.service.AccountVerificationService;
+import uk.gov.hmcts.reform.pip.account.management.service.SystemAdminAccountService;
 
 import java.util.List;
 import java.util.Map;
@@ -52,7 +54,12 @@ public class AccountController {
     private AccountService accountService;
 
     @Autowired
+    private SystemAdminAccountService systemAdminAccountService;
+
+    @Autowired
     private AccountVerificationService accountVerificationService;
+
+    private static final String ISSUER_ID = "x-issuer-id";
 
     private static final String NO_CONTENT_MESSAGE = "The request has been successfully fulfilled";
     private static final String NOT_AUTHORIZED_MESSAGE = "User has not been authorized";
@@ -61,6 +68,8 @@ public class AccountController {
     private static final String OK_CODE = "200";
     private static final String NOT_FOUND_ERROR_CODE = "404";
     private static final String NO_CONTENT_CODE = "204";
+
+    private static final String BAD_REQUEST_CODE = "400";
 
     /**
      * POST endpoint to create a new azure account.
@@ -76,7 +85,7 @@ public class AccountController {
     })
     @PostMapping("/add/azure")
     public ResponseEntity<Map<CreationEnum, List<? extends AzureAccount>>> createAzureAccount(
-        @RequestHeader("x-issuer-id") String issuerId,
+        @RequestHeader(ISSUER_ID) String issuerId,
         @RequestBody List<AzureAccount> azureAccounts) {
         return ResponseEntity.ok(accountService.addAzureAccounts(azureAccounts, issuerId, false));
     }
@@ -96,7 +105,7 @@ public class AccountController {
     @Operation(summary = "Add a user to the P&I postgres database")
     @PostMapping("/add/pi")
     public ResponseEntity<Map<CreationEnum, List<?>>> createUsers(
-        @RequestHeader("x-issuer-id") String issuerId,
+        @RequestHeader(ISSUER_ID) String issuerId,
         @RequestBody List<PiUser> users) {
         return ResponseEntity.status(HttpStatus.CREATED).body(accountService.addUsers(users, issuerId));
     }
@@ -159,7 +168,7 @@ public class AccountController {
     @Operation(summary = "Create media accounts via CSV upload")
     @PostMapping("/media-bulk-upload")
     public ResponseEntity<Map<CreationEnum, List<?>>> createMediaAccountsBulk(
-        @RequestHeader("x-issuer-id") String issuerId, @RequestPart MultipartFile mediaList) {
+        @RequestHeader(ISSUER_ID) String issuerId, @RequestPart MultipartFile mediaList) {
         return ResponseEntity.ok(accountService.uploadMediaFromCsv(mediaList, issuerId));
     }
 
@@ -307,4 +316,25 @@ public class AccountController {
     public ResponseEntity<String> updateAccountById(@PathVariable UUID userId, @PathVariable Roles role) {
         return ResponseEntity.ok(accountService.updateAccountRole(userId, role));
     }
+
+    /**
+     * POST endpoint that deals with creating a new System Admin Account (including PI and Azure)
+     * This will also trigger any welcome emails.
+     *
+     * @param issuerId The id of the user creating the accounts.
+     * @param account The account to add.
+     * @return The PiUser that's been added, or an ErroredPiUser if it failed to add.
+     */
+    @ApiResponses({
+        @ApiResponse(responseCode = OK_CODE, description = "{PiUser}"),
+        @ApiResponse(responseCode = BAD_REQUEST_CODE, description = "{ErroredSystemAdminAccount}"),
+        @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE),
+    })
+    @PostMapping("/add/system-admin")
+    public ResponseEntity<? extends PiUser> createSystemAdminAccount(
+        @RequestHeader(ISSUER_ID) String issuerId,
+        @RequestBody SystemAdminAccount account) {
+        return ResponseEntity.ok(systemAdminAccountService.addSystemAdminAccount(account, issuerId));
+    }
+
 }
