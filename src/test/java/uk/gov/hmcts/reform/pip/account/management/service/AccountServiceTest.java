@@ -234,6 +234,30 @@ class AccountServiceTest {
     }
 
     @Test
+    void testAccountCreatedAlreadyExistsWithNotVerifiedEmail() throws AzureCustomException {
+        when(validator.validate(argThat(sub -> ((AzureAccount) sub).getEmail().equals(azureAccount.getEmail()))))
+            .thenReturn(Set.of());
+
+        User azUser = new User();
+        azUser.id = ID;
+        azUser.givenName = FULL_NAME;
+
+        azureAccount.setRole(Roles.INTERNAL_ADMIN_CTSC);
+
+        when(azureUserService.getUser(EMAIL)).thenReturn(azUser);
+        when(publicationService.sendNotificationEmailForDuplicateMediaAccount(any(), any())).thenReturn(TRUE);
+        when(azureUserService.createUser(argThat(user -> user.getEmail().equals(azureAccount.getEmail()))))
+            .thenReturn(expectedUser);
+        Map<CreationEnum, List<? extends AzureAccount>> createdAccounts =
+            accountService.addAzureAccounts(List.of(azureAccount), ISSUER_ID, FALSE);
+
+        assertTrue(createdAccounts.containsKey(CreationEnum.CREATED_ACCOUNTS), SHOULD_CONTAIN
+            + "ERRORED_ACCOUNTS key");
+        assertFalse(createdAccounts.containsValue(CreationEnum.CREATED_ACCOUNTS), "Should not contain "
+            + "CREATED_ACCOUNTS value");
+    }
+
+    @Test
     void testAccountCreatedGetUserException() throws AzureCustomException {
         when(validator.validate(argThat(sub -> ((AzureAccount) sub).getEmail().equals(azureAccount.getEmail()))))
             .thenReturn(Set.of());

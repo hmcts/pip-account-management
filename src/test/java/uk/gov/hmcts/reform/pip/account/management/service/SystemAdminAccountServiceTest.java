@@ -152,6 +152,25 @@ class SystemAdminAccountServiceTest {
     }
 
     @Test
+    void testAddSystemAdminAccountNotVerified() throws AzureCustomException {
+        AzureAccount azUser = new AzureAccount();
+        azUser.setDisplayName(FORENAME);
+
+        expectedPiUser.setRoles(Roles.VERIFIED);
+        when(azureUserService.createUser(argThat(user -> EMAIL.equals(user.getEmail()))))
+            .thenReturn(expectedUser);
+        when(userRepository.save(any())).thenReturn(expectedPiUser);
+        when(publicationService.sendNotificationEmail(EMAIL, FORENAME, SURNAME)).thenReturn(Boolean.FALSE);
+        when(userRepository.findByUserId(any())).thenReturn(Optional.ofNullable(expectedPiUser));
+        when(validator.validate(SYSTEM_ADMIN_ACCOUNT)).thenReturn(Set.of());
+        when(userRepository.findByRoles(Roles.SYSTEM_ADMIN)).thenReturn(List.of(expectedPiUser));
+
+        PiUser returnedUser = systemAdminAccountService.addSystemAdminAccount(SYSTEM_ADMIN_ACCOUNT, ID);
+
+        assertEquals(expectedPiUser, returnedUser, "returned user did not match expected");
+    }
+
+    @Test
     void testUserAlreadyExists() throws AzureCustomException {
         AzureAccount azUser = new AzureAccount();
         azUser.setDisplayName(FORENAME);
