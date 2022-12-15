@@ -489,6 +489,17 @@ class AccountServiceTest {
         );
     }
 
+    @Test
+    void testIsUserAuthorisedForPublicationReturnsException() {
+        when(userRepository.findByUserId(VALID_USER_ID)).thenReturn(Optional.empty());
+        UserNotFoundException ex = assertThrows(UserNotFoundException.class, () ->
+            accountService.isUserAuthorisedForPublication(VALID_USER_ID, ListType.SJP_PRESS_LIST, Sensitivity.PUBLIC));
+        when(sensitivityService.checkAuthorisation(piUser, ListType.SJP_PRESS_LIST, Sensitivity.PUBLIC))
+            .thenReturn(false);
+
+        assertTrue(ex.getMessage().contains("No user found with the userId"), MESSAGES_MATCH);
+    }
+
 
     @Test
     void testAzureAdminAccountFailedDoesntTriggerEmail() throws AzureCustomException {
