@@ -192,6 +192,35 @@ class AccountServiceTest {
     }
 
     @Test
+    void testVerifiedAccountCreated() throws AzureCustomException {
+        azureAccount.setRole(Roles.VERIFIED);
+
+        when(validator.validate(argThat(sub -> ((AzureAccount) sub).getEmail().equals(azureAccount.getEmail()))))
+            .thenReturn(Set.of());
+
+        when(azureUserService.getUser(EMAIL)).thenReturn(null);
+
+        when(azureUserService.createUser(argThat(user -> user.getEmail().equals(azureAccount.getEmail()))))
+            .thenReturn(expectedUser);
+
+        when(publicationService.sendMediaNotificationEmail(azureAccount.getEmail(), "Test User", false))
+            .thenReturn(TRUE);
+
+        Map<CreationEnum, List<? extends AzureAccount>> createdAccounts =
+            accountService.addAzureAccounts(List.of(azureAccount), ISSUER_ID, FALSE);
+
+        assertTrue(createdAccounts.containsKey(CreationEnum.CREATED_ACCOUNTS), SHOULD_CONTAIN
+            + "CREATED_ACCOUNTS key");
+        List<? extends AzureAccount> accounts = createdAccounts.get(CreationEnum.CREATED_ACCOUNTS);
+        assertEquals(azureAccount.getEmail(), accounts.get(0).getEmail(), EMAIL_VALIDATION_MESSAGE);
+        assertEquals(ID, azureAccount.getAzureAccountId(), "AzureAccount should have azure "
+            + "object ID");
+        assertEquals(0, createdAccounts.get(CreationEnum.ERRORED_ACCOUNTS).size(),
+                     "Map should have no errored accounts"
+        );
+    }
+
+    @Test
     void testAccountCreatedAlreadyExistsNoEmail() throws AzureCustomException {
         when(validator.validate(argThat(sub -> ((AzureAccount) sub).getEmail().equals(azureAccount.getEmail()))))
             .thenReturn(Set.of());
