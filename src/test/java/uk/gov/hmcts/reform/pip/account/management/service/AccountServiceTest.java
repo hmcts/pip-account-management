@@ -830,6 +830,23 @@ class AccountServiceTest {
     }
 
     @Test
+    void testUpdateUserAccountRoleAzureException() throws AzureCustomException {
+        UUID userId = UUID.randomUUID();
+
+        when(userRepository.findByUserId(userId)).thenReturn(Optional.of(piUser));
+
+        when(azureUserService.updateUserRole(any(), any()))
+            .thenThrow(new AzureCustomException(TEST));
+
+        try (LogCaptor logCaptor = LogCaptor.forClass(AccountService.class)) {
+            accountService.updateAccountRole(userId, Roles.SYSTEM_ADMIN);
+            assertEquals(2, logCaptor.getInfoLogs().size(),
+                         "Should not log if failed creating account"
+            );
+        }
+    }
+
+    @Test
     void testFindAllAccountsExceptThirdPartyEmptyParams() {
         Pageable pageable = PageRequest.of(0, 25);
         List<UserProvenances> emptyUserProvenancesList = new ArrayList<>();
