@@ -110,6 +110,7 @@ class AccountServiceTest {
     private static final String VALIDATION_MESSAGE = "Validation Message";
     private static final String EMAIL_VALIDATION_MESSAGE = "AzureAccount should have expected email";
     private static final String ERRORED_ACCOUNTS_VALIDATION_MESSAGE = "Should contain ERRORED_ACCOUNTS key";
+    private static final String ERRORED_ACCOUNTS_KEY = "ERRORED_ACCOUNTS key";
     private static final String TEST = "Test";
     private static final String MESSAGES_MATCH = "Messages should match";
     private static final boolean FALSE = false;
@@ -237,7 +238,7 @@ class AccountServiceTest {
             accountService.addAzureAccounts(List.of(azureAccount), ISSUER_ID, FALSE);
 
         assertTrue(createdAccounts.containsKey(CreationEnum.ERRORED_ACCOUNTS), SHOULD_CONTAIN
-            + "ERRORED_ACCOUNTS key");
+            + ERRORED_ACCOUNTS_KEY);
     }
 
     @Test
@@ -257,7 +258,31 @@ class AccountServiceTest {
             accountService.addAzureAccounts(List.of(azureAccount), ISSUER_ID, FALSE);
 
         assertTrue(createdAccounts.containsKey(CreationEnum.CREATED_ACCOUNTS), SHOULD_CONTAIN
-            + "ERRORED_ACCOUNTS key");
+            + ERRORED_ACCOUNTS_KEY);
+        assertFalse(createdAccounts.containsValue(CreationEnum.CREATED_ACCOUNTS), "Should not contain "
+            + "CREATED_ACCOUNTS value");
+    }
+
+    @Test
+    void testAccountCreatedAlreadyExistsWithNotGivenNameEmail() throws AzureCustomException {
+        when(validator.validate(argThat(sub -> ((AzureAccount) sub).getEmail().equals(azureAccount.getEmail()))))
+            .thenReturn(Set.of());
+
+        User azUser = new User();
+        azUser.id = ID;
+        azUser.givenName = "";
+
+        azureAccount.setRole(Roles.VERIFIED);
+
+        when(azureUserService.getUser(EMAIL)).thenReturn(azUser);
+        when(publicationService.sendNotificationEmailForDuplicateMediaAccount(any(), any())).thenReturn(TRUE);
+        when(azureUserService.createUser(argThat(user -> user.getEmail().equals(azureAccount.getEmail()))))
+            .thenReturn(expectedUser);
+        Map<CreationEnum, List<? extends AzureAccount>> createdAccounts =
+            accountService.addAzureAccounts(List.of(azureAccount), ISSUER_ID, FALSE);
+
+        assertTrue(createdAccounts.containsKey(CreationEnum.CREATED_ACCOUNTS), SHOULD_CONTAIN
+            + ERRORED_ACCOUNTS_KEY);
         assertFalse(createdAccounts.containsValue(CreationEnum.CREATED_ACCOUNTS), "Should not contain "
             + "CREATED_ACCOUNTS value");
     }
@@ -281,7 +306,7 @@ class AccountServiceTest {
             accountService.addAzureAccounts(List.of(azureAccount), ISSUER_ID, FALSE);
 
         assertTrue(createdAccounts.containsKey(CreationEnum.CREATED_ACCOUNTS), SHOULD_CONTAIN
-            + "ERRORED_ACCOUNTS key");
+            + ERRORED_ACCOUNTS_KEY);
         assertFalse(createdAccounts.containsValue(CreationEnum.CREATED_ACCOUNTS), "Should not contain "
             + "CREATED_ACCOUNTS value");
     }
