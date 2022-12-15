@@ -63,6 +63,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static uk.gov.hmcts.reform.pip.account.management.model.Roles.ALL_NON_RESTRICTED_ADMIN_ROLES;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -101,7 +102,7 @@ class AccountServiceTest {
 
     private static final String FULL_NAME = "Full name";
     private static final String ISSUER_ID = "abcdef";
-    private static final String EMAIL = "a@b.com";
+    private static final String EMAIL = "test@hmcts.net";
     private static final UUID USER_UUID = UUID.randomUUID();
     private static final String INVALID_EMAIL = "ab.com";
     private static final String ID = "1234";
@@ -120,6 +121,8 @@ class AccountServiceTest {
     private static final String SUBSCRIPTIONS_DELETED = "subscriptions deleted";
     public static final List<String> EXAMPLE_CSV = List.of(
         "2fe899ff-96ed-435a-bcad-1411bbe96d2a,string,CFT_IDAM,INTERNAL_ADMIN_CTSC");
+
+    private static final String RETURNED_USER_MESSAGE = "Returned user does not match expected user";
 
     private static final UUID VALID_USER_ID = UUID.randomUUID();
     private static final UUID VALID_USER_ID_IDAM = UUID.randomUUID();
@@ -748,7 +751,7 @@ class AccountServiceTest {
         when(userRepository.findByUserId(userId)).thenReturn(Optional.of(user));
 
         PiUser returnedUser = accountService.getUserById(userId);
-        assertEquals(user, returnedUser, "Returned user does not match expected user");
+        assertEquals(user, returnedUser, RETURNED_USER_MESSAGE);
     }
 
     @Test
@@ -783,7 +786,7 @@ class AccountServiceTest {
 
         String response = accountService.updateAccountRole(userId, Roles.SYSTEM_ADMIN);
         assertEquals(String.format("User with ID %s has been updated to a SYSTEM_ADMIN", userId),
-                     response, "Returned user does not match expected user");
+                     response, RETURNED_USER_MESSAGE);
     }
 
     @Test
@@ -799,7 +802,7 @@ class AccountServiceTest {
 
         String response = accountService.updateAccountRole(userId, Roles.SYSTEM_ADMIN);
         assertEquals(String.format("User with ID %s has been updated to a SYSTEM_ADMIN", userId),
-                     response, "Returned user does not match expected user");
+                     response, RETURNED_USER_MESSAGE);
     }
 
     @Test
@@ -884,6 +887,41 @@ class AccountServiceTest {
                 any(), any(), any(), any(), any());
 
         assertEquals(page, response, "Returned page did not match expected");
+    }
+
+    @Test
+    void testGetAdminUserByEmailAndProvenance() {
+        PiUser user = new PiUser();
+        user.setEmail(EMAIL);
+        user.setUserProvenance(UserProvenances.PI_AAD);
+
+        when(userRepository.findByEmailIgnoreCaseAndUserProvenanceAndRolesIn(EMAIL, UserProvenances.PI_AAD,
+                                                                             ALL_NON_RESTRICTED_ADMIN_ROLES))
+            .thenReturn(Optional.of(user));
+
+        PiUser returnedUser = accountService.getAdminUserByEmailAndProvenance(EMAIL, UserProvenances.PI_AAD);
+        assertEquals(user, returnedUser, RETURNED_USER_MESSAGE);
+    }
+
+    @Test
+    void testGetAdminUserByEmailAndProvenanceNotFound() {
+        PiUser user = new PiUser();
+        user.setEmail(EMAIL);
+        user.setUserProvenance(UserProvenances.PI_AAD);
+
+        when(userRepository.findByEmailIgnoreCaseAndUserProvenanceAndRolesIn(EMAIL, UserProvenances.PI_AAD,
+                                                                             ALL_NON_RESTRICTED_ADMIN_ROLES))
+            .thenReturn(Optional.empty());
+
+        NotFoundException notFoundException = assertThrows(NotFoundException.class, () -> {
+            accountService.getAdminUserByEmailAndProvenance(EMAIL, UserProvenances.PI_AAD);
+        }, "The exception when a user has not been found has been thrown");
+
+        assertTrue(notFoundException.getMessage().contains("t***@hmcts.net"),
+                   "Exception message thrown does not contain email");
+
+        assertTrue(notFoundException.getMessage().contains(UserProvenances.PI_AAD.toString()),
+                   "Exception message thrown does not contain provenance");
     }
 
     @Test
