@@ -516,7 +516,7 @@ public class AccountService {
                 azureUser.setEmail(adminUser.get().getEmail());
                 return azureUser;
             } else {
-                new NotFoundException(String.format(
+                throw new NotFoundException(String.format(
                     "User with supplied issuer id: %s could not be found", issuerId));
             }
         } catch (AzureCustomException e) {
