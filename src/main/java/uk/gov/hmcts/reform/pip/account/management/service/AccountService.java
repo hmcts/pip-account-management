@@ -116,21 +116,18 @@ public class AccountService {
 
                 User userAzure = azureUserService.getUser(azureAccount.getEmail());
 
-                if (userAzure != null
-                    && !userAzure.givenName.isEmpty()
+                if (userAzure != null && !userAzure.givenName.isEmpty()
                     && azureAccount.getRole().equals(Roles.VERIFIED)) {
-                    boolean emailSent = publicationService
-                        .sendNotificationEmailForDuplicateMediaAccount(
-                            azureAccount.getEmail(),
-                            userAzure.givenName
-                        );
+
+                    boolean emailSent = publicationService.sendNotificationEmailForDuplicateMediaAccount(
+                            azureAccount.getEmail(), userAzure.givenName);
+
                     if (!emailSent) {
                         ErroredAzureAccount softErroredAccount = new ErroredAzureAccount(azureAccount);
                         softErroredAccount.setErrorMessages(
                             List.of("Unable to send duplicate media account email"));
                         erroredAccounts.add(softErroredAccount);
                     }
-
                     continue;
                 }
 
@@ -179,6 +176,15 @@ public class AccountService {
             user.setLastSignedInDate(localDateTime);
             user.setCreatedDate(localDateTime);
             Set<ConstraintViolation<PiUser>> constraintViolationSet = validator.validate(user);
+
+            if (user.getRoles().equals(Roles.SYSTEM_ADMIN)) {
+                ErroredPiUser erroredUser = new ErroredPiUser(user);
+                erroredUser.setErrorMessages(List.of(
+                    "System admins must be created via the /account/add/system-admin endpoint"));
+                erroredAccounts.add(erroredUser);
+                continue;
+            }
+
             if (!constraintViolationSet.isEmpty()) {
                 ErroredPiUser erroredUser = new ErroredPiUser(user);
                 erroredUser.setErrorMessages(constraintViolationSet
@@ -309,7 +315,6 @@ public class AccountService {
                                                boolean isExisting) {
         boolean isSuccessful;
         switch (createdAccount.getRole()) {
-            case SYSTEM_ADMIN:
             case INTERNAL_ADMIN_CTSC:
             case INTERNAL_ADMIN_LOCAL:
             case INTERNAL_SUPER_ADMIN_CTSC:
