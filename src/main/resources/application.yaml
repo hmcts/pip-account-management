@@ -107,6 +107,10 @@ verification:
   idam-account-sign-in-notification-days: 118
   idam-account-deletion-days: 132
 
+admin:
+  max-system-admin: ${MAX_SYSTEM_ADMIN_ACCOUNTS:4}
+
+
 springdoc:
   swagger-ui:
     path: /swagger-ui/

@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import uk.gov.hmcts.reform.pip.account.management.validation.annotations.AzureEmail;
+import uk.gov.hmcts.reform.pip.account.management.validation.annotations.NotSystemAdmin;
 
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
@@ -15,6 +16,7 @@ import javax.validation.constraints.NotNull;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@NotSystemAdmin
 public class AzureAccount {
 
     /**

@@ -1,3 +1,6 @@
 spring:
   flyway:
     enabled: true
+
+admin:
+  max-system-admin: ${MAX_SYSTEM_ADMIN_ACCOUNTS:2}
