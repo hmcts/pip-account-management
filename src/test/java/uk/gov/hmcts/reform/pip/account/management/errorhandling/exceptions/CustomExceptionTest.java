@@ -1,6 +1,9 @@
 package uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions;
 
 import org.junit.jupiter.api.Test;
+import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredSystemAdminAccount;
+
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -27,4 +30,18 @@ class CustomExceptionTest {
         assertEquals("Failed to parse CSV File due to: " + TEST_MESSAGE, csvParseException.getMessage(),
                      ASSERTION_MESSAGE);
     }
+
+    @Test
+    void testCreationOfSystemAdminException() {
+        ErroredSystemAdminAccount erroredSystemAdminAccount = new ErroredSystemAdminAccount();
+        erroredSystemAdminAccount.setFirstName("Test");
+        erroredSystemAdminAccount.setErrorMessages(List.of("Error message A"));
+
+        SystemAdminAccountException systemAdminAccountException =
+            new SystemAdminAccountException(erroredSystemAdminAccount);
+
+        assertEquals(erroredSystemAdminAccount, systemAdminAccountException.getErroredSystemAdminAccount(),
+                     "The system admin account should match the system admin passed in");
+    }
+
 }

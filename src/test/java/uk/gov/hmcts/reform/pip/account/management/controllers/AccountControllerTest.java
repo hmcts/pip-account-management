@@ -16,9 +16,11 @@ import uk.gov.hmcts.reform.pip.account.management.model.ListType;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
 import uk.gov.hmcts.reform.pip.account.management.model.Roles;
 import uk.gov.hmcts.reform.pip.account.management.model.Sensitivity;
+import uk.gov.hmcts.reform.pip.account.management.model.SystemAdminAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.UserProvenances;
 import uk.gov.hmcts.reform.pip.account.management.service.AccountService;
 import uk.gov.hmcts.reform.pip.account.management.service.AccountVerificationService;
+import uk.gov.hmcts.reform.pip.account.management.service.SystemAdminAccountService;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -56,6 +58,9 @@ class AccountControllerTest {
 
     @Mock
     private AccountVerificationService accountVerificationService;
+
+    @Mock
+    private SystemAdminAccountService systemAdminAccountService;
 
     @InjectMocks
     private AccountController accountController;
@@ -330,5 +335,25 @@ class AccountControllerTest {
         assertThat(accountController.updateAccountById(UUID.randomUUID(), Roles.SYSTEM_ADMIN).getStatusCode())
             .as(STATUS_CODE_MATCH)
             .isEqualTo(HttpStatus.OK);
+    }
+
+    @Test
+    void testCreateSystemAdminAccount() {
+        PiUser testUser = new PiUser();
+        testUser.setEmail(TEST_EMAIL_1);
+        testUser.setRoles(Roles.SYSTEM_ADMIN);
+        testUser.setUserProvenance(UserProvenances.PI_AAD);
+
+        SystemAdminAccount testAccount = new SystemAdminAccount(TEST_EMAIL_1,
+                                                                "Test", "User");
+
+        String testIssuerId = "1234";
+        when(systemAdminAccountService.addSystemAdminAccount(testAccount, testIssuerId)).thenReturn(testUser);
+
+        ResponseEntity<? extends PiUser> response =
+            accountController.createSystemAdminAccount(testIssuerId, testAccount);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode(), STATUS_CODE_MATCH);
+        assertEquals(testUser, response.getBody(), "Should return the created piUser");
     }
 }

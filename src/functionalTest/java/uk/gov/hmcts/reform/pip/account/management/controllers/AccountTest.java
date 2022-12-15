@@ -29,6 +29,7 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
@@ -44,6 +45,7 @@ import uk.gov.hmcts.reform.pip.account.management.model.ListType;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
 import uk.gov.hmcts.reform.pip.account.management.model.Roles;
 import uk.gov.hmcts.reform.pip.account.management.model.Sensitivity;
+import uk.gov.hmcts.reform.pip.account.management.model.SystemAdminAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.UserProvenances;
 import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredAzureAccount;
 
@@ -73,6 +75,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @WithMockUser(username = "admin", authorities = {"APPROLE_api.request.admin"})
+
 @SuppressWarnings({"PMD.TooManyMethods", "PMD.LawOfDemeter", "PMD.ExcessiveImports",
     "PMD.JUnitTestsShouldIncludeAssert", "PMD.ExcessiveClassLength"})
 class AccountTest {
@@ -125,7 +128,9 @@ class AccountTest {
     private static final String DELETE_EXPIRED_IDAM_ACCOUNTS_URL = ROOT_URL + "/idam/inactive";
     private static final String MI_REPORTING_ACCOUNT_DATA_URL = ROOT_URL + "/mi-data";
     private static final String GET_ALL_ACCOUNTS_EXCEPT_THIRD_PARTY = ROOT_URL + "/all";
+    private static final String CREATE_SYSTEM_ADMIN_URL = ROOT_URL + "/add/system-admin";
     private static final String EMAIL_URL = ROOT_URL + "/emails";
+
     private static final String EMAIL = "test_account_admin@hmcts.net";
     private static final String INVALID_EMAIL = "ab";
     private static final String FIRST_NAME = "First name";
@@ -133,6 +138,8 @@ class AccountTest {
     private static final UserProvenances PROVENANCE = UserProvenances.PI_AAD;
     private static final Roles ROLE = Roles.INTERNAL_ADMIN_CTSC;
     private static final String ISSUER_ID = "1234-1234-1234-1234";
+    private static final String SYSTEM_ADMIN_ISSUER_ID = "87f907d2-eb28-42cc-b6e1-ae2b03f7bba2";
+
     private static final String ISSUER_HEADER = "x-issuer-id";
     private static final String MEDIA_LIST = "mediaList";
     private static final String GIVEN_NAME = "Given Name";
@@ -175,6 +182,21 @@ class AccountTest {
         user.setSurname("Surname");
 
         return user;
+    }
+
+    private void mockPiUser() {
+        User user = new User();
+        user.id = ID;
+        user.givenName = GIVEN_NAME;
+        List<User> azUsers = new ArrayList<>();
+        azUsers.add(user);
+
+        userCollectionPage = new UserCollectionPage(azUsers, userCollectionRequestBuilder);
+        when(clientConfiguration.getB2cUrl()).thenReturn(B2C_URL);
+        when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
+        when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
+        when(userCollectionRequest.filter(any())).thenReturn(userCollectionRequest);
+        when(userCollectionRequest.get()).thenReturn(userCollectionPage);
     }
 
     @BeforeEach
@@ -255,19 +277,7 @@ class AccountTest {
         azureAccount.setFirstName(FIRST_NAME);
         azureAccount.setRole(Roles.VERIFIED);
 
-        User user = new User();
-        user.id = ID;
-        user.givenName = GIVEN_NAME;
-        List<User> azUsers = new ArrayList<>();
-        azUsers.add(user);
-
-        userCollectionPage = new UserCollectionPage(azUsers, userCollectionRequestBuilder);
-
-        when(clientConfiguration.getB2cUrl()).thenReturn(B2C_URL);
-        when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
-        when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
-        when(userCollectionRequest.filter(any())).thenReturn(userCollectionRequest);
-        when(userCollectionRequest.get()).thenReturn(userCollectionPage);
+        mockPiUser();
 
         objectMapper.findAndRegisterModules();
 
@@ -702,7 +712,8 @@ class AccountTest {
                 }
             );
 
-        assertEquals(1, mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).size(), "1 User should be created");
+        assertEquals(1, mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).size(),
+                     "1 User should be created");
     }
 
     @Test
@@ -740,7 +751,8 @@ class AccountTest {
                 }
             );
 
-        assertEquals(2, mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).size(), "1 Users should be created");
+        assertEquals(2, mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).size(),
+                     "1 Users should be created");
     }
 
     @Test
@@ -781,7 +793,8 @@ class AccountTest {
                 }
             );
 
-        assertEquals(2, mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).size(), "2 Users should be created");
+        assertEquals(2, mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).size(),
+                     "2 Users should be created");
     }
 
     @Test
@@ -802,7 +815,8 @@ class AccountTest {
                 }
             );
 
-        assertEquals(1, mappedResponse.get(CreationEnum.ERRORED_ACCOUNTS).size(), "1 User should be errored");
+        assertEquals(1, mappedResponse.get(CreationEnum.ERRORED_ACCOUNTS).size(),
+                     "1 User should be errored");
     }
 
     @Test
@@ -824,7 +838,8 @@ class AccountTest {
                 }
             );
 
-        assertEquals(2, mappedResponse.get(CreationEnum.ERRORED_ACCOUNTS).size(), "2 Users should be errored");
+        assertEquals(2, mappedResponse.get(CreationEnum.ERRORED_ACCOUNTS).size(),
+                     "2 Users should be errored");
     }
 
     @Test
@@ -845,8 +860,10 @@ class AccountTest {
                 }
             );
 
-        assertEquals(1, mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).size(), "1 User should be created");
-        assertEquals(1, mappedResponse.get(CreationEnum.ERRORED_ACCOUNTS).size(), "1 User should be errored");
+        assertEquals(1, mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).size(),
+                     "1 User should be created");
+        assertEquals(1, mappedResponse.get(CreationEnum.ERRORED_ACCOUNTS).size(),
+                     "1 User should be errored");
     }
 
     @Test
@@ -870,7 +887,8 @@ class AccountTest {
             response.getResponse().getContentAsString(),
             PiUser.class
         );
-        assertEquals(validUser.getProvenanceUserId(), returnedUser.getProvenanceUserId(), "Users should match");
+        assertEquals(validUser.getProvenanceUserId(), returnedUser.getProvenanceUserId(),
+                     "Users should match");
         assertThat(returnedUser.getCreatedDate()).as("Created date must not be null").isNotNull();
     }
 
@@ -1338,7 +1356,7 @@ class AccountTest {
     }
 
     @Test
-    @WithMockUser(username = "unauthorized_account", authorities = { "APPROLE_unknown.account" })
+    @WithMockUser(username = "unauthorized_account", authorities = {"APPROLE_unknown.account"})
     void testUnauthorizedGetAllThirdPartyAccounts() throws Exception {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .get(ROOT_URL + "/all/third-party");
@@ -1347,7 +1365,8 @@ class AccountTest {
             mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isForbidden()).andReturn();
 
         assertEquals(HttpStatus.FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
-                     FORBIDDEN_STATUS_CODE);
+                     FORBIDDEN_STATUS_CODE
+        );
     }
 
     @Test
@@ -1400,8 +1419,9 @@ class AccountTest {
             .delete(ROOT_URL + "/delete/" + createdUserId);
 
         MvcResult mvcResult = mockMvc.perform(deleteRequest).andExpect(status().isOk()).andReturn();
-        assertEquals("User deleted",mvcResult.getResponse().getContentAsString(),
-                     "Failed to delete user");
+        assertEquals("User deleted", mvcResult.getResponse().getContentAsString(),
+                     "Failed to delete user"
+        );
     }
 
     @Test
@@ -1484,6 +1504,102 @@ class AccountTest {
 
         assertEquals(HttpStatus.NOT_FOUND.value(), mvcResult.getResponse().getStatus(),
                      NOT_FOUND_STATUS_CODE_MESSAGE
+        );
+    }
+
+    @Test
+    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = "classpath:add-system-admin.sql")
+    void testCreateSystemAdminAccount() throws Exception {
+
+        SystemAdminAccount systemAdmin = new SystemAdminAccount();
+        systemAdmin.setFirstName("testSysAdminFirstname");
+        systemAdmin.setSurname("testSysAdminSurname");
+        systemAdmin.setEmail("testSysAdminEmail@justice.gov.uk");
+
+        mockPiUser();
+
+        MockHttpServletRequestBuilder createRequest =
+            MockMvcRequestBuilders
+                .post(CREATE_SYSTEM_ADMIN_URL)
+                .content(objectMapper.writeValueAsString(systemAdmin))
+                .header(ISSUER_HEADER, SYSTEM_ADMIN_ISSUER_ID)
+                .contentType(MediaType.APPLICATION_JSON);
+
+        MvcResult responseCreateSystemAdminUser = mockMvc.perform(createRequest)
+            .andExpect(status().isOk()).andReturn();
+
+        PiUser returnedUser = objectMapper.readValue(
+            responseCreateSystemAdminUser.getResponse().getContentAsString(),
+            PiUser.class
+        );
+
+        assertEquals(
+            systemAdmin.getEmail(), returnedUser.getEmail(),
+            "Failed to create user"
+        );
+    }
+
+    @Test
+    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
+    void testUnauthorizedCreateSystemAdminAccount() throws Exception {
+        SystemAdminAccount systemAdmin = new SystemAdminAccount();
+        systemAdmin.setFirstName("testSysAdminFirstname");
+        systemAdmin.setSurname("testSysAdminSurname");
+        systemAdmin.setEmail("testSysAdminEmail@justice.gov.uk");
+
+        MockHttpServletRequestBuilder createRequest =
+            MockMvcRequestBuilders
+                .post(CREATE_SYSTEM_ADMIN_URL)
+                .content(objectMapper.writeValueAsString(systemAdmin))
+                .header(ISSUER_HEADER, ISSUER_ID)
+                .contentType(MediaType.APPLICATION_JSON);
+
+        MvcResult responseCreateSystemAdminUser = mockMvc.perform(createRequest)
+            .andExpect(status().isForbidden()).andReturn();
+
+        assertEquals(HttpStatus.FORBIDDEN.value(), responseCreateSystemAdminUser.getResponse().getStatus(),
+                     FORBIDDEN_STATUS_CODE
+        );
+    }
+
+    @Test
+    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = "classpath:add-system-admin.sql")
+    void testCreateSystemAdminAccountRequestExceeded() throws Exception {
+
+        SystemAdminAccount systemAdmin1 = new SystemAdminAccount();
+        systemAdmin1.setFirstName("testSysAdminFirstname1");
+        systemAdmin1.setSurname("testSysAdminSurname1");
+        systemAdmin1.setEmail("testSysAdminEmai1l@justice.gov.uk");
+
+        mockPiUser();
+
+        MockHttpServletRequestBuilder createRequest1 =
+            MockMvcRequestBuilders
+                .post(CREATE_SYSTEM_ADMIN_URL)
+                .content(objectMapper.writeValueAsString(systemAdmin1))
+                .header(ISSUER_HEADER, SYSTEM_ADMIN_ISSUER_ID)
+                .contentType(MediaType.APPLICATION_JSON);
+
+        mockMvc.perform(createRequest1)
+            .andExpect(status().isOk());
+
+        SystemAdminAccount systemAdmin2 = new SystemAdminAccount();
+        systemAdmin2.setFirstName("testSysAdminFirstname2");
+        systemAdmin2.setSurname("testSysAdminSurname2");
+        systemAdmin2.setEmail("testSysAdminEmai12@justice.gov.uk");
+
+        MockHttpServletRequestBuilder createRequest2 =
+            MockMvcRequestBuilders
+                .post(CREATE_SYSTEM_ADMIN_URL)
+                .content(objectMapper.writeValueAsString(systemAdmin2))
+                .header(ISSUER_HEADER, SYSTEM_ADMIN_ISSUER_ID)
+                .contentType(MediaType.APPLICATION_JSON);
+
+        MvcResult responseCreateSystemAdminUser = mockMvc.perform(createRequest2)
+            .andExpect(status().isBadRequest()).andReturn();
+
+        assertEquals(HttpStatus.BAD_REQUEST.value(), responseCreateSystemAdminUser.getResponse().getStatus(),
+                     "Number of system admin accounts exceeded the max limit"
         );
     }
 
