@@ -38,4 +38,3 @@ resource "postgresql_grant" "readonly_mv" {
   privileges  = ["SELECT"]
   objects     = ["sdp_mat_view_pi_user"]
 }
-
