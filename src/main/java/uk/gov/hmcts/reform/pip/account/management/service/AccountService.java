@@ -14,6 +14,7 @@ import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.Azure
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.CsvParseException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.NotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.UserNotFoundException;
+import uk.gov.hmcts.reform.pip.account.management.helpers.EmailHelper;
 import uk.gov.hmcts.reform.pip.account.management.model.AzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.ListType;
@@ -510,6 +511,6 @@ public class AccountService {
         return userRepository.findByEmailIgnoreCaseAndUserProvenanceAndRolesIn(email, provenance,
                                                                                ALL_NON_RESTRICTED_ADMIN_ROLES)
             .orElseThrow(() -> new NotFoundException(String.format(
-                "No user found with the email: %s and provenance %s", email, provenance)));
+                "No user found with the email: %s and provenance %s", EmailHelper.maskEmail(email), provenance)));
     }
 }

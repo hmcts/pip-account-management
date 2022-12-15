@@ -102,7 +102,7 @@ class AccountServiceTest {
 
     private static final String FULL_NAME = "Full name";
     private static final String ISSUER_ID = "abcdef";
-    private static final String EMAIL = "a@b.com";
+    private static final String EMAIL = "test@hmcts.net";
     private static final UUID USER_UUID = UUID.randomUUID();
     private static final String INVALID_EMAIL = "ab.com";
     private static final String ID = "1234";
@@ -888,7 +888,7 @@ class AccountServiceTest {
             accountService.getAdminUserByEmailAndProvenance(EMAIL, UserProvenances.PI_AAD);
         }, "The exception when a user has not been found has been thrown");
 
-        assertTrue(notFoundException.getMessage().contains(EMAIL),
+        assertTrue(notFoundException.getMessage().contains("t***@hmcts.net"),
                    "Exception message thrown does not contain email");
 
         assertTrue(notFoundException.getMessage().contains(UserProvenances.PI_AAD.toString()),
