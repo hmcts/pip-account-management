@@ -344,8 +344,8 @@ public class AccountController {
     })
     @Operation(summary = "Get P&I Azure User info")
     @ResponseStatus(HttpStatus.OK)
-    @GetMapping("/get-info/{issuerId}")
-    public ResponseEntity<AzureAccount> getUserInfo(@PathVariable String issuerId) {
-        return ResponseEntity.ok(accountService.retrieveUser(issuerId));
+    @GetMapping("/get-info/{provenanceUserId}")
+    public ResponseEntity<AzureAccount> getUserInfo(@PathVariable String provenanceUserId) {
+        return ResponseEntity.ok(accountService.retrieveUser(provenanceUserId));
     }
 }

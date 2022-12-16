@@ -503,28 +503,28 @@ public class AccountService {
             "User with supplied user id: %s could not be found", userId)));
     }
 
-    public AzureAccount retrieveUser(String issuerId) {
+    public AzureAccount retrieveUser(String provenanceUserId) {
         try {
-            Optional<PiUser> pAndIUser = userRepository.findByUserIdAndUserProvenance(UUID.fromString(issuerId),
-                                                                                      UserProvenances.PI_AAD);
-            if (pAndIUser.isPresent()) {
+            Optional<PiUser> user = userRepository.findByProvenanceUserIdAndUserProvenance(
+                provenanceUserId, UserProvenances.PI_AAD);
+            if (user.isPresent()) {
                 AzureAccount azureUser = new AzureAccount();
-                User user = azureUserService.getUser(pAndIUser.get().getEmail());
-                azureUser.setAzureAccountId(user.id);
-                azureUser.setFirstName(user.givenName);
-                azureUser.setSurname(user.surname);
-                azureUser.setDisplayName(user.displayName);
-                azureUser.setEmail(pAndIUser.get().getEmail());
+                User aadUser = azureUserService.getUser(user.get().getEmail());
+                azureUser.setAzureAccountId(aadUser.id);
+                azureUser.setFirstName(aadUser.givenName);
+                azureUser.setSurname(aadUser.surname);
+                azureUser.setDisplayName(aadUser.displayName);
+                azureUser.setEmail(user.get().getEmail());
                 return azureUser;
             } else {
                 throw new NotFoundException(String.format(
-                    "User with supplied issuer id: %s could not be found", issuerId));
+                    "User with supplied issuer id: %s could not be found", provenanceUserId));
             }
         } catch (AzureCustomException e) {
-            log.error(writeLog(UUID.fromString(issuerId), "Error while retrieving users details"));
+            log.error(writeLog(UUID.fromString(provenanceUserId), "Error while retrieving users details"));
         }
 
-        throw new IllegalArgumentException("Error while retrieving user details with ID: " + issuerId);
+        throw new IllegalArgumentException("Error while retrieving user details with ID: " + provenanceUserId);
     }
 
 }
