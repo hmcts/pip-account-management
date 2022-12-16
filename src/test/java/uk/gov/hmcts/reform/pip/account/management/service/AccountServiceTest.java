@@ -1023,7 +1023,8 @@ class AccountServiceTest {
         azUser.surname = SURNAME;
 
         when(azureUserService.getUser(EMAIL)).thenReturn(azUser);
-        when(userRepository.findByUserId(userId)).thenReturn(Optional.of(user));
+        when(userRepository.findByUserIdAndUserProvenance(userId, UserProvenances.PI_AAD))
+            .thenReturn(Optional.of(user));
 
         AzureAccount returnedUser = accountService.retrieveUser(userId.toString());
         assertEquals(azUser.displayName, returnedUser.getDisplayName(), RETURN_USER_ERROR);

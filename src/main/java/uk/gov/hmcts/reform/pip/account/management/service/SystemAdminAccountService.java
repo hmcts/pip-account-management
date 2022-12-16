@@ -147,9 +147,9 @@ public class SystemAdminAccountService {
     }
 
     /**
-     * Method to retrieve the name of the admin user, and also throw an exception if the user is not a SYSTEM_ADMIN.
+     * Method to find whether user is SYSTEM_ADMIN or not.
      * @param issuerId The ID of the admin user
-     * @return The name of the admin user.
+     * @return Boolean user is SYSTEM_ADMIN or not
      */
     private Boolean verifyAdminUser(String issuerId) {
         Optional<PiUser> adminUser = userRepository.findByUserId(UUID.fromString(issuerId));

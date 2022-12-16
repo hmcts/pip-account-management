@@ -505,15 +505,16 @@ public class AccountService {
 
     public AzureAccount retrieveUser(String issuerId) {
         try {
-            Optional<PiUser> adminUser = userRepository.findByUserId(UUID.fromString(issuerId));
-            if (adminUser.isPresent()) {
+            Optional<PiUser> pAndIUser = userRepository.findByUserIdAndUserProvenance(UUID.fromString(issuerId),
+                                                                                      UserProvenances.PI_AAD);
+            if (pAndIUser.isPresent()) {
                 AzureAccount azureUser = new AzureAccount();
-                User user = azureUserService.getUser(adminUser.get().getEmail());
+                User user = azureUserService.getUser(pAndIUser.get().getEmail());
                 azureUser.setAzureAccountId(user.id);
                 azureUser.setFirstName(user.givenName);
                 azureUser.setSurname(user.surname);
                 azureUser.setDisplayName(user.displayName);
-                azureUser.setEmail(adminUser.get().getEmail());
+                azureUser.setEmail(pAndIUser.get().getEmail());
                 return azureUser;
             } else {
                 throw new NotFoundException(String.format(
