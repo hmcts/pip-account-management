@@ -14,6 +14,7 @@ import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.Azure
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.CsvParseException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.NotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.UserNotFoundException;
+import uk.gov.hmcts.reform.pip.account.management.helpers.EmailHelper;
 import uk.gov.hmcts.reform.pip.account.management.model.AzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.ListType;
@@ -45,6 +46,7 @@ import java.util.stream.Stream;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
 
+import static uk.gov.hmcts.reform.pip.account.management.model.Roles.ALL_NON_RESTRICTED_ADMIN_ROLES;
 import static uk.gov.hmcts.reform.pip.account.management.model.Roles.ALL_NON_THIRD_PARTY_ROLES;
 import static uk.gov.hmcts.reform.pip.account.management.model.UserProvenances.ALL_NON_THIRD_PARTY_PROVENANCES;
 import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
@@ -503,4 +505,17 @@ public class AccountService {
             "User with supplied user id: %s could not be found", userId)));
     }
 
+    /**
+     * This method retrieves an admin user (excluding system admin) by their email and provenance.
+     * @param email The email of the user to retrieve
+     * @param provenance The provenance of the user to retrieve
+     * @return The user that is found.
+     * @throws NotFoundException if a user is not found.
+     */
+    public PiUser getAdminUserByEmailAndProvenance(String email, UserProvenances provenance) {
+        return userRepository.findByEmailIgnoreCaseAndUserProvenanceAndRolesIn(email, provenance,
+                                                                               ALL_NON_RESTRICTED_ADMIN_ROLES)
+            .orElseThrow(() -> new NotFoundException(String.format(
+                "No user found with the email: %s and provenance %s", EmailHelper.maskEmail(email), provenance)));
+    }
 }
