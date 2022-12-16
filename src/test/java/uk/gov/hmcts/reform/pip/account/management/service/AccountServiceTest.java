@@ -67,7 +67,8 @@ import static uk.gov.hmcts.reform.pip.account.management.model.Roles.ALL_NON_RES
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
-@SuppressWarnings({"PMD.TooManyMethods", "PMD.ExcessiveImports", "PMD.LawOfDemeter"})
+@SuppressWarnings({"PMD.TooManyMethods", "PMD.ExcessiveImports", "PMD.LawOfDemeter",
+    "PMD.ExcessiveClassLength"})
 class AccountServiceTest {
 
     @Mock
@@ -123,8 +124,8 @@ class AccountServiceTest {
     public static final List<String> EXAMPLE_CSV = List.of(
         "2fe899ff-96ed-435a-bcad-1411bbe96d2a,string,CFT_IDAM,INTERNAL_ADMIN_CTSC");
 
-    private static final String RETURNED_USER_MESSAGE = "Returned user does not match expected user";
-
+    private static final String USER_NOT_FOUND_EXCEPTION_MESSAGE =
+        "The exception when a user has not been found has been thrown";
     private static final UUID VALID_USER_ID = UUID.randomUUID();
     private static final UUID VALID_USER_ID_IDAM = UUID.randomUUID();
 
@@ -853,7 +854,7 @@ class AccountServiceTest {
 
         NotFoundException notFoundException = assertThrows(NotFoundException.class, () -> {
             accountService.getUserById(userId);
-        }, "The exception when a user has not been found has been thrown");
+        }, USER_NOT_FOUND_EXCEPTION_MESSAGE);
 
         assertTrue(notFoundException.getMessage().contains(userId.toString()),
                    "Exception message thrown does not contain the user ID");
@@ -904,7 +905,7 @@ class AccountServiceTest {
 
         NotFoundException notFoundException = assertThrows(NotFoundException.class, () -> {
             accountService.updateAccountRole(userId, Roles.SYSTEM_ADMIN);
-        }, "The exception when a user has not been found has been thrown");
+        }, USER_NOT_FOUND_EXCEPTION_MESSAGE);
 
         assertTrue(notFoundException.getMessage().contains(userId.toString()),
                    "Exception message thrown does not contain the user ID");
@@ -1008,7 +1009,7 @@ class AccountServiceTest {
             .thenReturn(Optional.of(user));
 
         PiUser returnedUser = accountService.getAdminUserByEmailAndProvenance(EMAIL, UserProvenances.PI_AAD);
-        assertEquals(user, returnedUser, RETURNED_USER_MESSAGE);
+        assertEquals(user, returnedUser, RETURN_USER_ERROR);
     }
 
     @Test
@@ -1023,7 +1024,7 @@ class AccountServiceTest {
 
         NotFoundException notFoundException = assertThrows(NotFoundException.class, () -> {
             accountService.getAdminUserByEmailAndProvenance(EMAIL, UserProvenances.PI_AAD);
-        }, "The exception when a user has not been found has been thrown");
+        }, USER_NOT_FOUND_EXCEPTION_MESSAGE);
 
         assertTrue(notFoundException.getMessage().contains("t***@hmcts.net"),
                    "Exception message thrown does not contain email");
@@ -1076,7 +1077,7 @@ class AccountServiceTest {
 
         NotFoundException notFoundException = assertThrows(NotFoundException.class, () -> {
             accountService.getUserById(userId);
-        }, "The exception when a user has not been found has been thrown");
+        }, USER_NOT_FOUND_EXCEPTION_MESSAGE);
 
         assertTrue(notFoundException.getMessage().contains(userId.toString()),
                    "Exception message thrown does not contain the user ID");
