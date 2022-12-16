@@ -70,6 +70,7 @@ public class AccountController {
     private static final String NO_CONTENT_CODE = "204";
 
     private static final String BAD_REQUEST_CODE = "400";
+    private static final String PI_USER = "{piUser}";
 
     /**
      * POST endpoint to create a new azure account.
@@ -111,7 +112,7 @@ public class AccountController {
     }
 
     @ApiResponses({
-        @ApiResponse(responseCode = OK_CODE, description = "{PiUser}"),
+        @ApiResponse(responseCode = OK_CODE, description = PI_USER),
         @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE),
         @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description = "No user found with the "
             + "user Id: {userId}")
@@ -123,7 +124,7 @@ public class AccountController {
     }
 
     @ApiResponses({
-        @ApiResponse(responseCode = OK_CODE, description = "{PiUser}"),
+        @ApiResponse(responseCode = OK_CODE, description = PI_USER),
         @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE),
         @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description = "No user found with the "
             + "provenance user Id: {provenanceUserId}")
@@ -326,7 +327,7 @@ public class AccountController {
      * @return The PiUser that's been added, or an ErroredPiUser if it failed to add.
      */
     @ApiResponses({
-        @ApiResponse(responseCode = OK_CODE, description = "{PiUser}"),
+        @ApiResponse(responseCode = OK_CODE, description = PI_USER),
         @ApiResponse(responseCode = BAD_REQUEST_CODE, description = "{ErroredSystemAdminAccount}"),
         @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE),
     })
@@ -347,5 +348,18 @@ public class AccountController {
     @GetMapping("/get-info/{provenanceUserId}")
     public ResponseEntity<AzureAccount> getUserInfo(@PathVariable String provenanceUserId) {
         return ResponseEntity.ok(accountService.retrieveUser(provenanceUserId));
+    }
+
+    @ApiResponses({
+        @ApiResponse(responseCode = OK_CODE, description = PI_USER),
+        @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE),
+        @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description = "No user found with the ")
+    })
+    @Operation(summary = "Get an Admin user (excluding system admin) based on their email and provenance"
+        + "email: {email} and provenance {provenance}")
+    @GetMapping("/admin/{email}/{provenance}")
+    public ResponseEntity<PiUser> getAdminUserByEmailAndProvenance(@PathVariable String email,
+                                                              @PathVariable UserProvenances provenance) {
+        return ResponseEntity.ok(accountService.getAdminUserByEmailAndProvenance(email, provenance));
     }
 }
