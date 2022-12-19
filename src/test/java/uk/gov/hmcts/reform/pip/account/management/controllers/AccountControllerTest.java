@@ -381,14 +381,14 @@ class AccountControllerTest {
 
         String issuerId = UUID.randomUUID().toString();
 
-        when(accountService.retrieveUser(issuerId))
+        when(accountService.retrieveAzureUser(issuerId))
             .thenReturn(user);
 
         assertEquals(user,
-                     accountController.getUserInfo(issuerId)
+                     accountController.getAzureUserInfo(issuerId)
                          .getBody(), "Should return found user");
 
-        assertEquals(HttpStatus.OK, accountController.getUserInfo(issuerId).getStatusCode(),
+        assertEquals(HttpStatus.OK, accountController.getAzureUserInfo(issuerId).getStatusCode(),
                      STATUS_CODE_MATCH);
     }
 }

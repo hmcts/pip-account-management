@@ -97,7 +97,7 @@ class SystemAdminAccountServiceTest {
         when(azureUserService.createUser(argThat(user -> EMAIL.equals(user.getEmail()))))
             .thenReturn(expectedUser);
         when(userRepository.save(any())).thenReturn(expectedPiUser);
-        when(accountService.retrieveUser(any()))
+        when(accountService.retrieveAzureUser(any()))
             .thenReturn(azUser);
         when(publicationService.sendNotificationEmail(EMAIL, FORENAME, SURNAME)).thenReturn(Boolean.TRUE);
         when(userRepository.findByUserId(any())).thenReturn(Optional.ofNullable(expectedPiUser));
@@ -116,7 +116,7 @@ class SystemAdminAccountServiceTest {
 
         when(userRepository.findByUserId(any()))
             .thenReturn(Optional.ofNullable(expectedPiUser));
-        when(accountService.retrieveUser(any()))
+        when(accountService.retrieveAzureUser(any()))
             .thenReturn(azUser);
         when(azureUserService.createUser(argThat(user -> EMAIL.equals(user.getEmail()))))
             .thenThrow(new AzureCustomException("Test error"));
@@ -137,7 +137,7 @@ class SystemAdminAccountServiceTest {
 
         when(userRepository.findByUserId(any()))
             .thenReturn(Optional.ofNullable(expectedPiUser));
-        when(accountService.retrieveUser(any()))
+        when(accountService.retrieveAzureUser(any()))
             .thenReturn(azUser);
         when(validator.validate(any(), any())).thenReturn(Set.of(constraintViolation));
         when(constraintViolation.getMessage()).thenReturn("This is a message");
@@ -197,7 +197,7 @@ class SystemAdminAccountServiceTest {
             .thenReturn(Optional.of(expectedPiUser));
         when(userRepository.findByUserId(any()))
             .thenReturn(Optional.ofNullable(expectedPiUser));
-        when(accountService.retrieveUser(any()))
+        when(accountService.retrieveAzureUser(any()))
             .thenReturn(azUser);
 
         SystemAdminAccountException systemAdminAccountException =
@@ -216,7 +216,7 @@ class SystemAdminAccountServiceTest {
             .thenReturn(Optional.empty());
         when(userRepository.findByUserId(any()))
             .thenReturn(Optional.ofNullable(expectedPiUser));
-        when(accountService.retrieveUser(any()))
+        when(accountService.retrieveAzureUser(any()))
             .thenReturn(azUser);
         when(userRepository.findByRoles(Roles.SYSTEM_ADMIN)).thenReturn(List.of(expectedPiUser, expectedPiUser,
                                                                                 expectedPiUser, expectedPiUser));

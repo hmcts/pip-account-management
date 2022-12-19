@@ -1065,7 +1065,7 @@ class AccountServiceTest {
         when(userRepository.findByProvenanceUserIdAndUserProvenance(userId.toString(), UserProvenances.PI_AAD))
             .thenReturn(Optional.of(user));
 
-        AzureAccount returnedUser = accountService.retrieveUser(userId.toString());
+        AzureAccount returnedUser = accountService.retrieveAzureUser(userId.toString());
         assertEquals(azUser.displayName, returnedUser.getDisplayName(), RETURN_USER_ERROR);
     }
 

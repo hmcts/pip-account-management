@@ -65,7 +65,7 @@ public class SystemAdminAccountService {
 
         String displayName = "";
         if (verifyAdminUser(issuerId)) {
-            displayName = accountService.retrieveUser(issuerId).getDisplayName();
+            displayName = accountService.retrieveAzureUser(issuerId).getDisplayName();
         }
 
         validateSystemAdminAccount(account, issuerId, displayName);

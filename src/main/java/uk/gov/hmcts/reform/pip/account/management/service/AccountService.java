@@ -505,7 +505,7 @@ public class AccountService {
             "User with supplied user id: %s could not be found", userId)));
     }
 
-    public AzureAccount retrieveUser(String provenanceUserId) {
+    public AzureAccount retrieveAzureUser(String provenanceUserId) {
         try {
             Optional<PiUser> user = userRepository.findByProvenanceUserIdAndUserProvenance(
                 provenanceUserId, UserProvenances.PI_AAD);
@@ -520,13 +520,14 @@ public class AccountService {
                 return azureUser;
             } else {
                 throw new NotFoundException(String.format(
-                    "User with supplied issuer id: %s could not be found", provenanceUserId));
+                    "User with supplied provenanceUserId: %s could not be found", provenanceUserId));
             }
         } catch (AzureCustomException e) {
             log.error(writeLog(UUID.fromString(provenanceUserId), "Error while retrieving users details"));
         }
 
-        throw new IllegalArgumentException("Error while retrieving user details with ID: " + provenanceUserId);
+        throw new IllegalArgumentException("Error while retrieving user details with provenanceUserId: "
+                                               + provenanceUserId);
     }
 
     /**

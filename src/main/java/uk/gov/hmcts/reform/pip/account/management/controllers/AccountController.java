@@ -345,18 +345,18 @@ public class AccountController {
     })
     @Operation(summary = "Get P&I Azure User info")
     @ResponseStatus(HttpStatus.OK)
-    @GetMapping("/get-info/{provenanceUserId}")
-    public ResponseEntity<AzureAccount> getUserInfo(@PathVariable String provenanceUserId) {
-        return ResponseEntity.ok(accountService.retrieveUser(provenanceUserId));
+    @GetMapping("/azure/{provenanceUserId}")
+    public ResponseEntity<AzureAccount> getAzureUserInfo(@PathVariable String provenanceUserId) {
+        return ResponseEntity.ok(accountService.retrieveAzureUser(provenanceUserId));
     }
 
     @ApiResponses({
         @ApiResponse(responseCode = OK_CODE, description = PI_USER),
         @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE),
-        @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description = "No user found with the ")
+        @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description = "No user found with the "
+            + "email: {email} and provenance {provenance}")
     })
-    @Operation(summary = "Get an Admin user (excluding system admin) based on their email and provenance"
-        + "email: {email} and provenance {provenance}")
+    @Operation(summary = "Get an Admin user (excluding system admin) based on their email and provenance")
     @GetMapping("/admin/{email}/{provenance}")
     public ResponseEntity<PiUser> getAdminUserByEmailAndProvenance(@PathVariable String email,
                                                               @PathVariable UserProvenances provenance) {
