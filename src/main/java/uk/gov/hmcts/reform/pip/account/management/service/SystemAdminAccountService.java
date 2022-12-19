@@ -64,8 +64,9 @@ public class SystemAdminAccountService {
     public PiUser addSystemAdminAccount(SystemAdminAccount account, String issuerId) {
 
         String displayName = "";
-        if (verifyAdminUser(issuerId)) {
-            displayName = accountService.retrieveAzureUser(issuerId).getDisplayName();
+        String provenanceUserId = verifyAdminUser(issuerId);
+        if (!provenanceUserId.isEmpty()) {
+            displayName = accountService.retrieveAzureUser(provenanceUserId).getDisplayName();
         }
 
         validateSystemAdminAccount(account, issuerId, displayName);
@@ -151,12 +152,12 @@ public class SystemAdminAccountService {
      * @param issuerId The ID of the admin user
      * @return Boolean user is SYSTEM_ADMIN or not
      */
-    private Boolean verifyAdminUser(String issuerId) {
+    private String verifyAdminUser(String issuerId) {
         Optional<PiUser> adminUser = userRepository.findByUserId(UUID.fromString(issuerId));
         if (adminUser.isPresent() && adminUser.get().getRoles().equals(Roles.SYSTEM_ADMIN)) {
-            return true;
+            return adminUser.get().getProvenanceUserId();
         }
 
-        return false;
+        return "";
     }
 }
