@@ -13,7 +13,7 @@ import org.springframework.context.annotation.Profile;
 
 @Profile("functional")
 @Configuration
-public class AzureConfigurationClientTest {
+public class AzureConfigurationClientTestConfiguration {
 
     @Mock
     GraphServiceClient<Request> graphClientMock;
@@ -28,7 +28,7 @@ public class AzureConfigurationClientTest {
     GraphServiceException graphServiceExceptionMock;
 
 
-    public AzureConfigurationClientTest() {
+    public AzureConfigurationClientTestConfiguration() {
         MockitoAnnotations.openMocks(this);
     }
 

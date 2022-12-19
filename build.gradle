@@ -67,6 +67,14 @@ task migratePostgresDatabase(type: org.flywaydb.gradle.task.FlywayMigrateTask) {
   }
 }
 
+configurations {
+  functionalTestImplementation.extendsFrom testImplementation
+  functionalTestRuntimeOnly.extendsFrom runtimeOnly
+
+  smokeTestImplementation.extendsFrom testImplementation
+  smokeTestRuntimeOnly.extendsFrom runtimeOnly
+}
+
 tasks.withType(JavaCompile) {
   options.compilerArgs << "-Xlint:unchecked" << "-Werror"
 }
@@ -103,12 +111,12 @@ task smoke(type: Test) {
 
 checkstyle {
   maxWarnings = 0
-  toolVersion = '8.29'
+  toolVersion = '10.5.0'
   getConfigDirectory().set(new File(rootDir, 'config/checkstyle'))
 }
 
 pmd {
-  toolVersion = "6.39.0"
+  toolVersion = "6.52.0"
   sourceSets = [sourceSets.main, sourceSets.test, sourceSets.functionalTest, sourceSets.smokeTest]
   reportsDir = file("$project.buildDir/reports/pmd")
   // https://github.com/pmd/pmd/issues/876
@@ -227,12 +235,6 @@ dependencies {
   testImplementation group: 'io.zonky.test', name: 'embedded-database-spring-test', version: '2.1.1'
   testImplementation group: 'org.awaitility', name: 'awaitility', version: '4.2.0'
   testImplementation group: 'org.apiguardian', name: 'apiguardian-api', version: '1.1.2'
-
-  functionalTestImplementation sourceSets.main.runtimeClasspath
-  functionalTestImplementation sourceSets.test.runtimeClasspath
-
-  smokeTestImplementation sourceSets.main.runtimeClasspath
-  smokeTestImplementation sourceSets.test.runtimeClasspath
 }
 
 bootJar {

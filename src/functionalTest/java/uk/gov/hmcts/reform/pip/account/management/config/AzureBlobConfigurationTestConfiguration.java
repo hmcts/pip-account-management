@@ -12,8 +12,8 @@ import org.springframework.context.annotation.Profile;
  * Mock class for testing to mock out external calls to Azure.
  */
 @Configuration
-@Profile("test")
-public class AzureBlobConfigurationTest {
+@Profile({"test", "functional"})
+public class AzureBlobConfigurationTestConfiguration {
 
     @Mock
     BlobClient blobClientMock;
@@ -21,7 +21,7 @@ public class AzureBlobConfigurationTest {
     @Mock
     BlobContainerClient blobContainerClientMock;
 
-    public AzureBlobConfigurationTest() {
+    public AzureBlobConfigurationTestConfiguration() {
         MockitoAnnotations.openMocks(this);
     }
 

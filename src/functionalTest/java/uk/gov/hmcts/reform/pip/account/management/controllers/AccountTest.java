@@ -36,7 +36,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.testcontainers.shaded.org.apache.commons.io.IOUtils;
 import uk.gov.hmcts.reform.pip.account.management.Application;
-import uk.gov.hmcts.reform.pip.account.management.config.AzureConfigurationClientTest;
+import uk.gov.hmcts.reform.pip.account.management.config.AzureConfigurationClientTestConfiguration;
 import uk.gov.hmcts.reform.pip.account.management.config.ClientConfiguration;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.ExceptionResponse;
 import uk.gov.hmcts.reform.pip.account.management.model.AzureAccount;
@@ -68,7 +68,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest(classes = {AzureConfigurationClientTest.class, Application.class},
+@SpringBootTest(classes = {AzureConfigurationClientTestConfiguration.class, Application.class},
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 @ActiveProfiles(profiles = "functional")

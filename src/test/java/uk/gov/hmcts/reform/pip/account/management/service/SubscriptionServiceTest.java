@@ -12,7 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import uk.gov.hmcts.reform.pip.account.management.Application;
-import uk.gov.hmcts.reform.pip.account.management.config.AzureConfigurationClientTest;
+import uk.gov.hmcts.reform.pip.account.management.config.AzureConfigurationClientTestConfiguration;
 
 import java.io.IOException;
 
@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @ExtendWith(MockitoExtension.class)
-@SpringBootTest(classes = {AzureConfigurationClientTest.class, Application.class})
+@SpringBootTest(classes = {AzureConfigurationClientTestConfiguration.class, Application.class})
 @ActiveProfiles({"test", "non-async"})
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
 class SubscriptionServiceTest {
