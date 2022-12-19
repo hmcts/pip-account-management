@@ -313,29 +313,14 @@ public class AccountService {
 
     private boolean handleAccountCreationEmail(AzureAccount createdAccount, String fullName,
                                                boolean isExisting) {
-        boolean isSuccessful;
-        switch (createdAccount.getRole()) {
-            case INTERNAL_ADMIN_CTSC:
-            case INTERNAL_ADMIN_LOCAL:
-            case INTERNAL_SUPER_ADMIN_CTSC:
-            case INTERNAL_SUPER_ADMIN_LOCAL:
-                isSuccessful = publicationService.sendNotificationEmail(
-                    createdAccount.getEmail(),
-                    createdAccount.getFirstName(),
-                    createdAccount.getSurname()
-                );
-                break;
-            case VERIFIED:
-                isSuccessful = publicationService.sendMediaNotificationEmail(createdAccount.getEmail(),
-                                                                             fullName, isExisting
-                );
-                break;
-
-            default:
-                isSuccessful = false;
-                break;
-        }
-        return isSuccessful;
+        return switch (createdAccount.getRole()) {
+            case INTERNAL_ADMIN_CTSC, INTERNAL_ADMIN_LOCAL, INTERNAL_SUPER_ADMIN_CTSC, INTERNAL_SUPER_ADMIN_LOCAL ->
+                publicationService.sendNotificationEmail(createdAccount.getEmail(),
+                                                         createdAccount.getFirstName(), createdAccount.getSurname());
+            case VERIFIED ->  publicationService.sendMediaNotificationEmail(createdAccount.getEmail(),
+                                                                            fullName, isExisting);
+            default -> false;
+        };
     }
 
     public String getAccManDataForMiReporting() {
@@ -389,14 +374,12 @@ public class AccountService {
         params.forEach((k, v) -> {
             try {
                 switch (k) {
-                    case "lastVerifiedDate":
-                        userToUpdate.setLastVerifiedDate(DateTimeHelper.zonedDateTimeStringToLocalDateTime(v));
-                        break;
-                    case "lastSignedInDate":
-                        userToUpdate.setLastSignedInDate(DateTimeHelper.zonedDateTimeStringToLocalDateTime(v));
-                        break;
-                    default:
-                        throw new IllegalArgumentException(String.format("The field '%s' could not be updated", k));
+                    case "lastVerifiedDate" -> userToUpdate
+                        .setLastVerifiedDate(DateTimeHelper.zonedDateTimeStringToLocalDateTime(v));
+                    case "lastSignedInDate" -> userToUpdate
+                        .setLastSignedInDate(DateTimeHelper.zonedDateTimeStringToLocalDateTime(v));
+                    default -> throw new IllegalArgumentException(String.format(
+                        "The field '%s' could not be updated", k));
                 }
             } catch (DateTimeParseException e) {
                 throw new IllegalArgumentException(String.format("Date time value '%s' not in expected format", v));
