@@ -13,6 +13,7 @@ import static uk.gov.hmcts.reform.pip.account.management.model.Roles.ALL_VERIFIE
  * This class handles the checking whether a user has permission to see a publication.
  */
 @Component
+@SuppressWarnings({"PMD.LawOfDemeter"})
 public class SensitivityService {
     /**
      * Checks the sensitivity / list type and user, to determine if they have permission to see the publication.
@@ -22,23 +23,14 @@ public class SensitivityService {
      * @return true if user has permission to see the publication, false if not.
      */
     public boolean checkAuthorisation(PiUser user, ListType listType, Sensitivity sensitivity) {
-        switch (sensitivity) {
-            case PUBLIC: {
-                return true;
-            }
-            case PRIVATE: {
-                return ALL_VERIFIED_ROLES.contains(user.getRoles());
-            }
-            case CLASSIFIED: {
-                return user.getRoles().equals(Roles.VERIFIED)
-                        && user.getUserProvenance().equals(listType.getAllowedProvenance())
-                    || user.getUserProvenance().equals(UserProvenances.THIRD_PARTY)
-                        && listType.getAllowedThirdPartyRoles().contains(user.getRoles());
-            }
-            default: {
-                return false;
-            }
-        }
+        return switch (sensitivity) {
+            case PUBLIC -> true;
+            case PRIVATE -> ALL_VERIFIED_ROLES.contains(user.getRoles());
+            case CLASSIFIED -> Roles.VERIFIED.equals(user.getRoles())
+                && user.getUserProvenance().equals(listType.getAllowedProvenance())
+                || UserProvenances.THIRD_PARTY.equals(user.getUserProvenance())
+                && listType.getAllowedThirdPartyRoles().contains(user.getRoles());
+            default -> false;
+        };
     }
-
 }
