@@ -7,7 +7,6 @@ import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredSystemAdm
  * Exception class which handles an exception when creating the System Admin account.
  */
 @Getter
-@SuppressWarnings({"PMD.NonSerializableClass"})
 public class SystemAdminAccountException extends RuntimeException {
 
     private static final long serialVersionUID = 5618103537116781009L;
