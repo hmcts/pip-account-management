@@ -488,6 +488,31 @@ public class AccountService {
             "User with supplied user id: %s could not be found", userId)));
     }
 
+    public AzureAccount retrieveAzureUser(String provenanceUserId) {
+        try {
+            Optional<PiUser> user = userRepository.findByProvenanceUserIdAndUserProvenance(
+                provenanceUserId, UserProvenances.PI_AAD);
+            if (user.isPresent()) {
+                AzureAccount azureUser = new AzureAccount();
+                User aadUser = azureUserService.getUser(user.get().getEmail());
+                azureUser.setAzureAccountId(aadUser.id);
+                azureUser.setFirstName(aadUser.givenName);
+                azureUser.setSurname(aadUser.surname);
+                azureUser.setDisplayName(aadUser.displayName);
+                azureUser.setEmail(user.get().getEmail());
+                return azureUser;
+            } else {
+                throw new NotFoundException(String.format(
+                    "User with supplied provenanceUserId: %s could not be found", provenanceUserId));
+            }
+        } catch (AzureCustomException e) {
+            log.error(writeLog(UUID.fromString(provenanceUserId), "Error while retrieving users details"));
+        }
+
+        throw new IllegalArgumentException("Error while retrieving user details with provenanceUserId: "
+                                               + provenanceUserId);
+    }
+
     /**
      * This method retrieves an admin user (excluding system admin) by their email and provenance.
      * @param email The email of the user to retrieve

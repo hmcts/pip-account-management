@@ -372,4 +372,23 @@ class AccountControllerTest {
         assertEquals(HttpStatus.OK, response.getStatusCode(), STATUS_CODE_MATCH);
         assertEquals(testUser, response.getBody(), "Should return the created piUser");
     }
+
+    @Test
+    void testGetSystemAdminInfo() {
+        AzureAccount user = new AzureAccount();
+        user.setDisplayName("DisplayName");
+        user.setEmail(EMAIL);
+
+        String issuerId = UUID.randomUUID().toString();
+
+        when(accountService.retrieveAzureUser(issuerId))
+            .thenReturn(user);
+
+        assertEquals(user,
+                     accountController.getAzureUserInfo(issuerId)
+                         .getBody(), "Should return found user");
+
+        assertEquals(HttpStatus.OK, accountController.getAzureUserInfo(issuerId).getStatusCode(),
+                     STATUS_CODE_MATCH);
+    }
 }
