@@ -10,6 +10,7 @@ public class AzureEmailValidator implements ConstraintValidator<AzureEmail, Stri
 
     @Override
     public void initialize(AzureEmail email) {
+        // Do nothing
     }
 
     @Override

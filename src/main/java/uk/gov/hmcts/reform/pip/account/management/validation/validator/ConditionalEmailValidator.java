@@ -13,6 +13,7 @@ public class ConditionalEmailValidator implements ConstraintValidator<PiEmailCon
 
     @Override
     public void initialize(PiEmailConditionalValidation email) {
+        // Do nothing
     }
 
     /**

@@ -163,7 +163,7 @@ public class MediaApplicationService {
         mediaApplicationRepository.deleteAllInBatch(
             mediaApplications.stream().filter(app -> app.getStatus().equals(MediaApplicationStatus.APPROVED)
                 || app.getStatus().equals(MediaApplicationStatus.REJECTED))
-                .collect(Collectors.toList()));
+                .toList());
 
         log.info("Approved and Rejected media applications deleted");
     }

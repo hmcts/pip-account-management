@@ -3,7 +3,6 @@ package uk.gov.hmcts.reform.pip.account.management.model;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -54,13 +53,13 @@ public enum Roles {
             Collections.singletonList(GENERAL_THIRD_PARTY))
         .flatMap(Collection::stream)
         .distinct()
-        .collect(Collectors.toList());
+        .toList();
 
     public static final List<Roles> ALL_VERIFIED_ROLES = Stream.of(
             ALL_THIRD_PARTY_ROLES,
             Collections.singletonList(VERIFIED))
         .flatMap(Collection::stream)
-        .collect(Collectors.toList());
+        .toList();
 
     public static final List<Roles> ALL_NON_THIRD_PARTY_ROLES = List.of(
         VERIFIED,

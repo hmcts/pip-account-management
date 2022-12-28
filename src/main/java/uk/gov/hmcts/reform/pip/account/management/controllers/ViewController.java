@@ -23,10 +23,8 @@ public class ViewController {
     @Autowired
     ViewService viewService;
 
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "View Refreshed"),
-        @ApiResponse(responseCode = "403", description = "User has not been authorised"),
-    })
+    @ApiResponse(responseCode = "200", description = "View Refreshed")
+    @ApiResponse(responseCode = "403", description = "User has not been authorised")
     @PostMapping("/refresh")
     public ResponseEntity<Void> refreshView() {
         viewService.refreshView();
