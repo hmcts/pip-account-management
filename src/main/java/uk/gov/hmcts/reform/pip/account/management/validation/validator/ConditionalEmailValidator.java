@@ -1,13 +1,12 @@
 package uk.gov.hmcts.reform.pip.account.management.validation.validator;
 
 import org.apache.commons.validator.routines.EmailValidator;
+import uk.gov.hmcts.reform.pip.account.management.model.CombinedRoles;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
-import uk.gov.hmcts.reform.pip.account.management.model.Roles;
 import uk.gov.hmcts.reform.pip.account.management.validation.annotations.PiEmailConditionalValidation;
 
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
-
 
 public class ConditionalEmailValidator implements ConstraintValidator<PiEmailConditionalValidation, PiUser> {
 
@@ -28,7 +27,8 @@ public class ConditionalEmailValidator implements ConstraintValidator<PiEmailCon
     @Override
     @SuppressWarnings("PMD.LawOfDemeter")
     public boolean isValid(PiUser user, ConstraintValidatorContext context) {
-        if (Roles.ALL_THIRD_PARTY_ROLES.contains(user.getRoles())) {
+        CombinedRoles combinedRoles = new CombinedRoles();
+        if (combinedRoles.getAllThirdPartyRoles().contains(user.getRoles())) {
             user.setEmail(null);
             return true;
         }
