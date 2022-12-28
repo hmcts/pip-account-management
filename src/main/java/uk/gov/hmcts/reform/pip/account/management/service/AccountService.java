@@ -41,7 +41,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
@@ -122,12 +121,9 @@ public class AccountService {
                     boolean emailSent = publicationService.sendNotificationEmailForDuplicateMediaAccount(
                             azureAccount.getEmail(), userAzure.givenName);
 
-                    if (!emailSent) {
-                        ErroredAzureAccount softErroredAccount = new ErroredAzureAccount(azureAccount);
-                        softErroredAccount.setErrorMessages(
-                            List.of("Unable to send duplicate media account email"));
-                        erroredAccounts.add(softErroredAccount);
-                    }
+                    checkAndAddToErrorAccount(emailSent, azureAccount,
+                                              "Unable to send duplicate media account email",
+                                              erroredAccounts);
                 } else {
 
                     User user = azureUserService.createUser(azureAccount);
@@ -135,12 +131,8 @@ public class AccountService {
                     createdAzureAccounts.add(azureAccount);
 
                     log.info(writeLog(issuerId, UserActions.CREATE_ACCOUNT, azureAccount.getAzureAccountId()));
-
-                    if (!handleAccountCreationEmail(azureAccount, user.givenName, isExisting)) {
-                        ErroredAzureAccount softErroredAccount = new ErroredAzureAccount(azureAccount);
-                        softErroredAccount.setErrorMessages(List.of(EMAIL_NOT_SENT_MESSAGE));
-                        erroredAccounts.add(softErroredAccount);
-                    }
+                    boolean emailSent = handleAccountCreationEmail(azureAccount, user.givenName, isExisting);
+                    checkAndAddToErrorAccount(emailSent, azureAccount, EMAIL_NOT_SENT_MESSAGE, erroredAccounts);
                 }
 
             } catch (AzureCustomException azureCustomException) {
@@ -156,6 +148,15 @@ public class AccountService {
         processedAccounts.put(CreationEnum.ERRORED_ACCOUNTS, erroredAccounts);
 
         return processedAccounts;
+    }
+
+    private void checkAndAddToErrorAccount(Boolean checkCondition, AzureAccount azureAccount, String errorMessage,
+                                           List<ErroredAzureAccount> erroredAccounts) {
+        if (!checkCondition) {
+            ErroredAzureAccount softErroredAccount = new ErroredAzureAccount(azureAccount);
+            softErroredAccount.setErrorMessages(List.of(errorMessage));
+            erroredAccounts.add(softErroredAccount);
+        }
     }
 
     /**
@@ -182,19 +183,18 @@ public class AccountService {
                 erroredUser.setErrorMessages(List.of(
                     "System admins must be created via the /account/add/system-admin endpoint"));
                 erroredAccounts.add(erroredUser);
-            } else if (!constraintViolationSet.isEmpty()) {
+            } else if (constraintViolationSet.isEmpty()) {
+                PiUser addedUser = userRepository.save(user);
+                createdAccounts.add(addedUser.getUserId());
+
+                log.info(writeLog(issuerId, UserActions.CREATE_ACCOUNT, addedUser.getUserId().toString()));
+            } else {
                 ErroredPiUser erroredUser = new ErroredPiUser(user);
                 erroredUser.setErrorMessages(constraintViolationSet
                                                  .stream().map(ConstraintViolation::getMessage)
                                                  .toList());
                 erroredAccounts.add(erroredUser);
-                continue;
             }
-
-            PiUser addedUser = userRepository.save(user);
-            createdAccounts.add(addedUser.getUserId());
-
-            log.info(writeLog(issuerId, UserActions.CREATE_ACCOUNT, addedUser.getUserId().toString()));
         }
 
         Map<CreationEnum, List<?>> processedAccounts = new ConcurrentHashMap<>();
