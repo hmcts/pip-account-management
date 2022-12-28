@@ -35,4 +35,14 @@ public class ErroredPiUser extends PiUser {
               user.getLastVerifiedDate(),
               user.getLastSignedInDate());
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return 0;
+    }
 }
