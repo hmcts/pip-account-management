@@ -16,7 +16,6 @@ import uk.gov.hmcts.reform.pip.model.enums.UserActions;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
 
