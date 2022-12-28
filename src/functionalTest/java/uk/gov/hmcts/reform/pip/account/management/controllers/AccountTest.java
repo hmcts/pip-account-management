@@ -168,7 +168,15 @@ class AccountTest {
     private static final String NOT_FOUND_STATUS_CODE_MESSAGE = "Status code does not match not found";
     private static final String TEST_UUID_STRING = UUID.randomUUID().toString();
     private static final String MAP_SIZE_MESSAGE = "Map size should match";
-
+    private static final String USER_SHOULD_MATCH = "Users should match";
+    private static final String TEST_SYS_ADMIN_SURNAME = "testSysAdminSurname";
+    private static final String TEST_SYS_ADMIN_FIRSTNAME = "testSysAdminFirstname";
+    private static final String TEST_SYS_ADMIN_EMAIL = "testSysAdminEmail@justice.gov.uk";
+    private static final String AZURE_PATH = "/azure/";
+    private static final String DELETE_PATH = "/delete/";
+    private static final String UPDATE_PATH = "/update/";
+    private static final String INVALID_EMAIL_ERROR = "Error message is displayed for an invalid email";
+    private static final String REPLACE_STRING = "%s/%s/%s";
     private ObjectMapper objectMapper;
 
     private PiUser validUser;
@@ -180,7 +188,7 @@ class AccountTest {
         user.setUserProvenance(PROVENANCE);
         user.setRoles(ROLE);
         user.setForenames("Forename");
-        user.setSurname("Surname");
+        user.setSurname(SURNAME);
 
         return user;
     }
@@ -245,7 +253,6 @@ class AccountTest {
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isOk()).andReturn();
-
 
         ConcurrentHashMap<CreationEnum, List<AzureAccount>> accounts =
             objectMapper.readValue(
@@ -351,7 +358,7 @@ class AccountTest {
         assertEquals(SURNAME, erroredAccount.getSurname(), TEST_MESSAGE_SURNAME);
         assertEquals(Roles.INTERNAL_ADMIN_CTSC, erroredAccount.getRole(), TEST_MESSAGE_ROLE);
         assertEquals(EMAIL_VALIDATION_MESSAGE, erroredAccount.getErrorMessages().get(0),
-                     "Error message is displayed for an invalid email"
+                     INVALID_EMAIL_ERROR
         );
 
     }
@@ -400,7 +407,7 @@ class AccountTest {
         assertEquals(SURNAME, erroredAccount.getSurname(), TEST_MESSAGE_SURNAME);
         assertEquals(Roles.INTERNAL_ADMIN_CTSC, erroredAccount.getRole(), TEST_MESSAGE_ROLE);
         assertEquals(EMAIL_VALIDATION_MESSAGE, erroredAccount.getErrorMessages().get(0),
-                     "Error message is displayed for an invalid email"
+                     INVALID_EMAIL_ERROR
         );
     }
 
@@ -693,7 +700,7 @@ class AccountTest {
         assertEquals(SURNAME, returnedInvalidAccount.getSurname(), TEST_MESSAGE_SURNAME);
         assertEquals(Roles.INTERNAL_ADMIN_CTSC, returnedInvalidAccount.getRole(), TEST_MESSAGE_ROLE);
         assertEquals(EMAIL_VALIDATION_MESSAGE, returnedInvalidAccount.getErrorMessages().get(0),
-                     "Error message is displayed for an invalid email"
+                     INVALID_EMAIL_ERROR
         );
     }
 
@@ -885,7 +892,7 @@ class AccountTest {
         mockMvc.perform(setupRequest).andExpect(status().isCreated());
 
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
-            .get(String.format("%s/%s/%s", GET_PROVENANCE_USER_URL, validUser.getUserProvenance(),
+            .get(String.format(REPLACE_STRING, GET_PROVENANCE_USER_URL, validUser.getUserProvenance(),
                                validUser.getProvenanceUserId()
             ))
             .contentType(MediaType.APPLICATION_JSON);
@@ -896,7 +903,7 @@ class AccountTest {
             PiUser.class
         );
         assertEquals(validUser.getProvenanceUserId(), returnedUser.getProvenanceUserId(),
-                     "Users should match"
+                     USER_SHOULD_MATCH
         );
         assertThat(returnedUser.getCreatedDate()).as("Created date must not be null").isNotNull();
     }
@@ -904,7 +911,7 @@ class AccountTest {
     @Test
     void testGetUserByProvenanceIdReturnsNotFound() throws Exception {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
-            .get(String.format("%s/%s/%s", GET_PROVENANCE_USER_URL, UserProvenances.CFT_IDAM, ID))
+            .get(String.format(REPLACE_STRING, GET_PROVENANCE_USER_URL, UserProvenances.CFT_IDAM, ID))
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response =
@@ -954,7 +961,7 @@ class AccountTest {
     @WithMockUser(username = "unauthorized_provenance", authorities = {"APPROLE_unknown.provenance"})
     void testUnauthorizedGetUserByProvenance() throws Exception {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
-            .get(String.format("%s/%s/%s", GET_PROVENANCE_USER_URL, UserProvenances.CFT_IDAM, ID))
+            .get(String.format(REPLACE_STRING, GET_PROVENANCE_USER_URL, UserProvenances.CFT_IDAM, ID))
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult mvcResult =
@@ -1278,7 +1285,7 @@ class AccountTest {
         );
 
         assertEquals(1, users.length, "Correct number of users should return");
-        assertEquals(createdUserId, users[0].getUserId().toString(), "Users should match");
+        assertEquals(createdUserId, users[0].getUserId().toString(), USER_SHOULD_MATCH);
     }
 
     @Test
@@ -1361,7 +1368,7 @@ class AccountTest {
             responseGetUser.getResponse().getContentAsString(),
             PiUser.class
         );
-        assertEquals(createdUserId, returnedUser.getUserId().toString(), "Users should match");
+        assertEquals(createdUserId, returnedUser.getUserId().toString(), USER_SHOULD_MATCH);
     }
 
     @Test
@@ -1425,7 +1432,7 @@ class AccountTest {
         String createdUserId = mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).get(0).toString();
 
         MockHttpServletRequestBuilder deleteRequest = MockMvcRequestBuilders
-            .delete(ROOT_URL + "/delete/" + createdUserId);
+            .delete(ROOT_URL + DELETE_PATH + createdUserId);
 
         MvcResult mvcResult = mockMvc.perform(deleteRequest).andExpect(status().isOk()).andReturn();
         assertEquals("User deleted", mvcResult.getResponse().getContentAsString(),
@@ -1437,7 +1444,7 @@ class AccountTest {
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testUnauthorizedDeleteAccount() throws Exception {
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
-            .delete(ROOT_URL + "/delete/" + UUID.randomUUID());
+            .delete(ROOT_URL + DELETE_PATH + UUID.randomUUID());
 
         MvcResult mvcResult = mockMvc.perform(request).andExpect(status().isForbidden()).andReturn();
 
@@ -1449,7 +1456,7 @@ class AccountTest {
     @Test
     void testDeleteAccountNotFound() throws Exception {
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
-            .delete(ROOT_URL + "/delete/" + UUID.randomUUID());
+            .delete(ROOT_URL + DELETE_PATH + UUID.randomUUID());
 
         MvcResult mvcResult = mockMvc.perform(request).andExpect(status().isNotFound()).andReturn();
 
@@ -1480,7 +1487,7 @@ class AccountTest {
         String createdUserId = mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).get(0).toString();
 
         MockHttpServletRequestBuilder updateRequest = MockMvcRequestBuilders
-            .put(ROOT_URL + "/update/" + createdUserId + "/" + Roles.INTERNAL_ADMIN_LOCAL);
+            .put(ROOT_URL + UPDATE_PATH + createdUserId + "/" + Roles.INTERNAL_ADMIN_LOCAL);
 
         MvcResult responseUpdatedUser = mockMvc.perform(updateRequest)
             .andExpect(status().isOk()).andReturn();
@@ -1495,7 +1502,7 @@ class AccountTest {
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testUnauthorizedUpdateAccountById() throws Exception {
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
-            .put(ROOT_URL + "/update/" + UUID.randomUUID() + "/" + Roles.INTERNAL_ADMIN_LOCAL);
+            .put(ROOT_URL + UPDATE_PATH + UUID.randomUUID() + "/" + Roles.INTERNAL_ADMIN_LOCAL);
 
         MvcResult mvcResult = mockMvc.perform(request).andExpect(status().isForbidden()).andReturn();
 
@@ -1507,7 +1514,7 @@ class AccountTest {
     @Test
     void testUpdateAccountByIdNotFound() throws Exception {
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
-            .put(ROOT_URL + "/update/" + UUID.randomUUID() + "/" + Roles.INTERNAL_ADMIN_LOCAL);
+            .put(ROOT_URL + UPDATE_PATH + UUID.randomUUID() + "/" + Roles.INTERNAL_ADMIN_LOCAL);
 
         MvcResult mvcResult = mockMvc.perform(request).andExpect(status().isNotFound()).andReturn();
 
@@ -1521,9 +1528,9 @@ class AccountTest {
     void testCreateSystemAdminAccount() throws Exception {
 
         SystemAdminAccount systemAdmin = new SystemAdminAccount();
-        systemAdmin.setFirstName("testSysAdminFirstname");
-        systemAdmin.setSurname("testSysAdminSurname");
-        systemAdmin.setEmail("testSysAdminEmail@justice.gov.uk");
+        systemAdmin.setFirstName(TEST_SYS_ADMIN_FIRSTNAME);
+        systemAdmin.setSurname(TEST_SYS_ADMIN_SURNAME);
+        systemAdmin.setEmail(TEST_SYS_ADMIN_EMAIL);
 
         mockPiUser();
 
@@ -1552,9 +1559,9 @@ class AccountTest {
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testUnauthorizedCreateSystemAdminAccount() throws Exception {
         SystemAdminAccount systemAdmin = new SystemAdminAccount();
-        systemAdmin.setFirstName("testSysAdminFirstname");
-        systemAdmin.setSurname("testSysAdminSurname");
-        systemAdmin.setEmail("testSysAdminEmail@justice.gov.uk");
+        systemAdmin.setFirstName(TEST_SYS_ADMIN_FIRSTNAME);
+        systemAdmin.setSurname(TEST_SYS_ADMIN_SURNAME);
+        systemAdmin.setEmail(TEST_SYS_ADMIN_EMAIL);
 
         MockHttpServletRequestBuilder createRequest =
             MockMvcRequestBuilders
@@ -1674,9 +1681,9 @@ class AccountTest {
     @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = "classpath:add-system-admin.sql")
     void testGetAzureUserInfo() throws Exception {
         SystemAdminAccount systemAdmin = new SystemAdminAccount();
-        systemAdmin.setFirstName("testSysAdminFirstname");
-        systemAdmin.setSurname("testSysAdminSurname");
-        systemAdmin.setEmail("testSysAdminEmail@justice.gov.uk");
+        systemAdmin.setFirstName(TEST_SYS_ADMIN_FIRSTNAME);
+        systemAdmin.setSurname(TEST_SYS_ADMIN_SURNAME);
+        systemAdmin.setEmail(TEST_SYS_ADMIN_EMAIL);
 
         mockPiUser();
 
@@ -1696,7 +1703,7 @@ class AccountTest {
         );
 
         MockHttpServletRequestBuilder getRequest = MockMvcRequestBuilders
-            .get(ROOT_URL + "/azure/" + returnedUser.getProvenanceUserId());
+            .get(ROOT_URL + AZURE_PATH + returnedUser.getProvenanceUserId());
 
         MvcResult responseGetUser =
             mockMvc.perform(getRequest).andExpect(status().isOk()).andReturn();
@@ -1714,7 +1721,7 @@ class AccountTest {
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testUnauthorizedGetAzureUserInfo() throws Exception {
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
-            .get(ROOT_URL + "/azure/" + validUser.getProvenanceUserId());
+            .get(ROOT_URL + AZURE_PATH + validUser.getProvenanceUserId());
 
         MvcResult mvcResult = mockMvc.perform(request).andExpect(status().isForbidden()).andReturn();
 
@@ -1726,7 +1733,7 @@ class AccountTest {
     @Test
     void testGetAzureUserInfoNotFound() throws Exception {
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
-            .get(ROOT_URL + "/azure/" + validUser.getProvenanceUserId());
+            .get(ROOT_URL + AZURE_PATH + validUser.getProvenanceUserId());
 
         MvcResult mvcResult = mockMvc.perform(request).andExpect(status().isNotFound()).andReturn();
 

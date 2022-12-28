@@ -709,12 +709,15 @@ class AccountServiceTest {
 
     @Test
     void testDeleteAccountNotFound() {
-        NotFoundException notFoundException = assertThrows(NotFoundException.class, () ->
-            accountService.deleteAccount(UUID.randomUUID()), "Expected NotFoundException to be thrown");
-
-        assertTrue(notFoundException.getMessage()
-                       .contains("User with supplied ID could not be found"),
-                   "Not found error missing");
+        try {
+            Object result = accountService.deleteAccount(UUID.randomUUID());
+            assertThrows(NotFoundException.class, () ->
+                result.toString(), "Expected NotFoundException to be thrown");
+        } catch (NotFoundException e) {
+            assertTrue(e.getMessage()
+                           .contains("User with supplied ID could not be found"),
+                       "Not found error missing");
+        }
     }
 
     @Test
@@ -747,11 +750,9 @@ class AccountServiceTest {
         assertThat(testString)
             .as("Header row missing")
             .contains("provenance_user_id");
-        assertThat(splitLineString.length)
-            .as("Data must be missing, are only headers printing?")
-            .isGreaterThanOrEqualTo(2);
         assertThat(splitLineString)
-            .as("Wrong comma count compared to header row!")
+            .as("Data must be missing, are only headers printing? or Wrong data")
+            .hasSizeGreaterThanOrEqualTo(2)
             .allSatisfy(
                 e -> assertThat(e.chars().filter(character -> character == ',').count()).isEqualTo(countLine1));
     }
