@@ -11,7 +11,7 @@ public class SystemAdminAccountException extends RuntimeException {
 
     private static final long serialVersionUID = 5618103537116781009L;
 
-    private final ErroredSystemAdminAccount erroredSystemAdminAccount;
+    private final transient ErroredSystemAdminAccount erroredSystemAdminAccount;
 
 
     public SystemAdminAccountException(ErroredSystemAdminAccount erroredSystemAdminAccount) {
