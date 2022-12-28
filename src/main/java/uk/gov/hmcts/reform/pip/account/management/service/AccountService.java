@@ -107,7 +107,7 @@ public class AccountService {
                 ErroredAzureAccount erroredSubscriber = new ErroredAzureAccount(azureAccount);
                 erroredSubscriber.setErrorMessages(constraintViolationSet
                                                        .stream().map(constraint -> constraint.getPropertyPath()
-                        + ": " + constraint.getMessage()).collect(Collectors.toList()));
+                        + ": " + constraint.getMessage()).toList());
                 erroredAccounts.add(erroredSubscriber);
                 continue;
             }
@@ -128,19 +128,19 @@ public class AccountService {
                             List.of("Unable to send duplicate media account email"));
                         erroredAccounts.add(softErroredAccount);
                     }
-                    continue;
-                }
+                } else {
 
-                User user = azureUserService.createUser(azureAccount);
-                azureAccount.setAzureAccountId(user.id);
-                createdAzureAccounts.add(azureAccount);
+                    User user = azureUserService.createUser(azureAccount);
+                    azureAccount.setAzureAccountId(user.id);
+                    createdAzureAccounts.add(azureAccount);
 
-                log.info(writeLog(issuerId, UserActions.CREATE_ACCOUNT, azureAccount.getAzureAccountId()));
+                    log.info(writeLog(issuerId, UserActions.CREATE_ACCOUNT, azureAccount.getAzureAccountId()));
 
-                if (!handleAccountCreationEmail(azureAccount, user.givenName, isExisting)) {
-                    ErroredAzureAccount softErroredAccount = new ErroredAzureAccount(azureAccount);
-                    softErroredAccount.setErrorMessages(List.of(EMAIL_NOT_SENT_MESSAGE));
-                    erroredAccounts.add(softErroredAccount);
+                    if (!handleAccountCreationEmail(azureAccount, user.givenName, isExisting)) {
+                        ErroredAzureAccount softErroredAccount = new ErroredAzureAccount(azureAccount);
+                        softErroredAccount.setErrorMessages(List.of(EMAIL_NOT_SENT_MESSAGE));
+                        erroredAccounts.add(softErroredAccount);
+                    }
                 }
 
             } catch (AzureCustomException azureCustomException) {
@@ -182,14 +182,11 @@ public class AccountService {
                 erroredUser.setErrorMessages(List.of(
                     "System admins must be created via the /account/add/system-admin endpoint"));
                 erroredAccounts.add(erroredUser);
-                continue;
-            }
-
-            if (!constraintViolationSet.isEmpty()) {
+            } else if (!constraintViolationSet.isEmpty()) {
                 ErroredPiUser erroredUser = new ErroredPiUser(user);
                 erroredUser.setErrorMessages(constraintViolationSet
                                                  .stream().map(ConstraintViolation::getMessage)
-                                                 .collect(Collectors.toList()));
+                                                 .toList());
                 erroredAccounts.add(erroredUser);
                 continue;
             }
@@ -306,7 +303,7 @@ public class AccountService {
             Stream.concat(
                 azureAccounts.get(CreationEnum.ERRORED_ACCOUNTS).stream(),
                 piUserAccounts.get(CreationEnum.ERRORED_ACCOUNTS).stream()
-            ).distinct().collect(Collectors.toList())
+            ).distinct().toList()
         );
         return completedAccounts;
     }
