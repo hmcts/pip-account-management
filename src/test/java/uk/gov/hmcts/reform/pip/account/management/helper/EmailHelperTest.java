@@ -9,19 +9,20 @@ class EmailHelperTest {
     @Test
     void testMaskEmail() {
         Assertions.assertEquals(
-            EmailHelper.maskEmail("testUser@email.com"), "t*******@email.com", "Email was not masked correctly");
+            "t*******@email.com", EmailHelper.maskEmail("testUser@email.com"),
+            "Email was not masked correctly");
     }
 
     @Test
     void testMaskEmailNotValidEmail() {
-        Assertions.assertEquals(EmailHelper.maskEmail("abcde"), "a****",
+        Assertions.assertEquals("a****", EmailHelper.maskEmail("abcde"),
                                 "Email was not masked correctly");
     }
 
     @Test
     void testMaskEmailEmptyString() {
         Assertions.assertEquals(
-            EmailHelper.maskEmail(""), "", "Email was not masked correctly");
+            "", EmailHelper.maskEmail(""), "Email was not masked correctly");
     }
 
 }

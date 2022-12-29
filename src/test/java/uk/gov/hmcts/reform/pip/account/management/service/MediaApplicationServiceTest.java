@@ -239,10 +239,10 @@ class MediaApplicationServiceTest {
 
         mediaApplicationService.processApplicationsForReporting();
 
-        assertTrue("Email sent".equals(logCaptor.getInfoLogs().get(0)),
+        assertEquals("Email sent", logCaptor.getInfoLogs().get(0),
                    "Publication service response logs not being captured.");
 
-        assertTrue("Approved and Rejected media applications deleted".equals(logCaptor.getInfoLogs().get(1)),
+        assertEquals("Approved and Rejected media applications deleted", logCaptor.getInfoLogs().get(1),
                    "Application deletion logs not being captured");
 
         verify(publicationService).sendMediaApplicationReportingEmail(List.of(mediaApplicationExample));
