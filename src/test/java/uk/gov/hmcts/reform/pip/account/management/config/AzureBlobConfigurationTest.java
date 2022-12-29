@@ -18,13 +18,19 @@ import static org.mockito.Mockito.when;
  */
 @Configuration
 @Profile("test")
-public class AzureBlobConfigurationTest {
+class AzureBlobConfigurationTest {
 
     @Mock
     BlobClient blobClientMock;
 
     @Mock
     BlobContainerClient blobContainerClientMock;
+
+    @Mock
+    AzureBlobConfigurationProperties azureBlobConfigurationProperties;
+
+    @InjectMocks
+    AzureBlobConfiguration azureBlobConfiguration;
 
     public AzureBlobConfigurationTest() {
         MockitoAnnotations.openMocks(this);
@@ -39,12 +45,6 @@ public class AzureBlobConfigurationTest {
     public BlobClient blobClient() {
         return blobClientMock;
     }
-
-    @Mock
-    AzureBlobConfigurationProperties azureBlobConfigurationProperties;
-
-    @InjectMocks
-    AzureBlobConfiguration azureBlobConfiguration;
 
     @Test
     void testBlobContainerClientBuilder() {
