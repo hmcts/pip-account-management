@@ -45,7 +45,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles(profiles = "functional")
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
-@WithMockUser(username = "admin", authorities = { "APPROLE_api.request.admin" })
+@WithMockUser(username = "admin", authorities = {"APPROLE_api.request.admin"})
 @SuppressWarnings({"PMD.TooManyMethods", "PMD.JUnitTestsShouldIncludeAssert"})
 class MediaApplicationTest {
 
@@ -63,7 +63,10 @@ class MediaApplicationTest {
     private static final String PUT_URL = ROOT_URL + "/{id}/{status}";
     private static final String DELETE_URL = ROOT_URL + "/{id}";
     private static final String GET_BY_ID_URL = ROOT_URL + "/{id}";
+    private static final String GET_IMAGE_BY_ID_URL = ROOT_URL + "/image/{id}";
     private static final String REPORT_APPLICATIONS_URL = ROOT_URL + "/reporting";
+    private static final String UNAUTHORIZED_USERNAME = "unauthorized_username";
+    private static final String UNAUTHORIZED_ROLE = "APPROLE_unknown.role";
 
     private ObjectMapper objectMapper;
     private static final String FULL_NAME = "Test user";
@@ -94,19 +97,43 @@ class MediaApplicationTest {
             .getResourceAsStream("files/test-image.png")) {
 
             MockMultipartFile imageFile = new MockMultipartFile("file", "test-image.png",
-                                                                "", imageInputStream);
+                                                                "", imageInputStream
+            );
 
 
             when(blobContainerClient.getBlobClient(any())).thenReturn(blobClient);
             when(blobContainerClient.getBlobContainerUrl()).thenReturn(BLOB_IMAGE_URL);
 
             MvcResult mvcResult = mockMvc.perform(multipart(ROOT_URL)
-                                                  .file(imageFile)
-                                                  .flashAttr("application", applicationDto)
-                                                  .contentType(MediaType.MULTIPART_FORM_DATA_VALUE))
-                                                  .andExpect(status().isOk()).andReturn();
+                                                      .file(imageFile)
+                                                      .flashAttr("application", applicationDto)
+                                                      .contentType(MediaType.MULTIPART_FORM_DATA_VALUE))
+                .andExpect(status().isOk()).andReturn();
 
             return objectMapper.readValue(mvcResult.getResponse().getContentAsString(), MediaApplication.class);
+        }
+    }
+
+    @Test
+    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
+    void testCreateApplicationUnauthorised() throws Exception {
+        MediaApplicationDto applicationDto = new MediaApplicationDto();
+        applicationDto.setFullName(FULL_NAME);
+        applicationDto.setEmail(EMAIL);
+        applicationDto.setEmployer(EMPLOYER);
+        applicationDto.setStatus(STATUS);
+
+        try (InputStream imageInputStream = Thread.currentThread().getContextClassLoader()
+            .getResourceAsStream("files/test-image.png")) {
+
+            MockMultipartFile imageFile = new MockMultipartFile("file", "test-image.png",
+                                                                "", imageInputStream
+            );
+            mockMvc.perform(multipart(ROOT_URL)
+                                .file(imageFile)
+                                .flashAttr("application", applicationDto)
+                                .contentType(MediaType.MULTIPART_FORM_DATA_VALUE))
+                .andExpect(status().isForbidden());
         }
     }
 
@@ -118,9 +145,11 @@ class MediaApplicationTest {
             .andExpect(status().isOk())
             .andReturn();
 
-        MediaApplication[] arrayApplications = objectMapper.readValue(mvcResult.getResponse()
-                                                                             .getContentAsString(),
-                                                                             MediaApplication[].class);
+        MediaApplication[] arrayApplications = objectMapper.readValue(
+            mvcResult.getResponse()
+                .getContentAsString(),
+            MediaApplication[].class
+        );
 
         List<MediaApplication> applicationList = Arrays.asList(arrayApplications);
 
@@ -128,6 +157,13 @@ class MediaApplicationTest {
         assertEquals(FORMATTED_FULL_NAME, applicationList.get(0).getFullName(), "Full name hasn't been formatted");
         assertEquals(application.getStatus(), applicationList.get(0).getStatus(), "Statuses do not match");
         assertNotNull(applicationList.get(0).getImage(), "Image url is null");
+    }
+
+    @Test
+    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
+    void testGetApplicationsUnauthorised() throws Exception {
+        mockMvc.perform(get(ROOT_URL))
+            .andExpect(status().isForbidden());
     }
 
     @Test
@@ -138,9 +174,11 @@ class MediaApplicationTest {
             .andExpect(status().isOk())
             .andReturn();
 
-        MediaApplication[] arrayApplications = objectMapper.readValue(mvcResult.getResponse()
-                                                                                  .getContentAsString(),
-                                                                              MediaApplication[].class);
+        MediaApplication[] arrayApplications = objectMapper.readValue(
+            mvcResult.getResponse()
+                .getContentAsString(),
+            MediaApplication[].class
+        );
 
         List<MediaApplication> applicationList = Arrays.asList(arrayApplications);
 
@@ -152,6 +190,13 @@ class MediaApplicationTest {
     }
 
     @Test
+    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
+    void testGetApplicationsByStatusUnauthorised() throws Exception {
+        mockMvc.perform(get(GET_STATUS_URL, "PENDING"))
+            .andExpect(status().isForbidden());
+    }
+
+    @Test
     void testGetApplicationById() throws Exception {
         MediaApplication application = createApplication();
 
@@ -159,10 +204,11 @@ class MediaApplicationTest {
             .andExpect(status().isOk())
             .andReturn();
 
-        MediaApplication returnedApplication = objectMapper.readValue(mvcResult.getResponse()
-                                                                                  .getContentAsString(),
-                                                                              MediaApplication.class);
-
+        MediaApplication returnedApplication = objectMapper.readValue(
+            mvcResult.getResponse()
+                .getContentAsString(),
+            MediaApplication.class
+        );
 
         assertEquals(application.getEmail(), returnedApplication.getEmail(), "Emails do not match");
         assertEquals(FORMATTED_FULL_NAME, returnedApplication.getFullName(), "Full name hasn't been formatted");
@@ -179,6 +225,20 @@ class MediaApplicationTest {
     }
 
     @Test
+    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
+    void testGetApplicationByIdUnauthorised() throws Exception {
+        mockMvc.perform(get(GET_BY_ID_URL, TEST_ID))
+            .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
+    void testGetImageByIdUnauthorised() throws Exception {
+        mockMvc.perform(get(GET_IMAGE_BY_ID_URL, TEST_ID))
+            .andExpect(status().isForbidden());
+    }
+
+    @Test
     void testUpdateApplication() throws Exception {
         MediaApplication application = createApplication();
 
@@ -188,9 +248,11 @@ class MediaApplicationTest {
             .andExpect(status().isOk())
             .andReturn();
 
-        MediaApplication returnedApplication = objectMapper.readValue(mvcResult.getResponse()
-                                                                                  .getContentAsString(),
-                                                                              MediaApplication.class);
+        MediaApplication returnedApplication = objectMapper.readValue(
+            mvcResult.getResponse()
+                .getContentAsString(),
+            MediaApplication.class
+        );
 
         assertEquals(UPDATED_STATUS, returnedApplication.getStatus(), "Updated statuses do not match");
 
@@ -206,6 +268,13 @@ class MediaApplicationTest {
     }
 
     @Test
+    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
+    void testUpdateApplicationUnauthorised() throws Exception {
+        mockMvc.perform(put(PUT_URL, TEST_ID, STATUS))
+            .andExpect(status().isForbidden());
+    }
+
+    @Test
     void testDeleteApplication() throws Exception {
         MediaApplication application = createApplication();
 
@@ -214,7 +283,8 @@ class MediaApplicationTest {
             .andReturn();
 
         assertEquals("Application deleted", mvcResult.getResponse().getContentAsString(),
-                     "Application was not deleted");
+                     "Application was not deleted"
+        );
     }
 
     @Test
@@ -228,8 +298,22 @@ class MediaApplicationTest {
     }
 
     @Test
+    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
+    void testDeleteApplicationUnauthorised() throws Exception {
+        mockMvc.perform(delete(DELETE_URL, TEST_ID))
+            .andExpect(status().isForbidden());
+    }
+
+    @Test
     void testReportApplicationsSuccess() throws Exception {
         mockMvc.perform(post(REPORT_APPLICATIONS_URL))
             .andExpect(status().isNoContent());
+    }
+
+    @Test
+    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
+    void testReportApplicationsUnauthorised() throws Exception {
+        mockMvc.perform(post(REPORT_APPLICATIONS_URL))
+            .andExpect(status().isForbidden());
     }
 }
