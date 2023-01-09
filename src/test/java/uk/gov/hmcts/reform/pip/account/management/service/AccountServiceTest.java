@@ -67,7 +67,8 @@ import static uk.gov.hmcts.reform.pip.account.management.model.Roles.ALL_NON_RES
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
-@SuppressWarnings({"PMD.TooManyMethods", "PMD.ExcessiveImports", "PMD.LawOfDemeter"})
+@SuppressWarnings({"PMD.TooManyMethods", "PMD.ExcessiveImports", "PMD.LawOfDemeter",
+    "PMD.ExcessiveClassLength"})
 class AccountServiceTest {
 
     @Mock
@@ -111,6 +112,7 @@ class AccountServiceTest {
     private static final String VALIDATION_MESSAGE = "Validation Message";
     private static final String EMAIL_VALIDATION_MESSAGE = "AzureAccount should have expected email";
     private static final String ERRORED_ACCOUNTS_VALIDATION_MESSAGE = "Should contain ERRORED_ACCOUNTS key";
+    private static final String ERRORED_ACCOUNTS_KEY = "ERRORED_ACCOUNTS key";
     private static final String TEST = "Test";
     private static final String MESSAGES_MATCH = "Messages should match";
     private static final boolean FALSE = false;
@@ -122,8 +124,8 @@ class AccountServiceTest {
     public static final List<String> EXAMPLE_CSV = List.of(
         "2fe899ff-96ed-435a-bcad-1411bbe96d2a,string,CFT_IDAM,INTERNAL_ADMIN_CTSC");
 
-    private static final String RETURNED_USER_MESSAGE = "Returned user does not match expected user";
-
+    private static final String USER_NOT_FOUND_EXCEPTION_MESSAGE =
+        "The exception when a user has not been found has been thrown";
     private static final UUID VALID_USER_ID = UUID.randomUUID();
     private static final UUID VALID_USER_ID_IDAM = UUID.randomUUID();
 
@@ -132,6 +134,8 @@ class AccountServiceTest {
     private final MediaApplication mediaAndLegalApplication = new MediaApplication();
     private AzureAccount azureAccount;
     private User expectedUser;
+
+    private static final String RETURN_USER_ERROR = "Returned user does not match expected user";
 
     @BeforeEach
     void setup() {
@@ -193,6 +197,35 @@ class AccountServiceTest {
     }
 
     @Test
+    void testVerifiedAccountCreated() throws AzureCustomException {
+        azureAccount.setRole(Roles.VERIFIED);
+
+        when(validator.validate(argThat(sub -> ((AzureAccount) sub).getEmail().equals(azureAccount.getEmail()))))
+            .thenReturn(Set.of());
+
+        when(azureUserService.getUser(EMAIL)).thenReturn(null);
+
+        when(azureUserService.createUser(argThat(user -> user.getEmail().equals(azureAccount.getEmail()))))
+            .thenReturn(expectedUser);
+
+        when(publicationService.sendMediaNotificationEmail(azureAccount.getEmail(), "Test User", false))
+            .thenReturn(TRUE);
+
+        Map<CreationEnum, List<? extends AzureAccount>> createdAccounts =
+            accountService.addAzureAccounts(List.of(azureAccount), ISSUER_ID, FALSE);
+
+        assertTrue(createdAccounts.containsKey(CreationEnum.CREATED_ACCOUNTS), SHOULD_CONTAIN
+            + "CREATED_ACCOUNTS key");
+        List<? extends AzureAccount> accounts = createdAccounts.get(CreationEnum.CREATED_ACCOUNTS);
+        assertEquals(azureAccount.getEmail(), accounts.get(0).getEmail(), EMAIL_VALIDATION_MESSAGE);
+        assertEquals(ID, azureAccount.getAzureAccountId(), "AzureAccount should have azure "
+            + "object ID");
+        assertEquals(0, createdAccounts.get(CreationEnum.ERRORED_ACCOUNTS).size(),
+                     "Map should have no errored accounts"
+        );
+    }
+
+    @Test
     void testAccountCreatedAlreadyExistsNoEmail() throws AzureCustomException {
         when(validator.validate(argThat(sub -> ((AzureAccount) sub).getEmail().equals(azureAccount.getEmail()))))
             .thenReturn(Set.of());
@@ -209,7 +242,7 @@ class AccountServiceTest {
             accountService.addAzureAccounts(List.of(azureAccount), ISSUER_ID, FALSE);
 
         assertTrue(createdAccounts.containsKey(CreationEnum.ERRORED_ACCOUNTS), SHOULD_CONTAIN
-            + "ERRORED_ACCOUNTS key");
+            + ERRORED_ACCOUNTS_KEY);
     }
 
     @Test
@@ -229,7 +262,55 @@ class AccountServiceTest {
             accountService.addAzureAccounts(List.of(azureAccount), ISSUER_ID, FALSE);
 
         assertTrue(createdAccounts.containsKey(CreationEnum.CREATED_ACCOUNTS), SHOULD_CONTAIN
-            + "ERRORED_ACCOUNTS key");
+            + ERRORED_ACCOUNTS_KEY);
+        assertFalse(createdAccounts.containsValue(CreationEnum.CREATED_ACCOUNTS), "Should not contain "
+            + "CREATED_ACCOUNTS value");
+    }
+
+    @Test
+    void testAccountCreatedAlreadyExistsWithNotGivenNameEmail() throws AzureCustomException {
+        when(validator.validate(argThat(sub -> ((AzureAccount) sub).getEmail().equals(azureAccount.getEmail()))))
+            .thenReturn(Set.of());
+
+        User azUser = new User();
+        azUser.id = ID;
+        azUser.givenName = "";
+
+        azureAccount.setRole(Roles.VERIFIED);
+
+        when(azureUserService.getUser(EMAIL)).thenReturn(azUser);
+        when(publicationService.sendNotificationEmailForDuplicateMediaAccount(any(), any())).thenReturn(TRUE);
+        when(azureUserService.createUser(argThat(user -> user.getEmail().equals(azureAccount.getEmail()))))
+            .thenReturn(expectedUser);
+        Map<CreationEnum, List<? extends AzureAccount>> createdAccounts =
+            accountService.addAzureAccounts(List.of(azureAccount), ISSUER_ID, FALSE);
+
+        assertTrue(createdAccounts.containsKey(CreationEnum.CREATED_ACCOUNTS), SHOULD_CONTAIN
+            + ERRORED_ACCOUNTS_KEY);
+        assertFalse(createdAccounts.containsValue(CreationEnum.CREATED_ACCOUNTS), "Should not contain "
+            + "CREATED_ACCOUNTS value");
+    }
+
+    @Test
+    void testAccountCreatedAlreadyExistsWithNotVerifiedEmail() throws AzureCustomException {
+        when(validator.validate(argThat(sub -> ((AzureAccount) sub).getEmail().equals(azureAccount.getEmail()))))
+            .thenReturn(Set.of());
+
+        User azUser = new User();
+        azUser.id = ID;
+        azUser.givenName = FULL_NAME;
+
+        azureAccount.setRole(Roles.INTERNAL_ADMIN_CTSC);
+
+        when(azureUserService.getUser(EMAIL)).thenReturn(azUser);
+        when(publicationService.sendNotificationEmailForDuplicateMediaAccount(any(), any())).thenReturn(TRUE);
+        when(azureUserService.createUser(argThat(user -> user.getEmail().equals(azureAccount.getEmail()))))
+            .thenReturn(expectedUser);
+        Map<CreationEnum, List<? extends AzureAccount>> createdAccounts =
+            accountService.addAzureAccounts(List.of(azureAccount), ISSUER_ID, FALSE);
+
+        assertTrue(createdAccounts.containsKey(CreationEnum.CREATED_ACCOUNTS), SHOULD_CONTAIN
+            + ERRORED_ACCOUNTS_KEY);
         assertFalse(createdAccounts.containsValue(CreationEnum.CREATED_ACCOUNTS), "Should not contain "
             + "CREATED_ACCOUNTS value");
     }
@@ -488,6 +569,17 @@ class AccountServiceTest {
             accountService.isUserAuthorisedForPublication(VALID_USER_ID, ListType.SJP_PRESS_LIST, Sensitivity.PUBLIC),
             "User from PI_AAD should return true for allowed list type"
         );
+    }
+
+    @Test
+    void testIsUserAuthorisedForPublicationReturnsException() {
+        when(userRepository.findByUserId(VALID_USER_ID)).thenReturn(Optional.empty());
+        UserNotFoundException ex = assertThrows(UserNotFoundException.class, () ->
+            accountService.isUserAuthorisedForPublication(VALID_USER_ID, ListType.SJP_PRESS_LIST, Sensitivity.PUBLIC));
+        when(sensitivityService.checkAuthorisation(piUser, ListType.SJP_PRESS_LIST, Sensitivity.PUBLIC))
+            .thenReturn(false);
+
+        assertTrue(ex.getMessage().contains("No user found with the userId"), MESSAGES_MATCH);
     }
 
 
@@ -751,7 +843,7 @@ class AccountServiceTest {
         when(userRepository.findByUserId(userId)).thenReturn(Optional.of(user));
 
         PiUser returnedUser = accountService.getUserById(userId);
-        assertEquals(user, returnedUser, RETURNED_USER_MESSAGE);
+        assertEquals(user, returnedUser, RETURN_USER_ERROR);
     }
 
     @Test
@@ -762,7 +854,7 @@ class AccountServiceTest {
 
         NotFoundException notFoundException = assertThrows(NotFoundException.class, () -> {
             accountService.getUserById(userId);
-        }, "The exception when a user has not been found has been thrown");
+        }, USER_NOT_FOUND_EXCEPTION_MESSAGE);
 
         assertTrue(notFoundException.getMessage().contains(userId.toString()),
                    "Exception message thrown does not contain the user ID");
@@ -786,7 +878,7 @@ class AccountServiceTest {
 
         String response = accountService.updateAccountRole(userId, Roles.SYSTEM_ADMIN);
         assertEquals(String.format("User with ID %s has been updated to a SYSTEM_ADMIN", userId),
-                     response, RETURNED_USER_MESSAGE);
+                    response, RETURN_USER_ERROR);
     }
 
     @Test
@@ -802,7 +894,7 @@ class AccountServiceTest {
 
         String response = accountService.updateAccountRole(userId, Roles.SYSTEM_ADMIN);
         assertEquals(String.format("User with ID %s has been updated to a SYSTEM_ADMIN", userId),
-                     response, RETURNED_USER_MESSAGE);
+                     response, RETURN_USER_ERROR);
     }
 
     @Test
@@ -813,10 +905,27 @@ class AccountServiceTest {
 
         NotFoundException notFoundException = assertThrows(NotFoundException.class, () -> {
             accountService.updateAccountRole(userId, Roles.SYSTEM_ADMIN);
-        }, "The exception when a user has not been found has been thrown");
+        }, USER_NOT_FOUND_EXCEPTION_MESSAGE);
 
         assertTrue(notFoundException.getMessage().contains(userId.toString()),
                    "Exception message thrown does not contain the user ID");
+    }
+
+    @Test
+    void testUpdateUserAccountRoleAzureException() throws AzureCustomException {
+        UUID userId = UUID.randomUUID();
+
+        when(userRepository.findByUserId(userId)).thenReturn(Optional.of(piUser));
+
+        when(azureUserService.updateUserRole(any(), any()))
+            .thenThrow(new AzureCustomException(TEST));
+
+        try (LogCaptor logCaptor = LogCaptor.forClass(AccountService.class)) {
+            accountService.updateAccountRole(userId, Roles.SYSTEM_ADMIN);
+            assertEquals(2, logCaptor.getInfoLogs().size(),
+                         "Should not log if failed creating account"
+            );
+        }
     }
 
     @Test
@@ -900,7 +1009,7 @@ class AccountServiceTest {
             .thenReturn(Optional.of(user));
 
         PiUser returnedUser = accountService.getAdminUserByEmailAndProvenance(EMAIL, UserProvenances.PI_AAD);
-        assertEquals(user, returnedUser, RETURNED_USER_MESSAGE);
+        assertEquals(user, returnedUser, RETURN_USER_ERROR);
     }
 
     @Test
@@ -915,7 +1024,7 @@ class AccountServiceTest {
 
         NotFoundException notFoundException = assertThrows(NotFoundException.class, () -> {
             accountService.getAdminUserByEmailAndProvenance(EMAIL, UserProvenances.PI_AAD);
-        }, "The exception when a user has not been found has been thrown");
+        }, USER_NOT_FOUND_EXCEPTION_MESSAGE);
 
         assertTrue(notFoundException.getMessage().contains("t***@hmcts.net"),
                    "Exception message thrown does not contain email");
@@ -936,5 +1045,41 @@ class AccountServiceTest {
         ErroredPiUser erroredPiUser = (ErroredPiUser) returnedUsers.get(CreationEnum.ERRORED_ACCOUNTS).get(0);
         assertEquals("System admins must be created via the /account/add/system-admin endpoint",
                      erroredPiUser.getErrorMessages().get(0), "Error message is not correct");
+    }
+
+    @Test
+    void testRetrieveUser() throws AzureCustomException {
+        UUID userId = UUID.randomUUID();
+
+        PiUser user = new PiUser();
+        user.setUserId(userId);
+        user.setEmail(EMAIL);
+
+        User azUser = new User();
+        azUser.id = ID;
+        azUser.givenName = FULL_NAME;
+        azUser.displayName = FULL_NAME;
+        azUser.surname = SURNAME;
+
+        when(azureUserService.getUser(EMAIL)).thenReturn(azUser);
+        when(userRepository.findByProvenanceUserIdAndUserProvenance(userId.toString(), UserProvenances.PI_AAD))
+            .thenReturn(Optional.of(user));
+
+        AzureAccount returnedUser = accountService.retrieveAzureUser(userId.toString());
+        assertEquals(azUser.displayName, returnedUser.getDisplayName(), RETURN_USER_ERROR);
+    }
+
+    @Test
+    void testRetrieveUserNotFound() {
+        UUID userId = UUID.randomUUID();
+
+        when(userRepository.findByUserId(userId)).thenReturn(Optional.empty());
+
+        NotFoundException notFoundException = assertThrows(NotFoundException.class, () -> {
+            accountService.getUserById(userId);
+        }, USER_NOT_FOUND_EXCEPTION_MESSAGE);
+
+        assertTrue(notFoundException.getMessage().contains(userId.toString()),
+                   "Exception message thrown does not contain the user ID");
     }
 }

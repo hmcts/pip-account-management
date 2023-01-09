@@ -339,6 +339,18 @@ public class AccountController {
     }
 
     @ApiResponses({
+        @ApiResponse(responseCode = OK_CODE, description = "P&I Azure User Information"),
+        @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE),
+        @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description = "User not found")
+    })
+    @Operation(summary = "Get P&I Azure User info")
+    @ResponseStatus(HttpStatus.OK)
+    @GetMapping("/azure/{provenanceUserId}")
+    public ResponseEntity<AzureAccount> getAzureUserInfo(@PathVariable String provenanceUserId) {
+        return ResponseEntity.ok(accountService.retrieveAzureUser(provenanceUserId));
+    }
+
+    @ApiResponses({
         @ApiResponse(responseCode = OK_CODE, description = PI_USER),
         @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE),
         @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description = "No user found with the "

@@ -4,7 +4,7 @@ plugins {
   id 'com.github.ben-manes.versions' version '0.44.0'
   id 'io.spring.dependency-management' version '1.1.0'
   id 'jacoco'
-  id 'org.springframework.boot' version '2.7.5'
+  id 'org.springframework.boot' version '2.7.6'
   id 'org.owasp.dependencycheck' version '7.3.2'
   id 'org.sonarqube' version '3.5.0.2730'
   id 'pmd'
@@ -20,9 +20,10 @@ group = 'uk.gov.hmcts.reform.pip'
 mainClassName = 'uk.gov.hmcts.reform.pip.account.management.Application'
 version = '0.0.1'
 
-allprojects {
-  sourceCompatibility = '11'
-  targetCompatibility = '11'
+java {
+  toolchain {
+    languageVersion = JavaLanguageVersion.of(17)
+  }
 }
 
 repositories {
@@ -66,8 +67,21 @@ task migratePostgresDatabase(type: org.flywaydb.gradle.task.FlywayMigrateTask) {
   }
 }
 
+configurations {
+  functionalTestImplementation.extendsFrom testImplementation
+  functionalTestRuntimeOnly.extendsFrom runtimeOnly
+
+  smokeTestImplementation.extendsFrom testImplementation
+  smokeTestRuntimeOnly.extendsFrom runtimeOnly
+}
+
 tasks.withType(JavaCompile) {
   options.compilerArgs << "-Xlint:unchecked" << "-Werror"
+}
+
+// https://github.com/gradle/gradle/issues/16791
+tasks.withType(JavaExec).configureEach {
+  javaLauncher.set(javaToolchains.launcherFor(java.toolchain))
 }
 
 tasks.withType(Test) {
@@ -97,12 +111,12 @@ task smoke(type: Test) {
 
 checkstyle {
   maxWarnings = 0
-  toolVersion = '8.29'
+  toolVersion = '10.5.0'
   getConfigDirectory().set(new File(rootDir, 'config/checkstyle'))
 }
 
 pmd {
-  toolVersion = "6.39.0"
+  toolVersion = "6.52.0"
   sourceSets = [sourceSets.main, sourceSets.test, sourceSets.functionalTest, sourceSets.smokeTest]
   reportsDir = file("$project.buildDir/reports/pmd")
   // https://github.com/pmd/pmd/issues/876
@@ -111,7 +125,7 @@ pmd {
 }
 
 jacoco {
-  toolVersion = "0.8.6"
+  toolVersion = "0.8.8"
 }
 
 jacocoTestReport {
@@ -221,12 +235,7 @@ dependencies {
   testImplementation group: 'io.zonky.test', name: 'embedded-database-spring-test', version: '2.1.1'
   testImplementation group: 'org.awaitility', name: 'awaitility', version: '4.2.0'
   testImplementation group: 'org.apiguardian', name: 'apiguardian-api', version: '1.1.2'
-
-  functionalTestImplementation sourceSets.main.runtimeClasspath
-  functionalTestImplementation sourceSets.test.runtimeClasspath
-
-  smokeTestImplementation sourceSets.main.runtimeClasspath
-  smokeTestImplementation sourceSets.test.runtimeClasspath
+  testImplementation group: 'org.mockito', name: 'mockito-inline', version: '4.10.0'
 }
 
 bootJar {

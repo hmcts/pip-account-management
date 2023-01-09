@@ -36,7 +36,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.testcontainers.shaded.org.apache.commons.io.IOUtils;
 import uk.gov.hmcts.reform.pip.account.management.Application;
-import uk.gov.hmcts.reform.pip.account.management.config.AzureConfigurationClientTest;
+import uk.gov.hmcts.reform.pip.account.management.config.AzureConfigurationClientTestConfiguration;
 import uk.gov.hmcts.reform.pip.account.management.config.ClientConfiguration;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.ExceptionResponse;
 import uk.gov.hmcts.reform.pip.account.management.model.AzureAccount;
@@ -68,7 +68,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest(classes = {AzureConfigurationClientTest.class, Application.class},
+@SpringBootTest(classes = {AzureConfigurationClientTestConfiguration.class, Application.class},
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 @ActiveProfiles(profiles = "functional")
@@ -114,6 +114,7 @@ class AccountTest {
     private ClientConfiguration clientConfiguration;
 
     private static final String ROOT_URL = "/account";
+    private static final String ADMIN_ROOT_URL = "/account/admin/";
     private static final String AZURE_URL = ROOT_URL + "/add/azure";
     private static final String BULK_UPLOAD = ROOT_URL + "/media-bulk-upload";
     private static final String PI_URL = ROOT_URL + "/add/pi";
@@ -713,7 +714,8 @@ class AccountTest {
             );
 
         assertEquals(1, mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).size(),
-                     "1 User should be created");
+                     "1 User should be created"
+        );
     }
 
     @Test
@@ -752,7 +754,8 @@ class AccountTest {
             );
 
         assertEquals(2, mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).size(),
-                     "1 Users should be created");
+                     "1 Users should be created"
+        );
     }
 
     @Test
@@ -794,7 +797,8 @@ class AccountTest {
             );
 
         assertEquals(2, mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).size(),
-                     "2 Users should be created");
+                     "2 Users should be created"
+        );
     }
 
     @Test
@@ -816,7 +820,8 @@ class AccountTest {
             );
 
         assertEquals(1, mappedResponse.get(CreationEnum.ERRORED_ACCOUNTS).size(),
-                     "1 User should be errored");
+                     "1 User should be errored"
+        );
     }
 
     @Test
@@ -839,7 +844,8 @@ class AccountTest {
             );
 
         assertEquals(2, mappedResponse.get(CreationEnum.ERRORED_ACCOUNTS).size(),
-                     "2 Users should be errored");
+                     "2 Users should be errored"
+        );
     }
 
     @Test
@@ -861,9 +867,11 @@ class AccountTest {
             );
 
         assertEquals(1, mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).size(),
-                     "1 User should be created");
+                     "1 User should be created"
+        );
         assertEquals(1, mappedResponse.get(CreationEnum.ERRORED_ACCOUNTS).size(),
-                     "1 User should be errored");
+                     "1 User should be errored"
+        );
     }
 
     @Test
@@ -888,7 +896,8 @@ class AccountTest {
             PiUser.class
         );
         assertEquals(validUser.getProvenanceUserId(), returnedUser.getProvenanceUserId(),
-                     "Users should match");
+                     "Users should match"
+        );
         assertThat(returnedUser.getCreatedDate()).as("Created date must not be null").isNotNull();
     }
 
@@ -1624,7 +1633,7 @@ class AccountTest {
         String createdUserId = mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).get(0).toString();
 
         MockHttpServletRequestBuilder getRequest = MockMvcRequestBuilders
-            .get(ROOT_URL + "/admin/" + validUser.getEmail() + "/" + validUser.getUserProvenance());
+            .get(ADMIN_ROOT_URL + validUser.getEmail() + "/" + validUser.getUserProvenance());
 
         MvcResult responseGetUser =
             mockMvc.perform(getRequest).andExpect(status().isOk()).andReturn();
@@ -1640,7 +1649,7 @@ class AccountTest {
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testUnauthorizedGetAdminUserByEmailAndProvenance() throws Exception {
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
-            .get(ROOT_URL + "/admin/" + validUser.getEmail() + "/" + validUser.getUserProvenance());
+            .get(ADMIN_ROOT_URL + validUser.getEmail() + "/" + validUser.getUserProvenance());
 
         MvcResult mvcResult = mockMvc.perform(request).andExpect(status().isForbidden()).andReturn();
 
@@ -1652,7 +1661,72 @@ class AccountTest {
     @Test
     void testGetAdminUserByEmailAndProvenanceNotFound() throws Exception {
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
-            .get(ROOT_URL + "/admin/" + validUser.getEmail() + "/" + validUser.getUserProvenance());
+            .get(ADMIN_ROOT_URL + validUser.getEmail() + "/" + validUser.getUserProvenance());
+
+        MvcResult mvcResult = mockMvc.perform(request).andExpect(status().isNotFound()).andReturn();
+
+        assertEquals(HttpStatus.NOT_FOUND.value(), mvcResult.getResponse().getStatus(),
+                     NOT_FOUND_STATUS_CODE_MESSAGE
+        );
+    }
+
+    @Test
+    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = "classpath:add-system-admin.sql")
+    void testGetAzureUserInfo() throws Exception {
+        SystemAdminAccount systemAdmin = new SystemAdminAccount();
+        systemAdmin.setFirstName("testSysAdminFirstname");
+        systemAdmin.setSurname("testSysAdminSurname");
+        systemAdmin.setEmail("testSysAdminEmail@justice.gov.uk");
+
+        mockPiUser();
+
+        MockHttpServletRequestBuilder createRequest =
+            MockMvcRequestBuilders
+                .post(CREATE_SYSTEM_ADMIN_URL)
+                .content(objectMapper.writeValueAsString(systemAdmin))
+                .header(ISSUER_HEADER, SYSTEM_ADMIN_ISSUER_ID)
+                .contentType(MediaType.APPLICATION_JSON);
+
+        MvcResult responseCreateSystemAdminUser = mockMvc.perform(createRequest)
+            .andExpect(status().isOk()).andReturn();
+
+        PiUser returnedUser = objectMapper.readValue(
+            responseCreateSystemAdminUser.getResponse().getContentAsString(),
+            PiUser.class
+        );
+
+        MockHttpServletRequestBuilder getRequest = MockMvcRequestBuilders
+            .get(ROOT_URL + "/azure/" + returnedUser.getProvenanceUserId());
+
+        MvcResult responseGetUser =
+            mockMvc.perform(getRequest).andExpect(status().isOk()).andReturn();
+
+        AzureAccount returnedAzureAccount = objectMapper.readValue(
+            responseGetUser.getResponse().getContentAsString(),
+            AzureAccount.class
+        );
+        assertEquals(returnedUser.getEmail(), returnedAzureAccount.getEmail(),
+                     "Should return the correct user"
+        );
+    }
+
+    @Test
+    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
+    void testUnauthorizedGetAzureUserInfo() throws Exception {
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+            .get(ROOT_URL + "/azure/" + validUser.getProvenanceUserId());
+
+        MvcResult mvcResult = mockMvc.perform(request).andExpect(status().isForbidden()).andReturn();
+
+        assertEquals(HttpStatus.FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
+                     FORBIDDEN_STATUS_CODE
+        );
+    }
+
+    @Test
+    void testGetAzureUserInfoNotFound() throws Exception {
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+            .get(ROOT_URL + "/azure/" + validUser.getProvenanceUserId());
 
         MvcResult mvcResult = mockMvc.perform(request).andExpect(status().isNotFound()).andReturn();
 

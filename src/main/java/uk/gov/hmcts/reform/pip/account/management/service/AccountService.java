@@ -313,29 +313,14 @@ public class AccountService {
 
     private boolean handleAccountCreationEmail(AzureAccount createdAccount, String fullName,
                                                boolean isExisting) {
-        boolean isSuccessful;
-        switch (createdAccount.getRole()) {
-            case INTERNAL_ADMIN_CTSC:
-            case INTERNAL_ADMIN_LOCAL:
-            case INTERNAL_SUPER_ADMIN_CTSC:
-            case INTERNAL_SUPER_ADMIN_LOCAL:
-                isSuccessful = publicationService.sendNotificationEmail(
-                    createdAccount.getEmail(),
-                    createdAccount.getFirstName(),
-                    createdAccount.getSurname()
-                );
-                break;
-            case VERIFIED:
-                isSuccessful = publicationService.sendMediaNotificationEmail(createdAccount.getEmail(),
-                                                                             fullName, isExisting
-                );
-                break;
-
-            default:
-                isSuccessful = false;
-                break;
-        }
-        return isSuccessful;
+        return switch (createdAccount.getRole()) {
+            case INTERNAL_ADMIN_CTSC, INTERNAL_ADMIN_LOCAL, INTERNAL_SUPER_ADMIN_CTSC, INTERNAL_SUPER_ADMIN_LOCAL ->
+                publicationService.sendNotificationEmail(createdAccount.getEmail(),
+                                                         createdAccount.getFirstName(), createdAccount.getSurname());
+            case VERIFIED ->  publicationService.sendMediaNotificationEmail(createdAccount.getEmail(),
+                                                                            fullName, isExisting);
+            default -> false;
+        };
     }
 
     public String getAccManDataForMiReporting() {
@@ -389,14 +374,12 @@ public class AccountService {
         params.forEach((k, v) -> {
             try {
                 switch (k) {
-                    case "lastVerifiedDate":
-                        userToUpdate.setLastVerifiedDate(DateTimeHelper.zonedDateTimeStringToLocalDateTime(v));
-                        break;
-                    case "lastSignedInDate":
-                        userToUpdate.setLastSignedInDate(DateTimeHelper.zonedDateTimeStringToLocalDateTime(v));
-                        break;
-                    default:
-                        throw new IllegalArgumentException(String.format("The field '%s' could not be updated", k));
+                    case "lastVerifiedDate" -> userToUpdate
+                        .setLastVerifiedDate(DateTimeHelper.zonedDateTimeStringToLocalDateTime(v));
+                    case "lastSignedInDate" -> userToUpdate
+                        .setLastSignedInDate(DateTimeHelper.zonedDateTimeStringToLocalDateTime(v));
+                    default -> throw new IllegalArgumentException(String.format(
+                        "The field '%s' could not be updated", k));
                 }
             } catch (DateTimeParseException e) {
                 throw new IllegalArgumentException(String.format("Date time value '%s' not in expected format", v));
@@ -503,6 +486,31 @@ public class AccountService {
     public PiUser getUserById(UUID userId) {
         return userRepository.findByUserId(userId).orElseThrow(() -> new NotFoundException(String.format(
             "User with supplied user id: %s could not be found", userId)));
+    }
+
+    public AzureAccount retrieveAzureUser(String provenanceUserId) {
+        try {
+            Optional<PiUser> user = userRepository.findByProvenanceUserIdAndUserProvenance(
+                provenanceUserId, UserProvenances.PI_AAD);
+            if (user.isPresent()) {
+                AzureAccount azureUser = new AzureAccount();
+                User aadUser = azureUserService.getUser(user.get().getEmail());
+                azureUser.setAzureAccountId(aadUser.id);
+                azureUser.setFirstName(aadUser.givenName);
+                azureUser.setSurname(aadUser.surname);
+                azureUser.setDisplayName(aadUser.displayName);
+                azureUser.setEmail(user.get().getEmail());
+                return azureUser;
+            } else {
+                throw new NotFoundException(String.format(
+                    "User with supplied provenanceUserId: %s could not be found", provenanceUserId));
+            }
+        } catch (AzureCustomException e) {
+            log.error(writeLog(UUID.fromString(provenanceUserId), "Error while retrieving users details"));
+        }
+
+        throw new IllegalArgumentException("Error while retrieving user details with provenanceUserId: "
+                                               + provenanceUserId);
     }
 
     /**

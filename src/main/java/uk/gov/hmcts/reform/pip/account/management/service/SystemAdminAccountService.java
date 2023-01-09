@@ -39,17 +39,20 @@ public class SystemAdminAccountService {
     private final AzureUserService azureUserService;
     private final UserRepository userRepository;
     private final PublicationService publicationService;
+    private final AccountService accountService;
     private final Integer maxSystemAdminValue;
 
     @Autowired
     public SystemAdminAccountService(Validator validator, AzureUserService azureUserService,
                                      UserRepository userRepository, PublicationService publicationService,
-                                     @Value("${admin.max-system-admin}")Integer maxSystemAdminValue) {
+                                     @Value("${admin.max-system-admin}")Integer maxSystemAdminValue,
+                                     AccountService accountService) {
         this.validator = validator;
         this.azureUserService = azureUserService;
         this.userRepository = userRepository;
         this.publicationService = publicationService;
         this.maxSystemAdminValue = maxSystemAdminValue;
+        this.accountService = accountService;
     }
 
     /**
@@ -60,7 +63,12 @@ public class SystemAdminAccountService {
      */
     public PiUser addSystemAdminAccount(SystemAdminAccount account, String issuerId) {
 
-        String displayName = verifyAndRetrieveAdminUser(issuerId);
+        String displayName = "";
+        String provenanceUserId = verifyAdminUser(issuerId);
+        if (!provenanceUserId.isEmpty()) {
+            displayName = accountService.retrieveAzureUser(provenanceUserId).getDisplayName();
+        }
+
         validateSystemAdminAccount(account, issuerId, displayName);
         try {
             User user = azureUserService.createUser(account.convertToAzureAccount());
@@ -140,23 +148,16 @@ public class SystemAdminAccountService {
     }
 
     /**
-     * Method to retrieve the name of the admin user, and also throw an exception if the user is not a SYSTEM_ADMIN.
+     * Method to find whether user is SYSTEM_ADMIN or not.
      * @param issuerId The ID of the admin user
-     * @return The name of the admin user.
+     * @return Boolean user is SYSTEM_ADMIN or not
      */
-    private String verifyAndRetrieveAdminUser(String issuerId) {
+    private String verifyAdminUser(String issuerId) {
         Optional<PiUser> adminUser = userRepository.findByUserId(UUID.fromString(issuerId));
-
-        try {
-            if (adminUser.isPresent() && adminUser.get().getRoles().equals(Roles.SYSTEM_ADMIN)) {
-                String email = adminUser.get().getEmail();
-                return azureUserService.getUser(email).displayName;
-            }
-        } catch (AzureCustomException e) {
-            log.error(writeLog(UUID.fromString(issuerId), "Error while retrieving system admin users details"));
+        if (adminUser.isPresent() && adminUser.get().getRoles().equals(Roles.SYSTEM_ADMIN)) {
+            return adminUser.get().getProvenanceUserId();
         }
 
-        throw new IllegalArgumentException("Error while retrieving system admin users details with ID: " + issuerId);
+        return "";
     }
-
 }
