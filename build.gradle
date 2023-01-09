@@ -9,7 +9,7 @@ plugins {
   id 'org.sonarqube' version '3.5.0.2730'
   id 'pmd'
   id 'org.jetbrains.kotlin.jvm' version '1.7.22'
-  id 'io.freefair.lombok' version '6.5.1'
+  id 'io.freefair.lombok' version '6.6.1'
   id 'org.flywaydb.flyway' version '8.5.13'
 }
 
@@ -205,7 +205,7 @@ dependencies {
   // Include Azure identity for authentication
   implementation group: 'com.azure', name: 'azure-identity', version: '1.7.1'
 
-  implementation group: 'org.springdoc', name: 'springdoc-openapi-ui', version: '1.6.13'
+  implementation group: 'org.springdoc', name: 'springdoc-openapi-ui', version: '1.6.14'
 
   implementation group: 'com.github.hmcts.java-logging', name: 'logging', version: reformLoggingVersion
   implementation group: 'com.github.hmcts.java-logging', name: 'logging-appinsights', version: reformLoggingVersion
