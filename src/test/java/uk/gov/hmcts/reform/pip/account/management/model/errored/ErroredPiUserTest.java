@@ -29,12 +29,12 @@ class ErroredPiUserTest {
     }
 
     @Test
-    void testEqualWithAzureClassObject() {
+    void testEqualWithSameClassObject() {
         Assertions.assertEquals(erroredPiUser, new ErroredPiUser());
     }
 
     @Test
     void testHashcode() {
-        Assertions.assertEquals(erroredPiUser.hashCode(), 0);
+        Assertions.assertEquals(0, erroredPiUser.hashCode());
     }
 }

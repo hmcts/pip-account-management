@@ -90,7 +90,7 @@ public class AccountService {
      * @param issuerId      The id of the user who created the accounts.
      * @return Returns a map which contains two lists, Errored and Created accounts. Created will have object ID set.
      **/
-    public Map<CreationEnum, List<? extends AzureAccount>> addAzureAccounts(
+    public Map<CreationEnum, List<? extends AzureAccount>> addAzureAccounts(//NOSONAR
         List<AzureAccount> azureAccounts, String issuerId, boolean isExisting) {
 
         Map<CreationEnum, List<? extends AzureAccount>> processedAccounts = new ConcurrentHashMap<>();
@@ -167,7 +167,7 @@ public class AccountService {
      * @param issuerId the id of the admin adding the users for logging purposes.
      * @return Map of Created and Errored accounts, created has UUID's and errored has user objects.
      */
-    public Map<CreationEnum, List<?>> addUsers(List<PiUser> users, String issuerId) {
+    public Map<CreationEnum, List<?>> addUsers(List<PiUser> users, String issuerId) { //NOSONAR
         List<UUID> createdAccounts = new ArrayList<>();
         List<ErroredPiUser> erroredAccounts = new ArrayList<>();
 
@@ -261,7 +261,7 @@ public class AccountService {
         return emailMap;
     }
 
-    public Map<CreationEnum, List<?>> uploadMediaFromCsv(MultipartFile mediaCsv, String issuerId) {
+    public Map<CreationEnum, List<?>> uploadMediaFromCsv(MultipartFile mediaCsv, String issuerId) { //NOSONAR
         List<MediaCsv> mediaList;
 
         try (InputStreamReader inputStreamReader = new InputStreamReader(mediaCsv.getInputStream());

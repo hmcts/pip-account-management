@@ -29,12 +29,12 @@ class ErroredAzureAccountTest {
     }
 
     @Test
-    void testEqualWithAzureClassObject() {
+    void testEqualWithSameClassObject() {
         Assertions.assertEquals(erroredAzureAccount, new ErroredAzureAccount());
     }
 
     @Test
     void testHashcode() {
-        Assertions.assertEquals(erroredAzureAccount.hashCode(), 0);
+        Assertions.assertEquals(0, erroredAzureAccount.hashCode());
     }
 }

@@ -82,7 +82,7 @@ public class AccountController {
     @ApiResponse(responseCode = OK_CODE, description = "{AzureAccount}")
     @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
     @PostMapping("/add/azure")
-    public ResponseEntity<Map<CreationEnum, List<? extends AzureAccount>>> createAzureAccount(
+    public ResponseEntity<Map<CreationEnum, List<? extends AzureAccount>>> createAzureAccount(//NOSONAR
         @RequestHeader(ISSUER_ID) String issuerId,
         @RequestBody List<AzureAccount> azureAccounts) {
         return ResponseEntity.ok(accountService.addAzureAccounts(azureAccounts, issuerId, false));
@@ -100,7 +100,7 @@ public class AccountController {
     @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
     @Operation(summary = "Add a user to the P&I postgres database")
     @PostMapping("/add/pi")
-    public ResponseEntity<Map<CreationEnum, List<?>>> createUsers(
+    public ResponseEntity<Map<CreationEnum, List<?>>> createUsers(//NOSONAR
         @RequestHeader(ISSUER_ID) String issuerId,
         @RequestBody List<PiUser> users) {
         return ResponseEntity.status(HttpStatus.CREATED).body(accountService.addUsers(users, issuerId));
@@ -153,7 +153,7 @@ public class AccountController {
     @ApiResponse(responseCode = "400", description = "Bad request")
     @Operation(summary = "Create media accounts via CSV upload")
     @PostMapping("/media-bulk-upload")
-    public ResponseEntity<Map<CreationEnum, List<?>>> createMediaAccountsBulk(
+    public ResponseEntity<Map<CreationEnum, List<?>>> createMediaAccountsBulk(//NOSONAR
         @RequestHeader(ISSUER_ID) String issuerId, @RequestPart MultipartFile mediaList) {
         return ResponseEntity.ok(accountService.uploadMediaFromCsv(mediaList, issuerId));
     }
@@ -293,7 +293,7 @@ public class AccountController {
     @ApiResponse(responseCode = BAD_REQUEST_CODE, description = "{ErroredSystemAdminAccount}")
     @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
     @PostMapping("/add/system-admin")
-    public ResponseEntity<? extends PiUser> createSystemAdminAccount(
+    public ResponseEntity<? extends PiUser> createSystemAdminAccount(//NOSONAR
         @RequestHeader(ISSUER_ID) String issuerId,
         @RequestBody SystemAdminAccount account) {
         return ResponseEntity.ok(systemAdminAccountService.addSystemAdminAccount(account, issuerId));
