@@ -38,7 +38,7 @@ public class ErroredAzureAccount extends AzureAccount {
 
     @Override
     public boolean equals(Object obj) {
-        return false;
+        return obj != null && obj.getClass() == this.getClass();
     }
 
     @Override
