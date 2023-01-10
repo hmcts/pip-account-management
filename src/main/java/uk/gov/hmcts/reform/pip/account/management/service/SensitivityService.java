@@ -1,7 +1,6 @@
 package uk.gov.hmcts.reform.pip.account.management.service;
 
 import org.springframework.stereotype.Component;
-import uk.gov.hmcts.reform.pip.account.management.model.CombinedRoles;
 import uk.gov.hmcts.reform.pip.account.management.model.ListType;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
 import uk.gov.hmcts.reform.pip.account.management.model.Roles;
@@ -22,10 +21,9 @@ public class SensitivityService {
      * @return true if user has permission to see the publication, false if not.
      */
     public boolean checkAuthorisation(PiUser user, ListType listType, Sensitivity sensitivity) {
-        CombinedRoles combinedRoles = new CombinedRoles();
         return switch (sensitivity) {
             case PUBLIC -> true;
-            case PRIVATE -> combinedRoles.getAllVerifiedRoles().contains(user.getRoles());
+            case PRIVATE -> Roles.getAllVerifiedRoles().contains(user.getRoles());
             case CLASSIFIED -> Roles.VERIFIED.equals(user.getRoles())
                 && user.getUserProvenance().equals(listType.getAllowedProvenance())
                 || UserProvenances.THIRD_PARTY.equals(user.getUserProvenance())

@@ -1,6 +1,9 @@
 package uk.gov.hmcts.reform.pip.account.management.model;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * Enum of the roles allowed for users of P&I, verified are media members, Internal are different levels of admin,
@@ -58,4 +61,25 @@ public enum Roles {
         INTERNAL_ADMIN_CTSC,
         INTERNAL_ADMIN_LOCAL
     );
+
+    public static List<Roles> getAllThirdPartyRoles() {
+        return Stream.of(
+                ALL_VERIFIED_THIRD_PARTY_CRIME_ROLES,
+                ALL_VERIFIED_THIRD_PARTY_CFT_ROLES,
+                ALL_VERIFIED_THIRD_PARTY_PRESS_ROLES,
+                Collections.singletonList(GENERAL_THIRD_PARTY)
+            )
+            .flatMap(Collection::stream)
+            .distinct()
+            .toList();
+    }
+
+    public static List<Roles> getAllVerifiedRoles() {
+        return Stream.of(
+                getAllThirdPartyRoles(),
+                Collections.singletonList(VERIFIED)
+            )
+            .flatMap(Collection::stream)
+            .toList();
+    }
 }

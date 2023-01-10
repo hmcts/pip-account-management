@@ -150,9 +150,9 @@ public class AccountService {
         return processedAccounts;
     }
 
-    private void checkAndAddToErrorAccount(Boolean checkCondition, AzureAccount azureAccount, String errorMessage,
+    private void checkAndAddToErrorAccount(boolean checkCondition, AzureAccount azureAccount, String errorMessage,
                                            List<ErroredAzureAccount> erroredAccounts) {
-        if (checkCondition.equals(Boolean.FALSE)) {
+        if (!checkCondition) {
             ErroredAzureAccount softErroredAccount = new ErroredAzureAccount(azureAccount);
             softErroredAccount.setErrorMessages(List.of(errorMessage));
             erroredAccounts.add(softErroredAccount);
