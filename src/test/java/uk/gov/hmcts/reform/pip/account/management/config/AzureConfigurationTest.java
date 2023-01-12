@@ -27,7 +27,7 @@ class AzureConfigurationTest {
         when(clientConfiguration.getTenantGuid()).thenReturn("12345");
         when(clientConfiguration.getTokenProvider()).thenReturn("12345");
 
-        GraphServiceClient<Request> graphServiceClient = azureConfigurationClient.graphClient();
+        GraphServiceClient<Request> graphServiceClient = azureConfigurationClient.graphClient(clientConfiguration);
 
         assertNotNull(graphServiceClient, "Azure Graph Service client has been created");
     }
