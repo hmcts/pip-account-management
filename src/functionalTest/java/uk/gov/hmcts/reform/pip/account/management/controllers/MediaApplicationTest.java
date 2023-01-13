@@ -124,7 +124,7 @@ class MediaApplicationTest {
         applicationDto.setFullName(FULL_NAME);
         applicationDto.setEmail(EMAIL);
         applicationDto.setEmployer(EMPLOYER);
-        applicationDto.setStatus(STATUS);
+        applicationDto.setStatus("PENDING");
 
         try (InputStream imageInputStream = Thread.currentThread().getContextClassLoader()
             .getResourceAsStream("files/test-image.png")) {
