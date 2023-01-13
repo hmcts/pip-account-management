@@ -41,7 +41,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
@@ -97,7 +96,7 @@ public class AccountService {
         Map<CreationEnum, List<? extends AzureAccount>> processedAccounts = new ConcurrentHashMap<>();
 
         List<AzureAccount> createdAzureAccounts = new ArrayList<>();
-        AtomicReference<List<ErroredAzureAccount>> erroredAccounts = new AtomicReference<>();
+        List<ErroredAzureAccount> erroredAccounts = new ArrayList<>();
 
         for (AzureAccount azureAccount : azureAccounts) {
 
@@ -134,13 +133,12 @@ public class AccountService {
         }
 
         processedAccounts.put(CreationEnum.CREATED_ACCOUNTS, createdAzureAccounts);
-        processedAccounts.put(CreationEnum.ERRORED_ACCOUNTS, erroredAccounts.get());
+        processedAccounts.put(CreationEnum.ERRORED_ACCOUNTS, erroredAccounts);
 
         return processedAccounts;
     }
 
-    private boolean checkUserAlreadyExists(AzureAccount azureAccount,
-                                           AtomicReference<List<ErroredAzureAccount>> erroredAccounts)
+    private boolean checkUserAlreadyExists(AzureAccount azureAccount, List<ErroredAzureAccount> erroredAccounts)
         throws AzureCustomException {
         User userAzure = azureUserService.getUser(azureAccount.getEmail());
 
@@ -159,11 +157,11 @@ public class AccountService {
     }
 
     private void checkAndAddToErrorAccount(boolean checkCondition, AzureAccount azureAccount, List<String> errorMessage,
-                                           AtomicReference<List<ErroredAzureAccount>> erroredAccounts) {
+                                           List<ErroredAzureAccount> erroredAccounts) {
         if (!checkCondition) {
             ErroredAzureAccount softErroredAccount = new ErroredAzureAccount(azureAccount);
             softErroredAccount.setErrorMessages(errorMessage);
-            erroredAccounts.get().add(softErroredAccount);
+            erroredAccounts.add(softErroredAccount);
         }
     }
 
