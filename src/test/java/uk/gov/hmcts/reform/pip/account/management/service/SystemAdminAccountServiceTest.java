@@ -27,6 +27,7 @@ import javax.validation.Path;
 import javax.validation.Validator;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -126,8 +127,9 @@ class SystemAdminAccountServiceTest {
                 systemAdminAccountService.addSystemAdminAccount(SYSTEM_ADMIN_ACCOUNT, ID));
 
 
-        assertEquals(systemAdminAccountException.getErroredSystemAdminAccount().getErrorMessages().get(0),
-                     "Test error", "Error message not as expected");
+        assertEquals("Test error",
+                     systemAdminAccountException.getErroredSystemAdminAccount().getErrorMessages().get(0),
+                     "Error message not as expected");
     }
 
     @Test
@@ -147,7 +149,7 @@ class SystemAdminAccountServiceTest {
             assertThrows(SystemAdminAccountException.class, () ->
                 systemAdminAccountService.addSystemAdminAccount(ERRORED_SYSTEM_ADMIN_ACCOUNT, ID));
 
-        assertTrue(systemAdminAccountException.getErroredSystemAdminAccount().getErrorMessages().size() != 0,
+        assertNotEquals(0, systemAdminAccountException.getErroredSystemAdminAccount().getErrorMessages().size(),
                    "Constraint violation error messages not displayed");
     }
 
