@@ -77,6 +77,7 @@ class MediaApplicationTest {
     private static final MediaApplicationStatus STATUS = MediaApplicationStatus.PENDING;
     private static final MediaApplicationStatus UPDATED_STATUS = MediaApplicationStatus.APPROVED;
     private static final UUID TEST_ID = UUID.randomUUID();
+    private static final String PENDING_STATUS = "PENDING";
 
     private static final String NOT_FOUND_ERROR = "Returned ID does not match the expected ID";
     private static final String EMAIL_NOT_MATCH = "Emails do not match";
@@ -94,7 +95,7 @@ class MediaApplicationTest {
         applicationDto.setFullName(FULL_NAME);
         applicationDto.setEmail(EMAIL);
         applicationDto.setEmployer(EMPLOYER);
-        applicationDto.setStatus("PENDING");
+        applicationDto.setStatus(PENDING_STATUS);
 
         try (InputStream imageInputStream = Thread.currentThread().getContextClassLoader()
             .getResourceAsStream("files/test-image.png")) {
@@ -124,7 +125,7 @@ class MediaApplicationTest {
         applicationDto.setFullName(FULL_NAME);
         applicationDto.setEmail(EMAIL);
         applicationDto.setEmployer(EMPLOYER);
-        applicationDto.setStatus("PENDING");
+        applicationDto.setStatus(PENDING_STATUS);
 
         try (InputStream imageInputStream = Thread.currentThread().getContextClassLoader()
             .getResourceAsStream("files/test-image.png")) {
@@ -173,7 +174,7 @@ class MediaApplicationTest {
     void testGetApplicationsByStatus() throws Exception {
         MediaApplication application = createApplication();
 
-        MvcResult mvcResult = mockMvc.perform(get(GET_STATUS_URL, "PENDING"))
+        MvcResult mvcResult = mockMvc.perform(get(GET_STATUS_URL, PENDING_STATUS))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -195,7 +196,7 @@ class MediaApplicationTest {
     @Test
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testGetApplicationsByStatusUnauthorised() throws Exception {
-        mockMvc.perform(get(GET_STATUS_URL, "PENDING"))
+        mockMvc.perform(get(GET_STATUS_URL, PENDING_STATUS))
             .andExpect(status().isForbidden());
     }
 
