@@ -2,7 +2,6 @@ package uk.gov.hmcts.reform.pip.account.management.controllers;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
@@ -55,20 +54,16 @@ public class MediaApplicationController {
         this.mediaApplicationService = mediaApplicationService;
     }
 
-    @ApiResponses({
-        @ApiResponse(responseCode = OK_ERROR_CODE, description = "List<{MediaApplication}>"),
-        @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE),
-    })
+    @ApiResponse(responseCode = OK_ERROR_CODE, description = "List<{MediaApplication}>")
+    @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
     @Operation(summary = "Get all applications")
     @GetMapping(produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<List<MediaApplication>> getApplications() {
         return ResponseEntity.ok(mediaApplicationService.getApplications());
     }
 
-    @ApiResponses({
-        @ApiResponse(responseCode = OK_ERROR_CODE, description = "List<{MediaApplication}>"),
-        @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE),
-    })
+    @ApiResponse(responseCode = OK_ERROR_CODE, description = "List<{MediaApplication}>")
+    @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
     @Operation(summary = "Get all application by the status")
     @GetMapping(value = "/status/{status}", produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<List<MediaApplication>> getApplicationsByStatus(
@@ -76,21 +71,17 @@ public class MediaApplicationController {
         return ResponseEntity.ok(mediaApplicationService.getApplicationsByStatus(status));
     }
 
-    @ApiResponses({
-        @ApiResponse(responseCode = OK_ERROR_CODE, description = "{MediaApplication}"),
-        @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE),
-        @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description = "No media application found with id: {id}"),
-    })
+    @ApiResponse(responseCode = OK_ERROR_CODE, description = "{MediaApplication}")
+    @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
+    @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description = "No media application found with id: {id}")
     @GetMapping(value = "/{id}", produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<MediaApplication> getApplicationById(@PathVariable UUID id) {
         return ResponseEntity.ok(mediaApplicationService.getApplicationById(id));
     }
 
-    @ApiResponses({
-        @ApiResponse(responseCode = OK_ERROR_CODE, description = "Image with id: {id} is returned"),
-        @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE),
-        @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description = "No image found with id: {id}"),
-    })
+    @ApiResponse(responseCode = OK_ERROR_CODE, description = "Image with id: {id} is returned")
+    @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
+    @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description = "No image found with id: {id}")
     @GetMapping("/image/{id}")
     public ResponseEntity<Resource> getImageById(@PathVariable String id) {
         return ResponseEntity.ok()
@@ -98,11 +89,9 @@ public class MediaApplicationController {
             .body(mediaApplicationService.getImageById(id));
     }
 
-    @ApiResponses({
-        @ApiResponse(responseCode = OK_ERROR_CODE, description = "{MediaApplication}"),
-        @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE),
-        @ApiResponse(responseCode = "400", description = "Validation failed message")
-    })
+    @ApiResponse(responseCode = OK_ERROR_CODE, description = "{MediaApplication}")
+    @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
+    @ApiResponse(responseCode = "400", description = "Validation failed message")
     @Operation(summary = "Create a new application")
     @PostMapping(produces = APPLICATION_JSON_VALUE, consumes = MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<MediaApplication> createApplication(
@@ -111,11 +100,9 @@ public class MediaApplicationController {
         return ResponseEntity.ok(mediaApplicationService.createApplication(application.toEntity(), file));
     }
 
-    @ApiResponses({
-        @ApiResponse(responseCode = OK_ERROR_CODE, description = "{MediaApplication}"),
-        @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE),
-        @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description = "No media application found with id: {id}"),
-    })
+    @ApiResponse(responseCode = OK_ERROR_CODE, description = "{MediaApplication}")
+    @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
+    @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description = "No media application found with id: {id}")
     @Operation(summary = "Update an existing application")
     @PutMapping("/{id}/{status}")
     public ResponseEntity<MediaApplication> updateApplication(@PathVariable UUID id,
@@ -124,11 +111,9 @@ public class MediaApplicationController {
             mediaApplicationService.updateApplication(id, status));
     }
 
-    @ApiResponses({
-        @ApiResponse(responseCode = OK_ERROR_CODE, description = "Application deleted"),
-        @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE),
-        @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description = "No media application found with id: {id}"),
-    })
+    @ApiResponse(responseCode = OK_ERROR_CODE, description = "Application deleted")
+    @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
+    @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description = "No media application found with id: {id}")
     @Operation(summary = "Delete an application")
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteApplication(@PathVariable UUID id) {
@@ -136,10 +121,8 @@ public class MediaApplicationController {
         return ResponseEntity.ok("Application deleted");
     }
 
-    @ApiResponses({
-        @ApiResponse(responseCode = "204", description = NO_CONTENT_MESSAGE),
-        @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
-    })
+    @ApiResponse(responseCode = "204", description = NO_CONTENT_MESSAGE)
+    @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
     @Operation(summary = "Reports all media applications and deletes approved and rejected applications")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PostMapping("/reporting")

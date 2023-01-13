@@ -2,7 +2,6 @@ package uk.gov.hmcts.reform.pip.account.management.controllers;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -80,12 +79,10 @@ public class AccountController {
      * @param azureAccounts The accounts to add.
      * @return A list containing details of any created and errored azureAccounts.
      */
-    @ApiResponses({
-        @ApiResponse(responseCode = OK_CODE, description = "{AzureAccount}"),
-        @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE),
-    })
+    @ApiResponse(responseCode = OK_CODE, description = "{AzureAccount}")
+    @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
     @PostMapping("/add/azure")
-    public ResponseEntity<Map<CreationEnum, List<? extends AzureAccount>>> createAzureAccount(
+    public ResponseEntity<Map<CreationEnum, List<? extends AzureAccount>>> createAzureAccount(//NOSONAR
         @RequestHeader(ISSUER_ID) String issuerId,
         @RequestBody List<AzureAccount> azureAccounts) {
         return ResponseEntity.ok(accountService.addAzureAccounts(azureAccounts, issuerId, false));
@@ -98,37 +95,31 @@ public class AccountController {
      * @param users       The list of users to add to the database.
      * @return the uuid of the created and added users with any errored accounts
      */
-    @ApiResponses({
-        @ApiResponse(responseCode = "201",
-            description = "CREATED_ACCOUNTS: [{Created User UUID's}]"),
-        @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE),
-    })
+    @ApiResponse(responseCode = "201",
+            description = "CREATED_ACCOUNTS: [{Created User UUID's}]")
+    @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
     @Operation(summary = "Add a user to the P&I postgres database")
     @PostMapping("/add/pi")
-    public ResponseEntity<Map<CreationEnum, List<?>>> createUsers(
+    public ResponseEntity<Map<CreationEnum, List<?>>> createUsers(//NOSONAR
         @RequestHeader(ISSUER_ID) String issuerId,
         @RequestBody List<PiUser> users) {
         return ResponseEntity.status(HttpStatus.CREATED).body(accountService.addUsers(users, issuerId));
     }
 
-    @ApiResponses({
-        @ApiResponse(responseCode = OK_CODE, description = PI_USER),
-        @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE),
-        @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description = "No user found with the "
+    @ApiResponse(responseCode = OK_CODE, description = PI_USER)
+    @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
+    @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description = "No user found with the "
             + "user Id: {userId}")
-    })
     @Operation(summary = "Get a user based on their user ID")
     @GetMapping("/{userId}")
     public ResponseEntity<PiUser> getUserById(@PathVariable UUID userId) {
         return ResponseEntity.ok(accountService.getUserById(userId));
     }
 
-    @ApiResponses({
-        @ApiResponse(responseCode = OK_CODE, description = PI_USER),
-        @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE),
-        @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description = "No user found with the "
+    @ApiResponse(responseCode = OK_CODE, description = PI_USER)
+    @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
+    @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description = "No user found with the "
             + "provenance user Id: {provenanceUserId}")
-    })
     @Operation(summary = "Get a user based on their provenance user Id and provenance")
     @GetMapping("/provenance/{userProvenance}/{provenanceUserId}")
     public ResponseEntity<PiUser> getUserByProvenanceId(@PathVariable UserProvenances userProvenance,
@@ -136,12 +127,10 @@ public class AccountController {
         return ResponseEntity.ok(accountService.findUserByProvenanceId(userProvenance, provenanceUserId));
     }
 
-    @ApiResponses({
-        @ApiResponse(responseCode = OK_CODE, description = "User has access to provided publication"),
-        @ApiResponse(responseCode = AUTH_ERROR_CODE,
-            description = "User: {userId} does not have sufficient permission to view list type: {listType}"),
-        @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description = "No user found with the userId: {userId}"),
-    })
+    @ApiResponse(responseCode = OK_CODE, description = "User has access to provided publication")
+    @ApiResponse(responseCode = AUTH_ERROR_CODE,
+            description = "User: {userId} does not have sufficient permission to view list type: {listType}")
+    @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description = "No user found with the userId: {userId}")
     @Operation(summary = "Check if a user can see a classified publication through "
         + "their user ID and the publications list type and sensitivity")
     @GetMapping("/isAuthorised/{userId}/{listType}/{sensitivity}")
@@ -151,44 +140,36 @@ public class AccountController {
         return ResponseEntity.ok(accountService.isUserAuthorisedForPublication(userId, listType, sensitivity));
     }
 
-    @ApiResponses({
-        @ApiResponse(responseCode = OK_CODE, description = "{Map<String, Optional>}"),
-        @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
-    })
+    @ApiResponse(responseCode = OK_CODE, description = "{Map<String, Optional>}")
+    @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
     @Operation(summary = "Get a map of userId and email from a list of userIds")
     @PostMapping("/emails")
     public ResponseEntity<Map<String, Optional<String>>> getUserEmailsByIds(@RequestBody List<String> userIdsList) {
         return ResponseEntity.ok(accountService.findUserEmailsByIds(userIdsList));
     }
 
-    @ApiResponses({
-        @ApiResponse(responseCode = OK_CODE,
-            description = "CREATED_ACCOUNTS:[{Created user ids}], ERRORED_ACCOUNTS: [{failed accounts}]"),
-        @ApiResponse(responseCode = "400", description = "Bad request"),
-    })
+    @ApiResponse(responseCode = OK_CODE,
+            description = "CREATED_ACCOUNTS:[{Created user ids}], ERRORED_ACCOUNTS: [{failed accounts}]")
+    @ApiResponse(responseCode = "400", description = "Bad request")
     @Operation(summary = "Create media accounts via CSV upload")
     @PostMapping("/media-bulk-upload")
-    public ResponseEntity<Map<CreationEnum, List<?>>> createMediaAccountsBulk(
+    public ResponseEntity<Map<CreationEnum, List<?>>> createMediaAccountsBulk(//NOSONAR
         @RequestHeader(ISSUER_ID) String issuerId, @RequestPart MultipartFile mediaList) {
         return ResponseEntity.ok(accountService.uploadMediaFromCsv(mediaList, issuerId));
     }
 
-    @ApiResponses({
-        @ApiResponse(responseCode = OK_CODE, description = "Account Management - MI Data request accepted.")
-    })
+    @ApiResponse(responseCode = OK_CODE, description = "Account Management - MI Data request accepted.")
     @Operation(summary = "Returns a list of (anonymized) account data for MI reporting.")
     @GetMapping("/mi-data")
     public ResponseEntity<String> getMiData() {
         return ResponseEntity.status(HttpStatus.OK).body(accountService.getAccManDataForMiReporting());
     }
 
-    @ApiResponses({
-        @ApiResponse(responseCode = OK_CODE, description = "Account with provenance {userProvenance} and provenance id "
-            + "{provenanceUserId} has been updated"),
-        @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE),
-        @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description = "User with supplied provenance "
-            + "id: {provenanceUserId} could not be found"),
-    })
+    @ApiResponse(responseCode = OK_CODE, description = "Account with provenance {userProvenance} and provenance id "
+            + "{provenanceUserId} has been updated")
+    @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
+    @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description = "User with supplied provenance "
+            + "id: {provenanceUserId} could not be found")
     @Operation(summary = "Update the user's account based on their provenance user id and provenance")
     @PutMapping("/provenance/{userProvenance}/{provenanceUserId}")
     public ResponseEntity<String> updateAccount(@PathVariable UserProvenances userProvenance,
@@ -197,10 +178,8 @@ public class AccountController {
         return ResponseEntity.ok(accountService.updateAccount(userProvenance, provenanceUserId, params));
     }
 
-    @ApiResponses({
-        @ApiResponse(responseCode = NO_CONTENT_CODE, description = NO_CONTENT_MESSAGE),
-        @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NO_CONTENT_MESSAGE)
-    })
+    @ApiResponse(responseCode = NO_CONTENT_CODE, description = NO_CONTENT_MESSAGE)
+    @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NO_CONTENT_MESSAGE)
     @Operation(summary = "Notify inactive media users to verify their accounts")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PostMapping("/media/inactive/notify")
@@ -209,10 +188,8 @@ public class AccountController {
         return ResponseEntity.noContent().build();
     }
 
-    @ApiResponses({
-        @ApiResponse(responseCode = NO_CONTENT_CODE, description = NO_CONTENT_MESSAGE),
-        @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
-    })
+    @ApiResponse(responseCode = NO_CONTENT_CODE, description = NO_CONTENT_MESSAGE)
+    @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
     @Operation(summary = "Delete all expired inactive accounts")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/media/inactive")
@@ -221,10 +198,8 @@ public class AccountController {
         return ResponseEntity.noContent().build();
     }
 
-    @ApiResponses({
-        @ApiResponse(responseCode = NO_CONTENT_CODE, description = NO_CONTENT_MESSAGE),
-        @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NO_CONTENT_MESSAGE)
-    })
+    @ApiResponse(responseCode = NO_CONTENT_CODE, description = NO_CONTENT_MESSAGE)
+    @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NO_CONTENT_MESSAGE)
     @Operation(summary = "Notify inactive admin users to verify their accounts")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PostMapping("/admin/inactive/notify")
@@ -233,10 +208,8 @@ public class AccountController {
         return ResponseEntity.noContent().build();
     }
 
-    @ApiResponses({
-        @ApiResponse(responseCode = NO_CONTENT_CODE, description = NO_CONTENT_MESSAGE),
-        @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
-    })
+    @ApiResponse(responseCode = NO_CONTENT_CODE, description = NO_CONTENT_MESSAGE)
+    @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
     @Operation(summary = "Delete all expired inactive admin accounts")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/admin/inactive")
@@ -245,10 +218,8 @@ public class AccountController {
         return ResponseEntity.noContent().build();
     }
 
-    @ApiResponses({
-        @ApiResponse(responseCode = NO_CONTENT_CODE, description = NO_CONTENT_MESSAGE),
-        @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NO_CONTENT_MESSAGE)
-    })
+    @ApiResponse(responseCode = NO_CONTENT_CODE, description = NO_CONTENT_MESSAGE)
+    @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NO_CONTENT_MESSAGE)
     @Operation(summary = "Notify inactive idam users to verify their accounts")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PostMapping("/idam/inactive/notify")
@@ -257,10 +228,8 @@ public class AccountController {
         return ResponseEntity.noContent().build();
     }
 
-    @ApiResponses({
-        @ApiResponse(responseCode = NO_CONTENT_CODE, description = NO_CONTENT_MESSAGE),
-        @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
-    })
+    @ApiResponse(responseCode = NO_CONTENT_CODE, description = NO_CONTENT_MESSAGE)
+    @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
     @Operation(summary = "Delete all expired inactive idam accounts")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/idam/inactive")
@@ -269,10 +238,8 @@ public class AccountController {
         return ResponseEntity.noContent().build();
     }
 
-    @ApiResponses({
-        @ApiResponse(responseCode = OK_CODE, description = "List of third party accounts"),
-        @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
-    })
+    @ApiResponse(responseCode = OK_CODE, description = "List of third party accounts")
+    @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
     @Operation(summary = "Get all third party accounts")
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("/all/third-party")
@@ -295,11 +262,9 @@ public class AccountController {
                                                                                 provenances, roles, userId));
     }
 
-    @ApiResponses({
-        @ApiResponse(responseCode = OK_CODE, description = "String confirming deletion"),
-        @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE),
-        @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description = "User not found")
-    })
+    @ApiResponse(responseCode = OK_CODE, description = "String confirming deletion")
+    @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
+    @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description = "User not found")
     @Operation(summary = "Delete a user by their id")
     @DeleteMapping("/delete/{userId}")
     public ResponseEntity<String> deleteAccount(@PathVariable UUID userId) {
@@ -307,11 +272,9 @@ public class AccountController {
         return ResponseEntity.ok("User deleted");
     }
 
-    @ApiResponses({
-        @ApiResponse(responseCode = OK_CODE, description = "String confirming update"),
-        @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE),
-        @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description = "User not found")
-    })
+    @ApiResponse(responseCode = OK_CODE, description = "String confirming update")
+    @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
+    @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description = "User not found")
     @Operation(summary = "Update a users role by their id")
     @PutMapping("/update/{userId}/{role}")
     public ResponseEntity<String> updateAccountById(@PathVariable UUID userId, @PathVariable Roles role) {
@@ -326,23 +289,20 @@ public class AccountController {
      * @param account The account to add.
      * @return The PiUser that's been added, or an ErroredPiUser if it failed to add.
      */
-    @ApiResponses({
-        @ApiResponse(responseCode = OK_CODE, description = PI_USER),
-        @ApiResponse(responseCode = BAD_REQUEST_CODE, description = "{ErroredSystemAdminAccount}"),
-        @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE),
-    })
+    @ApiResponse(responseCode = OK_CODE, description = PI_USER)
+    @ApiResponse(responseCode = BAD_REQUEST_CODE, description = "{ErroredSystemAdminAccount}")
+    @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
     @PostMapping("/add/system-admin")
-    public ResponseEntity<? extends PiUser> createSystemAdminAccount(
+    public ResponseEntity<? extends PiUser> createSystemAdminAccount(//NOSONAR
         @RequestHeader(ISSUER_ID) String issuerId,
         @RequestBody SystemAdminAccount account) {
         return ResponseEntity.ok(systemAdminAccountService.addSystemAdminAccount(account, issuerId));
     }
 
-    @ApiResponses({
-        @ApiResponse(responseCode = OK_CODE, description = "P&I Azure User Information"),
-        @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE),
-        @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description = "User not found")
-    })
+
+    @ApiResponse(responseCode = OK_CODE, description = "P&I Azure User Information")
+    @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
+    @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description = "User not found")
     @Operation(summary = "Get P&I Azure User info")
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("/azure/{provenanceUserId}")
@@ -350,12 +310,10 @@ public class AccountController {
         return ResponseEntity.ok(accountService.retrieveAzureUser(provenanceUserId));
     }
 
-    @ApiResponses({
-        @ApiResponse(responseCode = OK_CODE, description = PI_USER),
-        @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE),
-        @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description = "No user found with the "
+    @ApiResponse(responseCode = OK_CODE, description = PI_USER)
+    @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
+    @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description = "No user found with the "
             + "email: {email} and provenance {provenance}")
-    })
     @Operation(summary = "Get an Admin user (excluding system admin) based on their email and provenance")
     @GetMapping("/admin/{email}/{provenance}")
     public ResponseEntity<PiUser> getAdminUserByEmailAndProvenance(@PathVariable String email,
