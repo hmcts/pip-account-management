@@ -20,7 +20,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
 
@@ -101,7 +100,7 @@ public class SystemAdminAccountService {
                           "has attempted to create a System Admin account, which has: " + result.toString()));
 
         List<String> existingAdminEmails = userRepository.findByRoles(Roles.SYSTEM_ADMIN)
-            .stream().map(PiUser::getEmail).collect(Collectors.toList());
+            .stream().map(PiUser::getEmail).toList();
 
         var createSystemAdminAction = new CreateSystemAdminAction();
         createSystemAdminAction.setAccountEmail(systemAdminAccount.getEmail());
@@ -125,7 +124,7 @@ public class SystemAdminAccountService {
             var erroredSystemAdminAccount = new ErroredSystemAdminAccount(account);
             erroredSystemAdminAccount.setErrorMessages(constraintViolationSet
                                                            .stream().map(constraint -> constraint.getPropertyPath()
-                    + ": " + constraint.getMessage()).collect(Collectors.toList()));
+                    + ": " + constraint.getMessage()).toList());
 
             handleNewSystemAdminAccountAction(account, issuerId, ActionResult.FAILED, name);
             throw new SystemAdminAccountException(erroredSystemAdminAccount);
