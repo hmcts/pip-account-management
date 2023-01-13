@@ -3,7 +3,6 @@ package uk.gov.hmcts.reform.pip.account.management.validation.validator;
 import uk.gov.hmcts.reform.pip.account.management.validation.annotations.ValueOfEnum;
 
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
@@ -18,7 +17,7 @@ public class ValueOfEnumValidator implements ConstraintValidator<ValueOfEnum, Ch
     public void initialize(ValueOfEnum annotation) {
         acceptedValues = Stream.of(annotation.enumClass().getEnumConstants())
             .map(Enum::name)
-            .collect(Collectors.toList());
+            .toList();
     }
 
     @Override
