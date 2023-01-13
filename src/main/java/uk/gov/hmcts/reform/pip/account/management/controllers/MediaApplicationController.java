@@ -101,6 +101,7 @@ public class MediaApplicationController {
     @ApiResponses({
         @ApiResponse(responseCode = OK_ERROR_CODE, description = "{MediaApplication}"),
         @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE),
+        @ApiResponse(responseCode = "400", description = "Validation failed message")
     })
     @Operation(summary = "Create a new application")
     @PostMapping(produces = APPLICATION_JSON_VALUE, consumes = MULTIPART_FORM_DATA_VALUE)
