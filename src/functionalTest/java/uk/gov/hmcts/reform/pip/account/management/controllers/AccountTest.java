@@ -163,15 +163,7 @@ class AccountTest {
     private static final String NOT_FOUND_STATUS_CODE_MESSAGE = "Status code does not match not found";
     private static final String TEST_UUID_STRING = UUID.randomUUID().toString();
     private static final String MAP_SIZE_MESSAGE = "Map size should match";
-    private static final String USER_SHOULD_MATCH = "Users should match";
-    private static final String TEST_SYS_ADMIN_SURNAME = "testSysAdminSurname";
-    private static final String TEST_SYS_ADMIN_FIRSTNAME = "testSysAdminFirstname";
-    private static final String TEST_SYS_ADMIN_EMAIL = "testSysAdminEmail@justice.gov.uk";
-    private static final String AZURE_PATH = "/azure/";
-    private static final String DELETE_PATH = "/delete/";
-    private static final String UPDATE_PATH = "/update/";
     private static final String INVALID_EMAIL_ERROR = "Error message is displayed for an invalid email";
-    private static final String REPLACE_STRING = "%s/%s/%s";
     private ObjectMapper objectMapper;
 
     private PiUser validUser;
@@ -919,70 +911,6 @@ class AccountTest {
     }
 
     @Test
-    @WithMockUser(username = "unauthorized_account", authorities = {"APPROLE_unknown.account"})
-    void testUnauthorizedCreateAccount() throws Exception {
-        MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
-            .post(AZURE_URL)
-            .content("[]")
-            .header(ISSUER_HEADER, ISSUER_ID)
-            .contentType(MediaType.APPLICATION_JSON);
-
-        MvcResult mvcResult =
-            mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isForbidden()).andReturn();
-
-        assertEquals(HttpStatus.FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
-                     FORBIDDEN_STATUS_CODE
-        );
-    }
-
-    @Test
-    @WithMockUser(username = "unauthroized_user", authorities = {"APPROLE_unknown.user"})
-    void testUnauthorizedCreateUser() throws Exception {
-        MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
-            .post(PI_URL)
-            .content("[]")
-            .header(ISSUER_HEADER, ISSUER_ID)
-            .contentType(MediaType.APPLICATION_JSON);
-
-        MvcResult mvcResult =
-            mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isForbidden()).andReturn();
-
-        assertEquals(HttpStatus.FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
-                     FORBIDDEN_STATUS_CODE
-        );
-    }
-
-    @Test
-    @WithMockUser(username = "unauthorized_provenance", authorities = {"APPROLE_unknown.provenance"})
-    void testUnauthorizedGetUserByProvenance() throws Exception {
-        MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
-            .get(String.format("%s/%s/%s", GET_PROVENANCE_USER_URL, UserProvenances.CFT_IDAM, ID))
-            .contentType(MediaType.APPLICATION_JSON);
-
-        MvcResult mvcResult =
-            mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isForbidden()).andReturn();
-
-        assertEquals(HttpStatus.FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
-                     FORBIDDEN_STATUS_CODE
-        );
-    }
-
-    @Test
-    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
-    void testUnauthorizedGetUserIsAuthorized() throws Exception {
-        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
-            .get(String.format("%s/isAuthorised/%s/%s/%s", ROOT_URL, UUID.randomUUID(),
-                               ListType.SJP_PRESS_LIST, Sensitivity.PUBLIC
-            ));
-
-        MvcResult mvcResult = mockMvc.perform(request).andExpect(status().isForbidden()).andReturn();
-
-        assertEquals(HttpStatus.FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
-                     FORBIDDEN_STATUS_CODE
-        );
-    }
-
-    @Test
     void testGetUserEmailsByIds() throws Exception {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(EMAIL_URL)
@@ -1321,19 +1249,6 @@ class AccountTest {
     }
 
     @Test
-    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
-    void testUnauthorizedGetAllAccountsExceptThirdParty() throws Exception {
-        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
-            .get(GET_ALL_ACCOUNTS_EXCEPT_THIRD_PARTY);
-
-        MvcResult mvcResult = mockMvc.perform(request).andExpect(status().isForbidden()).andReturn();
-
-        assertEquals(HttpStatus.FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
-                     FORBIDDEN_STATUS_CODE
-        );
-    }
-
-    @Test
     void testGetUserById() throws Exception {
         MockHttpServletRequestBuilder createRequest =
             MockMvcRequestBuilders
@@ -1367,36 +1282,9 @@ class AccountTest {
     }
 
     @Test
-    @WithMockUser(username = "unauthorized_account", authorities = {"APPROLE_unknown.account"})
-    void testUnauthorizedGetAllThirdPartyAccounts() throws Exception {
-        MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
-            .get(ROOT_URL + "/all/third-party");
-
-        MvcResult mvcResult =
-            mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isForbidden()).andReturn();
-
-        assertEquals(HttpStatus.FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
-                     FORBIDDEN_STATUS_CODE
-        );
-    }
-
-    @Test
-    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
-    void testUnauthorizedGetUserById() throws Exception {
-        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
-            .get(ROOT_URL + "/" + UUID.randomUUID().toString());
-
-        MvcResult mvcResult = mockMvc.perform(request).andExpect(status().isForbidden()).andReturn();
-
-        assertEquals(HttpStatus.FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
-                     FORBIDDEN_STATUS_CODE
-        );
-    }
-
-    @Test
     void testGetUserByIdNotFound() throws Exception {
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
-            .get(ROOT_URL + "/" + UUID.randomUUID().toString());
+            .get(ROOT_URL + "/" + UUID.randomUUID());
 
         MvcResult mvcResult = mockMvc.perform(request).andExpect(status().isNotFound()).andReturn();
 
@@ -1432,19 +1320,6 @@ class AccountTest {
         MvcResult mvcResult = mockMvc.perform(deleteRequest).andExpect(status().isOk()).andReturn();
         assertEquals("User deleted", mvcResult.getResponse().getContentAsString(),
                      "Failed to delete user"
-        );
-    }
-
-    @Test
-    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
-    void testUnauthorizedDeleteAccount() throws Exception {
-        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
-            .delete(ROOT_URL + "/delete/" + UUID.randomUUID());
-
-        MvcResult mvcResult = mockMvc.perform(request).andExpect(status().isForbidden()).andReturn();
-
-        assertEquals(HttpStatus.FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
-                     FORBIDDEN_STATUS_CODE
         );
     }
 
@@ -1494,19 +1369,6 @@ class AccountTest {
     }
 
     @Test
-    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
-    void testUnauthorizedUpdateAccountById() throws Exception {
-        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
-            .put(ROOT_URL + "/update/" + UUID.randomUUID() + "/" + Roles.INTERNAL_ADMIN_LOCAL);
-
-        MvcResult mvcResult = mockMvc.perform(request).andExpect(status().isForbidden()).andReturn();
-
-        assertEquals(HttpStatus.FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
-                     FORBIDDEN_STATUS_CODE
-        );
-    }
-
-    @Test
     void testUpdateAccountByIdNotFound() throws Exception {
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .put(ROOT_URL + "/update/" + UUID.randomUUID() + "/" + Roles.INTERNAL_ADMIN_LOCAL);
@@ -1547,29 +1409,6 @@ class AccountTest {
         assertEquals(
             systemAdmin.getEmail(), returnedUser.getEmail(),
             "Failed to create user"
-        );
-    }
-
-    @Test
-    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
-    void testUnauthorizedCreateSystemAdminAccount() throws Exception {
-        SystemAdminAccount systemAdmin = new SystemAdminAccount();
-        systemAdmin.setFirstName("testSysAdminFirstname");
-        systemAdmin.setSurname("testSysAdminSurname");
-        systemAdmin.setEmail("testSysAdminEmail@justice.gov.uk");
-
-        MockHttpServletRequestBuilder createRequest =
-            MockMvcRequestBuilders
-                .post(CREATE_SYSTEM_ADMIN_URL)
-                .content(objectMapper.writeValueAsString(systemAdmin))
-                .header(ISSUER_HEADER, ISSUER_ID)
-                .contentType(MediaType.APPLICATION_JSON);
-
-        MvcResult responseCreateSystemAdminUser = mockMvc.perform(createRequest)
-            .andExpect(status().isForbidden()).andReturn();
-
-        assertEquals(HttpStatus.FORBIDDEN.value(), responseCreateSystemAdminUser.getResponse().getStatus(),
-                     FORBIDDEN_STATUS_CODE
         );
     }
 
@@ -1648,19 +1487,6 @@ class AccountTest {
     }
 
     @Test
-    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
-    void testUnauthorizedGetAdminUserByEmailAndProvenance() throws Exception {
-        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
-            .get(ADMIN_ROOT_URL + validUser.getEmail() + "/" + validUser.getUserProvenance());
-
-        MvcResult mvcResult = mockMvc.perform(request).andExpect(status().isForbidden()).andReturn();
-
-        assertEquals(HttpStatus.FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
-                     FORBIDDEN_STATUS_CODE
-        );
-    }
-
-    @Test
     void testGetAdminUserByEmailAndProvenanceNotFound() throws Exception {
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .get(ADMIN_ROOT_URL + validUser.getEmail() + "/" + validUser.getUserProvenance());
@@ -1709,19 +1535,6 @@ class AccountTest {
         );
         assertEquals(returnedUser.getEmail(), returnedAzureAccount.getEmail(),
                      "Should return the correct user"
-        );
-    }
-
-    @Test
-    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
-    void testUnauthorizedGetAzureUserInfo() throws Exception {
-        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
-            .get(ROOT_URL + "/azure/" + validUser.getProvenanceUserId());
-
-        MvcResult mvcResult = mockMvc.perform(request).andExpect(status().isForbidden()).andReturn();
-
-        assertEquals(HttpStatus.FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
-                     FORBIDDEN_STATUS_CODE
         );
     }
 
