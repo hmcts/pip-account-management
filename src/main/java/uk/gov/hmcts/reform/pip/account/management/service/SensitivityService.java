@@ -7,8 +7,6 @@ import uk.gov.hmcts.reform.pip.account.management.model.Roles;
 import uk.gov.hmcts.reform.pip.account.management.model.Sensitivity;
 import uk.gov.hmcts.reform.pip.account.management.model.UserProvenances;
 
-import static uk.gov.hmcts.reform.pip.account.management.model.Roles.ALL_VERIFIED_ROLES;
-
 /**
  * This class handles the checking whether a user has permission to see a publication.
  */
@@ -25,7 +23,7 @@ public class SensitivityService {
     public boolean checkAuthorisation(PiUser user, ListType listType, Sensitivity sensitivity) {
         return switch (sensitivity) {
             case PUBLIC -> true;
-            case PRIVATE -> ALL_VERIFIED_ROLES.contains(user.getRoles());
+            case PRIVATE -> Roles.getAllVerifiedRoles().contains(user.getRoles());
             case CLASSIFIED -> Roles.VERIFIED.equals(user.getRoles())
                 && user.getUserProvenance().equals(listType.getAllowedProvenance())
                 || UserProvenances.THIRD_PARTY.equals(user.getUserProvenance())

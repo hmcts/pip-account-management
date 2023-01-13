@@ -9,10 +9,6 @@ import javax.validation.ConstraintValidatorContext;
 public class AzureEmailValidator implements ConstraintValidator<AzureEmail, String> {
 
     @Override
-    public void initialize(AzureEmail email) {
-    }
-
-    @Override
     public boolean isValid(String email, ConstraintValidatorContext context) {
         EmailValidator validator = EmailValidator.getInstance();
         return validator.isValid(email);

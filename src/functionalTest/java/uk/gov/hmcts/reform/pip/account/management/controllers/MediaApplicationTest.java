@@ -79,6 +79,9 @@ class MediaApplicationTest {
     private static final UUID TEST_ID = UUID.randomUUID();
 
     private static final String NOT_FOUND_ERROR = "Returned ID does not match the expected ID";
+    private static final String EMAIL_NOT_MATCH = "Emails do not match";
+    private static final String FULLNAME_NOT_FORMATTTED = "Full name hasn't been formatted";
+    private static final String STATUSES_NOT_MATCH = "Statuses do not match";
 
     @BeforeEach
     void setup() {
@@ -153,9 +156,9 @@ class MediaApplicationTest {
 
         List<MediaApplication> applicationList = Arrays.asList(arrayApplications);
 
-        assertEquals(application.getEmail(), applicationList.get(0).getEmail(), "Emails do not match");
-        assertEquals(FORMATTED_FULL_NAME, applicationList.get(0).getFullName(), "Full name hasn't been formatted");
-        assertEquals(application.getStatus(), applicationList.get(0).getStatus(), "Statuses do not match");
+        assertEquals(application.getEmail(), applicationList.get(0).getEmail(), EMAIL_NOT_MATCH);
+        assertEquals(FORMATTED_FULL_NAME, applicationList.get(0).getFullName(), FULLNAME_NOT_FORMATTTED);
+        assertEquals(application.getStatus(), applicationList.get(0).getStatus(), STATUSES_NOT_MATCH);
         assertNotNull(applicationList.get(0).getImage(), "Image url is null");
     }
 
@@ -182,9 +185,9 @@ class MediaApplicationTest {
 
         List<MediaApplication> applicationList = Arrays.asList(arrayApplications);
 
-        assertEquals(application.getEmail(), applicationList.get(0).getEmail(), "Emails do not match");
-        assertEquals(FORMATTED_FULL_NAME, applicationList.get(0).getFullName(), "Full name hasn't been formatted");
-        assertEquals(application.getStatus(), applicationList.get(0).getStatus(), "Statuses do not match");
+        assertEquals(application.getEmail(), applicationList.get(0).getEmail(), EMAIL_NOT_MATCH);
+        assertEquals(FORMATTED_FULL_NAME, applicationList.get(0).getFullName(), FULLNAME_NOT_FORMATTTED);
+        assertEquals(application.getStatus(), applicationList.get(0).getStatus(), STATUSES_NOT_MATCH);
         assertNotNull(applicationList.get(0).getImage(), "Image url is null");
 
     }
@@ -210,9 +213,9 @@ class MediaApplicationTest {
             MediaApplication.class
         );
 
-        assertEquals(application.getEmail(), returnedApplication.getEmail(), "Emails do not match");
-        assertEquals(FORMATTED_FULL_NAME, returnedApplication.getFullName(), "Full name hasn't been formatted");
-        assertEquals(application.getStatus(), returnedApplication.getStatus(), "Statuses do not match");
+        assertEquals(application.getEmail(), returnedApplication.getEmail(), EMAIL_NOT_MATCH);
+        assertEquals(FORMATTED_FULL_NAME, returnedApplication.getFullName(), FULLNAME_NOT_FORMATTTED);
+        assertEquals(application.getStatus(), returnedApplication.getStatus(), STATUSES_NOT_MATCH);
     }
 
     @Test
