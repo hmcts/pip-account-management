@@ -7,8 +7,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.junit.jupiter.MockitoSettings;
-import org.mockito.quality.Strictness;
 import uk.gov.hmcts.reform.pip.account.management.database.UserRepository;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.AzureCustomException;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
@@ -26,9 +24,8 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-@MockitoSettings(strictness = Strictness.LENIENT)
 @SuppressWarnings("PMD.TooManyMethods")
-class AccountVerificationServiceTest {
+class InactiveAccountManagementServiceTest {
     private static final UUID MEDIA_USER_UUID = UUID.randomUUID();
     private static final String MEDIA_USER_EMAIL = "media@test.com";
     private static final UUID AAD_ADMIN_UUID = UUID.randomUUID();
@@ -73,7 +70,7 @@ class AccountVerificationServiceTest {
     PublicationService publicationService;
 
     @InjectMocks
-    private AccountVerificationService accountVerificationService;
+    private InactiveAccountManagementService inactiveAccountManagementService;
 
     @BeforeAll
     static void setup() {
@@ -87,7 +84,7 @@ class AccountVerificationServiceTest {
             .thenReturn(Collections.singletonList(MEDIA_USER));
         when(azureUserService.getUser(MEDIA_USER_EMAIL)).thenReturn(azureMediaUser);
 
-        accountVerificationService.sendMediaUsersForVerification();
+        inactiveAccountManagementService.sendMediaUsersForVerification();
         verify(publicationService).sendAccountVerificationEmail(MEDIA_USER_EMAIL, AZURE_MEDIA_USER_NAME);
     }
 
@@ -96,7 +93,7 @@ class AccountVerificationServiceTest {
         when(userRepository.findVerifiedUsersByLastVerifiedDate(anyInt()))
             .thenReturn(Collections.emptyList());
 
-        accountVerificationService.sendMediaUsersForVerification();
+        inactiveAccountManagementService.sendMediaUsersForVerification();
         verifyNoInteractions(publicationService);
         verifyNoInteractions(azureUserService);
     }
@@ -107,7 +104,7 @@ class AccountVerificationServiceTest {
             .thenReturn(Collections.singletonList(AAD_ADMIN_USER));
         when(azureUserService.getUser(AAD_ADMIN_USER_EMAIL)).thenReturn(azureAdminUser);
 
-        accountVerificationService.notifyAdminUsersToSignIn();
+        inactiveAccountManagementService.notifyAdminUsersToSignIn();
         verify(publicationService).sendInactiveAccountSignInNotificationEmail(
             AAD_ADMIN_USER_EMAIL, AZURE_ADMIN_USER_NAME, UserProvenances.PI_AAD, LAST_SIGNED_IN_DATE_STRING
         );
@@ -118,7 +115,7 @@ class AccountVerificationServiceTest {
         when(userRepository.findAadAdminUsersByLastSignedInDate(anyInt()))
             .thenReturn(Collections.emptyList());
 
-        accountVerificationService.notifyAdminUsersToSignIn();
+        inactiveAccountManagementService.notifyAdminUsersToSignIn();
         verifyNoInteractions(publicationService);
         verifyNoInteractions(azureUserService);
     }
@@ -128,7 +125,7 @@ class AccountVerificationServiceTest {
         when(userRepository.findIdamUsersByLastSignedInDate(anyInt()))
             .thenReturn(List.of(CFT_IDAM_USER, CRIME_IDAM_USER));
 
-        accountVerificationService.notifyIdamUsersToSignIn();
+        inactiveAccountManagementService.notifyIdamUsersToSignIn();
         verify(publicationService).sendInactiveAccountSignInNotificationEmail(
             CFT_IDAM_USER_EMAIL, FORENAME + " " + SURNAME, UserProvenances.CFT_IDAM, LAST_SIGNED_IN_DATE_STRING
         );
@@ -142,7 +139,7 @@ class AccountVerificationServiceTest {
         when(userRepository.findIdamUsersByLastSignedInDate(anyInt()))
             .thenReturn(Collections.emptyList());
 
-        accountVerificationService.notifyIdamUsersToSignIn();
+        inactiveAccountManagementService.notifyIdamUsersToSignIn();
         verifyNoInteractions(publicationService);
     }
 
@@ -151,7 +148,7 @@ class AccountVerificationServiceTest {
         when(userRepository.findVerifiedUsersByLastVerifiedDate(anyInt()))
             .thenReturn(Collections.singletonList(MEDIA_USER));
 
-        accountVerificationService.findMediaAccountsForDeletion();
+        inactiveAccountManagementService.findMediaAccountsForDeletion();
         verify(accountService).deleteAccount(MEDIA_USER_UUID);
     }
 
@@ -160,7 +157,7 @@ class AccountVerificationServiceTest {
         when(userRepository.findVerifiedUsersByLastVerifiedDate(anyInt()))
             .thenReturn(Collections.emptyList());
 
-        accountVerificationService.findMediaAccountsForDeletion();
+        inactiveAccountManagementService.findMediaAccountsForDeletion();
         verifyNoInteractions(accountService);
     }
 
@@ -169,7 +166,7 @@ class AccountVerificationServiceTest {
         when(userRepository.findAadAdminUsersByLastSignedInDate(anyInt()))
             .thenReturn(Collections.singletonList(AAD_ADMIN_USER));
 
-        accountVerificationService.findAdminAccountsForDeletion();
+        inactiveAccountManagementService.findAdminAccountsForDeletion();
         verify(accountService).deleteAccount(AAD_ADMIN_UUID);
     }
 
@@ -178,7 +175,7 @@ class AccountVerificationServiceTest {
         when(userRepository.findAadAdminUsersByLastSignedInDate(anyInt()))
             .thenReturn(Collections.emptyList());
 
-        accountVerificationService.findAdminAccountsForDeletion();
+        inactiveAccountManagementService.findAdminAccountsForDeletion();
         verifyNoInteractions(accountService);
     }
 
@@ -187,7 +184,7 @@ class AccountVerificationServiceTest {
         when(userRepository.findIdamUsersByLastSignedInDate(anyInt()))
             .thenReturn(List.of(CFT_IDAM_USER, CRIME_IDAM_USER));
 
-        accountVerificationService.findIdamAccountsForDeletion();
+        inactiveAccountManagementService.findIdamAccountsForDeletion();
         verify(accountService).deleteAccount(CFT_IDAM_UUID);
         verify(accountService).deleteAccount(CRIME_IDAM_UUID);
     }
@@ -197,7 +194,7 @@ class AccountVerificationServiceTest {
         when(userRepository.findIdamUsersByLastSignedInDate(anyInt()))
             .thenReturn(Collections.emptyList());
 
-        accountVerificationService.findIdamAccountsForDeletion();
+        inactiveAccountManagementService.findIdamAccountsForDeletion();
         verifyNoInteractions(accountService);
     }
 }
