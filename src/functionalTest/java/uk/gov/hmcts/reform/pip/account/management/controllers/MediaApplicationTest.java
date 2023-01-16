@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -46,7 +47,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 @WithMockUser(username = "admin", authorities = {"APPROLE_api.request.admin"})
-@SuppressWarnings({"PMD.TooManyMethods", "PMD.JUnitTestsShouldIncludeAssert"})
+
+@SuppressWarnings({"PMD.TooManyMethods", "PMD.LawOfDemeter", "PMD.JUnitTestsShouldIncludeAssert"})
 class MediaApplicationTest {
 
     @Autowired
@@ -71,7 +73,7 @@ class MediaApplicationTest {
     private ObjectMapper objectMapper;
     private static final String FULL_NAME = "Test user";
     private static final String FORMATTED_FULL_NAME = "Test user";
-    private static final String EMAIL = "test@email.com";
+    private static final String EMAIL = "test@justice.gov.uk";
     private static final String EMPLOYER = "Test employer";
     private static final String BLOB_IMAGE_URL = "https://localhost";
     private static final MediaApplicationStatus STATUS = MediaApplicationStatus.PENDING;
@@ -83,6 +85,7 @@ class MediaApplicationTest {
     private static final String EMAIL_NOT_MATCH = "Emails do not match";
     private static final String FULLNAME_NOT_FORMATTTED = "Full name hasn't been formatted";
     private static final String STATUSES_NOT_MATCH = "Statuses do not match";
+    private static final String ERROR_MESSAGE_MISMATCH = "Error messages do not match";
 
     @BeforeEach
     void setup() {
@@ -116,6 +119,104 @@ class MediaApplicationTest {
 
             return objectMapper.readValue(mvcResult.getResponse().getContentAsString(), MediaApplication.class);
         }
+    }
+
+    private MvcResult createApplicationRequest(String fullname, String email,
+                                               String employer, String status) throws Exception {
+        MediaApplicationDto applicationDto = new MediaApplicationDto();
+        applicationDto.setFullName(fullname);
+        applicationDto.setEmail(email);
+        applicationDto.setEmployer(employer);
+        applicationDto.setStatus(status);
+
+        try (InputStream imageInputStream = Thread.currentThread().getContextClassLoader()
+            .getResourceAsStream("files/test-image.png")) {
+
+            MockMultipartFile imageFile = new MockMultipartFile("file", "test-image.png",
+                                                                "", imageInputStream
+            );
+
+
+            when(blobContainerClient.getBlobClient(any())).thenReturn(blobClient);
+            when(blobContainerClient.getBlobContainerUrl()).thenReturn(BLOB_IMAGE_URL);
+
+            return mockMvc.perform(multipart(ROOT_URL)
+                                       .file(imageFile)
+                                       .flashAttr("application", applicationDto)
+                                       .contentType(MediaType.MULTIPART_FORM_DATA_VALUE))
+                .andReturn();
+        }
+    }
+
+    @Test
+    void testCreateApplicationInvalidEmail() throws Exception {
+        MvcResult mvcResult = createApplicationRequest(
+            FULL_NAME,
+            "email...@justice.gov.uk",
+            EMPLOYER,
+            PENDING_STATUS
+        );
+        assertEquals(HttpStatus.BAD_REQUEST.value(), mvcResult.getResponse().getStatus(), STATUSES_NOT_MATCH);
+        assertEquals(
+            "{\"email\":\"must be a well-formed email address\"}",
+            mvcResult.getResponse().getContentAsString(),
+            ERROR_MESSAGE_MISMATCH
+        );
+    }
+
+    @Test
+    void testCreateApplicationEmptyEmail() throws Exception {
+        MvcResult mvcResult = createApplicationRequest(FULL_NAME, "", EMPLOYER, PENDING_STATUS);
+        assertEquals(HttpStatus.BAD_REQUEST.value(), mvcResult.getResponse().getStatus(), STATUSES_NOT_MATCH);
+        assertEquals(
+            "{\"email\":\"email shouldn't be blank or null\"}",
+            mvcResult.getResponse().getContentAsString(),
+            ERROR_MESSAGE_MISMATCH
+        );
+    }
+
+    @Test
+    void testCreateApplicationEmptyEmployer() throws Exception {
+        MvcResult mvcResult = createApplicationRequest(FULL_NAME, EMAIL, "", PENDING_STATUS);
+        assertEquals(HttpStatus.BAD_REQUEST.value(), mvcResult.getResponse().getStatus(), STATUSES_NOT_MATCH);
+        assertEquals(
+            "{\"employer\":\"employer shouldn't be blank or null\"}",
+            mvcResult.getResponse().getContentAsString(),
+            ERROR_MESSAGE_MISMATCH
+        );
+    }
+
+    @Test
+    void testCreateApplicationEmptyName() throws Exception {
+        MvcResult mvcResult = createApplicationRequest("", EMAIL, EMPLOYER, PENDING_STATUS);
+        assertEquals(HttpStatus.BAD_REQUEST.value(), mvcResult.getResponse().getStatus(), STATUSES_NOT_MATCH);
+        assertEquals(
+            "{\"fullName\":\"fullName shouldn't be blank or null\"}",
+            mvcResult.getResponse().getContentAsString(),
+            ERROR_MESSAGE_MISMATCH
+        );
+    }
+
+    @Test
+    void testCreateApplicationEmptyStatus() throws Exception {
+        MvcResult mvcResult = createApplicationRequest(FULL_NAME, EMAIL, EMPLOYER, "");
+        assertEquals(HttpStatus.BAD_REQUEST.value(), mvcResult.getResponse().getStatus(), STATUSES_NOT_MATCH);
+        assertEquals(
+            "{\"status\":\"status should be one of PENDING, REJECTED or APPROVED\"}",
+            mvcResult.getResponse().getContentAsString(),
+            ERROR_MESSAGE_MISMATCH
+        );
+    }
+
+    @Test
+    void testCreateApplicationNullStatus() throws Exception {
+        MvcResult mvcResult = createApplicationRequest(FULL_NAME, EMAIL, EMPLOYER, null);
+        assertEquals(HttpStatus.BAD_REQUEST.value(), mvcResult.getResponse().getStatus(), STATUSES_NOT_MATCH);
+        assertEquals(
+            "{\"status\":\"status shouldn't be null\"}",
+            mvcResult.getResponse().getContentAsString(),
+            ERROR_MESSAGE_MISMATCH
+        );
     }
 
     @Test
