@@ -447,12 +447,12 @@ class AzureAccountServiceTest {
 
     @Test
     void testRetrieveUserNotFound() {
-        UUID userId = UUID.randomUUID();
+        String userId = UUID.randomUUID().toString();
         when(userRepository.findByProvenanceUserIdAndUserProvenance(userId.toString(), UserProvenances.PI_AAD))
             .thenReturn(Optional.empty());
 
         NotFoundException exception = assertThrows(NotFoundException.class, () ->
-            azureAccountService.retrieveAzureAccount(userId.toString()));
+            azureAccountService.retrieveAzureAccount(userId));
 
         assertEquals(
             "User with supplied provenanceUserId: " + userId + " could not be found",
