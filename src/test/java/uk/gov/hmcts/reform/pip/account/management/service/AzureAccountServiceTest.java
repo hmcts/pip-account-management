@@ -448,7 +448,7 @@ class AzureAccountServiceTest {
     @Test
     void testRetrieveUserNotFound() {
         String userId = UUID.randomUUID().toString();
-        when(userRepository.findByProvenanceUserIdAndUserProvenance(userId.toString(), UserProvenances.PI_AAD))
+        when(userRepository.findByProvenanceUserIdAndUserProvenance(userId, UserProvenances.PI_AAD))
             .thenReturn(Optional.empty());
 
         NotFoundException exception = assertThrows(NotFoundException.class, () ->
