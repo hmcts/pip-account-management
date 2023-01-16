@@ -14,6 +14,7 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import uk.gov.hmcts.reform.pip.account.management.database.UserRepository;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.AzureCustomException;
+import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.NotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.model.AzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
@@ -442,5 +443,21 @@ class AzureAccountServiceTest {
 
         AzureAccount returnedUser = azureAccountService.retrieveAzureAccount(userId.toString());
         assertEquals(azUser.displayName, returnedUser.getDisplayName(), RETURN_USER_ERROR);
+    }
+
+    @Test
+    void testRetrieveUserNotFound() {
+        UUID userId = UUID.randomUUID();
+        when(userRepository.findByProvenanceUserIdAndUserProvenance(userId.toString(), UserProvenances.PI_AAD))
+            .thenReturn(Optional.empty());
+
+        NotFoundException exception = assertThrows(NotFoundException.class, () ->
+            azureAccountService.retrieveAzureAccount(userId.toString()));
+
+        assertEquals(
+            "User with supplied provenanceUserId: " + userId + " could not be found",
+            exception.getMessage(),
+            "Error message does not match"
+        );
     }
 }
