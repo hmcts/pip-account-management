@@ -28,6 +28,7 @@ import uk.gov.hmcts.reform.pip.account.management.service.MediaApplicationServic
 
 import java.util.List;
 import java.util.UUID;
+import javax.validation.Valid;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
@@ -90,10 +91,11 @@ public class MediaApplicationController {
 
     @ApiResponse(responseCode = OK_ERROR_CODE, description = "{MediaApplication}")
     @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
+    @ApiResponse(responseCode = "400", description = "Validation failed message")
     @Operation(summary = "Create a new application")
     @PostMapping(produces = APPLICATION_JSON_VALUE, consumes = MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<MediaApplication> createApplication(
-        @ModelAttribute("application") MediaApplicationDto application,
+        @ModelAttribute("application") @Valid MediaApplicationDto application,
         @RequestPart("file") MultipartFile file) {
         return ResponseEntity.ok(mediaApplicationService.createApplication(application.toEntity(), file));
     }
