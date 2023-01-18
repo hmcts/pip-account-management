@@ -34,7 +34,7 @@ import static uk.gov.hmcts.reform.pip.account.management.model.Roles.ALL_NON_RES
 import static uk.gov.hmcts.reform.pip.account.management.model.UserProvenances.PI_AAD;
 
 @ExtendWith(MockitoExtension.class)
-class CustomAccountRetrievalServiceTest {
+class AccountFilteringServiceTest {
     private static final String EMAIL = "test@hmcts.net";
     private static final String ID = "1234";
     private static final List<String> EXAMPLE_CSV = List.of(
@@ -49,7 +49,7 @@ class CustomAccountRetrievalServiceTest {
     private UserRepository userRepository;
 
     @InjectMocks
-    private CustomAccountRetrievalService customAccountRetrievalService;
+    private AccountFilteringService accountFilteringService;
 
     @BeforeAll
     static void setup() {
@@ -62,7 +62,7 @@ class CustomAccountRetrievalServiceTest {
     @Test
     void testMiService() {
         when(userRepository.getAccManDataForMI()).thenReturn(EXAMPLE_CSV);
-        String testString = customAccountRetrievalService.getAccManDataForMiReporting();
+        String testString = accountFilteringService.getAccManDataForMiReporting();
         assertThat(testString)
             .as("Json parsing has probably failed")
             .contains("CTSC")
@@ -88,7 +88,7 @@ class CustomAccountRetrievalServiceTest {
 
         when(userRepository.findAllByUserProvenance(UserProvenances.THIRD_PARTY)).thenReturn(usersList);
 
-        List<PiUser> returnedUsers = customAccountRetrievalService.findAllThirdPartyAccounts();
+        List<PiUser> returnedUsers = accountFilteringService.findAllThirdPartyAccounts();
 
         assertEquals(usersList, returnedUsers, "Returned users does not match expected users");
     }
@@ -107,9 +107,9 @@ class CustomAccountRetrievalServiceTest {
             any()
         )).thenReturn(page);
 
-        Page<PiUser> response = customAccountRetrievalService.findAllAccountsExceptThirdParty(pageable, "", "",
-                                                                               emptyUserProvenancesList, emptyRoleList,
-                                                                               "");
+        Page<PiUser> response = accountFilteringService.findAllAccountsExceptThirdParty(pageable, "", "",
+                                                                                        emptyUserProvenancesList, emptyRoleList,
+                                                                                        "");
 
         verify(userRepository, never()).findByUserIdPageable(
             any(), any());
@@ -131,8 +131,8 @@ class CustomAccountRetrievalServiceTest {
             any()
         )).thenReturn(page);
 
-        Page<PiUser> response = customAccountRetrievalService.findAllAccountsExceptThirdParty(pageable, "test", ID,
-                                                                               userProvenancesList, roleList, "");
+        Page<PiUser> response = accountFilteringService.findAllAccountsExceptThirdParty(pageable, "test", ID,
+                                                                                        userProvenancesList, roleList, "");
 
         verify(userRepository, never()).findByUserIdPageable(
             any(), any());
@@ -151,7 +151,7 @@ class CustomAccountRetrievalServiceTest {
 
         when(userRepository.findByUserIdPageable(user.getUserId().toString(), pageable)).thenReturn(page);
 
-        Page<PiUser> response = customAccountRetrievalService.findAllAccountsExceptThirdParty(
+        Page<PiUser> response = accountFilteringService.findAllAccountsExceptThirdParty(
             pageable, "", "", emptyUserProvenancesList, emptyRoleList, user.getUserId().toString()
         );
 
@@ -172,7 +172,7 @@ class CustomAccountRetrievalServiceTest {
                                                                              ALL_NON_RESTRICTED_ADMIN_ROLES))
             .thenReturn(Optional.of(user));
 
-        PiUser returnedUser = customAccountRetrievalService.getAdminUserByEmailAndProvenance(
+        PiUser returnedUser = accountFilteringService.getAdminUserByEmailAndProvenance(
             EMAIL, PI_AAD
         );
         assertEquals(user, returnedUser, RETURN_USER_ERROR);
@@ -190,7 +190,7 @@ class CustomAccountRetrievalServiceTest {
 
         NotFoundException notFoundException = assertThrows(
             NotFoundException.class,
-            () -> customAccountRetrievalService.getAdminUserByEmailAndProvenance(EMAIL, PI_AAD),
+            () -> accountFilteringService.getAdminUserByEmailAndProvenance(EMAIL, PI_AAD),
             USER_NOT_FOUND_EXCEPTION_MESSAGE
         );
 

@@ -18,7 +18,7 @@ import static uk.gov.hmcts.reform.pip.account.management.model.Roles.ALL_NON_THI
 import static uk.gov.hmcts.reform.pip.account.management.model.UserProvenances.ALL_NON_THIRD_PARTY_PROVENANCES;
 
 @Service
-public class CustomAccountRetrievalService {
+public class AccountFilteringService {
     @Autowired
     UserRepository userRepository;
 

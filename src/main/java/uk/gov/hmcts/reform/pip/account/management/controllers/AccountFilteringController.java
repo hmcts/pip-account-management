@@ -20,7 +20,7 @@ import uk.gov.hmcts.reform.pip.account.management.authentication.roles.IsAdmin;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
 import uk.gov.hmcts.reform.pip.account.management.model.Roles;
 import uk.gov.hmcts.reform.pip.account.management.model.UserProvenances;
-import uk.gov.hmcts.reform.pip.account.management.service.CustomAccountRetrievalService;
+import uk.gov.hmcts.reform.pip.account.management.service.AccountFilteringService;
 
 import java.util.List;
 
@@ -29,9 +29,9 @@ import java.util.List;
 @RequestMapping("/account")
 @Validated
 @IsAdmin
-public class CustomAccountRetrievalController {
+public class AccountFilteringController {
     @Autowired
-    private CustomAccountRetrievalService customAccountRetrievalService;
+    private AccountFilteringService accountFilteringService;
 
     private static final String NOT_AUTHORIZED_MESSAGE = "User has not been authorized";
 
@@ -45,7 +45,7 @@ public class CustomAccountRetrievalController {
     @Operation(summary = "Returns a list of (anonymized) account data for MI reporting.")
     @GetMapping("/mi-data")
     public ResponseEntity<String> getMiData() {
-        return ResponseEntity.status(HttpStatus.OK).body(customAccountRetrievalService.getAccManDataForMiReporting());
+        return ResponseEntity.status(HttpStatus.OK).body(accountFilteringService.getAccManDataForMiReporting());
     }
 
     @ApiResponse(responseCode = OK_CODE, description = "List of third party accounts")
@@ -54,7 +54,7 @@ public class CustomAccountRetrievalController {
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("/all/third-party")
     public ResponseEntity<List<PiUser>> getAllThirdPartyAccounts() {
-        return ResponseEntity.ok(customAccountRetrievalService.findAllThirdPartyAccounts());
+        return ResponseEntity.ok(accountFilteringService.findAllThirdPartyAccounts());
     }
 
     @Operation(summary = "Get all accounts except third party in a page with filtering")
@@ -68,7 +68,7 @@ public class CustomAccountRetrievalController {
         @RequestParam(name = "roles", defaultValue = "", required = false) List<Roles> roles,
         @RequestParam(name = "userId", defaultValue = "", required = false) String userId) {
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
-        return ResponseEntity.ok(customAccountRetrievalService.findAllAccountsExceptThirdParty(
+        return ResponseEntity.ok(accountFilteringService.findAllAccountsExceptThirdParty(
             pageable, email, userProvenanceId, provenances, roles, userId
         ));
     }
@@ -81,6 +81,6 @@ public class CustomAccountRetrievalController {
     @GetMapping("/admin/{email}/{provenance}")
     public ResponseEntity<PiUser> getAdminUserByEmailAndProvenance(@PathVariable String email,
                                                                    @PathVariable UserProvenances provenance) {
-        return ResponseEntity.ok(customAccountRetrievalService.getAdminUserByEmailAndProvenance(email, provenance));
+        return ResponseEntity.ok(accountFilteringService.getAdminUserByEmailAndProvenance(email, provenance));
     }
 }

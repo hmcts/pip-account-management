@@ -10,7 +10,7 @@ import org.springframework.http.ResponseEntity;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
 import uk.gov.hmcts.reform.pip.account.management.model.Roles;
 import uk.gov.hmcts.reform.pip.account.management.model.UserProvenances;
-import uk.gov.hmcts.reform.pip.account.management.service.CustomAccountRetrievalService;
+import uk.gov.hmcts.reform.pip.account.management.service.AccountFilteringService;
 
 import java.util.List;
 import java.util.UUID;
@@ -20,20 +20,20 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class CustomAccountRetrievalControllerTest {
+class AccountFilteringControllerTest {
     private static final String EMAIL = "a@b.com";
     private static final String STATUS_CODE_MATCH = "Status code responses should match";
 
     @Mock
-    CustomAccountRetrievalService customAccountRetrievalService;
+    AccountFilteringService accountFilteringService;
 
     @InjectMocks
-    CustomAccountRetrievalController customAccountRetrievalController;
+    AccountFilteringController accountFilteringController;
 
     @Test
     void testMiDataReturnsOk() {
         assertEquals(HttpStatus.OK,
-                     customAccountRetrievalController.getMiData().getStatusCode(),
+                     accountFilteringController.getMiData().getStatusCode(),
                      STATUS_CODE_MATCH);
     }
 
@@ -44,9 +44,9 @@ class CustomAccountRetrievalControllerTest {
         piUser.setUserId(uuid);
 
         List<PiUser> users = List.of(piUser);
-        when(customAccountRetrievalService.findAllThirdPartyAccounts()).thenReturn(users);
+        when(accountFilteringService.findAllThirdPartyAccounts()).thenReturn(users);
 
-        ResponseEntity<List<PiUser>> response = customAccountRetrievalController.getAllThirdPartyAccounts();
+        ResponseEntity<List<PiUser>> response = accountFilteringController.getAllThirdPartyAccounts();
 
         assertEquals(HttpStatus.OK, response.getStatusCode(), "Expected status code does not match");
         assertEquals(users, response.getBody(), "Expected users do not match");
@@ -54,7 +54,7 @@ class CustomAccountRetrievalControllerTest {
 
     @Test
     void testGetAllAccountsExceptThirdParty() {
-        assertThat(customAccountRetrievalController.getAllAccountsExceptThirdParty(
+        assertThat(accountFilteringController.getAllAccountsExceptThirdParty(
             0, 25, "test", "1234",
             List.of(UserProvenances.PI_AAD), List.of(Roles.VERIFIED), "1234").getStatusCode())
             .as(STATUS_CODE_MATCH)
@@ -67,11 +67,11 @@ class CustomAccountRetrievalControllerTest {
         piUser.setEmail(EMAIL);
         piUser.setUserProvenance(UserProvenances.PI_AAD);
 
-        when(customAccountRetrievalService.getAdminUserByEmailAndProvenance(EMAIL, UserProvenances.PI_AAD))
+        when(accountFilteringService.getAdminUserByEmailAndProvenance(EMAIL, UserProvenances.PI_AAD))
             .thenReturn(piUser);
 
-        ResponseEntity<PiUser> response = customAccountRetrievalController.getAdminUserByEmailAndProvenance(EMAIL,
-                                                                                             UserProvenances.PI_AAD);
+        ResponseEntity<PiUser> response = accountFilteringController.getAdminUserByEmailAndProvenance(EMAIL,
+                                                                                                      UserProvenances.PI_AAD);
 
         assertEquals(HttpStatus.OK, response.getStatusCode(), "Expected status code does not match");
         assertEquals(piUser, response.getBody(), "Expected PI user does not match");
