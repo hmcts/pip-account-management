@@ -62,46 +62,30 @@ public class AzureAccountService {
         List<ErroredAzureAccount> erroredAccounts = new ArrayList<>();
 
         for (AzureAccount azureAccount : azureAccounts) {
-
             Set<ConstraintViolation<AzureAccount>> constraintViolationSet = validator.validate(azureAccount);
             if (!constraintViolationSet.isEmpty()) {
-
-                ErroredAzureAccount erroredSubscriber = new ErroredAzureAccount(azureAccount);
-                erroredSubscriber.setErrorMessages(constraintViolationSet
-                                                       .stream().map(constraint -> constraint.getPropertyPath()
-                        + ": " + constraint.getMessage()).toList());
-                erroredAccounts.add(erroredSubscriber);
+                checkAndAddToErrorAccount(false, azureAccount, constraintViolationSet
+                                              .stream().map(constraint -> constraint.getPropertyPath()
+                                                  + ": " + constraint.getMessage()).toList(),
+                                          erroredAccounts);
                 continue;
             }
 
             try {
-                User userAzure = azureUserService.getUser(azureAccount.getEmail());
-
-                if (userAzure != null && !userAzure.givenName.isEmpty()
-                    && azureAccount.getRole().equals(VERIFIED)) {
-
-                    boolean emailSent = publicationService.sendNotificationEmailForDuplicateMediaAccount(
-                        azureAccount.getEmail(), userAzure.givenName
-                    );
-
-                    checkAndAddToErrorAccount(emailSent, azureAccount,
-                                              "Unable to send duplicate media account email",
-                                              erroredAccounts);
-                } else {
-
+                if (!checkUserAlreadyExists(azureAccount, erroredAccounts)) {
                     User user = azureUserService.createUser(azureAccount);
+
                     azureAccount.setAzureAccountId(user.id);
                     createdAzureAccounts.add(azureAccount);
 
                     log.info(writeLog(issuerId, UserActions.CREATE_ACCOUNT, azureAccount.getAzureAccountId()));
                     boolean emailSent = handleAccountCreationEmail(azureAccount, user.givenName, isExisting);
-                    checkAndAddToErrorAccount(emailSent, azureAccount, EMAIL_NOT_SENT_MESSAGE, erroredAccounts);
+                    checkAndAddToErrorAccount(emailSent, azureAccount, List.of(EMAIL_NOT_SENT_MESSAGE), erroredAccounts);
                 }
             } catch (AzureCustomException azureCustomException) {
                 log.error(writeLog(issuerId, UserActions.CREATE_ACCOUNT, azureAccount.getAzureAccountId()));
-                ErroredAzureAccount erroredSubscriber = new ErroredAzureAccount(azureAccount);
-                erroredSubscriber.setErrorMessages(List.of(azureCustomException.getMessage()));
-                erroredAccounts.add(erroredSubscriber);
+                checkAndAddToErrorAccount(false, azureAccount, List.of(azureCustomException.getMessage()),
+                                          erroredAccounts);
             }
         }
 
@@ -136,11 +120,28 @@ public class AzureAccountService {
                                                + provenanceUserId);
     }
 
-    private void checkAndAddToErrorAccount(boolean checkCondition, AzureAccount azureAccount, String errorMessage,
+    private boolean checkUserAlreadyExists(AzureAccount azureAccount, List<ErroredAzureAccount> erroredAccounts)
+        throws AzureCustomException {
+        User userAzure = azureUserService.getUser(azureAccount.getEmail());
+
+        if (userAzure != null && !userAzure.givenName.isEmpty()
+            && azureAccount.getRole().equals(VERIFIED)) {
+            boolean emailSent = publicationService.sendNotificationEmailForDuplicateMediaAccount(
+                azureAccount.getEmail(), userAzure.givenName);
+
+            checkAndAddToErrorAccount(emailSent, azureAccount,
+                                      List.of("Unable to send duplicate media account email"),
+                                      erroredAccounts);
+            return true;
+        }
+        return false;
+    }
+
+    private void checkAndAddToErrorAccount(boolean checkCondition, AzureAccount azureAccount, List<String> errorMessage,
                                            List<ErroredAzureAccount> erroredAccounts) {
         if (!checkCondition) {
             ErroredAzureAccount softErroredAccount = new ErroredAzureAccount(azureAccount);
-            softErroredAccount.setErrorMessages(List.of(errorMessage));
+            softErroredAccount.setErrorMessages(errorMessage);
             erroredAccounts.add(softErroredAccount);
         }
     }
