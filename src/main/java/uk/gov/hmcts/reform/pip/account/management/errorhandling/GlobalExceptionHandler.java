@@ -4,9 +4,11 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindException;
 import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.CsvParseException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.ForbiddenPermissionsException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.NotFoundException;
@@ -14,6 +16,8 @@ import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.Syste
 import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredSystemAdminAccount;
 
 import java.time.LocalDateTime;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import javax.validation.ConstraintViolationException;
 
 import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
@@ -116,5 +120,14 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErroredSystemAdminAccount> handle(SystemAdminAccountException ex) {
         log.error(writeLog("400, Error while creating a system admin account"));
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getErroredSystemAdminAccount());
+    }
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(BindException.class)
+    public ResponseEntity<Map<String, String>> handle(BindException ex) {
+        Map<String, String> errorMap = new ConcurrentHashMap<>();
+        ex.getBindingResult().getFieldErrors().forEach(error -> errorMap.put(error.getField(),
+                                                                             error.getDefaultMessage()));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorMap);
     }
 }
