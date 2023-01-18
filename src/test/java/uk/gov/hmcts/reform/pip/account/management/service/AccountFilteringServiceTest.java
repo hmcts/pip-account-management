@@ -107,9 +107,9 @@ class AccountFilteringServiceTest {
             any()
         )).thenReturn(page);
 
-        Page<PiUser> response = accountFilteringService.findAllAccountsExceptThirdParty(pageable, "", "",
-                                                                                        emptyUserProvenancesList, emptyRoleList,
-                                                                                        "");
+        Page<PiUser> response = accountFilteringService.findAllAccountsExceptThirdParty(
+            pageable, "", "", emptyUserProvenancesList, emptyRoleList, ""
+        );
 
         verify(userRepository, never()).findByUserIdPageable(
             any(), any());
@@ -131,8 +131,9 @@ class AccountFilteringServiceTest {
             any()
         )).thenReturn(page);
 
-        Page<PiUser> response = accountFilteringService.findAllAccountsExceptThirdParty(pageable, "test", ID,
-                                                                                        userProvenancesList, roleList, "");
+        Page<PiUser> response = accountFilteringService.findAllAccountsExceptThirdParty(
+            pageable, "test", ID, userProvenancesList, roleList, ""
+        );
 
         verify(userRepository, never()).findByUserIdPageable(
             any(), any());

@@ -70,8 +70,8 @@ class AccountFilteringControllerTest {
         when(accountFilteringService.getAdminUserByEmailAndProvenance(EMAIL, UserProvenances.PI_AAD))
             .thenReturn(piUser);
 
-        ResponseEntity<PiUser> response = accountFilteringController.getAdminUserByEmailAndProvenance(EMAIL,
-                                                                                                      UserProvenances.PI_AAD);
+        ResponseEntity<PiUser> response = accountFilteringController.getAdminUserByEmailAndProvenance(
+            EMAIL, UserProvenances.PI_AAD);
 
         assertEquals(HttpStatus.OK, response.getStatusCode(), "Expected status code does not match");
         assertEquals(piUser, response.getBody(), "Expected PI user does not match");
