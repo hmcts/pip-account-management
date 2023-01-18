@@ -80,7 +80,8 @@ public class AzureAccountService {
 
                     log.info(writeLog(issuerId, UserActions.CREATE_ACCOUNT, azureAccount.getAzureAccountId()));
                     boolean emailSent = handleAccountCreationEmail(azureAccount, user.givenName, isExisting);
-                    checkAndAddToErrorAccount(emailSent, azureAccount, List.of(EMAIL_NOT_SENT_MESSAGE), erroredAccounts);
+                    checkAndAddToErrorAccount(emailSent, azureAccount, List.of(EMAIL_NOT_SENT_MESSAGE),
+                                              erroredAccounts);
                 }
             } catch (AzureCustomException azureCustomException) {
                 log.error(writeLog(issuerId, UserActions.CREATE_ACCOUNT, azureAccount.getAzureAccountId()));
