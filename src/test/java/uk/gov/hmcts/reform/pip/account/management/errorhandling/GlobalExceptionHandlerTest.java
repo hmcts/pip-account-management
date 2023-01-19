@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindException;
 import org.springframework.web.bind.MissingRequestHeaderException;
 import uk.gov.hmcts.reform.pip.account.management.controllers.AccountController;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.CsvParseException;
@@ -14,6 +15,7 @@ import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.Syste
 import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredSystemAdminAccount;
 
 import java.util.List;
+import java.util.Map;
 import javax.validation.ConstraintViolationException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -135,5 +137,14 @@ class GlobalExceptionHandlerTest {
         assertEquals(responseEntity.getBody(), erroredSystemAdminAccount,
                      "Returned errored account should match");
 
+    }
+
+    @Test
+    void testBindException() {
+        BindException bindException = new BindException(ERROR_MESSAGE, null);
+        ResponseEntity<Map<String, String>> responseEntity = globalExceptionHandler.handle(bindException);
+
+        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode(), SHOULD_BE_BAD_REQUEST_EXCEPTION);
+        assertNotNull(responseEntity.getBody(), NOT_NULL_MESSAGE);
     }
 }

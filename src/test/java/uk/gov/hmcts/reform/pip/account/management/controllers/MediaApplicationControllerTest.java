@@ -82,7 +82,7 @@ class MediaApplicationControllerTest {
         applicationDto.setFullName("Test user");
         applicationDto.setEmail("test@email.com");
         applicationDto.setEmployer("Test employer");
-        applicationDto.setStatus(MediaApplicationStatus.PENDING);
+        applicationDto.setStatus("PENDING");
 
         MediaApplication application = createApplication(MediaApplicationStatus.PENDING);
 

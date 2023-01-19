@@ -41,7 +41,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
@@ -91,7 +90,7 @@ public class AccountService {
      * @param issuerId      The id of the user who created the accounts.
      * @return Returns a map which contains two lists, Errored and Created accounts. Created will have object ID set.
      **/
-    public Map<CreationEnum, List<? extends AzureAccount>> addAzureAccounts(
+    public Map<CreationEnum, List<? extends AzureAccount>> addAzureAccounts(//NOSONAR
         List<AzureAccount> azureAccounts, String issuerId, boolean isExisting) {
 
         Map<CreationEnum, List<? extends AzureAccount>> processedAccounts = new ConcurrentHashMap<>();
@@ -103,51 +102,32 @@ public class AccountService {
 
             Set<ConstraintViolation<AzureAccount>> constraintViolationSet = validator.validate(azureAccount);
             if (!constraintViolationSet.isEmpty()) {
-
-                ErroredAzureAccount erroredSubscriber = new ErroredAzureAccount(azureAccount);
-                erroredSubscriber.setErrorMessages(constraintViolationSet
-                                                       .stream().map(constraint -> constraint.getPropertyPath()
-                        + ": " + constraint.getMessage()).collect(Collectors.toList()));
-                erroredAccounts.add(erroredSubscriber);
+                checkAndAddToErrorAccount(false, azureAccount, constraintViolationSet
+                                              .stream().map(constraint -> constraint.getPropertyPath()
+                                                  + ": " + constraint.getMessage()).toList(),
+                                          erroredAccounts);
                 continue;
             }
 
             try {
 
-                User userAzure = azureUserService.getUser(azureAccount.getEmail());
+                if (!checkUserAlreadyExists(azureAccount, erroredAccounts)) {
+                    User user = azureUserService.createUser(azureAccount);
 
-                if (userAzure != null && !userAzure.givenName.isEmpty()
-                    && azureAccount.getRole().equals(Roles.VERIFIED)) {
+                    azureAccount.setAzureAccountId(user.id);
+                    createdAzureAccounts.add(azureAccount);
 
-                    boolean emailSent = publicationService.sendNotificationEmailForDuplicateMediaAccount(
-                            azureAccount.getEmail(), userAzure.givenName);
-
-                    if (!emailSent) {
-                        ErroredAzureAccount softErroredAccount = new ErroredAzureAccount(azureAccount);
-                        softErroredAccount.setErrorMessages(
-                            List.of("Unable to send duplicate media account email"));
-                        erroredAccounts.add(softErroredAccount);
-                    }
-                    continue;
-                }
-
-                User user = azureUserService.createUser(azureAccount);
-                azureAccount.setAzureAccountId(user.id);
-                createdAzureAccounts.add(azureAccount);
-
-                log.info(writeLog(issuerId, UserActions.CREATE_ACCOUNT, azureAccount.getAzureAccountId()));
-
-                if (!handleAccountCreationEmail(azureAccount, user.givenName, isExisting)) {
-                    ErroredAzureAccount softErroredAccount = new ErroredAzureAccount(azureAccount);
-                    softErroredAccount.setErrorMessages(List.of(EMAIL_NOT_SENT_MESSAGE));
-                    erroredAccounts.add(softErroredAccount);
+                    log.info(writeLog(issuerId, UserActions.CREATE_ACCOUNT, azureAccount.getAzureAccountId()));
+                    boolean emailSent = handleAccountCreationEmail(azureAccount, user.givenName, isExisting);
+                    checkAndAddToErrorAccount(emailSent, azureAccount, List.of(EMAIL_NOT_SENT_MESSAGE),
+                                              erroredAccounts);
                 }
 
             } catch (AzureCustomException azureCustomException) {
                 log.error(writeLog(issuerId, UserActions.CREATE_ACCOUNT, azureAccount.getAzureAccountId()));
-                ErroredAzureAccount erroredSubscriber = new ErroredAzureAccount(azureAccount);
-                erroredSubscriber.setErrorMessages(List.of(azureCustomException.getMessage()));
-                erroredAccounts.add(erroredSubscriber);
+                checkAndAddToErrorAccount(false, azureAccount,
+                                          List.of(azureCustomException.getMessage()),
+                                          erroredAccounts);
             }
 
         }
@@ -158,6 +138,33 @@ public class AccountService {
         return processedAccounts;
     }
 
+    private boolean checkUserAlreadyExists(AzureAccount azureAccount, List<ErroredAzureAccount> erroredAccounts)
+        throws AzureCustomException {
+        User userAzure = azureUserService.getUser(azureAccount.getEmail());
+
+        if (userAzure != null && !userAzure.givenName.isEmpty()
+            && azureAccount.getRole().equals(Roles.VERIFIED)) {
+
+            boolean emailSent = publicationService.sendNotificationEmailForDuplicateMediaAccount(
+                azureAccount.getEmail(), userAzure.givenName);
+
+            checkAndAddToErrorAccount(emailSent, azureAccount,
+                                      List.of("Unable to send duplicate media account email"),
+                                      erroredAccounts);
+            return true;
+        }
+        return false;
+    }
+
+    private void checkAndAddToErrorAccount(boolean checkCondition, AzureAccount azureAccount, List<String> errorMessage,
+                                           List<ErroredAzureAccount> erroredAccounts) {
+        if (!checkCondition) {
+            ErroredAzureAccount softErroredAccount = new ErroredAzureAccount(azureAccount);
+            softErroredAccount.setErrorMessages(errorMessage);
+            erroredAccounts.add(softErroredAccount);
+        }
+    }
+
     /**
      * Method to add users to P&I database, loops through the list and validates the email provided then adds them to
      * success or failure lists.
@@ -166,7 +173,7 @@ public class AccountService {
      * @param issuerId the id of the admin adding the users for logging purposes.
      * @return Map of Created and Errored accounts, created has UUID's and errored has user objects.
      */
-    public Map<CreationEnum, List<?>> addUsers(List<PiUser> users, String issuerId) {
+    public Map<CreationEnum, List<?>> addUsers(List<PiUser> users, String issuerId) { //NOSONAR
         List<UUID> createdAccounts = new ArrayList<>();
         List<ErroredPiUser> erroredAccounts = new ArrayList<>();
 
@@ -182,22 +189,18 @@ public class AccountService {
                 erroredUser.setErrorMessages(List.of(
                     "System admins must be created via the /account/add/system-admin endpoint"));
                 erroredAccounts.add(erroredUser);
-                continue;
-            }
+            } else if (constraintViolationSet.isEmpty()) {
+                PiUser addedUser = userRepository.save(user);
+                createdAccounts.add(addedUser.getUserId());
 
-            if (!constraintViolationSet.isEmpty()) {
+                log.info(writeLog(issuerId, UserActions.CREATE_ACCOUNT, addedUser.getUserId().toString()));
+            } else {
                 ErroredPiUser erroredUser = new ErroredPiUser(user);
                 erroredUser.setErrorMessages(constraintViolationSet
                                                  .stream().map(ConstraintViolation::getMessage)
-                                                 .collect(Collectors.toList()));
+                                                 .toList());
                 erroredAccounts.add(erroredUser);
-                continue;
             }
-
-            PiUser addedUser = userRepository.save(user);
-            createdAccounts.add(addedUser.getUserId());
-
-            log.info(writeLog(issuerId, UserActions.CREATE_ACCOUNT, addedUser.getUserId().toString()));
         }
 
         Map<CreationEnum, List<?>> processedAccounts = new ConcurrentHashMap<>();
@@ -264,7 +267,7 @@ public class AccountService {
         return emailMap;
     }
 
-    public Map<CreationEnum, List<?>> uploadMediaFromCsv(MultipartFile mediaCsv, String issuerId) {
+    public Map<CreationEnum, List<?>> uploadMediaFromCsv(MultipartFile mediaCsv, String issuerId) { //NOSONAR
         List<MediaCsv> mediaList;
 
         try (InputStreamReader inputStreamReader = new InputStreamReader(mediaCsv.getInputStream());
@@ -306,7 +309,7 @@ public class AccountService {
             Stream.concat(
                 azureAccounts.get(CreationEnum.ERRORED_ACCOUNTS).stream(),
                 piUserAccounts.get(CreationEnum.ERRORED_ACCOUNTS).stream()
-            ).distinct().collect(Collectors.toList())
+            ).distinct().toList()
         );
         return completedAccounts;
     }
