@@ -16,7 +16,6 @@ import uk.gov.hmcts.reform.pip.model.enums.UserActions;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
 
@@ -29,6 +28,8 @@ public class MediaApplicationService {
 
     private final AzureBlobService azureBlobService;
     private final PublicationService publicationService;
+
+    private static final String APPLICATION_NOT_FOUND = "Application with id %s could not be found";
 
     @Autowired
     public MediaApplicationService(MediaApplicationRepository mediaApplicationRepository,
@@ -66,7 +67,7 @@ public class MediaApplicationService {
      */
     public MediaApplication getApplicationById(UUID id) {
         return mediaApplicationRepository.findById(id).orElseThrow(() ->
-            new NotFoundException(String.format("Application with id %s could not be found", id)));
+            new NotFoundException(String.format(APPLICATION_NOT_FOUND, id)));
     }
 
     /**
@@ -115,7 +116,7 @@ public class MediaApplicationService {
      */
     public MediaApplication updateApplication(UUID id, MediaApplicationStatus status) {
         MediaApplication applicationToUpdate = mediaApplicationRepository.findById(id).orElseThrow(() ->
-            new NotFoundException(String.format("Application with id %s could not be found", id)));
+            new NotFoundException(String.format(APPLICATION_NOT_FOUND, id)));
 
         log.info(writeLog(UserActions.UPDATE_MEDIA_APPLICATION, applicationToUpdate.getId().toString()));
 
@@ -136,7 +137,7 @@ public class MediaApplicationService {
      */
     public void deleteApplication(UUID id) {
         MediaApplication applicationToDelete = mediaApplicationRepository.findById(id).orElseThrow(() ->
-            new NotFoundException(String.format("Application with id %s could not be found", id)));
+            new NotFoundException(String.format(APPLICATION_NOT_FOUND, id)));
 
         log.info(writeLog(UserActions.DELETE_MEDIA_APPLICATION, applicationToDelete.getId().toString()));
 
@@ -163,7 +164,7 @@ public class MediaApplicationService {
         mediaApplicationRepository.deleteAllInBatch(
             mediaApplications.stream().filter(app -> app.getStatus().equals(MediaApplicationStatus.APPROVED)
                 || app.getStatus().equals(MediaApplicationStatus.REJECTED))
-                .collect(Collectors.toList()));
+                .toList());
 
         log.info("Approved and Rejected media applications deleted");
     }
