@@ -150,6 +150,7 @@ class SensitivityServiceTest {
             Arguments.of(ListType.CIVIL_AND_FAMILY_DAILY_CAUSE_LIST, Roles.VERIFIED_THIRD_PARTY_CRIME_CFT, true),
             Arguments.of(ListType.COP_DAILY_CAUSE_LIST, Roles.VERIFIED_THIRD_PARTY_CRIME, false),
             Arguments.of(ListType.SSCS_DAILY_LIST, Roles.VERIFIED_THIRD_PARTY_CRIME_PRESS, false),
+            Arguments.of(ListType.SSCS_DAILY_LIST_ADDITIONAL_HEARINGS, Roles.VERIFIED_THIRD_PARTY_CRIME_PRESS, false),
             Arguments.of(ListType.IAC_DAILY_LIST, Roles.VERIFIED_THIRD_PARTY_CRIME_PRESS, false)
         );
     }
