@@ -7,23 +7,14 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.web.multipart.MultipartFile;
-import org.testcontainers.shaded.org.apache.commons.io.IOUtils;
-import uk.gov.hmcts.reform.pip.account.management.model.AzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.ListType;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
 import uk.gov.hmcts.reform.pip.account.management.model.Roles;
 import uk.gov.hmcts.reform.pip.account.management.model.Sensitivity;
-import uk.gov.hmcts.reform.pip.account.management.model.SystemAdminAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.UserProvenances;
 import uk.gov.hmcts.reform.pip.account.management.service.AccountService;
-import uk.gov.hmcts.reform.pip.account.management.service.AccountVerificationService;
-import uk.gov.hmcts.reform.pip.account.management.service.SystemAdminAccountService;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -34,13 +25,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-@SuppressWarnings("PMD.TooManyMethods")
 class AccountControllerTest {
 
     private static final String EMAIL = "a@b.com";
@@ -52,38 +39,11 @@ class AccountControllerTest {
     private static final String TEST_EMAIL_1 = "test@user.com";
     private static final String TEST_EMAIL_2 = "dave@email.com";
 
-
     @Mock
     private AccountService accountService;
 
-    @Mock
-    private AccountVerificationService accountVerificationService;
-
-    @Mock
-    private SystemAdminAccountService systemAdminAccountService;
-
     @InjectMocks
     private AccountController accountController;
-
-    @Test
-    void createAzureAccount() {
-        Map<CreationEnum, List<? extends AzureAccount>> accountsMap = new ConcurrentHashMap<>();
-        accountsMap.put(CreationEnum.CREATED_ACCOUNTS, List.of(new AzureAccount()));
-
-        AzureAccount azureAccount = new AzureAccount();
-        azureAccount.setEmail(EMAIL);
-
-        List<AzureAccount> azureAccounts = List.of(azureAccount);
-
-        when(accountService.addAzureAccounts(argThat(arg -> arg.equals(azureAccounts)),
-                                             eq("b@c.com"), eq(false))).thenReturn(accountsMap);
-
-        ResponseEntity<Map<CreationEnum, List<? extends AzureAccount>>> response =
-            accountController.createAzureAccount("b@c.com", azureAccounts);
-
-        assertEquals(HttpStatus.OK, response.getStatusCode(), STATUS_CODE_MATCH);
-        assertEquals(accountsMap, response.getBody(), "Should return the expected azureAccounts map");
-    }
 
     @Test
     void testCreateUser() {
@@ -154,11 +114,10 @@ class AccountControllerTest {
 
         when(accountService.findUserEmailsByIds(userIdsList)).thenReturn(userEmailMap);
 
-        assertEquals(userEmailMap, accountController.getUserEmailsByIds(userIdsList).getBody(),
-                     "Should return correct id and email map");
+        ResponseEntity<Map<String, Optional<String>>> response = accountController.getUserEmailsByIds(userIdsList);
 
-        assertEquals(HttpStatus.OK, accountController.getUserEmailsByIds(userIdsList)
-            .getStatusCode(), STATUS_CODE_MATCH);
+        assertEquals(userEmailMap, response.getBody(), "Should return correct id and email map");
+        assertEquals(HttpStatus.OK, response.getStatusCode(), STATUS_CODE_MATCH);
     }
 
     @Test
@@ -172,49 +131,12 @@ class AccountControllerTest {
         userEmailMap.put(TEST_ID_STRING_2, Optional.of(TEST_EMAIL_2));
         userEmailMap.put(TEST_ID_STRING_3, Optional.empty());
 
-
         when(accountService.findUserEmailsByIds(userIdsList)).thenReturn(userEmailMap);
 
-        assertEquals(userEmailMap, accountController.getUserEmailsByIds(userIdsList).getBody(),
-                     "Should return correct id and email map");
+        ResponseEntity<Map<String, Optional<String>>> response = accountController.getUserEmailsByIds(userIdsList);
 
-        assertEquals(HttpStatus.OK, accountController.getUserEmailsByIds(userIdsList)
-            .getStatusCode(), STATUS_CODE_MATCH);
-    }
-
-    @Test
-    void testCreateMediaAccountsBulkReturnsOk() throws IOException {
-        try (InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream("csv/valid.csv")) {
-            MultipartFile multipartFile = new MockMultipartFile("file",
-                                                                "TestFileName", "text/plain",
-                                                                IOUtils.toByteArray(is));
-            when(accountService.uploadMediaFromCsv(multipartFile, TEST_EMAIL_1)).thenReturn(new ConcurrentHashMap<>());
-
-            assertEquals(HttpStatus.OK,
-                         accountController.createMediaAccountsBulk(TEST_EMAIL_1, multipartFile).getStatusCode(),
-                         STATUS_CODE_MATCH);
-        }
-    }
-
-    @Test
-    void testCreateMediaAccountsBulkReturnsMap() throws IOException {
-        try (InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream("csv/valid.csv")) {
-            MultipartFile multipartFile = new MockMultipartFile("file",
-                                                                "TestFileName", "text/plain",
-                                                                IOUtils.toByteArray(is));
-            when(accountService.uploadMediaFromCsv(multipartFile, TEST_EMAIL_1)).thenReturn(new ConcurrentHashMap<>());
-
-            assertEquals(new ConcurrentHashMap<>(),
-                         accountController.createMediaAccountsBulk(TEST_EMAIL_1, multipartFile).getBody(),
-                         "Maps should match");
-        }
-    }
-
-    @Test
-    void testMiDataReturnsOk() {
-        assertEquals(HttpStatus.OK,
-                     accountController.getMiData().getStatusCode(),
-                     STATUS_CODE_MATCH);
+        assertEquals(userEmailMap, response.getBody(), "Should return correct id and email map");
+        assertEquals(HttpStatus.OK, response.getStatusCode(), STATUS_CODE_MATCH);
     }
 
     @Test
@@ -233,79 +155,6 @@ class AccountControllerTest {
 
         assertEquals(HttpStatus.OK, response.getStatusCode(), STATUS_CODE_MATCH);
         assertEquals(expectedString, response.getBody(), "Body does not match expected");
-    }
-
-    @Test
-    void testNotifyInactiveMediaAccounts() {
-        doNothing().when(accountVerificationService).sendMediaUsersForVerification();
-        assertThat(accountController.notifyInactiveMediaAccounts().getStatusCode())
-            .as(STATUS_CODE_MATCH)
-            .isEqualTo(HttpStatus.NO_CONTENT);
-    }
-
-    @Test
-    void testDeleteExpiredAccounts() {
-        doNothing().when(accountVerificationService).findMediaAccountsForDeletion();
-        assertThat(accountController.deleteExpiredMediaAccounts().getStatusCode())
-            .as(STATUS_CODE_MATCH)
-            .isEqualTo(HttpStatus.NO_CONTENT);
-    }
-
-    @Test
-    void testNotifyInactiveAdminAccounts() {
-        doNothing().when(accountVerificationService).notifyAdminUsersToSignIn();
-        assertThat(accountController.notifyInactiveAdminAccounts().getStatusCode())
-            .as(STATUS_CODE_MATCH)
-            .isEqualTo(HttpStatus.NO_CONTENT);
-    }
-
-    @Test
-    void testDeleteExpiredAdminAccounts() {
-        doNothing().when(accountVerificationService).findAdminAccountsForDeletion();
-        assertThat(accountController.deleteExpiredAdminAccounts().getStatusCode())
-            .as(STATUS_CODE_MATCH)
-            .isEqualTo(HttpStatus.NO_CONTENT);
-    }
-
-    @Test
-    void testNotifyInactiveIdamAccounts() {
-        doNothing().when(accountVerificationService).notifyIdamUsersToSignIn();
-        assertThat(accountController.notifyInactiveIdamAccounts().getStatusCode())
-            .as(STATUS_CODE_MATCH)
-            .isEqualTo(HttpStatus.NO_CONTENT);
-    }
-
-    @Test
-    void testDeleteExpiredIdamAccounts() {
-        doNothing().when(accountVerificationService).findIdamAccountsForDeletion();
-        assertThat(accountController.deleteExpiredIdamAccounts().getStatusCode())
-            .as(STATUS_CODE_MATCH)
-            .isEqualTo(HttpStatus.NO_CONTENT);
-    }
-
-    @Test
-    void testRetrieveThirdPartyAccounts() {
-        UUID uuid = UUID.randomUUID();
-        PiUser piUser = new PiUser();
-        piUser.setUserId(uuid);
-
-        List<PiUser> users = List.of(piUser);
-        when(accountService.findAllThirdPartyAccounts()).thenReturn(users);
-
-        ResponseEntity<List<PiUser>> response = accountController.getAllThirdPartyAccounts();
-
-        assertEquals(HttpStatus.OK, response.getStatusCode(), "Expected status code does not match");
-
-        assertEquals(users, response.getBody(), "Expected users do not match");
-    }
-
-    @Test
-    void testGetAllAccountsExceptThirdParty() {
-        assertThat(accountController.getAllAccountsExceptThirdParty(
-            0, 25, "test", "1234",
-            List.of(UserProvenances.PI_AAD), List.of(Roles.VERIFIED), "1234").getStatusCode())
-            .as(STATUS_CODE_MATCH)
-            .isEqualTo(HttpStatus.OK);
     }
 
     @Test
@@ -335,60 +184,5 @@ class AccountControllerTest {
         assertThat(accountController.updateAccountById(UUID.randomUUID(), Roles.SYSTEM_ADMIN).getStatusCode())
             .as(STATUS_CODE_MATCH)
             .isEqualTo(HttpStatus.OK);
-    }
-
-    @Test
-    void testGetAdminUserByEmailAndProvenance() {
-        PiUser piUser = new PiUser();
-        piUser.setEmail(EMAIL);
-        piUser.setUserProvenance(UserProvenances.PI_AAD);
-
-        when(accountService.getAdminUserByEmailAndProvenance(EMAIL, UserProvenances.PI_AAD)).thenReturn(piUser);
-
-        ResponseEntity<PiUser> response = accountController.getAdminUserByEmailAndProvenance(EMAIL,
-                                                                                             UserProvenances.PI_AAD);
-
-        assertEquals(HttpStatus.OK, response.getStatusCode(), "Expected status code does not match");
-
-        assertEquals(piUser, response.getBody(), "Expected PI user does not match");
-    }
-
-    @Test
-    void testCreateSystemAdminAccount() {
-        PiUser testUser = new PiUser();
-        testUser.setEmail(TEST_EMAIL_1);
-        testUser.setRoles(Roles.SYSTEM_ADMIN);
-        testUser.setUserProvenance(UserProvenances.PI_AAD);
-
-        SystemAdminAccount testAccount = new SystemAdminAccount(TEST_EMAIL_1,
-                                                                "Test", "User");
-
-        String testIssuerId = "1234";
-        when(systemAdminAccountService.addSystemAdminAccount(testAccount, testIssuerId)).thenReturn(testUser);
-
-        ResponseEntity<? extends PiUser> response =
-            accountController.createSystemAdminAccount(testIssuerId, testAccount);
-
-        assertEquals(HttpStatus.OK, response.getStatusCode(), STATUS_CODE_MATCH);
-        assertEquals(testUser, response.getBody(), "Should return the created piUser");
-    }
-
-    @Test
-    void testGetSystemAdminInfo() {
-        AzureAccount user = new AzureAccount();
-        user.setDisplayName("DisplayName");
-        user.setEmail(EMAIL);
-
-        String issuerId = UUID.randomUUID().toString();
-
-        when(accountService.retrieveAzureUser(issuerId))
-            .thenReturn(user);
-
-        assertEquals(user,
-                     accountController.getAzureUserInfo(issuerId)
-                         .getBody(), "Should return found user");
-
-        assertEquals(HttpStatus.OK, accountController.getAzureUserInfo(issuerId).getStatusCode(),
-                     STATUS_CODE_MATCH);
     }
 }

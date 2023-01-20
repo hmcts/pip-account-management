@@ -17,11 +17,12 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+import static uk.gov.hmcts.reform.pip.account.management.model.MediaApplicationStatus.APPROVED;
+import static uk.gov.hmcts.reform.pip.account.management.model.MediaApplicationStatus.REJECTED;
 import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
 
 @Slf4j
 @Service
-@SuppressWarnings("PMD.LawOfDemeter")
 public class MediaApplicationService {
 
     private final MediaApplicationRepository mediaApplicationRepository;
@@ -123,7 +124,7 @@ public class MediaApplicationService {
         applicationToUpdate.setStatus(status);
         applicationToUpdate.setStatusDate(LocalDateTime.now());
 
-        if (MediaApplicationStatus.APPROVED.equals(status) || MediaApplicationStatus.REJECTED.equals(status)) {
+        if (APPROVED.equals(status) || REJECTED.equals(status)) {
             azureBlobService.deleteBlob(applicationToUpdate.getImage());
         }
 
@@ -162,8 +163,8 @@ public class MediaApplicationService {
     private void processApplicationsForDeleting() {
         List<MediaApplication> mediaApplications = getApplications();
         mediaApplicationRepository.deleteAllInBatch(
-            mediaApplications.stream().filter(app -> app.getStatus().equals(MediaApplicationStatus.APPROVED)
-                || app.getStatus().equals(MediaApplicationStatus.REJECTED))
+            mediaApplications.stream().filter(app -> app.getStatus().equals(APPROVED)
+                || app.getStatus().equals(REJECTED))
                 .toList());
 
         log.info("Approved and Rejected media applications deleted");

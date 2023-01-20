@@ -13,7 +13,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -45,7 +44,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles(profiles = "functional")
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 @WithMockUser(username = "admin", authorities = {"APPROLE_api.request.admin"})
 
 @SuppressWarnings({"PMD.TooManyMethods", "PMD.LawOfDemeter", "PMD.JUnitTestsShouldIncludeAssert"})

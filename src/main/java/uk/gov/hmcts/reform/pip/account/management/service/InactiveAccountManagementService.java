@@ -12,7 +12,7 @@ import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
 
 @Slf4j
 @Service
-public class AccountVerificationService {
+public class InactiveAccountManagementService {
 
     private final UserRepository userRepository;
     private final AzureUserService azureUserService;
@@ -38,8 +38,8 @@ public class AccountVerificationService {
     private int idamAccountDeletionDays;
 
     @Autowired
-    public AccountVerificationService(UserRepository userRepository, AzureUserService azureUserService,
-                                      PublicationService publicationService, AccountService accountService) {
+    public InactiveAccountManagementService(UserRepository userRepository, AzureUserService azureUserService,
+                                            PublicationService publicationService, AccountService accountService) {
         this.userRepository = userRepository;
         this.azureUserService = azureUserService;
         this.publicationService = publicationService;
