@@ -26,6 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -248,6 +249,27 @@ class MediaApplicationServiceTest {
                    "Application deletion logs not being captured");
 
         verify(publicationService).sendMediaApplicationReportingEmail(List.of(mediaApplicationExample));
+        verify(mediaApplicationRepository).deleteAllInBatch(Collections.emptyList());
+    }
+
+    @Test
+    void testProcessApplicationForReportingWithProcessedApplications() {
+        List<MediaApplication> applications = List.of(createApplication(MediaApplicationStatus.APPROVED),
+                                                      createApplication(MediaApplicationStatus.REJECTED));
+        when(mediaApplicationRepository.findAll()).thenReturn(applications);
+        when(publicationService.sendMediaApplicationReportingEmail(applications))
+            .thenReturn("Email sent");
+
+        mediaApplicationService.processApplicationsForReporting();
+
+        assertEquals("Email sent", logCaptor.getInfoLogs().get(0),
+                     "Publication service response logs not being captured.");
+
+        assertEquals("Approved and Rejected media applications deleted", logCaptor.getInfoLogs().get(1),
+                     "Application deletion logs not being captured");
+
+        verify(publicationService).sendMediaApplicationReportingEmail(applications);
+        verify(mediaApplicationRepository).deleteAllInBatch(applications);
     }
 
     @Test
@@ -256,5 +278,6 @@ class MediaApplicationServiceTest {
 
         mediaApplicationService.processApplicationsForReporting();
         verifyNoInteractions(publicationService);
+        verify(mediaApplicationRepository, never()).deleteAllInBatch(any());
     }
 }
