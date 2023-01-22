@@ -62,6 +62,7 @@ class MediaApplicationServiceTest {
     private static final String IMAGE_NAME = "test-image.png";
     private static final String NOT_FOUND_MESSAGE = "Not found exception does not contain expected ID";
     private static final String NOT_FOUND_EXCEPTION_THROWN_MESSAGE = "Expected NotFoundException to be thrown";
+    private static final String EMAIL_SENT_MESSAGE = "Email sent";
 
 
     @BeforeEach
@@ -238,11 +239,11 @@ class MediaApplicationServiceTest {
     void testProcessApplicationForReporting() {
         when(mediaApplicationRepository.findAll()).thenReturn(List.of(mediaApplicationExample));
         when(publicationService.sendMediaApplicationReportingEmail(List.of(mediaApplicationExample)))
-            .thenReturn("Email sent");
+            .thenReturn(EMAIL_SENT_MESSAGE);
 
         mediaApplicationService.processApplicationsForReporting();
 
-        assertEquals("Email sent", logCaptor.getInfoLogs().get(0),
+        assertEquals(EMAIL_SENT_MESSAGE, logCaptor.getInfoLogs().get(0),
                    "Publication service response logs not being captured.");
 
         assertEquals("Approved and Rejected media applications deleted", logCaptor.getInfoLogs().get(1),
@@ -258,11 +259,11 @@ class MediaApplicationServiceTest {
                                                       createApplication(MediaApplicationStatus.REJECTED));
         when(mediaApplicationRepository.findAll()).thenReturn(applications);
         when(publicationService.sendMediaApplicationReportingEmail(applications))
-            .thenReturn("Email sent");
+            .thenReturn(EMAIL_SENT_MESSAGE);
 
         mediaApplicationService.processApplicationsForReporting();
 
-        assertEquals("Email sent", logCaptor.getInfoLogs().get(0),
+        assertEquals(EMAIL_SENT_MESSAGE, logCaptor.getInfoLogs().get(0),
                      "Publication service response logs not being captured.");
 
         assertEquals("Approved and Rejected media applications deleted", logCaptor.getInfoLogs().get(1),
