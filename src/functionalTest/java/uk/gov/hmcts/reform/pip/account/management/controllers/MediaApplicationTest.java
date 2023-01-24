@@ -1,7 +1,9 @@
 package uk.gov.hmcts.reform.pip.account.management.controllers;
 
+import com.azure.core.util.BinaryData;
 import com.azure.storage.blob.BlobClient;
 import com.azure.storage.blob.BlobContainerClient;
+import com.azure.storage.blob.models.BlobStorageException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
 import org.junit.jupiter.api.BeforeEach;
@@ -23,6 +25,7 @@ import uk.gov.hmcts.reform.pip.account.management.model.MediaApplicationDto;
 import uk.gov.hmcts.reform.pip.account.management.model.MediaApplicationStatus;
 
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -332,6 +335,35 @@ class MediaApplicationTest {
     void testGetApplicationByIdUnauthorised() throws Exception {
         mockMvc.perform(get(GET_BY_ID_URL, TEST_ID))
             .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void testGetImageById() throws Exception {
+        MediaApplication application = createApplication();
+
+        final byte[] data = "Image".getBytes(StandardCharsets.UTF_8);
+        BinaryData binaryData = BinaryData.fromBytes(data);
+
+        when(blobClient.downloadContent()).thenReturn(binaryData);
+
+        MvcResult mvcResult = mockMvc.perform(get(GET_IMAGE_BY_ID_URL, application.getImage()))
+            .andExpect(status().isOk())
+            .andReturn();
+
+        assertEquals("Image", mvcResult.getResponse().getContentAsString(), "Images do not match");
+    }
+
+    @Test
+    void testGetImageByIdNotFound() throws Exception {
+        createApplication();
+
+        when(blobClient.downloadContent()).thenThrow(BlobStorageException.class);
+
+        MvcResult mvcResult = mockMvc.perform(get(GET_IMAGE_BY_ID_URL, TEST_ID))
+            .andExpect(status().isNotFound())
+            .andReturn();
+
+        assertTrue(mvcResult.getResponse().getContentAsString().contains(String.valueOf(TEST_ID)), NOT_FOUND_ERROR);
     }
 
     @Test
