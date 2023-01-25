@@ -1,19 +1,18 @@
 package uk.gov.hmcts.reform.pip.account.management.service;
 
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import uk.gov.hmcts.reform.pip.account.management.model.ListType;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
 import uk.gov.hmcts.reform.pip.account.management.model.Roles;
 import uk.gov.hmcts.reform.pip.account.management.model.Sensitivity;
-import uk.gov.hmcts.reform.pip.account.management.model.UserProvenances;
 
-import static uk.gov.hmcts.reform.pip.account.management.model.Roles.ALL_VERIFIED_ROLES;
+import static uk.gov.hmcts.reform.pip.account.management.model.Roles.VERIFIED;
+import static uk.gov.hmcts.reform.pip.account.management.model.UserProvenances.THIRD_PARTY;
 
 /**
  * This class handles the checking whether a user has permission to see a publication.
  */
-@Component
-@SuppressWarnings({"PMD.LawOfDemeter"})
+@Service
 public class SensitivityService {
     /**
      * Checks the sensitivity / list type and user, to determine if they have permission to see the publication.
@@ -25,10 +24,10 @@ public class SensitivityService {
     public boolean checkAuthorisation(PiUser user, ListType listType, Sensitivity sensitivity) {
         return switch (sensitivity) {
             case PUBLIC -> true;
-            case PRIVATE -> ALL_VERIFIED_ROLES.contains(user.getRoles());
-            case CLASSIFIED -> Roles.VERIFIED.equals(user.getRoles())
+            case PRIVATE -> Roles.getAllVerifiedRoles().contains(user.getRoles());
+            case CLASSIFIED -> VERIFIED.equals(user.getRoles())
                 && user.getUserProvenance().equals(listType.getAllowedProvenance())
-                || UserProvenances.THIRD_PARTY.equals(user.getUserProvenance())
+                || THIRD_PARTY.equals(user.getUserProvenance())
                 && listType.getAllowedThirdPartyRoles().contains(user.getRoles());
             default -> false;
         };

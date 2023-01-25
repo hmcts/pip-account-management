@@ -8,13 +8,7 @@ import uk.gov.hmcts.reform.pip.account.management.validation.annotations.PiEmail
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 
-
 public class ConditionalEmailValidator implements ConstraintValidator<PiEmailConditionalValidation, PiUser> {
-
-    @Override
-    public void initialize(PiEmailConditionalValidation email) {
-    }
-
     /**
      * This is a note that the below validator wipes incoming email addresses when they are added erroneously to
      * third party creation requests. This prevents us having access to any data we shouldn't have. The suppression
@@ -25,9 +19,8 @@ public class ConditionalEmailValidator implements ConstraintValidator<PiEmailCon
      * @return boolean for whether it's successfully validated or not
      */
     @Override
-    @SuppressWarnings("PMD.LawOfDemeter")
     public boolean isValid(PiUser user, ConstraintValidatorContext context) {
-        if (Roles.ALL_THIRD_PARTY_ROLES.contains(user.getRoles())) {
+        if (Roles.getAllThirdPartyRoles().contains(user.getRoles())) {
             user.setEmail(null);
             return true;
         }
