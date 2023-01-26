@@ -20,7 +20,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
 
@@ -39,20 +38,20 @@ public class SystemAdminAccountService {
     private final AzureUserService azureUserService;
     private final UserRepository userRepository;
     private final PublicationService publicationService;
-    private final AccountService accountService;
+    private final AzureAccountService azureAccountService;
     private final Integer maxSystemAdminValue;
 
     @Autowired
     public SystemAdminAccountService(Validator validator, AzureUserService azureUserService,
                                      UserRepository userRepository, PublicationService publicationService,
                                      @Value("${admin.max-system-admin}")Integer maxSystemAdminValue,
-                                     AccountService accountService) {
+                                     AzureAccountService azureAccountService) {
         this.validator = validator;
         this.azureUserService = azureUserService;
         this.userRepository = userRepository;
         this.publicationService = publicationService;
         this.maxSystemAdminValue = maxSystemAdminValue;
-        this.accountService = accountService;
+        this.azureAccountService = azureAccountService;
     }
 
     /**
@@ -66,7 +65,7 @@ public class SystemAdminAccountService {
         String displayName = "";
         String provenanceUserId = verifyAdminUser(issuerId);
         if (!provenanceUserId.isEmpty()) {
-            displayName = accountService.retrieveAzureUser(provenanceUserId).getDisplayName();
+            displayName = azureAccountService.retrieveAzureAccount(provenanceUserId).getDisplayName();
         }
 
         validateSystemAdminAccount(account, issuerId, displayName);
@@ -101,7 +100,7 @@ public class SystemAdminAccountService {
                           "has attempted to create a System Admin account, which has: " + result.toString()));
 
         List<String> existingAdminEmails = userRepository.findByRoles(Roles.SYSTEM_ADMIN)
-            .stream().map(PiUser::getEmail).collect(Collectors.toList());
+            .stream().map(PiUser::getEmail).toList();
 
         var createSystemAdminAction = new CreateSystemAdminAction();
         createSystemAdminAction.setAccountEmail(systemAdminAccount.getEmail());
@@ -125,7 +124,7 @@ public class SystemAdminAccountService {
             var erroredSystemAdminAccount = new ErroredSystemAdminAccount(account);
             erroredSystemAdminAccount.setErrorMessages(constraintViolationSet
                                                            .stream().map(constraint -> constraint.getPropertyPath()
-                    + ": " + constraint.getMessage()).collect(Collectors.toList()));
+                    + ": " + constraint.getMessage()).toList());
 
             handleNewSystemAdminAccountAction(account, issuerId, ActionResult.FAILED, name);
             throw new SystemAdminAccountException(erroredSystemAdminAccount);

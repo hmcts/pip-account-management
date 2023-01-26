@@ -15,6 +15,7 @@ import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.NotFo
 import uk.gov.hmcts.reform.pip.account.management.model.MediaApplication;
 import uk.gov.hmcts.reform.pip.account.management.model.MediaApplicationStatus;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,6 +28,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static uk.gov.hmcts.reform.pip.account.management.helper.MediaApplicationHelper.FILE;
 import static uk.gov.hmcts.reform.pip.account.management.helper.MediaApplicationHelper.STATUS;
@@ -239,13 +241,20 @@ class MediaApplicationServiceTest {
 
         mediaApplicationService.processApplicationsForReporting();
 
-        assertTrue("Email sent".equals(logCaptor.getInfoLogs().get(0)),
+        assertEquals("Email sent", logCaptor.getInfoLogs().get(0),
                    "Publication service response logs not being captured.");
 
-        assertTrue("Approved and Rejected media applications deleted".equals(logCaptor.getInfoLogs().get(1)),
+        assertEquals("Approved and Rejected media applications deleted", logCaptor.getInfoLogs().get(1),
                    "Application deletion logs not being captured");
 
         verify(publicationService).sendMediaApplicationReportingEmail(List.of(mediaApplicationExample));
     }
 
+    @Test
+    void testProcessApplicationForReportingWithNoApplication() {
+        when(mediaApplicationRepository.findAll()).thenReturn(Collections.emptyList());
+
+        mediaApplicationService.processApplicationsForReporting();
+        verifyNoInteractions(publicationService);
+    }
 }
