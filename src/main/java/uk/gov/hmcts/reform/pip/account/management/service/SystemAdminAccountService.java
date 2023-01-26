@@ -38,20 +38,20 @@ public class SystemAdminAccountService {
     private final AzureUserService azureUserService;
     private final UserRepository userRepository;
     private final PublicationService publicationService;
-    private final AccountService accountService;
+    private final AzureAccountService azureAccountService;
     private final Integer maxSystemAdminValue;
 
     @Autowired
     public SystemAdminAccountService(Validator validator, AzureUserService azureUserService,
                                      UserRepository userRepository, PublicationService publicationService,
                                      @Value("${admin.max-system-admin}")Integer maxSystemAdminValue,
-                                     AccountService accountService) {
+                                     AzureAccountService azureAccountService) {
         this.validator = validator;
         this.azureUserService = azureUserService;
         this.userRepository = userRepository;
         this.publicationService = publicationService;
         this.maxSystemAdminValue = maxSystemAdminValue;
-        this.accountService = accountService;
+        this.azureAccountService = azureAccountService;
     }
 
     /**
@@ -65,7 +65,7 @@ public class SystemAdminAccountService {
         String displayName = "";
         String provenanceUserId = verifyAdminUser(issuerId);
         if (!provenanceUserId.isEmpty()) {
-            displayName = accountService.retrieveAzureUser(provenanceUserId).getDisplayName();
+            displayName = azureAccountService.retrieveAzureAccount(provenanceUserId).getDisplayName();
         }
 
         validateSystemAdminAccount(account, issuerId, displayName);

@@ -10,7 +10,7 @@ import com.microsoft.graph.requests.GraphServiceClient;
 import com.microsoft.graph.requests.UserCollectionPage;
 import okhttp3.Request;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import uk.gov.hmcts.reform.pip.account.management.config.ClientConfiguration;
 import uk.gov.hmcts.reform.pip.account.management.config.UserConfiguration;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.AzureCustomException;
@@ -22,7 +22,7 @@ import java.util.List;
 /**
  * A class that wraps any interacts with Azure active directory.
  */
-@Component
+@Service
 public class AzureUserService {
 
     @Autowired

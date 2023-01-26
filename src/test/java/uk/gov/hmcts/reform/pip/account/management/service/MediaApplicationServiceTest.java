@@ -15,6 +15,7 @@ import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.NotFo
 import uk.gov.hmcts.reform.pip.account.management.model.MediaApplication;
 import uk.gov.hmcts.reform.pip.account.management.model.MediaApplicationStatus;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,6 +28,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static uk.gov.hmcts.reform.pip.account.management.helper.MediaApplicationHelper.FILE;
 import static uk.gov.hmcts.reform.pip.account.management.helper.MediaApplicationHelper.STATUS;
@@ -248,4 +250,11 @@ class MediaApplicationServiceTest {
         verify(publicationService).sendMediaApplicationReportingEmail(List.of(mediaApplicationExample));
     }
 
+    @Test
+    void testProcessApplicationForReportingWithNoApplication() {
+        when(mediaApplicationRepository.findAll()).thenReturn(Collections.emptyList());
+
+        mediaApplicationService.processApplicationsForReporting();
+        verifyNoInteractions(publicationService);
+    }
 }
