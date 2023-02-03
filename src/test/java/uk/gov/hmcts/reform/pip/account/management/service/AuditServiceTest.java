@@ -11,8 +11,8 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import uk.gov.hmcts.reform.pip.account.management.database.AuditRepository;
-import uk.gov.hmcts.reform.pip.account.management.model.AuditAction;
 import uk.gov.hmcts.reform.pip.account.management.model.AuditLog;
+import uk.gov.hmcts.reform.pip.model.enums.AuditAction;
 
 import java.time.LocalDateTime;
 import java.util.List;

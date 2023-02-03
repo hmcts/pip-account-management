@@ -31,6 +31,8 @@ public class AuditController {
     private final AuditService auditService;
 
     private static final String OK_ERROR_CODE = "200";
+    private static final String AUTH_ERROR_CODE = "403";
+    private static final String NOT_AUTHORIZED_MESSAGE = "User has not been authorized";
 
     @Autowired
     public AuditController(AuditService auditService) {
@@ -38,6 +40,7 @@ public class AuditController {
     }
 
     @ApiResponse(responseCode = OK_ERROR_CODE, description = "All audit logs returned as a page.")
+    @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
     @Operation(summary = "Get all audit logs returned as a page")
     @GetMapping
     public ResponseEntity<Page<AuditLog>> getAllAuditLogs(
@@ -48,12 +51,14 @@ public class AuditController {
     }
 
     @ApiResponse(responseCode = OK_ERROR_CODE, description = "Newly created audit log returned.")
+    @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
     @PostMapping
     public ResponseEntity<AuditLog> createAuditLog(@RequestBody @Valid AuditLogDto auditLogDto) {
         return ResponseEntity.ok(auditService.createAuditLog(auditLogDto.toEntity()));
     }
 
     @ApiResponse(responseCode = OK_ERROR_CODE, description = "All audit logs that have reached max retention deleted.")
+    @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
     @DeleteMapping
     public ResponseEntity<String> deleteAuditLogs() {
         return ResponseEntity.ok(auditService.deleteAuditLogs());

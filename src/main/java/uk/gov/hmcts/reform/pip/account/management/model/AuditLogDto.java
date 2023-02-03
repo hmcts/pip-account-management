@@ -3,6 +3,7 @@ package uk.gov.hmcts.reform.pip.account.management.model;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import uk.gov.hmcts.reform.pip.account.management.validation.annotations.ValueOfEnum;
+import uk.gov.hmcts.reform.pip.model.enums.AuditAction;
 
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
