@@ -23,8 +23,9 @@ public class AccountFilteringService {
     UserRepository userRepository;
 
     public String getAccManDataForMiReporting() {
-        StringBuilder builder = new StringBuilder(54);
-        builder.append("user_id,provenance_user_id,user_provenance,roles").append(System.lineSeparator());
+        StringBuilder builder = new StringBuilder(85);
+        builder.append("user_id,provenance_user_id,user_provenance,roles,created_date,last_signed_in_date")
+            .append(System.lineSeparator());
         userRepository.getAccManDataForMI()
             .forEach(line -> builder.append(line).append(System.lineSeparator()));
         return builder.toString();
