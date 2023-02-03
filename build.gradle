@@ -226,7 +226,7 @@ dependencies {
     strictly("1.33")
   }
 
-  testImplementation(platform('org.junit:junit-bom:5.9.1'))
+  testImplementation(platform('org.junit:junit-bom:5.9.2'))
   testImplementation group: 'org.springframework.boot', name: 'spring-boot-starter-test'
   testImplementation group: 'org.springframework.security', name: 'spring-security-test'
   testImplementation "io.zonky.test:embedded-database-spring-test:2.2.0"
