@@ -38,7 +38,8 @@ class AccountFilteringServiceTest {
     private static final String EMAIL = "test@hmcts.net";
     private static final String ID = "1234";
     private static final List<String> EXAMPLE_CSV = List.of(
-        "2fe899ff-96ed-435a-bcad-1411bbe96d2a,string,CFT_IDAM,INTERNAL_ADMIN_CTSC");
+        "2fe899ff-96ed-435a-bcad-1411bbe96d2a,string,CFT_IDAM,INTERNAL_ADMIN_CTSC,2022-01-19 13:45:50.873778,"
+            + "2023-01-25 14:22:56.434343");
     private static final PiUser PI_USER = new PiUser();
 
     private static final String USER_NOT_FOUND_EXCEPTION_MESSAGE =
@@ -63,15 +64,19 @@ class AccountFilteringServiceTest {
     void testMiService() {
         when(userRepository.getAccManDataForMI()).thenReturn(EXAMPLE_CSV);
         String testString = accountFilteringService.getAccManDataForMiReporting();
+
         assertThat(testString)
             .as("Json parsing has probably failed")
             .contains("CTSC")
             .hasLineCount(2);
+
         String[] splitLineString = testString.split("(\r\n|\r|\n)");
         long countLine1 = splitLineString[0].chars().filter(character -> character == ',').count();
-        assertThat(testString)
-            .as("Header row missing")
-            .contains("provenance_user_id");
+
+        assertThat(splitLineString[0])
+            .as("Header row does not match")
+            .isEqualTo("user_id,provenance_user_id,user_provenance,roles,created_date,last_signed_in_date");
+
         assertThat(splitLineString)
             .as("Data must be missing, are only headers printing? or Wrong data")
             .hasSizeGreaterThanOrEqualTo(2)
