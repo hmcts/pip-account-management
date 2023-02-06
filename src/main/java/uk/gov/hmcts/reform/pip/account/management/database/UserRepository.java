@@ -24,7 +24,8 @@ public interface UserRepository extends JpaRepository<PiUser, Long> {
 
     Optional<PiUser> findByUserId(UUID userId);
 
-    @Query(value = "SELECT cast(USER_ID as text), PROVENANCE_USER_ID, USER_PROVENANCE, ROLES FROM pi_user",
+    @Query(value = "SELECT cast(user_id as text), provenance_user_id, user_provenance, roles, created_date, "
+        + "last_signed_in_date FROM pi_user",
         nativeQuery = true)
     List<String> getAccManDataForMI();
 
