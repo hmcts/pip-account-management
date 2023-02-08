@@ -6,12 +6,15 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.List;
 
 @JsonIgnoreProperties(ignoreUnknown = true, value = {"pageable"})
 public class CustomPageImpl<T> extends PageImpl<T> implements Serializable {
-    private static final long serialVersionUID = 1;
+
+    @Serial
+    private static final long serialVersionUID = -8188257920346699960L;
 
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
     public CustomPageImpl(@JsonProperty("content") List<T> content,
