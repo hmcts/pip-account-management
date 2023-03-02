@@ -189,7 +189,7 @@ class AccountServiceTest {
         when(userRepository.findExistingByProvenanceId(TEST, "CRIME_IDAM")).thenReturn(List.of());
         UserWithProvenanceNotFoundException ex = assertThrows(UserWithProvenanceNotFoundException.class, () ->
             accountService.findUserByProvenanceId(UserProvenances.CRIME_IDAM, TEST));
-        assertEquals("No user found with the provenanceUserId: Test", ex.getMessage(), MESSAGES_MATCH);
+        assertEquals("No user found with provenance user ID: Test", ex.getMessage(), MESSAGES_MATCH);
     }
 
     @Test
