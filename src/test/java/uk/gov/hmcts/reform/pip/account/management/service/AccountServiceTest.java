@@ -423,7 +423,7 @@ class AccountServiceTest {
         when(userRepository.findByUserId(userId)).thenReturn(Optional.of(user));
         when(azureUserService.updateUserRole(ID, SYSTEM_ADMIN.toString())).thenReturn(azUser);
 
-        String response = accountService.updateAccountRole(userId, SYSTEM_ADMIN);
+        String response = accountService.updateAccountRole(null, userId, SYSTEM_ADMIN);
         assertEquals(String.format("User with ID %s has been updated to a SYSTEM_ADMIN", userId),
                     response, RETURN_USER_ERROR);
     }
@@ -439,7 +439,7 @@ class AccountServiceTest {
 
         when(userRepository.findByUserId(userId)).thenReturn(Optional.of(user));
 
-        String response = accountService.updateAccountRole(userId, SYSTEM_ADMIN);
+        String response = accountService.updateAccountRole(null, userId, SYSTEM_ADMIN);
         assertEquals(String.format("User with ID %s has been updated to a SYSTEM_ADMIN", userId),
                      response, RETURN_USER_ERROR);
     }
@@ -451,7 +451,7 @@ class AccountServiceTest {
         when(userRepository.findByUserId(userId)).thenReturn(Optional.empty());
 
         NotFoundException notFoundException = assertThrows(NotFoundException.class, () -> {
-            accountService.updateAccountRole(userId, SYSTEM_ADMIN);
+            accountService.updateAccountRole(null, userId, SYSTEM_ADMIN);
         }, USER_NOT_FOUND_EXCEPTION_MESSAGE);
 
         assertTrue(notFoundException.getMessage().contains(userId.toString()),
@@ -468,7 +468,7 @@ class AccountServiceTest {
             .thenThrow(new AzureCustomException(TEST));
 
         try (LogCaptor logCaptor = LogCaptor.forClass(AccountService.class)) {
-            accountService.updateAccountRole(userId, SYSTEM_ADMIN);
+            accountService.updateAccountRole(null, userId, SYSTEM_ADMIN);
             assertEquals(2, logCaptor.getInfoLogs().size(),
                          "Should not log if failed creating account"
             );

@@ -238,13 +238,13 @@ public class AccountService {
      * @return A confirmation string that the user has been updated with the new role.
      */
     public String updateAccountRole(UUID adminId, UUID userId, Roles updatedRole) {
-        PiUser userToUpdate = userRepository.findByUserId(userId).orElseThrow(() -> new NotFoundException(String.format(
-            "User with supplied user id: %s could not be found", userId)));
-
         if (adminId != null && adminId.equals(userId)) {
             throw new ForbiddenRoleUpdateException(
                 String.format("User with id %s is unable to update user ID %s", adminId, userId));
         }
+
+        PiUser userToUpdate = userRepository.findByUserId(userId).orElseThrow(() -> new NotFoundException(String.format(
+            "User with supplied user id: %s could not be found", userId)));
 
         // If they are a PI AAD user then try update the users role in B2C
         if (PI_AAD.equals(userToUpdate.getUserProvenance())) {
