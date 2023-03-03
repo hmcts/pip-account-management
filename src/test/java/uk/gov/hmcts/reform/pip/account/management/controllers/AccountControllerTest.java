@@ -31,7 +31,11 @@ import static org.mockito.Mockito.when;
 class AccountControllerTest {
 
     private static final String EMAIL = "a@b.com";
+
+    private static final String TEST_BODY = "This is a returned string";
     private static final String STATUS_CODE_MATCH = "Status code responses should match";
+
+    private static final String BODY_MATCH = "Body should match";
 
     private static final String TEST_ID_STRING_1 = "0b8968b4-5c79-4e4e-8f66-f6a552d9fa67";
     private static final String TEST_ID_STRING_2 = "0b8968b4-5c79-4e4e-8f66-f6a552d9fa68";
@@ -180,9 +184,40 @@ class AccountControllerTest {
     }
 
     @Test
-    void testUpdateAccountById() {
-        assertThat(accountController.updateAccountRoleById(UUID.randomUUID(), Roles.SYSTEM_ADMIN, null).getStatusCode())
+    void testUpdateAccountRoleByIdWithoutAdminUser() {
+        UUID userId = UUID.randomUUID();
+
+        when(accountService.updateAccountRole(null, userId, Roles.SYSTEM_ADMIN))
+            .thenReturn(TEST_BODY);
+
+        ResponseEntity<String> response =
+            accountController.updateAccountRoleById(userId, Roles.SYSTEM_ADMIN, null);
+
+        assertThat(response.getStatusCode())
             .as(STATUS_CODE_MATCH)
             .isEqualTo(HttpStatus.OK);
+
+        assertThat(response.getBody())
+            .as(BODY_MATCH)
+            .isEqualTo(TEST_BODY);
+    }
+
+    @Test
+    void testUpdateAccountRoleByIdWithAdminUser() {
+        UUID userId = UUID.randomUUID();
+        UUID adminId = UUID.randomUUID();
+
+        when(accountService.updateAccountRole(adminId, userId, Roles.SYSTEM_ADMIN))
+            .thenReturn(TEST_BODY);
+
+        ResponseEntity<String> response = accountController.updateAccountRoleById(userId, Roles.SYSTEM_ADMIN, adminId);
+
+        assertThat(response.getStatusCode())
+            .as(STATUS_CODE_MATCH)
+            .isEqualTo(HttpStatus.OK);
+
+        assertThat(response.getBody())
+            .as(BODY_MATCH)
+            .isEqualTo(TEST_BODY);
     }
 }

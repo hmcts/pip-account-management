@@ -83,7 +83,7 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
-    void testForbiddenPermissionsException() {
+    void testForbiddenRoleUpdateException() {
         ForbiddenRoleUpdateException forbiddenRoleUpdateException = new ForbiddenRoleUpdateException(ERROR_MESSAGE);
         ResponseEntity<ExceptionResponse> responseEntity = globalExceptionHandler.handle(forbiddenRoleUpdateException);
 
