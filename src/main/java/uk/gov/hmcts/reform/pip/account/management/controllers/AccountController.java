@@ -141,7 +141,8 @@ public class AccountController {
     @PutMapping("/update/{userId}/{role}")
     public ResponseEntity<String> updateAccountRoleById(@PathVariable UUID userId,
                                                         @PathVariable Roles role,
-                                                        @RequestHeader(value = "x-admin-id", required = false) UUID adminUser) {
+                                                        @RequestHeader(value = "x-admin-id", required = false)
+                                                            UUID adminUser) {
         return ResponseEntity.ok(accountService.updateAccountRole(adminUser, userId, role));
     }
 }

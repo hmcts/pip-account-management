@@ -181,7 +181,7 @@ class AccountControllerTest {
 
     @Test
     void testUpdateAccountById() {
-        assertThat(accountController.updateAccountById(UUID.randomUUID(), Roles.SYSTEM_ADMIN).getStatusCode())
+        assertThat(accountController.updateAccountRoleById(UUID.randomUUID(), Roles.SYSTEM_ADMIN).getStatusCode())
             .as(STATUS_CODE_MATCH)
             .isEqualTo(HttpStatus.OK);
     }
