@@ -11,13 +11,16 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import uk.gov.hmcts.reform.pip.account.management.database.AuditRepository;
+import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.NotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.model.AuditLog;
 import uk.gov.hmcts.reform.pip.model.enums.AuditAction;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
@@ -27,6 +30,7 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class AuditServiceTest {
+    private static final UUID ID = UUID.randomUUID();
 
     @Mock
     private AuditRepository auditRepository;
@@ -38,7 +42,7 @@ class AuditServiceTest {
 
     @BeforeEach
     void setup() {
-        auditLogExample.setId(UUID.randomUUID());
+        auditLogExample.setId(ID);
         auditLogExample.setUserId("1234");
         auditLogExample.setUserEmail("test@justice.gov.uk");
         auditLogExample.setAction(AuditAction.MANAGE_USER);
@@ -56,6 +60,25 @@ class AuditServiceTest {
 
         assertEquals(auditLogExample, returnedAuditLogs.getContent().get(0),
                      "Returned audit log does not match the expected");
+    }
+
+    @Test
+    void testGetAuditLogById() {
+        when(auditRepository.findById(ID)).thenReturn(Optional.of(auditLogExample));
+
+        AuditLog returnedAuditLog = auditService.getAuditLogById(ID);
+
+        assertEquals(auditLogExample, returnedAuditLog,
+                     "Returned audit log does not match the expected");
+    }
+
+    @Test
+    void testGetAuditLogByIdNotFound() {
+        when(auditRepository.findById(ID)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> auditService.getAuditLogById(ID))
+            .isInstanceOf(NotFoundException.class)
+            .hasMessage("Audit log with id " + ID + " could not be found");
     }
 
     @Test
