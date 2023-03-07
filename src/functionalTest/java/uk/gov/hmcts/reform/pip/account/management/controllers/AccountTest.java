@@ -568,7 +568,7 @@ class AccountTest {
     }
 
     @Test
-    void testUpdateUpdateAccountById() throws Exception {
+    void testUpdateUpdateAccountRoleById() throws Exception {
         validUser.setUserProvenance(UserProvenances.CFT_IDAM);
         MockHttpServletRequestBuilder createRequest =
             MockMvcRequestBuilders
@@ -601,7 +601,7 @@ class AccountTest {
     }
 
     @Test
-    void testUpdateUpdateAccountByIdWithAdminProvided() throws Exception {
+    void testUpdateUpdateAccountRoleByIdWithAdminProvided() throws Exception {
         validUser.setUserProvenance(UserProvenances.CFT_IDAM);
         MockHttpServletRequestBuilder createRequest =
             MockMvcRequestBuilders
@@ -635,7 +635,7 @@ class AccountTest {
     }
 
     @Test
-    void testUpdateUpdateAccountByIdWithSameAdminId() throws Exception {
+    void testUpdateUpdateAccountRoleByIdWithSameAdminId() throws Exception {
         validUser.setUserProvenance(UserProvenances.CFT_IDAM);
         MockHttpServletRequestBuilder createRequest =
             MockMvcRequestBuilders
@@ -669,7 +669,7 @@ class AccountTest {
     }
 
     @Test
-    void testUpdateAccountByIdNotFound() throws Exception {
+    void testUpdateAccountRoleByIdNotFound() throws Exception {
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .put(ROOT_URL + UPDATE_PATH + UUID.randomUUID() + "/" + Roles.INTERNAL_ADMIN_LOCAL);
 
