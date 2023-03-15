@@ -12,6 +12,7 @@ import uk.gov.hmcts.reform.pip.account.management.database.UserRepository;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.AzureCustomException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.NotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.UserNotFoundException;
+import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.UserWithProvenanceNotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.model.AzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.ListType;
@@ -186,9 +187,9 @@ class AccountServiceTest {
     @Test
     void testFindUserByProvenanceIdThrows() {
         when(userRepository.findExistingByProvenanceId(TEST, "CRIME_IDAM")).thenReturn(List.of());
-        UserNotFoundException ex = assertThrows(UserNotFoundException.class, () ->
+        UserWithProvenanceNotFoundException ex = assertThrows(UserWithProvenanceNotFoundException.class, () ->
             accountService.findUserByProvenanceId(UserProvenances.CRIME_IDAM, TEST));
-        assertEquals("No user found with the provenanceUserId: Test", ex.getMessage(), MESSAGES_MATCH);
+        assertEquals("No user found with provenance user ID: Test", ex.getMessage(), MESSAGES_MATCH);
     }
 
     @Test

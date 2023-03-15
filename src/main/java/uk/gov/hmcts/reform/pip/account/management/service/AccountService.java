@@ -7,6 +7,7 @@ import uk.gov.hmcts.reform.pip.account.management.database.UserRepository;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.AzureCustomException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.NotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.UserNotFoundException;
+import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.UserWithProvenanceNotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.ListType;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
@@ -150,7 +151,7 @@ public class AccountService {
         if (!returnedUser.isEmpty()) {
             return returnedUser.get(0);
         }
-        throw new UserNotFoundException("provenanceUserId", provenanceUserId);
+        throw new UserWithProvenanceNotFoundException(provenanceUserId);
     }
 
     public Map<String, Optional<String>> findUserEmailsByIds(List<String> userIdsList) {
