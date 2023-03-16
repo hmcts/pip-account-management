@@ -25,6 +25,13 @@ class CustomExceptionTest {
     }
 
     @Test
+    void testCreationOfUserWithProvenanceNotFoundException() {
+        UserWithProvenanceNotFoundException notFoundException = new UserWithProvenanceNotFoundException("testId");
+        assertEquals("No user found with provenance user ID: testId", notFoundException.getMessage(),
+                     ASSERTION_MESSAGE);
+    }
+
+    @Test
     void testCreationOfCsvParseException() {
         CsvParseException csvParseException = new CsvParseException(TEST_MESSAGE);
         assertEquals("Failed to parse CSV File due to: " + TEST_MESSAGE, csvParseException.getMessage(),

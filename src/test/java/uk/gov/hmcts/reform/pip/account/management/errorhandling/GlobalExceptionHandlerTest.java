@@ -12,6 +12,7 @@ import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.CsvPa
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.ForbiddenRoleUpdateException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.NotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.SystemAdminAccountException;
+import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.UserWithProvenanceNotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredSystemAdminAccount;
 
 import java.util.List;
@@ -90,6 +91,18 @@ class GlobalExceptionHandlerTest {
         assertEquals(HttpStatus.FORBIDDEN, responseEntity.getStatusCode(), "Status code should be not found");
         assertNotNull(responseEntity.getBody(), RESPONSE_SHOULD_CONTAIN_A_BODY);
         assertEquals(ERROR_MESSAGE,
+                     responseEntity.getBody().getMessage(), EXCEPTION_BODY_NOT_MATCH
+        );
+    }
+
+    @Test
+    void testUserWithProvenanceNotFoundException() {
+        UserWithProvenanceNotFoundException notFoundException = new UserWithProvenanceNotFoundException("123");
+        ResponseEntity<ExceptionResponse> responseEntity = globalExceptionHandler.handle(notFoundException);
+
+        assertEquals(HttpStatus.NOT_FOUND, responseEntity.getStatusCode(), "Status code should be not found");
+        assertNotNull(responseEntity.getBody(), RESPONSE_SHOULD_CONTAIN_A_BODY);
+        assertEquals("No user found with provenance user ID: 123",
                      responseEntity.getBody().getMessage(), EXCEPTION_BODY_NOT_MATCH);
     }
 

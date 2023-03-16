@@ -113,7 +113,7 @@ class AccountTest {
     private static final String UNAUTHORIZED_ROLE = "APPROLE_unknown.authorized";
     private static final String UNAUTHORIZED_USERNAME = "unauthorized_isAuthorized";
 
-    private static final String ERROR_RESPONSE_USER_PROVENANCE = "No user found with the provenanceUserId: 1234";
+    private static final String ERROR_RESPONSE_USER_PROVENANCE = "No user found with provenance user ID: 1234";
     private static final String NOT_FOUND_STATUS_CODE_MESSAGE = "Status code does not match not found";
     private static final String TEST_UUID_STRING = UUID.randomUUID().toString();
     private static final String USER_SHOULD_MATCH = "Users should match";
