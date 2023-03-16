@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.CsvParseException;
-import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.ForbiddenPermissionsException;
+import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.ForbiddenRoleUpdateException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.NotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.SystemAdminAccountException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.UserWithProvenanceNotFoundException;
@@ -63,9 +63,9 @@ public class GlobalExceptionHandler {
             .body(generateExceptionResponse(ex.getMessage()));
     }
 
-    @ExceptionHandler(ForbiddenPermissionsException.class)
-    public ResponseEntity<ExceptionResponse> handle(ForbiddenPermissionsException ex) {
-        log.error(writeLog("403, User is not permitted to access the requested endpoint"));
+    @ExceptionHandler(ForbiddenRoleUpdateException.class)
+    public ResponseEntity<ExceptionResponse> handle(ForbiddenRoleUpdateException ex) {
+        log.error(writeLog("403, " + ex.getMessage()));
 
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
             .body(generateExceptionResponse(ex.getMessage()));

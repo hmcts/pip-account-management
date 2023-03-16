@@ -9,7 +9,7 @@ import org.springframework.validation.BindException;
 import org.springframework.web.bind.MissingRequestHeaderException;
 import uk.gov.hmcts.reform.pip.account.management.controllers.AccountController;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.CsvParseException;
-import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.ForbiddenPermissionsException;
+import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.ForbiddenRoleUpdateException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.NotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.SystemAdminAccountException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.UserWithProvenanceNotFoundException;
@@ -84,6 +84,18 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
+    void testForbiddenRoleUpdateException() {
+        ForbiddenRoleUpdateException forbiddenRoleUpdateException = new ForbiddenRoleUpdateException(ERROR_MESSAGE);
+        ResponseEntity<ExceptionResponse> responseEntity = globalExceptionHandler.handle(forbiddenRoleUpdateException);
+
+        assertEquals(HttpStatus.FORBIDDEN, responseEntity.getStatusCode(), "Status code should be not found");
+        assertNotNull(responseEntity.getBody(), RESPONSE_SHOULD_CONTAIN_A_BODY);
+        assertEquals(ERROR_MESSAGE,
+                     responseEntity.getBody().getMessage(), EXCEPTION_BODY_NOT_MATCH
+        );
+    }
+
+    @Test
     void testUserWithProvenanceNotFoundException() {
         UserWithProvenanceNotFoundException notFoundException = new UserWithProvenanceNotFoundException("123");
         ResponseEntity<ExceptionResponse> responseEntity = globalExceptionHandler.handle(notFoundException);
@@ -91,17 +103,6 @@ class GlobalExceptionHandlerTest {
         assertEquals(HttpStatus.NOT_FOUND, responseEntity.getStatusCode(), "Status code should be not found");
         assertNotNull(responseEntity.getBody(), RESPONSE_SHOULD_CONTAIN_A_BODY);
         assertEquals("No user found with provenance user ID: 123",
-                     responseEntity.getBody().getMessage(), EXCEPTION_BODY_NOT_MATCH);
-    }
-
-    @Test
-    void testForbiddenPermissionsException() {
-        ForbiddenPermissionsException forbiddenPermissionsException = new ForbiddenPermissionsException(ERROR_MESSAGE);
-        ResponseEntity<ExceptionResponse> responseEntity = globalExceptionHandler.handle(forbiddenPermissionsException);
-
-        assertEquals(HttpStatus.FORBIDDEN, responseEntity.getStatusCode(), "Status code should be not found");
-        assertNotNull(responseEntity.getBody(), RESPONSE_SHOULD_CONTAIN_A_BODY);
-        assertEquals(ERROR_MESSAGE,
                      responseEntity.getBody().getMessage(), EXCEPTION_BODY_NOT_MATCH);
     }
 

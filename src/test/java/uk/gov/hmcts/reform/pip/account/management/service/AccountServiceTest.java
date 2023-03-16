@@ -10,6 +10,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.hmcts.reform.pip.account.management.database.UserRepository;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.AzureCustomException;
+import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.ForbiddenRoleUpdateException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.NotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.UserNotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.UserWithProvenanceNotFoundException;
@@ -409,6 +410,45 @@ class AccountServiceTest {
     }
 
     @Test
+    void testUpdateUserAccountRoleWhenIdIsNull() throws AzureCustomException {
+        UUID userId = UUID.randomUUID();
+
+        PiUser user = new PiUser();
+        user.setUserId(userId);
+        user.setUserProvenance(UserProvenances.PI_AAD);
+        user.setProvenanceUserId(ID);
+
+        User azUser = new User();
+        azUser.id = ID;
+        azUser.givenName = FULL_NAME;
+
+        when(userRepository.findByUserId(userId)).thenReturn(Optional.of(user));
+        when(azureUserService.updateUserRole(ID, SYSTEM_ADMIN.toString())).thenReturn(azUser);
+
+        String response = accountService.updateAccountRole(null, userId, SYSTEM_ADMIN);
+        assertEquals(String.format("User with ID %s has been updated to a SYSTEM_ADMIN", userId),
+                     response, RETURN_USER_ERROR);
+    }
+
+    @Test
+    void testExceptionIsThrownWhenAdminAndUserIdMatches() {
+        UUID userId = UUID.randomUUID();
+
+        PiUser user = new PiUser();
+        user.setUserId(userId);
+        user.setUserProvenance(UserProvenances.PI_AAD);
+        user.setProvenanceUserId(ID);
+
+        ForbiddenRoleUpdateException forbiddenRoleUpdateException =
+            assertThrows(ForbiddenRoleUpdateException.class, () ->
+            accountService.updateAccountRole(userId, userId, SYSTEM_ADMIN));
+
+        assertEquals(String.format("User with id %s is unable to update user ID %s", userId, userId),
+                     forbiddenRoleUpdateException.getMessage(),
+                     "Exception message does not match expected message");
+    }
+
+    @Test
     void testUpdateUserAccountRolePiAad() throws AzureCustomException {
         UUID userId = UUID.randomUUID();
 
@@ -424,7 +464,7 @@ class AccountServiceTest {
         when(userRepository.findByUserId(userId)).thenReturn(Optional.of(user));
         when(azureUserService.updateUserRole(ID, SYSTEM_ADMIN.toString())).thenReturn(azUser);
 
-        String response = accountService.updateAccountRole(userId, SYSTEM_ADMIN);
+        String response = accountService.updateAccountRole(UUID.randomUUID(), userId, SYSTEM_ADMIN);
         assertEquals(String.format("User with ID %s has been updated to a SYSTEM_ADMIN", userId),
                     response, RETURN_USER_ERROR);
     }
@@ -440,7 +480,7 @@ class AccountServiceTest {
 
         when(userRepository.findByUserId(userId)).thenReturn(Optional.of(user));
 
-        String response = accountService.updateAccountRole(userId, SYSTEM_ADMIN);
+        String response = accountService.updateAccountRole(UUID.randomUUID(), userId, SYSTEM_ADMIN);
         assertEquals(String.format("User with ID %s has been updated to a SYSTEM_ADMIN", userId),
                      response, RETURN_USER_ERROR);
     }
@@ -452,7 +492,7 @@ class AccountServiceTest {
         when(userRepository.findByUserId(userId)).thenReturn(Optional.empty());
 
         NotFoundException notFoundException = assertThrows(NotFoundException.class, () -> {
-            accountService.updateAccountRole(userId, SYSTEM_ADMIN);
+            accountService.updateAccountRole(UUID.randomUUID(), userId, SYSTEM_ADMIN);
         }, USER_NOT_FOUND_EXCEPTION_MESSAGE);
 
         assertTrue(notFoundException.getMessage().contains(userId.toString()),
@@ -469,7 +509,7 @@ class AccountServiceTest {
             .thenThrow(new AzureCustomException(TEST));
 
         try (LogCaptor logCaptor = LogCaptor.forClass(AccountService.class)) {
-            accountService.updateAccountRole(userId, SYSTEM_ADMIN);
+            accountService.updateAccountRole(UUID.randomUUID(), userId, SYSTEM_ADMIN);
             assertEquals(2, logCaptor.getInfoLogs().size(),
                          "Should not log if failed creating account"
             );

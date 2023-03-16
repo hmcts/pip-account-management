@@ -43,7 +43,8 @@ public class AccountController {
     private static final String ISSUER_ID = "x-issuer-id";
     private static final String NOT_AUTHORIZED_MESSAGE = "User has not been authorized";
 
-    private static final String AUTH_ERROR_CODE = "403";
+    private static final String AUTH_ERROR_CODE = "401";
+    private static final String FORBIDDEN_ERROR_CODE = "403";
     private static final String OK_CODE = "200";
     private static final String NOT_FOUND_ERROR_CODE = "404";
 
@@ -135,9 +136,13 @@ public class AccountController {
     @ApiResponse(responseCode = OK_CODE, description = "String confirming update")
     @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
     @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description = "User not found")
+    @ApiResponse(responseCode = FORBIDDEN_ERROR_CODE, description = "User with id %s is unable to update user ID %s")
     @Operation(summary = "Update a users role by their id")
     @PutMapping("/update/{userId}/{role}")
-    public ResponseEntity<String> updateAccountById(@PathVariable UUID userId, @PathVariable Roles role) {
-        return ResponseEntity.ok(accountService.updateAccountRole(userId, role));
+    public ResponseEntity<String> updateAccountRoleById(@PathVariable UUID userId,
+                                                        @PathVariable Roles role,
+                                                        @RequestHeader(value = "x-admin-id", required = false)
+                                                            UUID adminUser) {
+        return ResponseEntity.ok(accountService.updateAccountRole(adminUser, userId, role));
     }
 }

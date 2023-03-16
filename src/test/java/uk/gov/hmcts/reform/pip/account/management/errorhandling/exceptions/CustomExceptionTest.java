@@ -39,6 +39,12 @@ class CustomExceptionTest {
     }
 
     @Test
+    void testCreationOfForbiddenRoleUpdateException() {
+        ForbiddenRoleUpdateException forbiddenRoleUpdateException = new ForbiddenRoleUpdateException(TEST_MESSAGE);
+        assertEquals(TEST_MESSAGE, forbiddenRoleUpdateException.getMessage(), ASSERTION_MESSAGE);
+    }
+
+    @Test
     void testCreationOfSystemAdminException() {
         ErroredSystemAdminAccount erroredSystemAdminAccount = new ErroredSystemAdminAccount();
         erroredSystemAdminAccount.setFirstName("Test");
