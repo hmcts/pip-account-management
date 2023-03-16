@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS audit_log (
     user_provenance varchar(255),
     action varchar(255),
     details varchar(255),
-    timestamp timestamp;
+    timestamp timestamp
   );
 
 ALTER TABLE audit_log
