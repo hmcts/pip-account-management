@@ -6,9 +6,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import uk.gov.hmcts.reform.pip.account.management.database.AuditRepository;
+import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.NotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.model.AuditLog;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 /**
  * Service layer that deals with auditing operations.
@@ -16,6 +18,7 @@ import java.time.LocalDateTime;
 @Slf4j
 @Service
 public class AuditService {
+    private static final String AUDIT_LOG_NOT_FOUND = "Audit log with id %s could not be found";
 
     private final AuditRepository auditRepository;
 
@@ -32,6 +35,11 @@ public class AuditService {
      */
     public Page<AuditLog> getAllAuditLogs(Pageable pageable) {
         return auditRepository.findAllByOrderByTimestampDesc(pageable);
+    }
+
+    public AuditLog getAuditLogById(UUID id) {
+        return auditRepository.findById(id)
+            .orElseThrow(() -> new NotFoundException(String.format(AUDIT_LOG_NOT_FOUND, id)));
     }
 
     /**

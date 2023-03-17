@@ -23,6 +23,20 @@ public class AuditLogDto {
     @NotBlank(message = "email shouldn't be blank or null")
     private String userEmail;
 
+    @NotNull(message = "roles shouldn't be null")
+    @ValueOfEnum(
+        enumClass = Roles.class,
+        message = "roles value should be contained in the enum"
+    )
+    private String roles;
+
+    @NotNull(message = "user provenance shouldn't be null")
+    @ValueOfEnum(
+        enumClass = UserProvenances.class,
+        message = "user provenance value should be contained in the enum"
+    )
+    private String userProvenance;
+
     @NotNull(message = "action shouldn't be null")
     @ValueOfEnum(
         enumClass = AuditAction.class,
@@ -37,6 +51,8 @@ public class AuditLogDto {
         AuditLog entity = new AuditLog();
         entity.setUserId(this.userId);
         entity.setUserEmail(this.userEmail);
+        entity.setRoles(Roles.valueOf(this.roles));
+        entity.setUserProvenance(UserProvenances.valueOf(this.userProvenance));
         entity.setAction(AuditAction.valueOf(this.action));
         entity.setDetails(this.details);
 
