@@ -106,13 +106,14 @@ class AccountTest {
     private static final Roles ROLE = Roles.INTERNAL_ADMIN_CTSC;
     private static final String ISSUER_ID = "1234-1234-1234-1234";
     private static final String ISSUER_HEADER = "x-issuer-id";
+    private static final String ADMIN_HEADER = "x-admin-id";
     private static final String GIVEN_NAME = "Given Name";
     private static final String ID = "1234";
     private static final String ADDITIONAL_ID = "4321";
     private static final String UNAUTHORIZED_ROLE = "APPROLE_unknown.authorized";
     private static final String UNAUTHORIZED_USERNAME = "unauthorized_isAuthorized";
 
-    private static final String ERROR_RESPONSE_USER_PROVENANCE = "No user found with the provenanceUserId: 1234";
+    private static final String ERROR_RESPONSE_USER_PROVENANCE = "No user found with provenance user ID: 1234";
     private static final String NOT_FOUND_STATUS_CODE_MESSAGE = "Status code does not match not found";
     private static final String TEST_UUID_STRING = UUID.randomUUID().toString();
     private static final String USER_SHOULD_MATCH = "Users should match";
@@ -567,7 +568,7 @@ class AccountTest {
     }
 
     @Test
-    void testUpdateUpdateAccountById() throws Exception {
+    void testUpdateUpdateAccountRoleById() throws Exception {
         validUser.setUserProvenance(UserProvenances.CFT_IDAM);
         MockHttpServletRequestBuilder createRequest =
             MockMvcRequestBuilders
@@ -600,7 +601,75 @@ class AccountTest {
     }
 
     @Test
-    void testUpdateAccountByIdNotFound() throws Exception {
+    void testUpdateUpdateAccountRoleByIdWithAdminProvided() throws Exception {
+        validUser.setUserProvenance(UserProvenances.CFT_IDAM);
+        MockHttpServletRequestBuilder createRequest =
+            MockMvcRequestBuilders
+                .post(PI_URL)
+                .content(OBJECT_MAPPER.writeValueAsString(List.of(validUser)))
+                .header(ISSUER_HEADER, ISSUER_ID)
+                .contentType(MediaType.APPLICATION_JSON);
+
+        MvcResult responseCreateUser = mockMvc.perform(createRequest)
+            .andExpect(status().isCreated()).andReturn();
+        ConcurrentHashMap<CreationEnum, List<Object>> mappedResponse =
+            OBJECT_MAPPER.readValue(
+                responseCreateUser.getResponse().getContentAsString(),
+                new TypeReference<>() {
+                }
+            );
+
+        String createdUserId = mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).get(0).toString();
+
+        MockHttpServletRequestBuilder updateRequest = MockMvcRequestBuilders
+            .put(ROOT_URL + UPDATE_PATH + createdUserId + "/" + Roles.INTERNAL_ADMIN_LOCAL)
+            .header(ADMIN_HEADER, UUID.randomUUID());
+
+        MvcResult responseUpdatedUser = mockMvc.perform(updateRequest)
+            .andExpect(status().isOk()).andReturn();
+
+        assertEquals(
+            "User with ID " + createdUserId + " has been updated to a " + Roles.INTERNAL_ADMIN_LOCAL,
+            responseUpdatedUser.getResponse().getContentAsString(), "Failed to update account"
+        );
+    }
+
+    @Test
+    void testUpdateUpdateAccountRoleByIdWithSameAdminId() throws Exception {
+        validUser.setUserProvenance(UserProvenances.CFT_IDAM);
+        MockHttpServletRequestBuilder createRequest =
+            MockMvcRequestBuilders
+                .post(PI_URL)
+                .content(OBJECT_MAPPER.writeValueAsString(List.of(validUser)))
+                .header(ISSUER_HEADER, ISSUER_ID)
+                .contentType(MediaType.APPLICATION_JSON);
+
+        MvcResult responseCreateUser = mockMvc.perform(createRequest)
+            .andExpect(status().isCreated()).andReturn();
+        ConcurrentHashMap<CreationEnum, List<Object>> mappedResponse =
+            OBJECT_MAPPER.readValue(
+                responseCreateUser.getResponse().getContentAsString(),
+                new TypeReference<>() {
+                }
+            );
+
+        String createdUserId = mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).get(0).toString();
+
+        MockHttpServletRequestBuilder updateRequest = MockMvcRequestBuilders
+            .put(ROOT_URL + UPDATE_PATH + createdUserId + "/" + Roles.INTERNAL_ADMIN_LOCAL)
+            .header(ADMIN_HEADER, createdUserId);
+
+        MvcResult responseUpdatedUser = mockMvc.perform(updateRequest)
+            .andExpect(status().isForbidden()).andReturn();
+
+        assertTrue(responseUpdatedUser.getResponse().getContentAsString().contains(
+            "User with id " + createdUserId + " is unable to update user ID " + createdUserId),
+                   "Failed to update account"
+        );
+    }
+
+    @Test
+    void testUpdateAccountRoleByIdNotFound() throws Exception {
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .put(ROOT_URL + UPDATE_PATH + UUID.randomUUID() + "/" + Roles.INTERNAL_ADMIN_LOCAL);
 
