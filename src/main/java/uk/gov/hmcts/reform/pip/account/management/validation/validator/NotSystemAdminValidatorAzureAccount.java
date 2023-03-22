@@ -6,7 +6,7 @@ import uk.gov.hmcts.reform.pip.account.management.validation.annotations.NotSyst
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 
-import static uk.gov.hmcts.reform.pip.account.management.model.Roles.SYSTEM_ADMIN;
+import static uk.gov.hmcts.reform.pip.model.account.Roles.SYSTEM_ADMIN;
 
 /**
  * Validator class that checks if an azure account is a system admin.

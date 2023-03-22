@@ -22,7 +22,7 @@ import uk.gov.hmcts.reform.pip.account.management.config.ClientConfiguration;
 import uk.gov.hmcts.reform.pip.account.management.config.UserConfiguration;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.AzureCustomException;
 import uk.gov.hmcts.reform.pip.account.management.model.AzureAccount;
-import uk.gov.hmcts.reform.pip.account.management.model.Roles;
+import uk.gov.hmcts.reform.pip.model.account.Roles;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -145,11 +145,12 @@ class AzureUserServiceTest {
                      "Display name is set as the first name + surname");
         assertEquals(FIRST_NAME, user.givenName, "Given name is set as the firstname");
         assertEquals(SURNAME, user.surname, "Lastname is set as the surname");
-        assertEquals(Roles.INTERNAL_ADMIN_CTSC.name(),
-                     user.additionalDataManager().get("extension_"
+        assertEquals(
+            Roles.INTERNAL_ADMIN_CTSC.name(),
+            user.additionalDataManager().get("extension_"
                                                       + EXTENSION_ID.replace("-", "")
                                                           + "_UserRole").getAsString(),
-                     "User role has not been returned as expected"
+            "User role has not been returned as expected"
         );
     }
 
