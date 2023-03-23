@@ -1,284 +1,305 @@
-# Publication & Information Account Management Microservice
+# pip-account-management
 
-## Purpose
+## Table of Contents
 
-The purpose of this template is to speed up the creation of new Spring applications within HMCTS
-and help keep the same standards across multiple teams. If you need to create a new app, you can
-simply use this one as a starting point and build on top of it.
+- [Overview](#overview)
+- [Features and Functionality](#features-and-functionality)
+- [Azure B2C integration](#azure-b2c-integration)
+- [System Admin Accounts](#system-admin-accounts)
+- [List Sensitivity checking](#list-sensitivity-checking)
+  - [Verified Users](#verified-users)
+  - [Third Party Users](#third-party-users)
+- [Account Application Process](#account-application-process)
+- [Expired / Inactive accounts](#expired--inactive-accounts)
+- [Roles](#roles)
+- [Architecture Diagram](#architecture-diagram)
+- [Getting Started](#getting-started)
+  - [Prerequisites](#prerequisites)
+    - [General](#general)
+    - [Local development](#local-development)
+    - [Nice-to-haves](#nice-to-haves)
+  - [Installation](#installation)
+  - [Configuration](#configuration)
+    - [Environment variables](#environment-variables)
+      - [Getting all environment variables with python](#get-environment-variables-with-python-scripts)
+      - [Additional Test secrets](#additional-test-secrets)
+      - [Application.yaml files](#applicationyaml-files)
+- [API Documentation](#api-documentation)
+- [Examples](#examples)
+  - [Requesting a bearer token](#requesting-a-bearer-token)
+  - [Using the bearer token](#using-the-bearer-token)
+- [Deployment](#deployment)
+- [Creating or debugging of SQL scripts with Flyway](#creating-or-debugging-of-sql-scripts-with-flyway)
+  - [Pipeline](#pipeline)
+  - [Local](#local)
+- [Monitoring and Logging](#monitoring-and-logging)
+- [Security & Quality Considerations](#security--quality-considerations)
+- [Test Suite](#test-suite)
+  - [Unit tests](#unit-tests)
+  - [Functional tests](#functional-tests)
+- [Contributing](#contributing)
+- [License](#license)
 
-## What's inside
+## Overview
+`pip-account-management` is a microservice that deals with operations related to accounts, including interaction with Azure B2C for PI_AAD users. It also manages the audit functionality.
 
-The template is a working application with a minimal setup. It contains:
- * application skeleton.
- * setup script to prepare project
- * common plugins and libraries.
- * docker setup.
- * swagger configuration for api documentation ([see how to publish your api documentation to shared repository](https://github.com/hmcts/reform-api-docs#publish-swagger-docs))
- * code quality tools already set up.
- * integration with Travis CI.
- * Hystrix circuit breaker enabled
- * MIT license and contribution information.
- * Helm chart using chart-java.
+It sits within the Court and Tribunal Hearings Service (CaTH hereafter), written with Spring Boot/Java.
 
-The application exposes health endpoint (http://localhost:6969/health) and metrics endpoint
-(http://localhost:6969/metrics).
+In practice, the service is usually containerized within a hosted kubernetes environment within Azure.
 
-## Plugins
+All interactions with `pip-account-management` are performed through the API (specified in [API Documentation](#api-documentation)) either as a standalone service or via connections to other microservices.
 
-The template contains the following plugins:
+## Features and Functionality
 
-  * checkstyle
+- Creation of new verified PI_AAD users in Azure B2C and in the PiUser postgres database.
+- Creation of new system admin accounts in Azure B2C and in the PiUser postgres database, and ensures the limit is not breached.
+- For third parties and other IDAMs (e.g. CFT IDAM), creation of the user in the PiUser postgres database.
+- Maintenance of the above users, such as updating roles and deletion when expired.
+- Provides functionality to check if a user has permission to see a list based on the sensitivity and list type.
+- Allows the creation of an audit log to log admin activities.
+- Provides the ability to bulk create verified users (Follows the same process as point 1)
+- Triggers the sending of emails to users under various conditions (e.g New user, expiring, audit actions).
+- Manages the account application process for PI_AAD users.
+- Provides MI reporting endpoints, which are used to produce the MI report.
+- Flyway for database modifications via SQL ingestion.
+- Secure/Insecure Mode: Use of bearer tokens for authentication with the secure instance (if desired)
+- OpenAPI Spec/Swagger-UI: Documents and allows users or developers to access API resources within the browser.
+- Integration tests using TestContainers for dummy database operations.
 
-    https://docs.gradle.org/current/userguide/checkstyle_plugin.html
+## Azure B2C integration
 
-    Performs code style checks on Java source files using Checkstyle and generates reports from these checks.
-    The checks are included in gradle's *check* task (you can run them by executing `./gradlew check` command).
+Internal users (not in an external IDAM) will be stored in Azure B2C. Azure B2C provides OIDC which is used in our frontend to authenticate the users.
 
-  * pmd
+Account management interacts with Azure B2C - storing the user when they are created, updating them when their role changes, or deleting them if they have expired.
 
-    https://docs.gradle.org/current/userguide/pmd_plugin.html
+## System Admin Accounts
 
-    Performs static code analysis to finds common programming flaws. Included in gradle `check` task.
+There is a limit to the number of system admin accounts that can be created. This is set using an environment variable: MAX_SYSTEM_ADMIN_ACCOUNTS.
 
+If this is not set, the default maximum number of accounts is 4. The request will be rejected if an attempt is made that causes it to go over this limit.
 
-  * jacoco
+## List Sensitivity checking
 
-    https://docs.gradle.org/current/userguide/jacoco_plugin.html
+### Verified Users
 
-    Provides code coverage metrics for Java code via integration with JaCoCo.
-    You can create the report by running the following command:
+If a publication is PRIVATE or CLASSIFIED, then account management is used to validate whether the user should have permission to see that publication.
 
-    ```bash
-      ./gradlew jacocoTestReport
-    ```
+For PRIVATE, as long as the user exists in our database, then they are able to see the publication.
 
-    The report will be created in build/reports subdirectory in your project directory.
+For CLASSIFIED, rules are applied based on the List Type and Provenance of the user. The provenance is which IDAM the user came from (PI_AAD, CFT_IDAM or CRIME_IDAM). The mappings of which provenance can see which list type is defined in the [enum file](./src/main/java/uk/gov/hmcts/reform/pip/account/management/model/ListType.java)
 
-  * io.spring.dependency-management.
+### Third Party Users
 
-    https://github.com/spring-gradle-plugins/dependency-management-plugin
+For third party users, a similar process is applied however is based on List Type + Third Party role. This is also defined in: [enum file](./src/main/java/uk/gov/hmcts/reform/pip/account/management/model/ListType.java)
 
-    Provides Maven-like dependency management. Allows you to declare dependency management
-    using `dependency 'groupId:artifactId:version'`
-    or `dependency group:'group', name:'name', version:version'`.
+## Account Application Process
 
-  * org.springframework.boot
+When a user applies for a new internal, verified account they go through an approval process. Account management deals with all CRUD operations associated with this process.
 
-    http://projects.spring.io/spring-boot/
+On Approval / Rejection, the uploaded ID file will be deleted.
 
-    Reduces the amount of work needed to create a Spring application
+## Expired / Inactive accounts
 
-  * org.owasp.dependencycheck
+For Verified (Internal and external IDAMs) and admins, there is an inactive account process to ensure accounts are deleted when they are no longer used.
 
-    https://jeremylong.github.io/DependencyCheck/dependency-check-gradle/index.html
+For IDAM and Admin users, this uses the sign in date. For internal, this will use the verified date.
 
-    Provides monitoring of the project's dependent libraries and creating a report
-    of known vulnerable components that are included in the build. To run it
-    execute `gradle dependencyCheck` command.
+Users will be sent a reminder to login / re-verify 14 days (which is configurable) before their account is due to expire.
 
-  * com.github.ben-manes.versions
+If they do not complete this process by the 14 days, their account will be deleted.
 
-    https://github.com/ben-manes/gradle-versions-plugin
+## Roles
 
-    Provides a task to determine which dependencies have updates. Usage:
+Any endpoint that should require authentication, needs to be annotated either at controller or endpoint level with @IsAdmin.
 
-    ```bash
-      ./gradlew dependencyUpdates -Drevision=release
-    ```
+## Architecture Diagram
 
-## Setup
+![Architecture Diagram for pip-subscription-management](./subscription-man-arch.png)
 
-Located in `./bin/init.sh`. Simply run and follow the explanation how to execute it.
+The above diagram is somewhat simplified for readability (e.g. it does not include secure/insecure communications, but those are covered elsewhere).
 
-## Notes
+## Getting Started
 
-Since Spring Boot 2.1 bean overriding is disabled. If you want to enable it you will need to set `spring.main.allow-bean-definition-overriding` to `true`.
+### Prerequisites
 
-JUnit 5 is now enabled by default in the project. Please refrain from using JUnit4 and use the next generation
+##### General
 
-## Building and deploying the application
+- [Java JDK 17](https://openjdk.org/projects/jdk/17/) - this is used throughout all of our services.
+- REST client of some description (e.g. [Curl](https://github.com/curl/curl), [Insomnia](https://insomnia.rest/), [Postman](https://www.postman.com/)). Swagger-UI can also be used to send requests.
+- Docker - used to run integration tests due to our use of [TestContainers](https://www.testcontainers.org/)
 
-### Building the application
+##### Local development
 
-The project uses [Gradle](https://gradle.org) as a build tool. It already contains
-`./gradlew` wrapper script, so there's no need to install gradle.
+- [Azurite](https://learn.microsoft.com/en-us/azure/storage/common/storage-use-azurite) - Local Azure emulator used along with Azure Storage explorer for local storage.
+- [Azure Storage Explorer](https://azure.microsoft.com/en-us/products/storage/storage-explorer) - Used for viewing and storing blobs within an Azurite instance locally.
 
-To build the project execute the following command:
+##### Nice-to-haves
 
-```bash
-  ./gradlew build
+- [pip-dev-env](https://github.com/hmcts/pip-dev-env) - This repo provides a development environment wherein ensure all microservices, as well as external services (e.g. postgres & redis) are all running in tandem within the service. It eases the development process and is particularly helpful when working with cross-service communication, as it also reduces strain on local performance from having many separate IDE windows open.
+- PostgreSQL - for local development, it will help to install Postgres. Ensure your postgres instance matches the relevant [environment variables](#environment-variables). Most devs on the project are just using this within a docker container.
+- Some means of interfacing with the postgres database either locally or remotely. Good options include [DataGrip](https://www.jetbrains.com/datagrip/), [pgAdmin](https://www.pgadmin.org/) or [psql](https://www.postgresql.org/docs/9.1/app-psql.html). This will allow you to verify the impacts of your requests on the underlying database.
+
+### Installation
+
+- Clone the repository
+- Ensure all required [environment variables](#environment-variables) have been set.
+- Build using the command `./gradlew clean build`
+- Start the service using the command `./gradlew bootrun` in the newly created directory.
+
+### Configuration
+
+#### Environment Variables
+
+Environment variables are used by the service to control its behaviour in various ways.
+
+These variables can be found within various separate CaTH Azure keyvaults. You may need to obtain access to this via a support ticket.
+- Runtime secrets are stored in `pip-ss-{env}-kv` (where {env} is the environment where the given instance is running (e.g. production, staging, test, sandbox)).
+- Test secrets are stored in `pip-bootstrap-{env}-kv` with the same convention.
+
+##### Get environment variables with python scripts
+Python scripts to quickly grab all environment variables (subject to Azure permissions) are available for both [runtime](https://github.com/hmcts/pip-dev-env/blob/master/get_envs.py) and [test](https://github.com/hmcts/pip-secret-grabber/blob/master/main.py) secrets.
+
+##### Runtime secrets
+
+Below is a table of currently used environment variables for starting the service, along with a descriptor of their purpose and whether they are optional or required.
+
+| Variable                       | Description                                                                                                                                                                                                                                                            | Required? |
+|:-------------------------------|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------|
+| SPRING_PROFILES_ACTIVE         | If set equal to `dev`, the application will run in insecure mode (i.e. no bearer token authentication required for incoming requests.) *Note - if you wish to communicate with other services, you will need to set them all to run in insecure mode in the same way.* | No        |
+| DB_HOST                        | Postgres Hostname                                                                                                                                                                                                                                                      | Yes       |
+| DB_PORT                        | Postgres Port                                                                                                                                                                                                                                                          | Yes       |
+| DB_NAME                        | Postgres Db name                                                                                                                                                                                                                                                       | Yes       |
+| DB_USER                        | Postgres Username                                                                                                                                                                                                                                                      | Yes       |
+| DB_PASS                        | Postgres Password                                                                                                                                                                                                                                                      | Yes       |
+| APP_URI                        | Uniform Resource Identifier - the location where the application expects to receive bearer tokens after a successful authentication process. The application then validates received bearer tokens using the AUD parameter in the token.                               | No        |
+| CLIENT_ID                      | Unique ID for the application within Azure AD. Used to identify the application during authentication.                                                                                                                                                                 | No        |
+| TENANT_ID                      | Directory unique ID assigned to our Azure AD tenant. Represents the organisation that owns and manages the Azure AD instance.                                                                                                                                          | No        |
+| CLIENT_SECRET                  | Secret key for authentication requests to the service.                                                                                                                                                                                                                 | No        |
+| SUBSCRIPTION_MANAGEMENT_URL    | URL used for connecting to the pip-subscription-management service. Defaults to staging if not provided.                                                                                                                                                               | No        |
+| PUBLICATION_SERVICES_URL       | URL used for connecting to the pip-publication-services service. Defaults to staging if not provided.                                                                                                                                                                  | No        |
+| SUBSCRIPTION_MANAGEMENT_AZ_API | Used as part of the `scope` parameter when requesting a token from Azure. Used for service-to-service communication with the pip-subscription-management service.                                                                                                      | No        |
+| PUBLICATION_SERVICES_AZ_API    | Used as part of the `scope` parameter when requesting a token from Azure. Used for service-to-service communication with the pip-publication-services service.                                                                                                         | No        |
+| INSTRUMENTATION_KEY            | This is the instrumentation key used by the app to talk to Application Insights.                                                                                                                                                                                       | No        |
+| CLIENT_ID_B2C                  | The client id to use when authenticating with the Azure B2C instance.                                                                                                                                                                                                  | No        |
+| CLIENT_SECRET_B2C              | The client secret to use when authenticating with the Azure B2C instance.                                                                                                                                                                                              | No        |
+| TENANT_GUID_B2C                | The tenant id of the Azure B2C instance                                                                                                                                                                                                                                | No        |
+| EXTENSION_ID                   | The extension ID for the users. This is used to store the role against a user.                                                                                                                                                                                         | No        |
+| IDENTITY_ISSUER                | The identity issue of the Azure B2C instance.                                                                                                                                                                                                                          | No        |
+| CONNECTION_STRING              | Connection string for connecting to the Azure Blob Storage service.                                                                                                                                                                                                    | No        |
+
+##### Additional Test secrets
+
+Secrets required for getting tests to run correctly can be found in the below table:
+
+| Variable                       | Description                                                                                                                                                                                                                                     |
+|:-------------------------------|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| APP_URI                        | Uniform Resource Identifier - the location where the application expects to receive bearer tokens after a successful authentication process. The application then validates received bearer tokens using the AUD parameter in the token.        |
+| CLIENT_ID                      | Unique ID for the application within Azure AD. Used to identify the application during authentication.                                                                                                                                          |
+| CLIENT_SECRET                  | Secret key for authentication requests to the service.                                                                                                                                                                                          |
+| PUBLICATION_SERVICES_AZ_API    | Used as part of the `scope` parameter when requesting a token from Azure. Used for service-to-service communication with the pip-publication-services service.                                                                                  |
+| SUBSCRIPTION_MANAGEMENT_AZ_API | Used as part of the `scope` parameter when requesting a token from Azure. Used for service-to-service communication with the pip-subscription-management service.                                                                               |
+| TENANT_ID                      | Directory unique ID assigned to our Azure AD tenant. Represents the organisation that owns and manages the Azure AD instance.                                                                                                                   |
+
+#### Application.yaml files
+The service can also be adapted using the yaml files found in the following locations:
+- [src/main/resources/application.yaml](./src/main/resources/application.yaml) for changes to the behaviour of the service itself.
+- [src/main/resources/application-dev.yaml](./src/main/resources/application-dev.yaml) for changes to the behaviour of the service when running locally.
+- [src/test/resources/application-test.yaml](./src/test/resources/application-test.yaml) for changes to other test types (e.g. unit tests).
+- [src/integrationTest/resources/application-functional.yaml](./src/functionalTest/resources/application-functional.yaml) for changes to the application when its running functional tests.
+
+## API Documentation
+Our full API specification can be found within our Swagger-UI page.
+It can be accessed locally by starting the service and going to [http://localhost:6969/swagger-ui/swagger-ui/index.html](http://localhost:6969/swagger-ui/swagger-ui/index.html)
+Alternatively, if you're on our VPN, you can access the swagger endpoint at our staging URL (ask a teammate to give you this).
+
+## Examples
+As mentioned, the full api documentation can be found within swagger-ui, but some of the most common operations are highlighted below.
+
+Most of the communication with this service benefits from using secure authentication. While possible to stand up locally in insecure mode, to simulate a production environment it is better to use secure mode.
+Before sending in any requests to the service, you'll need to obtain a bearer token using the following approach:
+
+### Requesting a bearer token
+To request a bearer token, sending a post request following this template:
+```
+curl --request POST \
+  --url https://login.microsoftonline.com/{TENANT_ID}/oauth2/v2.0/token \
+  --header 'Content-Type: multipart/form-data' \
+  --form client_id={CLIENT_ID_FOR_ANOTHER_SERVICE} \
+  --form scope={APP_URI}/.default \
+  --form client_secret={CLIENT_SECRET_FOR_ANOTHER_SERVICE}\
+  --form grant_type=client_credentials
+```
+You can copy the above curl command into either Postman or Insomnia and they will automatically be converted to the relevant formats for those programs.
+
+*Note - the `_FOR_ANOTHER_SERVICE` variables need to be extracted from another registered microservice within the broader CaTH umbrella (e.g. [pip-data-management](https://github.com/hmcts/pip-data-management))*
+
+### Using the bearer token
+You can use the bearer token in the Authorization header when making requests. Here is an example using the create subscription endpoint.
+```
+curl --request POST \
+  --url http://localhost:4550/subscription \
+  --header 'Authorization: Bearer {BEARER_TOKEN_HERE}' \
+  --header 'Content-Type: application/json' \
+  --header 'x-user-id: <UserIDOfTheUser>' \
+  --data-raw '[
+    {
+    	"userId": "<userId>",
+    	"searchType": "CASE_ID",
+    	"searchValue": "1234",
+    	"channel": "EMAIL"
+    }
+  ]'
 ```
 
-### Running the application
+## Deployment
+We use [Jenkins](https://www.jenkins.io/) as our CI/CD system. The deployment of this can be controlled within our application logic using the various `Jenkinsfile`-prepended files within the root directory of the repository.
 
-Create the image of the application by executing the following command:
+Our builds run against our `dev` environment during the Jenkins build process. As this is a microservice, the build process involves standing up the service in a docker container in a Kubernetes cluster with the current staging master copies of the other interconnected microservices.
 
-```bash
-  ./gradlew assemble
-```
+If your debugging leads you to conclude that you need to implement a pipeline fix, this can be done in the [CNP Jenkins repo](https://github.com/hmcts/cnp-jenkins-library)
 
-Create docker image:
+## Creating or debugging of SQL scripts with Flyway
+Flyway is used to apply incremental schema changes (migrations) to our database.
 
-```bash
-  docker-compose build
-```
+### Pipeline
+Flyway is enabled on the pipeline, but is run at startup then switched off.
 
-Run the distribution (created in `build/install/spring-boot-template` directory)
-by executing the following command:
+### Local
+For local development, flyway is turned off by default. This is due to all tables existing within a single database locally. This can cause flyway to fail at startup due to mismatching scripts.
 
-```bash
-  docker-compose up
-```
+## Monitoring and Logging
+We utilise [Azure Application Insights](https://learn.microsoft.com/en-us/azure/azure-monitor/app/app-insights-overview) to store our logs. Ask a teammate for the specific resource in Azure to access these.
+Locally, we use [Log4j](https://logging.apache.org/log4j/2.x/).
 
-This will start the API container exposing the application's port
-(set to `6969` in this template app).
+In addition, this service is also monitored in production and staging environments by [Dynatrace](https://www.dynatrace.com/). The URL for viewing our specific Dynatrace instance can be had by asking a team member.
 
-In order to test if the application is up, you can call its health endpoint:
+## Security & Quality Considerations
+We use a few automated tools to ensure quality and security within the service. A few examples can be found below:
 
-```bash
-  curl http://localhost:6969/health
-```
+- SonarCloud - provides automated code analysis, finding vulnerabilities, bugs and code smells. Quality gates ensure that test coverage, code style and security are maintained where possible.
+- DependencyCheckAggregate - Ensures that dependencies are kept up to date and that those with known security vulnerabilities (based on the [National Vulnerability Database(NVD)](https://nvd.nist.gov/)) are flagged to developers for mitigation or suppression.
+- JaCoCo Test Coverage - Produces code coverage metrics which allows developers to determine which lines of code are covered (or not) by unit testing. This also makes up one of SonarCloud's quality gates.
+- PMD - Static code analysis tool providing code quality guidance and identifying potential issues relating to coding standards, performance or security.
+- CheckStyle - Enforces coding standards and conventions such as formatting, naming conventions and structure.
 
-You should get a response similar to this:
+## Test Suite
 
-```
-  {"status":"UP","diskSpace":{"status":"UP","total":249644974080,"free":137188298752,"threshold":10485760}}
-```
+This microservice is comprehensively tested using both unit and functional tests.
 
-### Alternative script to run application
+### Unit tests
 
-To skip all the setting up and building, just execute the following command:
+Unit tests can be run on demand using `./gradlew test`.
 
-```bash
-./bin/run-in-docker.sh
-```
+### Functional tests
 
-For more information:
+Functional tests can be run using `./gradlew functional`
 
-```bash
-./bin/run-in-docker.sh -h
-```
+For our functional tests, we are using Square's [MockWebServer](https://github.com/square/okhttp/tree/master/mockwebserver) library. This allows us to test the full HTTP stack for our service-to-service interactions.
 
-Script includes bare minimum environment variables necessary to start api instance. Whenever any variable is changed or any other script regarding docker image/container build, the suggested way to ensure all is cleaned up properly is by this command:
+The functional tests also call out to Data Management in staging to retrieve publications.
 
-```bash
-docker-compose rm
-```
-
-It clears stopped containers correctly. Might consider removing clutter of images too, especially the ones fiddled with:
-
-```bash
-docker images
-
-docker image rm <image-id>
-```
-
-There is no need to remove postgres and java or similar core images.
-
-## Hystrix
-
-[Hystrix](https://github.com/Netflix/Hystrix/wiki) is a library that helps you control the interactions
-between your application and other services by adding latency tolerance and fault tolerance logic. It does this
-by isolating points of access between the services, stopping cascading failures across them,
-and providing fallback options. We recommend you to use Hystrix in your application if it calls any services.
-
-### Hystrix circuit breaker
-
-This template API has [Hystrix Circuit Breaker](https://github.com/Netflix/Hystrix/wiki/How-it-Works#circuit-breaker)
-already enabled. It monitors and manages all the`@HystrixCommand` or `HystrixObservableCommand` annotated methods
-inside `@Component` or `@Service` annotated classes.
-
-### Other
-
-Hystrix offers much more than Circuit Breaker pattern implementation or command monitoring.
-Here are some other functionalities it provides:
- * [Separate, per-dependency thread pools](https://github.com/Netflix/Hystrix/wiki/How-it-Works#isolation)
- * [Semaphores](https://github.com/Netflix/Hystrix/wiki/How-it-Works#semaphores), which you can use to limit
- the number of concurrent calls to any given dependency
- * [Request caching](https://github.com/Netflix/Hystrix/wiki/How-it-Works#request-caching), allowing
- different code paths to execute Hystrix Commands without worrying about duplicating work
+## Contributing
+We are happy to accept third-party contributions. See [.github/CONTRIBUTING.md](./.github/CONTRIBUTING.md) for more details.
 
 ## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details
-
-## API
-Account management exposes various endpoints that aid in managing accounts within the P&I service.
-
-- POST `/account/add/azure` - used to add an account into the azure AAD. Takes in users name, email and role, and attempts to
-persist this into azure.  Takes in a header of the email of the admin issuing the request and a body of a list
-of users to add to Azure following the [Account model](#Account) without the azureAccountId as this
-is created by azure.
-
-- POST `/account/add/pi` - used to add a user to the P&I user database. Takes in a header of the email of the admin issuing
-the request and a body of a list of users to add to the database following the [P&I User model](#piuser) without the
-`userId` as this is created by the service.
-
-- POST `/account/media-bulk-upload` - used to bulk upload media members to P&I, adds to azure db and to P&I db.
-
-- GET `/account/provenance/{userProvenance}/{provenanceUserId}` - used to get the [P&I User](#piuser) from the pi_user
-  table by matching the user provenance and the provenanceUserId. eg a user from `PI_AAD` with the `provenanceUserId`
-  of `123` would be returned if both attributes matched.
-
-- GET `/account/isAuthorised/{userId}/{listType}` - used to check if the user provided has sufficient permissions to
-  view the specified list type based on mapping from user provenances to allowed list types in
-  [List type enum](src/main/java/uk/gov/hmcts/reform/pip/account/management/model/ListType.java).
-
-## Models
-
-### PiUser
-
-```json
-{
-  "userId": "111111-aaaa-1111-ssss-11111111",
-  "userProvenance": "PI_AAD",
-  "provenanceUserId": "222222-vvvv-11111-ssss-11111111",
-  "email": "example@email.com",
-  "roles": "INTERNAL_ADMIN_LOCAL"
-}
-```
-### Account
-
-```json
-{
-  "azureAccountId": "111111-aaaa-1111-ssss-11111111",
-  "email": "a@b.com",
-  "firstName": "Firstname",
-  "surname": "Surname",
-  "role": "INTERNAL_ADMIN_LOCAL"
-}
-```
-
-### CSV Media bulk upload format
-the media bulk upload [api](#api) takes in a csv containing email, first name and surname. The column headers are
-named as such: `email`, `firstName` and `surname` case sensitive. ideally all columns are populated, but can be sent
-with only email column populated, in this scenario the `firstName`field of the user will be populated with their email.
-an example valid csv can be found [here](src/test/resources/csv/valid.csv).
-
-### Roles
-an enum for the different roles available to P&I.
-
-`VERIFIED` - will be media users within P&I.
-
-`INTERNAL_SUPER_ADMIN_CTSC` - super admin privileges for CTSC
-
-`INTERNAL_SUPER_ADMIN_LOCAL` - super admin privileges for local courts
-
-`INTERNAL_ADMIN_CTSC` - admin privileges for CTSC
-
-`INTERNAL_ADMIN_LOCAL` - admin privileges for local courts
-
-## Flyway
-
-Flyway is integrated with Account Management.
-
-- On the pipeline flyway is enabled but run on start up switched off
-- Locally, flyway is disabled. This is due to all tables existing in a single database locally which causes flyway to fail startup due to mismatching scripts
-
-If you want to test the scripts locally, you will first need to clear the "flyway_schema_history' table, and then set the 'ENABLE_FLYWAY' environment variable to 'true'.
-
-## Materialised View
-
-There is a materialised view created for the PI User table, which contains a subset of the fields.
-
-This view is implemented via Flyway.
+This project is licensed under the MIT License - see the [LICENSE](./LICENSE) file for details.
