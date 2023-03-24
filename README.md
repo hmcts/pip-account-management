@@ -51,13 +51,13 @@ All interactions with `pip-account-management` are performed through the API (sp
 
 ## Features and Functionality
 
-- Creation of new verified PI_AAD users in Azure B2C and in the PiUser postgres database.
-- Creation of new system admin accounts in Azure B2C and in the PiUser postgres database, and ensures the limit is not breached.
+- Creation of new verified PI_AAD users in Azure B2C and in the PiUser postgres table.
+- Creation of new system admin accounts in Azure B2C and in the PiUser postgres table, and ensures the limit is not breached.
 - For third parties and other IDAMs (e.g. CFT IDAM), creation of the user in the PiUser postgres database.
-- Maintenance of the above users, such as updating roles and deletion when expired.
+- Maintenance of the above users, such as updating roles and deletion of account and subscriptions when expired.
 - Provides functionality to check if a user has permission to see a list based on the sensitivity and list type.
 - Allows the creation of an audit log to log admin activities.
-- Provides the ability to bulk create verified users (Follows the same process as point 1)
+- Provides the ability to bulk create verified users (follows the same process as point 1)
 - Triggers the sending of emails to users under various conditions (e.g New user, expiring, audit actions).
 - Manages the account application process for PI_AAD users.
 - Provides MI reporting endpoints, which are used to produce the MI report.
@@ -68,7 +68,7 @@ All interactions with `pip-account-management` are performed through the API (sp
 
 ## Azure B2C integration
 
-Internal users (not in an external IDAM) will be stored in Azure B2C. Azure B2C provides OIDC which is used in our frontend to authenticate the users.
+PI_AAD users, excluding third parties, will be stored in Azure B2C. Azure B2C provides OIDC which is used in our frontend to authenticate the users.
 
 Account management interacts with Azure B2C - storing the user when they are created, updating them when their role changes, or deleting them if they have expired.
 
@@ -82,11 +82,11 @@ If this is not set, the default maximum number of accounts is 4. The request wil
 
 ### Verified Users
 
-If a publication is PRIVATE or CLASSIFIED, then account management is used to validate whether the user should have permission to see that publication.
+If a publication is PRIVATE or CLASSIFIED, account management is used to validate whether the user has permission to see the publication.
 
 For PRIVATE, as long as the user exists in our database, then they are able to see the publication.
 
-For CLASSIFIED, rules are applied based on the List Type and Provenance of the user. The provenance is which IDAM the user came from (PI_AAD, CFT_IDAM or CRIME_IDAM). The mappings of which provenance can see which list type is defined in the [enum file](./src/main/java/uk/gov/hmcts/reform/pip/account/management/model/ListType.java)
+For CLASSIFIED, rules are applied based on the List Type and Provenance of the user. For reference, the provenance is which IDAM the user came from (PI_AAD, CFT_IDAM or CRIME_IDAM). The mappings of which provenance can see which list type is defined in the [enum file](./src/main/java/uk/gov/hmcts/reform/pip/account/management/model/ListType.java)
 
 ### Third Party Users
 
@@ -94,17 +94,17 @@ For third party users, a similar process is applied however is based on List Typ
 
 ## Account Application Process
 
-When a user applies for a new internal, verified account they go through an approval process. Account management deals with all CRUD operations associated with this process.
+When a user applies for a new PI_AAD verified account they go through an approval process. Account management deals with all CRUD operations associated with this process.
 
 On Approval / Rejection, the uploaded ID file will be deleted.
 
 ## Expired / Inactive accounts
 
-For Verified (Internal and external IDAMs) and admins, there is an inactive account process to ensure accounts are deleted when they are no longer used.
+For all users except for third party, there is an inactive account process to ensure accounts are deleted when they are no longer used.
 
 For IDAM and Admin users, this uses the sign in date. For internal, this will use the verified date.
 
-Users will be sent a reminder to login / re-verify 14 days (which is configurable) before their account is due to expire.
+Users will be sent a reminder to login / re-verify 14 days before their account is due to expire.
 
 If they do not complete this process by the 14 days, their account will be deleted.
 
@@ -114,7 +114,7 @@ Any endpoint that should require authentication, needs to be annotated either at
 
 ## Architecture Diagram
 
-![Architecture Diagram for pip-subscription-management](./subscription-man-arch.png)
+![Architecture Diagram for pip-account-management](./account-man-arch.png)
 
 The above diagram is somewhat simplified for readability (e.g. it does not include secure/insecure communications, but those are covered elsewhere).
 
@@ -180,12 +180,13 @@ Below is a table of currently used environment variables for starting the servic
 | SUBSCRIPTION_MANAGEMENT_AZ_API | Used as part of the `scope` parameter when requesting a token from Azure. Used for service-to-service communication with the pip-subscription-management service.                                                                                                      | No        |
 | PUBLICATION_SERVICES_AZ_API    | Used as part of the `scope` parameter when requesting a token from Azure. Used for service-to-service communication with the pip-publication-services service.                                                                                                         | No        |
 | INSTRUMENTATION_KEY            | This is the instrumentation key used by the app to talk to Application Insights.                                                                                                                                                                                       | No        |
-| CLIENT_ID_B2C                  | The client id to use when authenticating with the Azure B2C instance.                                                                                                                                                                                                  | No        |
-| CLIENT_SECRET_B2C              | The client secret to use when authenticating with the Azure B2C instance.                                                                                                                                                                                              | No        |
-| TENANT_GUID_B2C                | The tenant id of the Azure B2C instance                                                                                                                                                                                                                                | No        |
-| EXTENSION_ID                   | The extension ID for the users. This is used to store the role against a user.                                                                                                                                                                                         | No        |
-| IDENTITY_ISSUER                | The identity issue of the Azure B2C instance.                                                                                                                                                                                                                          | No        |
-| CONNECTION_STRING              | Connection string for connecting to the Azure Blob Storage service.                                                                                                                                                                                                    | No        |
+| CLIENT_ID_B2C                  | The client id to use when authenticating with the Azure B2C instance.                                                                                                                                                                                                  | Yes       |
+| CLIENT_SECRET_B2C              | The client secret to use when authenticating with the Azure B2C instance.                                                                                                                                                                                              | Yes       |
+| TENANT_GUID_B2C                | The tenant id of the Azure B2C instance                                                                                                                                                                                                                                | Yes       |
+| EXTENSION_ID                   | The extension ID for the users. This is used to store the role against a user.                                                                                                                                                                                         | Yes       |
+| IDENTITY_ISSUER                | The identity issue of the Azure B2C instance.                                                                                                                                                                                                                          | Yes       |
+| CONNECTION_STRING              | Connection string for connecting to the Azure Blob Storage service.                                                                                                                                                                                                    | Yes       |
+| MAX_SYSTEM_ADMIN_ACCOUNTS      | The max number of system admin accounts that can exist. Default is 4.                                                                                                                                                                                                  | No        |
 
 ##### Additional Test secrets
 
@@ -234,19 +235,18 @@ You can copy the above curl command into either Postman or Insomnia and they wil
 *Note - the `_FOR_ANOTHER_SERVICE` variables need to be extracted from another registered microservice within the broader CaTH umbrella (e.g. [pip-data-management](https://github.com/hmcts/pip-data-management))*
 
 ### Using the bearer token
-You can use the bearer token in the Authorization header when making requests. Here is an example using the create subscription endpoint.
+You can use the bearer token in the Authorization header when making requests. Here is an example using the create PI user endpoint:
 ```
 curl --request POST \
-  --url http://localhost:4550/subscription \
+  --url http://localhost:6969/account/add/pi \
   --header 'Authorization: Bearer {BEARER_TOKEN_HERE}' \
   --header 'Content-Type: application/json' \
-  --header 'x-user-id: <UserIDOfTheUser>' \
+  --header 'x-issuer-id: <UserIdOfTheUserSubmittingTheRequest>' \
   --data-raw '[
     {
-    	"userId": "<userId>",
-    	"searchType": "CASE_ID",
-    	"searchValue": "1234",
-    	"channel": "EMAIL"
+    	"userProvenance": "PI_AAD",
+    	"provenanceUserId": "<UserIdInTheProvenanceIDAM>",
+    	"roles": "VERIFIED",
     }
   ]'
 ```
