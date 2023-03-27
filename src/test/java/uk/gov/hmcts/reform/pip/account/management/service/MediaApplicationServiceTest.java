@@ -40,6 +40,7 @@ import static uk.gov.hmcts.reform.pip.account.management.helper.MediaApplication
 @SuppressWarnings("PMD.TooManyMethods")
 class MediaApplicationServiceTest {
 
+    public static final String REJECTION_REASONS_GO_HERE = "Rejection reasons go here";
     @Mock
     private MediaApplicationRepository mediaApplicationRepository;
 
@@ -217,18 +218,18 @@ class MediaApplicationServiceTest {
         when(mediaApplicationRepository.findById(eq(TEST_ID)))
             .thenReturn(Optional.of(mediaApplicationExample));
 
-        when(publicationService.sendMediaAccountRejectionEmail(mediaApplicationExample, "Rejection reasons go here"))
+        when(publicationService.sendMediaAccountRejectionEmail(mediaApplicationExample, REJECTION_REASONS_GO_HERE))
             .thenReturn(true);
 
         String result = mediaApplicationService
-            .sendMediaApplicationRejectionEmail(TEST_ID, "Rejection reasons go here");
+            .sendMediaApplicationRejectionEmail(TEST_ID, REJECTION_REASONS_GO_HERE);
 
         assertEquals("email successfully sent to " + TEST_ID, result,
                      "Expected email successfully sent message");
 
         verify(mediaApplicationRepository, times(1)).findById(eq(TEST_ID));
         verify(publicationService, times(1))
-            .sendMediaAccountRejectionEmail(mediaApplicationExample, "Rejection reasons go here");
+            .sendMediaAccountRejectionEmail(mediaApplicationExample, REJECTION_REASONS_GO_HERE);
     }
 
     @Test
@@ -236,17 +237,17 @@ class MediaApplicationServiceTest {
         when(mediaApplicationRepository.findById(eq(TEST_ID)))
             .thenReturn(Optional.of(mediaApplicationExample));
 
-        when(publicationService.sendMediaAccountRejectionEmail(mediaApplicationExample, "Rejection reasons go here"))
+        when(publicationService.sendMediaAccountRejectionEmail(mediaApplicationExample, REJECTION_REASONS_GO_HERE))
             .thenReturn(false);
 
-        String result = mediaApplicationService.sendMediaApplicationRejectionEmail(TEST_ID, "Rejection reasons go here");
+        String result = mediaApplicationService.sendMediaApplicationRejectionEmail(TEST_ID, REJECTION_REASONS_GO_HERE);
 
         assertEquals("email failed to send to " + TEST_ID, result,
                      "Expected email failed to send message");
 
         verify(mediaApplicationRepository, times(1)).findById(eq(TEST_ID));
         verify(publicationService, times(1))
-            .sendMediaAccountRejectionEmail(mediaApplicationExample, "Rejection reasons go here");
+            .sendMediaAccountRejectionEmail(mediaApplicationExample, REJECTION_REASONS_GO_HERE);
     }
 
     @Test
