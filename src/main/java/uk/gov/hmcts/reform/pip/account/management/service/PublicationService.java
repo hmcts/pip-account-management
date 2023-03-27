@@ -60,6 +60,30 @@ public class PublicationService {
         }
     }
 
+    /**
+     * Method which sends a request to the publication-services microservice to send a media account rejection email.
+     *
+     * @param mediaApplication - MediaApplication object containing applicant details
+     * @param reasons          - reasons for rejection
+     * @return boolean for logging success or failure
+     */
+    public boolean sendMediaAccountRejectionEmail(MediaApplication mediaApplication, String reasons) {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("applicantId", mediaApplication.getId().toString());
+        jsonObject.put("fullName", mediaApplication.getFullName());
+        jsonObject.put("email", mediaApplication.getEmail());
+        jsonObject.put("reasons", reasons);
+        try {
+            log.info(webClient.post().uri(url + "/notify/media-account/reject")
+                         .body(BodyInserters.fromValue(jsonObject)).retrieve()
+                         .bodyToMono(String.class).block());
+            return true;
+        } catch (WebClientException ex) {
+            log.error(String.format("Request failed with error message: %s", ex.getMessage()));
+            return false;
+        }
+    }
+
     public boolean sendNotificationEmailForDuplicateMediaAccount(String emailAddress, String fullName) {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put(EMAIL, emailAddress);
@@ -98,6 +122,7 @@ public class PublicationService {
             return false;
         }
     }
+
 
     /**
      * Method which sends a request to publication services to email the P&I team.
