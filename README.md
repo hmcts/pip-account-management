@@ -4,13 +4,13 @@
 
 - [Overview](#overview)
 - [Features and Functionality](#features-and-functionality)
-- [Azure B2C integration](#azure-b2c-integration)
+- [Azure B2C Integration](#azure-b2c-integration)
 - [System Admin Accounts](#system-admin-accounts)
-- [List Sensitivity checking](#list-sensitivity-checking)
+- [List Sensitivity Checking](#list-sensitivity-checking)
   - [Verified Users](#verified-users)
   - [Third Party Users](#third-party-users)
 - [Account Application Process](#account-application-process)
-- [Expired / Inactive accounts](#expired--inactive-accounts)
+- [Expired / Inactive Accounts](#expired--inactive-accounts)
 - [Roles](#roles)
 - [Architecture Diagram](#architecture-diagram)
 - [Getting Started](#getting-started)
@@ -66,7 +66,7 @@ All interactions with `pip-account-management` are performed through the API (sp
 - OpenAPI Spec/Swagger-UI: Documents and allows users or developers to access API resources within the browser.
 - Integration tests using TestContainers for dummy database operations.
 
-## Azure B2C integration
+## Azure B2C Integration
 
 PI_AAD users, excluding third parties, will be stored in Azure B2C. Azure B2C provides OIDC which is used in our frontend to authenticate the users.
 
@@ -78,7 +78,7 @@ There is a limit to the number of system admin accounts that can be created. Thi
 
 If this is not set, the default maximum number of accounts is 4. The request will be rejected if an attempt is made that causes it to go over this limit.
 
-## List Sensitivity checking
+## List Sensitivity Checking
 
 ### Verified Users
 
@@ -98,7 +98,7 @@ When a user applies for a new PI_AAD verified account they go through an approva
 
 On Approval / Rejection, the uploaded ID file will be deleted.
 
-## Expired / Inactive accounts
+## Expired / Inactive Accounts
 
 For all users except for third party, there is an inactive account process to ensure accounts are deleted when they are no longer used.
 
@@ -106,7 +106,7 @@ For IDAM and Admin users, this uses the sign in date. For internal, this will us
 
 Users will be sent a reminder to login / re-verify 14 days before their account is due to expire.
 
-If they do not complete this process by the 14 days, their account will be deleted.
+If they do not complete this process within 14 days, their account will be deleted.
 
 ## Roles
 
