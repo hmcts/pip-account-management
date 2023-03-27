@@ -10,6 +10,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,7 +21,10 @@ import uk.gov.hmcts.reform.pip.account.management.model.AuditLog;
 import uk.gov.hmcts.reform.pip.account.management.model.AuditLogDto;
 import uk.gov.hmcts.reform.pip.account.management.service.AuditService;
 
+import java.util.UUID;
 import javax.validation.Valid;
+
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @RestController
 @Tag(name = "Account Management - API for managing audit logs")
@@ -32,6 +36,7 @@ public class AuditController {
 
     private static final String OK_ERROR_CODE = "200";
     private static final String AUTH_ERROR_CODE = "403";
+    private static final String NOT_FOUND_ERROR_CODE = "404";
     private static final String NOT_AUTHORIZED_MESSAGE = "User has not been authorized";
 
     @Autowired
@@ -48,6 +53,15 @@ public class AuditController {
         @RequestParam(name = "pageSize", defaultValue = "25") int pageSize) {
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
         return ResponseEntity.ok(auditService.getAllAuditLogs(pageable));
+    }
+
+    @ApiResponse(responseCode = OK_ERROR_CODE, description = "Audit log with id {id} returned.")
+    @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
+    @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description = "Audit log with id {id} could not be found.")
+    @Operation(summary = "Get audit log with id")
+    @GetMapping(value = "/{id}", produces = APPLICATION_JSON_VALUE)
+    public ResponseEntity<AuditLog> getAuditLogById(@PathVariable UUID id) {
+        return ResponseEntity.ok(auditService.getAuditLogById(id));
     }
 
     @ApiResponse(responseCode = OK_ERROR_CODE, description = "Newly created audit log returned.")

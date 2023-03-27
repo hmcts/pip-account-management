@@ -20,6 +20,8 @@ import uk.gov.hmcts.reform.pip.account.management.config.AzureConfigurationClien
 import uk.gov.hmcts.reform.pip.account.management.model.AuditLog;
 import uk.gov.hmcts.reform.pip.account.management.model.AuditLogDto;
 import uk.gov.hmcts.reform.pip.account.management.model.CustomPageImpl;
+import uk.gov.hmcts.reform.pip.account.management.model.Roles;
+import uk.gov.hmcts.reform.pip.account.management.model.UserProvenances;
 import uk.gov.hmcts.reform.pip.model.enums.AuditAction;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -40,6 +42,8 @@ class AuditTest {
 
     private static final String ROOT_URL = "/audit";
     private static final String EMAIL = "test_account_admin@hmcts.net";
+    private static final String ROLES = Roles.SYSTEM_ADMIN.toString();
+    private static final String USER_PROVENANCE = UserProvenances.PI_AAD.toString();
     private static final String AUDIT_DETAILS = "User requested to view all third party users";
     private static final String USER_ID = "1234";
     private static final String ADDITIONAL_USER_ID = "3456";
@@ -60,6 +64,8 @@ class AuditTest {
         return new AuditLogDto(
             USER_ID,
             EMAIL,
+            ROLES,
+            USER_PROVENANCE,
             AUDIT_ACTION,
             AUDIT_DETAILS
         );
@@ -79,6 +85,8 @@ class AuditTest {
             .content(OBJECT_MAPPER.writeValueAsString(new AuditLogDto(
                 ADDITIONAL_USER_ID,
                 EMAIL,
+                ROLES,
+                USER_PROVENANCE,
                 AUDIT_ACTION,
                 AUDIT_DETAILS
             )))

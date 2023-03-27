@@ -37,6 +37,12 @@ public class AuditLog {
     private String userEmail;
 
     @Enumerated(EnumType.STRING)
+    private Roles roles;
+
+    @Enumerated(EnumType.STRING)
+    private UserProvenances userProvenance;
+
+    @Enumerated(EnumType.STRING)
     private AuditAction action;
 
     private String details;
