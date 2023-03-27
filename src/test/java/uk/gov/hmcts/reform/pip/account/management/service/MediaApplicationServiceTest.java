@@ -220,7 +220,8 @@ class MediaApplicationServiceTest {
         when(publicationService.sendMediaAccountRejectionEmail(mediaApplicationExample, "Rejection reasons go here"))
             .thenReturn(true);
 
-        String result = mediaApplicationService.sendMediaApplicationRejectionEmail(TEST_ID, "Rejection reasons go here");
+        String result = mediaApplicationService
+            .sendMediaApplicationRejectionEmail(TEST_ID, "Rejection reasons go here");
 
         assertEquals("email successfully sent to " + TEST_ID, result,
                      "Expected email successfully sent message");
