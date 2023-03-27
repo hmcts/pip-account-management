@@ -14,11 +14,13 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import uk.gov.hmcts.reform.pip.account.management.Application;
 import uk.gov.hmcts.reform.pip.account.management.config.AzureConfigurationClientTestConfiguration;
+import uk.gov.hmcts.reform.pip.account.management.model.MediaApplication;
 import uk.gov.hmcts.reform.pip.account.management.model.UserProvenances;
 import uk.gov.hmcts.reform.pip.model.system.admin.ActionResult;
 import uk.gov.hmcts.reform.pip.model.system.admin.CreateSystemAdminAction;
 
 import java.io.IOException;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -129,6 +131,23 @@ class PublicationServiceTest {
             createApplicationList(2)),
                      "No application list sent");
     }
+
+    @Test
+    void testSendMediaAccountRejectionEmail() {
+        mockPublicationServicesEndpoint.enqueue(new MockResponse().setBody(SENT_MESSAGE));
+
+        MediaApplication mediaApplication = new MediaApplication();
+        mediaApplication.setFullName("John Doe");
+        mediaApplication.setId(UUID.randomUUID());
+        mediaApplication.setEmail("john.doe@example.com");
+        String reasons = "Rejection reasons go here";
+
+        assertTrue(publicationService.sendMediaAccountRejectionEmail(mediaApplication, reasons),
+                   "Failed to send media account rejection email");
+
+        assertTrue(logCaptor.getInfoLogs().get(0).contains(SENT_MESSAGE), MESSAGES_MATCH);
+    }
+
 
     @Test
     void testFailedMediaApplicationReportEmail() {
