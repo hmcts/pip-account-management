@@ -232,6 +232,24 @@ class MediaApplicationServiceTest {
     }
 
     @Test
+    void testSendMediaApplicationRejectionEmailFailure() {
+        when(mediaApplicationRepository.findById(eq(TEST_ID)))
+            .thenReturn(Optional.of(mediaApplicationExample));
+
+        when(publicationService.sendMediaAccountRejectionEmail(mediaApplicationExample, "Rejection reasons go here"))
+            .thenReturn(false);
+
+        String result = mediaApplicationService.sendMediaApplicationRejectionEmail(TEST_ID, "Rejection reasons go here");
+
+        assertEquals("email failed to send to " + TEST_ID, result,
+                     "Expected email failed to send message");
+
+        verify(mediaApplicationRepository, times(1)).findById(eq(TEST_ID));
+        verify(publicationService, times(1))
+            .sendMediaAccountRejectionEmail(mediaApplicationExample, "Rejection reasons go here");
+    }
+
+    @Test
     void testDeleteApplication() {
 
         when(mediaApplicationRepository.findById(TEST_ID))

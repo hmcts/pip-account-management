@@ -15,6 +15,7 @@ import org.springframework.test.context.ActiveProfiles;
 import uk.gov.hmcts.reform.pip.account.management.Application;
 import uk.gov.hmcts.reform.pip.account.management.config.AzureConfigurationClientTestConfiguration;
 import uk.gov.hmcts.reform.pip.account.management.model.MediaApplication;
+import uk.gov.hmcts.reform.pip.account.management.model.MediaApplicationStatus;
 import uk.gov.hmcts.reform.pip.account.management.model.UserProvenances;
 import uk.gov.hmcts.reform.pip.model.system.admin.ActionResult;
 import uk.gov.hmcts.reform.pip.model.system.admin.CreateSystemAdminAction;
@@ -25,6 +26,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static uk.gov.hmcts.reform.pip.account.management.helper.MediaApplicationHelper.createApplication;
 import static uk.gov.hmcts.reform.pip.account.management.helper.MediaApplicationHelper.createApplicationList;
 
 @ExtendWith(MockitoExtension.class)
@@ -147,6 +149,21 @@ class PublicationServiceTest {
 
         assertTrue(logCaptor.getInfoLogs().get(0).contains(SENT_MESSAGE), MESSAGES_MATCH);
     }
+
+    @Test
+    void testSendMediaAccountRejectionEmailFailure() {
+        mockPublicationServicesEndpoint.enqueue(new MockResponse().setResponseCode(500));
+
+        MediaApplication mediaApplication = createApplication(MediaApplicationStatus.REJECTED);
+        String rejectionReasons = "Rejection reasons go here";
+
+        assertFalse(publicationService.sendMediaAccountRejectionEmail(mediaApplication, rejectionReasons),
+                    "Expected email sending to fail");
+
+        assertTrue(logCaptor.getErrorLogs().get(0).contains("Request failed with error message:"),
+                   "Expected error log message");
+    }
+
 
 
     @Test
