@@ -118,9 +118,9 @@ public class MediaApplicationController {
     @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
     @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description = NO_MEDIA_APPLICATION_FOUND_WITH_ID)
     @Operation(summary = "Send media application rejection email")
-    @PostMapping("/rejection-email")
+    @PostMapping("/reject/{applicantId}")
     public ResponseEntity<String> sendMediaApplicationRejectionEmail(
-        @RequestBody String reasons, UUID applicantId) {
+        @RequestBody String reasons, @PathVariable UUID applicantId) {
         return ResponseEntity.ok(mediaApplicationService.sendMediaApplicationRejectionEmail(applicantId, reasons));
     }
 
