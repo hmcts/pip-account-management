@@ -68,10 +68,10 @@ public class MediaApplicationService {
      */
     public MediaApplication getApplicationById(UUID id) {
         return mediaApplicationRepository.findById(id).orElseThrow(() ->
-                                                                       new NotFoundException(String.format(
-                                                                           APPLICATION_NOT_FOUND,
-                                                                           id
-                                                                       )));
+                new NotFoundException(String.format(
+                        APPLICATION_NOT_FOUND,
+                        id
+                )));
     }
 
     /**
@@ -105,7 +105,7 @@ public class MediaApplicationService {
         MediaApplication createdMediaApplication = mediaApplicationRepository.save(application);
 
         log.info(writeLog(createdMediaApplication.getId().toString(), UserActions.CREATE_MEDIA_APPLICATION,
-                          createdMediaApplication.getId().toString()
+                createdMediaApplication.getId().toString()
         ));
 
         return createdMediaApplication;
@@ -121,13 +121,37 @@ public class MediaApplicationService {
      */
     public MediaApplication updateApplication(UUID id, MediaApplicationStatus status) {
         MediaApplication applicationToUpdate = mediaApplicationRepository
-            .findById(id).orElseThrow(() -> new NotFoundException(
-                String.format(
-                    APPLICATION_NOT_FOUND,
-                    id
-                )));
+                .findById(id).orElseThrow(() -> new NotFoundException(
+                        String.format(
+                                APPLICATION_NOT_FOUND,
+                                id
+                        )));
 
         log.info(writeLog(UserActions.UPDATE_MEDIA_APPLICATION, applicationToUpdate.getId().toString()));
+
+        applicationToUpdate.setStatus(status);
+        applicationToUpdate.setStatusDate(LocalDateTime.now());
+
+        if (APPROVED.equals(status) || REJECTED.equals(status)) {
+            azureBlobService.deleteBlob(applicationToUpdate.getImage());
+        }
+
+        return mediaApplicationRepository.save(applicationToUpdate);
+    }
+
+    public MediaApplication updateApplication(UUID id, MediaApplicationStatus status, String reasons) {
+        MediaApplication applicationToUpdate = mediaApplicationRepository
+                .findById(id).orElseThrow(() -> new NotFoundException(
+                        String.format(
+                                APPLICATION_NOT_FOUND,
+                                id
+                        )));
+        if (REJECTED.equals(status)) {
+            sendMediaApplicationRejectionEmail(id, reasons);
+        }
+
+        log.info(writeLog(UserActions.UPDATE_MEDIA_APPLICATION, applicationToUpdate.getId().toString()));
+
 
         applicationToUpdate.setStatus(status);
         applicationToUpdate.setStatusDate(LocalDateTime.now());
@@ -146,7 +170,7 @@ public class MediaApplicationService {
      */
     public void deleteApplication(UUID id) {
         MediaApplication applicationToDelete = mediaApplicationRepository
-            .findById(id).orElseThrow(() -> new NotFoundException(String.format(APPLICATION_NOT_FOUND, id)));
+                .findById(id).orElseThrow(() -> new NotFoundException(String.format(APPLICATION_NOT_FOUND, id)));
         log.info(writeLog(UserActions.DELETE_MEDIA_APPLICATION, applicationToDelete.getId().toString()));
 
         azureBlobService.deleteBlob(applicationToDelete.getImage());
@@ -156,7 +180,7 @@ public class MediaApplicationService {
     /**
      * Send rejection email for a given applicant.
      */
-    public String sendMediaApplicationRejectionEmail(UUID id, String rejectionReasons) {
+    private String sendMediaApplicationRejectionEmail(UUID id, String rejectionReasons) {
         MediaApplication mediaApplication = this.getApplicationById(id);
         boolean emailSent = publicationService.sendMediaAccountRejectionEmail(mediaApplication, rejectionReasons);
         if (emailSent) {
@@ -182,9 +206,9 @@ public class MediaApplicationService {
      */
     private void processApplicationsForDeleting(List<MediaApplication> mediaApplications) {
         mediaApplicationRepository.deleteAllInBatch(
-            mediaApplications.stream().filter(app -> app.getStatus().equals(APPROVED)
-                    || app.getStatus().equals(REJECTED))
-                .toList());
+                mediaApplications.stream().filter(app -> app.getStatus().equals(APPROVED)
+                                || app.getStatus().equals(REJECTED))
+                        .toList());
 
         log.info("Approved and Rejected media applications deleted");
     }

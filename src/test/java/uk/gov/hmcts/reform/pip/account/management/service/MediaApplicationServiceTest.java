@@ -214,43 +214,6 @@ class MediaApplicationServiceTest {
     }
 
     @Test
-    void testSendMediaApplicationRejectionEmail() {
-        when(mediaApplicationRepository.findById(eq(TEST_ID)))
-            .thenReturn(Optional.of(mediaApplicationExample));
-
-        when(publicationService.sendMediaAccountRejectionEmail(mediaApplicationExample, REJECTION_REASONS_GO_HERE))
-            .thenReturn(true);
-
-        String result = mediaApplicationService
-            .sendMediaApplicationRejectionEmail(TEST_ID, REJECTION_REASONS_GO_HERE);
-
-        assertEquals("email successfully sent to " + TEST_ID, result,
-                     "Expected email successfully sent message");
-
-        verify(mediaApplicationRepository, times(1)).findById(eq(TEST_ID));
-        verify(publicationService, times(1))
-            .sendMediaAccountRejectionEmail(mediaApplicationExample, REJECTION_REASONS_GO_HERE);
-    }
-
-    @Test
-    void testSendMediaApplicationRejectionEmailFailure() {
-        when(mediaApplicationRepository.findById(eq(TEST_ID)))
-            .thenReturn(Optional.of(mediaApplicationExample));
-
-        when(publicationService.sendMediaAccountRejectionEmail(mediaApplicationExample, REJECTION_REASONS_GO_HERE))
-            .thenReturn(false);
-
-        String result = mediaApplicationService.sendMediaApplicationRejectionEmail(TEST_ID, REJECTION_REASONS_GO_HERE);
-
-        assertEquals("email failed to send to " + TEST_ID, result,
-                     "Expected email failed to send message");
-
-        verify(mediaApplicationRepository, times(1)).findById(eq(TEST_ID));
-        verify(publicationService, times(1))
-            .sendMediaAccountRejectionEmail(mediaApplicationExample, REJECTION_REASONS_GO_HERE);
-    }
-
-    @Test
     void testDeleteApplication() {
 
         when(mediaApplicationRepository.findById(TEST_ID))

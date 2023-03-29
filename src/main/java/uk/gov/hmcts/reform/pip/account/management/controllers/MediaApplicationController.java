@@ -117,11 +117,11 @@ public class MediaApplicationController {
     @ApiResponse(responseCode = OK_ERROR_CODE, description = MEDIA_APPLICATION)
     @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
     @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description = NO_MEDIA_APPLICATION_FOUND_WITH_ID)
-    @Operation(summary = "Send media application rejection email")
-    @PostMapping("/reject/{applicantId}")
-    public ResponseEntity<String> sendMediaApplicationRejectionEmail(
-        @RequestBody String reasons, @PathVariable UUID applicantId) {
-        return ResponseEntity.ok(mediaApplicationService.sendMediaApplicationRejectionEmail(applicantId, reasons));
+    @Operation(summary = "Update a media application, sending an update email alongside")
+    @PutMapping("/{id}/{status}/reasons")
+    public ResponseEntity<MediaApplication> updateApplication(
+        @RequestBody String reasons, @PathVariable MediaApplicationStatus status, @PathVariable UUID id) {
+        return ResponseEntity.ok(mediaApplicationService.updateApplication(id, status, reasons));
     }
 
 
