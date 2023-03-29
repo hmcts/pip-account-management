@@ -180,7 +180,7 @@ class MediaApplicationServiceTest {
             .thenReturn(mediaApplicationExample);
 
         MediaApplication returnedApplication = mediaApplicationService
-            .updateApplication(TEST_ID, MediaApplicationStatus.REJECTED);
+            .updateApplication(TEST_ID, MediaApplicationStatus.REJECTED, "hello,this,is,dog");
 
         assertEquals(MediaApplicationStatus.REJECTED, returnedApplication.getStatus(),
                      "Application status was not updated");
