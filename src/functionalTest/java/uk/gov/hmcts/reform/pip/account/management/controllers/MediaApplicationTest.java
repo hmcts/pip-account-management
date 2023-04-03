@@ -64,6 +64,7 @@ class MediaApplicationTest {
     private static final String ROOT_URL = "/application";
     private static final String GET_STATUS_URL = ROOT_URL + "/status/{status}";
     private static final String PUT_URL = ROOT_URL + "/{id}/{status}";
+    private static final String UPDATE_APPLICATION_REJECTION_URL = ROOT_URL + "/{id}/{status}/reasons";
     private static final String DELETE_URL = ROOT_URL + "/{id}";
     private static final String GET_BY_ID_URL = ROOT_URL + "/{id}";
     private static final String GET_IMAGE_BY_ID_URL = ROOT_URL + "/image/{id}";
@@ -406,6 +407,51 @@ class MediaApplicationTest {
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testUpdateApplicationUnauthorised() throws Exception {
         mockMvc.perform(put(PUT_URL, TEST_ID, STATUS))
+            .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void testUpdateApplicationRejection() throws Exception {
+        MediaApplication application = createApplication();
+
+        assertEquals(STATUS, application.getStatus(), "Original statuses do not match");
+
+        MvcResult mvcResult = mockMvc.perform(put(UPDATE_APPLICATION_REJECTION_URL, application.getId(),
+                                                  MediaApplicationStatus.REJECTED
+            ).content("The name, email address and Press ID do not match each other."))
+            .andExpect(status().isOk())
+            .andReturn();
+
+        MediaApplication returnedApplication = objectMapper.readValue(
+            mvcResult.getResponse()
+                .getContentAsString(),
+            MediaApplication.class
+        );
+
+        assertEquals(MediaApplicationStatus.REJECTED, returnedApplication.getStatus(),
+                     "Updated statuses do not match"
+        );
+    }
+
+    @Test
+    void testUpdateApplicationRejectionNotFound() throws Exception {
+        MvcResult mvcResult = mockMvc.perform(put(UPDATE_APPLICATION_REJECTION_URL, TEST_ID,
+                                                  MediaApplicationStatus.REJECTED
+            ).content("The name, email address and Press ID do not match each other."))
+            .andExpect(status().isNotFound())
+            .andReturn();
+
+        assertTrue(mvcResult.getResponse().getContentAsString()
+                       .contains("Application with id " + TEST_ID + " could not be found"), NOT_FOUND_ERROR);
+
+    }
+
+    @Test
+    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
+    void testUpdateApplicationRejectionUnauthorised() throws Exception {
+        mockMvc.perform(put(UPDATE_APPLICATION_REJECTION_URL, TEST_ID,
+                            MediaApplicationStatus.REJECTED
+            ).content("The name, email address and Press ID do not match each other."))
             .andExpect(status().isForbidden());
     }
 

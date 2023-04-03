@@ -119,7 +119,7 @@ public class MediaApplicationController {
     @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description = NO_MEDIA_APPLICATION_FOUND_WITH_ID)
     @Operation(summary = "Update a media application, sending an update email alongside")
     @PutMapping("/{id}/{status}/reasons")
-    public ResponseEntity<MediaApplication> updateApplication(
+    public ResponseEntity<MediaApplication> updateApplicationRejection(
         @RequestBody String reasons, @PathVariable MediaApplicationStatus status, @PathVariable UUID id) {
         return ResponseEntity.ok(mediaApplicationService.updateApplication(id, status, reasons));
     }
