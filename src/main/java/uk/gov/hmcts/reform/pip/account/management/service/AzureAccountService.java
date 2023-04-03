@@ -10,8 +10,8 @@ import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.NotFo
 import uk.gov.hmcts.reform.pip.account.management.model.AzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
-import uk.gov.hmcts.reform.pip.account.management.model.UserProvenances;
 import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredAzureAccount;
+import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
 import uk.gov.hmcts.reform.pip.model.enums.UserActions;
 
 import java.util.ArrayList;
@@ -24,8 +24,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
 
-import static uk.gov.hmcts.reform.pip.account.management.model.Roles.VERIFIED;
 import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
+import static uk.gov.hmcts.reform.pip.model.account.Roles.VERIFIED;
 
 @Service
 @Slf4j

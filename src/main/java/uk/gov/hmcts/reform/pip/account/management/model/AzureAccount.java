@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import uk.gov.hmcts.reform.pip.account.management.validation.annotations.AzureEmail;
 import uk.gov.hmcts.reform.pip.account.management.validation.annotations.NotSystemAdmin;
+import uk.gov.hmcts.reform.pip.model.account.Roles;
 
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
@@ -20,7 +21,7 @@ import javax.validation.constraints.NotNull;
 public class AzureAccount {
 
     /**
-     * The is the object ID that is returned from azure.
+     * The object ID that is returned from azure.
      */
     @Schema(hidden = true)
     private String azureAccountId;
