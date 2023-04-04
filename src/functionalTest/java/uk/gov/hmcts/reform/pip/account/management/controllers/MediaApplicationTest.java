@@ -92,11 +92,11 @@ class MediaApplicationTest {
     private static final String STATUSES_NOT_MATCH = "Statuses do not match";
     private static final String ERROR_MESSAGE_MISMATCH = "Error messages do not match";
 
-    private static final Map<String, List<String>> reasons = new ConcurrentHashMap<>();
+    private static final Map<String, List<String>> REASONS = new ConcurrentHashMap<>();
 
     @BeforeAll
     static void beforeAllSetup() {
-        reasons.put("Reason A", List.of("Text A", "Text B"));
+        REASONS.put("Reason A", List.of("Text A", "Text B"));
     }
 
     @BeforeEach
@@ -428,7 +428,7 @@ class MediaApplicationTest {
 
         MvcResult mvcResult = mockMvc.perform(put(UPDATE_APPLICATION_REJECTION_URL, application.getId(),
                                                   MediaApplicationStatus.REJECTED
-            ).content(objectMapper.writeValueAsString(reasons)).contentType(MediaType.APPLICATION_JSON))
+            ).content(objectMapper.writeValueAsString(REASONS)).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -447,7 +447,7 @@ class MediaApplicationTest {
     void testUpdateApplicationRejectionNotFound() throws Exception {
         MvcResult mvcResult = mockMvc.perform(put(UPDATE_APPLICATION_REJECTION_URL, TEST_ID,
                                                   MediaApplicationStatus.REJECTED
-            ).content(objectMapper.writeValueAsString(reasons)).contentType(MediaType.APPLICATION_JSON))
+            ).content(objectMapper.writeValueAsString(REASONS)).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isNotFound())
             .andReturn();
 
@@ -461,7 +461,7 @@ class MediaApplicationTest {
     void testUpdateApplicationRejectionUnauthorised() throws Exception {
         mockMvc.perform(put(UPDATE_APPLICATION_REJECTION_URL, TEST_ID,
                             MediaApplicationStatus.REJECTED
-            ).content(objectMapper.writeValueAsString(reasons)).contentType(MediaType.APPLICATION_JSON)
+            ).content(objectMapper.writeValueAsString(REASONS)).contentType(MediaType.APPLICATION_JSON)
                             .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isForbidden());
     }
