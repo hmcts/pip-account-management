@@ -15,6 +15,7 @@ import uk.gov.hmcts.reform.pip.model.enums.UserActions;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static uk.gov.hmcts.reform.pip.account.management.model.MediaApplicationStatus.APPROVED;
@@ -139,7 +140,8 @@ public class MediaApplicationService {
         return mediaApplicationRepository.save(applicationToUpdate);
     }
 
-    public MediaApplication updateApplication(UUID id, MediaApplicationStatus status, String reasons) {
+    public MediaApplication updateApplication(UUID id, MediaApplicationStatus status,
+                                              Map<String, List<String>> reasons) {
         MediaApplication applicationToUpdate = mediaApplicationRepository
                 .findById(id).orElseThrow(() -> new NotFoundException(
                         String.format(
@@ -180,7 +182,7 @@ public class MediaApplicationService {
     /**
      * Send rejection email for a given applicant.
      */
-    private String sendMediaApplicationRejectionEmail(UUID id, String rejectionReasons) {
+    private String sendMediaApplicationRejectionEmail(UUID id, Map<String, List<String>> rejectionReasons) {
         MediaApplication mediaApplication = this.getApplicationById(id);
         boolean emailSent = publicationService.sendMediaAccountRejectionEmail(mediaApplication, rejectionReasons);
         if (emailSent) {

@@ -15,6 +15,7 @@ import uk.gov.hmcts.reform.pip.account.management.model.UserProvenances;
 import uk.gov.hmcts.reform.pip.model.system.admin.SystemAdminAction;
 
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Component
@@ -67,14 +68,15 @@ public class PublicationService {
      * @param reasons          - reasons for rejection
      * @return boolean for logging success or failure
      */
-    public boolean sendMediaAccountRejectionEmail(MediaApplication mediaApplication, String reasons) {
+    public boolean sendMediaAccountRejectionEmail(MediaApplication mediaApplication,
+                                                  Map<String, List<String>> reasons) {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("applicantId", mediaApplication.getId().toString());
         jsonObject.put("fullName", mediaApplication.getFullName());
         jsonObject.put("email", mediaApplication.getEmail());
         jsonObject.put("reasons", reasons);
         try {
-            log.info(webClient.post().uri(url + "/notify/media-account/reject")
+            log.info(webClient.post().uri(url + "/notify/media/reject")
                          .body(BodyInserters.fromValue(jsonObject)).retrieve()
                          .bodyToMono(String.class).block());
             return true;

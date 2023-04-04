@@ -17,7 +17,9 @@ import uk.gov.hmcts.reform.pip.account.management.model.MediaApplicationStatus;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -179,8 +181,12 @@ class MediaApplicationServiceTest {
         when(mediaApplicationRepository.save(mediaApplicationExample))
             .thenReturn(mediaApplicationExample);
 
+
+        Map<String, List<String>> reasons = new ConcurrentHashMap<>();
+        reasons.put("Reason A", List.of("Reason Text", "Reason Text"));
+
         MediaApplication returnedApplication = mediaApplicationService
-            .updateApplication(TEST_ID, MediaApplicationStatus.REJECTED, "hello,this,is,dog");
+            .updateApplication(TEST_ID, MediaApplicationStatus.REJECTED, reasons);
 
         assertEquals(MediaApplicationStatus.REJECTED, returnedApplication.getStatus(),
                      "Application status was not updated");

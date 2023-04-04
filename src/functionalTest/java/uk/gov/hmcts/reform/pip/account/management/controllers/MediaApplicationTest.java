@@ -28,7 +28,9 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -416,9 +418,12 @@ class MediaApplicationTest {
 
         assertEquals(STATUS, application.getStatus(), "Original statuses do not match");
 
+        Map<String, List<String>> reasons = new ConcurrentHashMap<>();
+        reasons.put("Reason A", List.of("Text A", "Text B"));
+
         MvcResult mvcResult = mockMvc.perform(put(UPDATE_APPLICATION_REJECTION_URL, application.getId(),
                                                   MediaApplicationStatus.REJECTED
-            ).content("The name, email address and Press ID do not match each other."))
+            ).content(objectMapper.writeValueAsString(reasons)))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -435,9 +440,12 @@ class MediaApplicationTest {
 
     @Test
     void testUpdateApplicationRejectionNotFound() throws Exception {
+        Map<String, List<String>> reasons = new ConcurrentHashMap<>();
+        reasons.put("Reason A", List.of("Text A", "Text B"));
+
         MvcResult mvcResult = mockMvc.perform(put(UPDATE_APPLICATION_REJECTION_URL, TEST_ID,
                                                   MediaApplicationStatus.REJECTED
-            ).content("The name, email address and Press ID do not match each other."))
+            ).content(objectMapper.writeValueAsString(reasons)))
             .andExpect(status().isNotFound())
             .andReturn();
 

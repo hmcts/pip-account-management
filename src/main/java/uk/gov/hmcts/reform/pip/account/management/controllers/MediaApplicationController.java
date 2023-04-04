@@ -28,6 +28,7 @@ import uk.gov.hmcts.reform.pip.account.management.model.MediaApplicationStatus;
 import uk.gov.hmcts.reform.pip.account.management.service.MediaApplicationService;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import javax.validation.Valid;
 
@@ -120,7 +121,8 @@ public class MediaApplicationController {
     @Operation(summary = "Update a media application, sending an update email alongside")
     @PutMapping("/{id}/{status}/reasons")
     public ResponseEntity<MediaApplication> updateApplicationRejection(
-        @RequestBody String reasons, @PathVariable MediaApplicationStatus status, @PathVariable UUID id) {
+        @RequestBody Map<String, List<String>> reasons,
+        @PathVariable MediaApplicationStatus status, @PathVariable UUID id) {
         return ResponseEntity.ok(mediaApplicationService.updateApplication(id, status, reasons));
     }
 

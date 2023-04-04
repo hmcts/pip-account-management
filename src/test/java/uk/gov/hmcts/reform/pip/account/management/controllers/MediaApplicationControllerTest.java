@@ -13,6 +13,9 @@ import uk.gov.hmcts.reform.pip.account.management.model.MediaApplicationStatus;
 import uk.gov.hmcts.reform.pip.account.management.service.MediaApplicationService;
 
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -127,5 +130,25 @@ class MediaApplicationControllerTest {
         assertThat(mediaApplicationController.reportApplications().getStatusCode())
             .as(STATUS_CODE_MATCH)
             .isEqualTo(HttpStatus.NO_CONTENT);
+    }
+
+    @Test
+    void testRejectApplicationWithReasons() {
+        MediaApplication mediaApplication = new MediaApplication();
+        mediaApplication.setFullName("Test Name");
+
+        UUID testUuid = UUID.randomUUID();
+
+        Map<String, List<String>> reasons = new ConcurrentHashMap<>();
+        reasons.put("Reason A", List.of("Text A", "Text B"));
+
+        when(mediaApplicationService.updateApplication(testUuid, MediaApplicationStatus.REJECTED, reasons))
+            .thenReturn(mediaApplication);
+
+        ResponseEntity<MediaApplication> response =
+            mediaApplicationController.updateApplicationRejection(reasons, MediaApplicationStatus.REJECTED, testUuid);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode(), STATUS_CODE_MATCH);
+        assertEquals(mediaApplication, response.getBody(), "Returned media application does not match");
     }
 }
