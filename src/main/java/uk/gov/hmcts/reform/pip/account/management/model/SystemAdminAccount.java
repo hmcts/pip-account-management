@@ -3,6 +3,8 @@ package uk.gov.hmcts.reform.pip.account.management.model;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import uk.gov.hmcts.reform.pip.model.account.Roles;
+import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;

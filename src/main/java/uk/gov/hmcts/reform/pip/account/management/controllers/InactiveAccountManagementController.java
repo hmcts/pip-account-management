@@ -12,8 +12,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import uk.gov.hmcts.reform.pip.account.management.authentication.roles.IsAdmin;
 import uk.gov.hmcts.reform.pip.account.management.service.InactiveAccountManagementService;
+import uk.gov.hmcts.reform.pip.model.authentication.roles.IsAdmin;
 
 @RestController
 @Tag(name = "Account Management - API for managing inactive user accounts")

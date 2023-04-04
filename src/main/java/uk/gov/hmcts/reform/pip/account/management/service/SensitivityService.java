@@ -1,13 +1,13 @@
 package uk.gov.hmcts.reform.pip.account.management.service;
 
 import org.springframework.stereotype.Service;
-import uk.gov.hmcts.reform.pip.account.management.model.ListType;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
-import uk.gov.hmcts.reform.pip.account.management.model.Roles;
-import uk.gov.hmcts.reform.pip.account.management.model.Sensitivity;
+import uk.gov.hmcts.reform.pip.model.account.Roles;
+import uk.gov.hmcts.reform.pip.model.publication.ListType;
+import uk.gov.hmcts.reform.pip.model.publication.Sensitivity;
 
-import static uk.gov.hmcts.reform.pip.account.management.model.Roles.VERIFIED;
-import static uk.gov.hmcts.reform.pip.account.management.model.UserProvenances.THIRD_PARTY;
+import static uk.gov.hmcts.reform.pip.model.account.Roles.VERIFIED;
+import static uk.gov.hmcts.reform.pip.model.account.UserProvenances.THIRD_PARTY;
 
 /**
  * This class handles the checking whether a user has permission to see a publication.
