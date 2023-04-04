@@ -423,7 +423,7 @@ class MediaApplicationTest {
 
         MvcResult mvcResult = mockMvc.perform(put(UPDATE_APPLICATION_REJECTION_URL, application.getId(),
                                                   MediaApplicationStatus.REJECTED
-            ).content(objectMapper.writeValueAsString(reasons)))
+            ).content(objectMapper.writeValueAsString(reasons)).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -445,7 +445,7 @@ class MediaApplicationTest {
 
         MvcResult mvcResult = mockMvc.perform(put(UPDATE_APPLICATION_REJECTION_URL, TEST_ID,
                                                   MediaApplicationStatus.REJECTED
-            ).content(objectMapper.writeValueAsString(reasons)))
+            ).content(objectMapper.writeValueAsString(reasons)).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isNotFound())
             .andReturn();
 
@@ -459,7 +459,8 @@ class MediaApplicationTest {
     void testUpdateApplicationRejectionUnauthorised() throws Exception {
         mockMvc.perform(put(UPDATE_APPLICATION_REJECTION_URL, TEST_ID,
                             MediaApplicationStatus.REJECTED
-            ).content("The name, email address and Press ID do not match each other."))
+            ).content("The name, email address and Press ID do not match each other.")
+                            .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isForbidden());
     }
 

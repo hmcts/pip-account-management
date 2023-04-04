@@ -119,7 +119,7 @@ public class MediaApplicationController {
     @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
     @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description = NO_MEDIA_APPLICATION_FOUND_WITH_ID)
     @Operation(summary = "Update a media application, sending an update email alongside")
-    @PutMapping("/{id}/{status}/reasons")
+    @PutMapping(value = "/{id}/{status}/reasons", consumes = APPLICATION_JSON_VALUE)
     public ResponseEntity<MediaApplication> updateApplicationRejection(
         @RequestBody Map<String, List<String>> reasons,
         @PathVariable MediaApplicationStatus status, @PathVariable UUID id) {
