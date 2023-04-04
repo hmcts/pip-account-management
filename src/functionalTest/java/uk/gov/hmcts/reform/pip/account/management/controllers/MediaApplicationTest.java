@@ -6,6 +6,7 @@ import com.azure.storage.blob.BlobContainerClient;
 import com.azure.storage.blob.models.BlobStorageException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -90,6 +91,13 @@ class MediaApplicationTest {
     private static final String FULLNAME_NOT_FORMATTTED = "Full name hasn't been formatted";
     private static final String STATUSES_NOT_MATCH = "Statuses do not match";
     private static final String ERROR_MESSAGE_MISMATCH = "Error messages do not match";
+
+    private static final Map<String, List<String>> reasons = new ConcurrentHashMap<>();
+
+    @BeforeAll
+    static void beforeAllSetup() {
+        reasons.put("Reason A", List.of("Text A", "Text B"));
+    }
 
     @BeforeEach
     void setup() {
@@ -418,9 +426,6 @@ class MediaApplicationTest {
 
         assertEquals(STATUS, application.getStatus(), "Original statuses do not match");
 
-        Map<String, List<String>> reasons = new ConcurrentHashMap<>();
-        reasons.put("Reason A", List.of("Text A", "Text B"));
-
         MvcResult mvcResult = mockMvc.perform(put(UPDATE_APPLICATION_REJECTION_URL, application.getId(),
                                                   MediaApplicationStatus.REJECTED
             ).content(objectMapper.writeValueAsString(reasons)).contentType(MediaType.APPLICATION_JSON))
@@ -440,9 +445,6 @@ class MediaApplicationTest {
 
     @Test
     void testUpdateApplicationRejectionNotFound() throws Exception {
-        Map<String, List<String>> reasons = new ConcurrentHashMap<>();
-        reasons.put("Reason A", List.of("Text A", "Text B"));
-
         MvcResult mvcResult = mockMvc.perform(put(UPDATE_APPLICATION_REJECTION_URL, TEST_ID,
                                                   MediaApplicationStatus.REJECTED
             ).content(objectMapper.writeValueAsString(reasons)).contentType(MediaType.APPLICATION_JSON))
@@ -459,7 +461,7 @@ class MediaApplicationTest {
     void testUpdateApplicationRejectionUnauthorised() throws Exception {
         mockMvc.perform(put(UPDATE_APPLICATION_REJECTION_URL, TEST_ID,
                             MediaApplicationStatus.REJECTED
-            ).content("The name, email address and Press ID do not match each other.")
+            ).content(objectMapper.writeValueAsString(reasons)).contentType(MediaType.APPLICATION_JSON)
                             .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isForbidden());
     }
