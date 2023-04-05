@@ -33,6 +33,7 @@ public class PublicationService {
     private static final String FULL_NAME = "fullName";
     private static final String USER_PROVENANCE = "userProvenance";
     private static final String LAST_SIGNED_IN_DATE = "lastSignedInDate";
+    private static final String REQUEST_FAILED_MESSAGE = "Request failed with error message: %s";
 
     @Autowired
     WebClient webClient;
@@ -56,7 +57,7 @@ public class PublicationService {
                          .bodyToMono(String.class).block());
             return true;
         } catch (WebClientException ex) {
-            log.error(String.format("Request failed with error message: %s", ex.getMessage()));
+            log.error(String.format(REQUEST_FAILED_MESSAGE, ex.getMessage()));
             return false;
         }
     }
@@ -72,8 +73,8 @@ public class PublicationService {
                                                   Map<String, List<String>> reasons) {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("applicantId", mediaApplication.getId().toString());
-        jsonObject.put("fullName", mediaApplication.getFullName());
-        jsonObject.put("email", mediaApplication.getEmail());
+        jsonObject.put(FULL_NAME, mediaApplication.getFullName());
+        jsonObject.put(EMAIL, mediaApplication.getEmail());
         jsonObject.put("reasons", reasons);
         try {
             log.info(webClient.post().uri(url + "/notify/media/reject")
@@ -81,7 +82,7 @@ public class PublicationService {
                          .bodyToMono(String.class).block());
             return true;
         } catch (WebClientException ex) {
-            log.error(String.format("Request failed with error message: %s", ex.getMessage()));
+            log.error(String.format(REQUEST_FAILED_MESSAGE, ex.getMessage()));
             return false;
         }
     }
@@ -96,7 +97,7 @@ public class PublicationService {
                 .bodyToMono(String.class).block());
             return true;
         } catch (WebClientException ex) {
-            log.error(String.format("Request failed with error message: %s", ex.getMessage()));
+            log.error(String.format(REQUEST_FAILED_MESSAGE, ex.getMessage()));
             return false;
         }
     }
