@@ -6,6 +6,7 @@ import com.azure.storage.blob.BlobContainerClient;
 import com.azure.storage.blob.models.BlobStorageException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,7 +29,9 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -64,6 +67,7 @@ class MediaApplicationTest {
     private static final String ROOT_URL = "/application";
     private static final String GET_STATUS_URL = ROOT_URL + "/status/{status}";
     private static final String PUT_URL = ROOT_URL + "/{id}/{status}";
+    private static final String UPDATE_APPLICATION_REJECTION_URL = ROOT_URL + "/{id}/{status}/reasons";
     private static final String DELETE_URL = ROOT_URL + "/{id}";
     private static final String GET_BY_ID_URL = ROOT_URL + "/{id}";
     private static final String GET_IMAGE_BY_ID_URL = ROOT_URL + "/image/{id}";
@@ -87,6 +91,13 @@ class MediaApplicationTest {
     private static final String FULLNAME_NOT_FORMATTTED = "Full name hasn't been formatted";
     private static final String STATUSES_NOT_MATCH = "Statuses do not match";
     private static final String ERROR_MESSAGE_MISMATCH = "Error messages do not match";
+
+    private static final Map<String, List<String>> REASONS = new ConcurrentHashMap<>();
+
+    @BeforeAll
+    static void beforeAllSetup() {
+        REASONS.put("Reason A", List.of("Text A", "Text B"));
+    }
 
     @BeforeEach
     void setup() {
@@ -406,6 +417,52 @@ class MediaApplicationTest {
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testUpdateApplicationUnauthorised() throws Exception {
         mockMvc.perform(put(PUT_URL, TEST_ID, STATUS))
+            .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void testUpdateApplicationRejection() throws Exception {
+        MediaApplication application = createApplication();
+
+        assertEquals(STATUS, application.getStatus(), "Original statuses do not match");
+
+        MvcResult mvcResult = mockMvc.perform(put(UPDATE_APPLICATION_REJECTION_URL, application.getId(),
+                                                  MediaApplicationStatus.REJECTED
+            ).content(objectMapper.writeValueAsString(REASONS)).contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andReturn();
+
+        MediaApplication returnedApplication = objectMapper.readValue(
+            mvcResult.getResponse()
+                .getContentAsString(),
+            MediaApplication.class
+        );
+
+        assertEquals(MediaApplicationStatus.REJECTED, returnedApplication.getStatus(),
+                     "Updated statuses do not match"
+        );
+    }
+
+    @Test
+    void testUpdateApplicationRejectionNotFound() throws Exception {
+        MvcResult mvcResult = mockMvc.perform(put(UPDATE_APPLICATION_REJECTION_URL, TEST_ID,
+                                                  MediaApplicationStatus.REJECTED
+            ).content(objectMapper.writeValueAsString(REASONS)).contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isNotFound())
+            .andReturn();
+
+        assertTrue(mvcResult.getResponse().getContentAsString()
+                       .contains("Application with id " + TEST_ID + " could not be found"), NOT_FOUND_ERROR);
+
+    }
+
+    @Test
+    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
+    void testUpdateApplicationRejectionUnauthorised() throws Exception {
+        mockMvc.perform(put(UPDATE_APPLICATION_REJECTION_URL, TEST_ID,
+                            MediaApplicationStatus.REJECTED
+            ).content(objectMapper.writeValueAsString(REASONS)).contentType(MediaType.APPLICATION_JSON)
+                            .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isForbidden());
     }
 
