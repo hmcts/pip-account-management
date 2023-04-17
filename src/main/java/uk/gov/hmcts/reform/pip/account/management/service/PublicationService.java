@@ -15,6 +15,7 @@ import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
 import uk.gov.hmcts.reform.pip.model.system.admin.SystemAdminAction;
 
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -32,6 +33,7 @@ public class PublicationService {
     private static final String FULL_NAME = "fullName";
     private static final String USER_PROVENANCE = "userProvenance";
     private static final String LAST_SIGNED_IN_DATE = "lastSignedInDate";
+    private static final String REQUEST_FAILED_MESSAGE = "Request failed with error message: %s";
 
     @Autowired
     WebClient webClient;
@@ -55,7 +57,32 @@ public class PublicationService {
                          .bodyToMono(String.class).block());
             return true;
         } catch (WebClientException ex) {
-            log.error(String.format("Request failed with error message: %s", ex.getMessage()));
+            log.error(String.format(REQUEST_FAILED_MESSAGE, ex.getMessage()));
+            return false;
+        }
+    }
+
+    /**
+     * Method which sends a request to the publication-services microservice to send a media account rejection email.
+     *
+     * @param mediaApplication - MediaApplication object containing applicant details
+     * @param reasons          - reasons for rejection
+     * @return boolean for logging success or failure
+     */
+    public boolean sendMediaAccountRejectionEmail(MediaApplication mediaApplication,
+                                                  Map<String, List<String>> reasons) {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("applicantId", mediaApplication.getId().toString());
+        jsonObject.put(FULL_NAME, mediaApplication.getFullName());
+        jsonObject.put(EMAIL, mediaApplication.getEmail());
+        jsonObject.put("reasons", reasons);
+        try {
+            log.info(webClient.post().uri(url + "/notify/media/reject")
+                         .body(BodyInserters.fromValue(jsonObject)).retrieve()
+                         .bodyToMono(String.class).block());
+            return true;
+        } catch (WebClientException ex) {
+            log.error(String.format(REQUEST_FAILED_MESSAGE, ex.getMessage()));
             return false;
         }
     }
@@ -70,7 +97,7 @@ public class PublicationService {
                 .bodyToMono(String.class).block());
             return true;
         } catch (WebClientException ex) {
-            log.error(String.format("Request failed with error message: %s", ex.getMessage()));
+            log.error(String.format(REQUEST_FAILED_MESSAGE, ex.getMessage()));
             return false;
         }
     }
@@ -98,6 +125,7 @@ public class PublicationService {
             return false;
         }
     }
+
 
     /**
      * Method which sends a request to publication services to email the P&I team.

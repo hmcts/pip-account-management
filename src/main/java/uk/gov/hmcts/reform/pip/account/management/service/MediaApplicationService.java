@@ -15,6 +15,7 @@ import uk.gov.hmcts.reform.pip.model.enums.UserActions;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static uk.gov.hmcts.reform.pip.account.management.model.MediaApplicationStatus.APPROVED;
@@ -68,7 +69,10 @@ public class MediaApplicationService {
      */
     public MediaApplication getApplicationById(UUID id) {
         return mediaApplicationRepository.findById(id).orElseThrow(() ->
-            new NotFoundException(String.format(APPLICATION_NOT_FOUND, id)));
+                new NotFoundException(String.format(
+                        APPLICATION_NOT_FOUND,
+                        id
+                )));
     }
 
     /**
@@ -89,7 +93,7 @@ public class MediaApplicationService {
      * Create an application and store the image in the blob store, saving the blob url in the entity.
      *
      * @param application The application entity to save to the database
-     * @param file The file to upload to the blob store
+     * @param file        The file to upload to the blob store
      * @return The newly created application
      */
     public MediaApplication createApplication(MediaApplication application, MultipartFile file) {
@@ -102,7 +106,8 @@ public class MediaApplicationService {
         MediaApplication createdMediaApplication = mediaApplicationRepository.save(application);
 
         log.info(writeLog(createdMediaApplication.getId().toString(), UserActions.CREATE_MEDIA_APPLICATION,
-                          createdMediaApplication.getId().toString()));
+                createdMediaApplication.getId().toString()
+        ));
 
         return createdMediaApplication;
     }
@@ -111,15 +116,44 @@ public class MediaApplicationService {
      * Update an application by fetching the application.
      * If the status has been updated to Approved or Rejected then also delete the stored image.
      *
-     * @param id The id of the application to update
+     * @param id     The id of the application to update
      * @param status The status to update the application with
      * @return The updated application
      */
     public MediaApplication updateApplication(UUID id, MediaApplicationStatus status) {
-        MediaApplication applicationToUpdate = mediaApplicationRepository.findById(id).orElseThrow(() ->
-            new NotFoundException(String.format(APPLICATION_NOT_FOUND, id)));
+        MediaApplication applicationToUpdate = mediaApplicationRepository
+                .findById(id).orElseThrow(() -> new NotFoundException(
+                        String.format(
+                                APPLICATION_NOT_FOUND,
+                                id
+                        )));
 
         log.info(writeLog(UserActions.UPDATE_MEDIA_APPLICATION, applicationToUpdate.getId().toString()));
+
+        applicationToUpdate.setStatus(status);
+        applicationToUpdate.setStatusDate(LocalDateTime.now());
+
+        if (APPROVED.equals(status) || REJECTED.equals(status)) {
+            azureBlobService.deleteBlob(applicationToUpdate.getImage());
+        }
+
+        return mediaApplicationRepository.save(applicationToUpdate);
+    }
+
+    public MediaApplication updateApplication(UUID id, MediaApplicationStatus status,
+                                              Map<String, List<String>> reasons) {
+        MediaApplication applicationToUpdate = mediaApplicationRepository
+                .findById(id).orElseThrow(() -> new NotFoundException(
+                        String.format(
+                                APPLICATION_NOT_FOUND,
+                                id
+                        )));
+        if (REJECTED.equals(status)) {
+            sendMediaApplicationRejectionEmail(id, reasons);
+        }
+
+        log.info(writeLog(UserActions.UPDATE_MEDIA_APPLICATION, applicationToUpdate.getId().toString()));
+
 
         applicationToUpdate.setStatus(status);
         applicationToUpdate.setStatusDate(LocalDateTime.now());
@@ -137,13 +171,25 @@ public class MediaApplicationService {
      * @param id The id of the application to delete
      */
     public void deleteApplication(UUID id) {
-        MediaApplication applicationToDelete = mediaApplicationRepository.findById(id).orElseThrow(() ->
-            new NotFoundException(String.format(APPLICATION_NOT_FOUND, id)));
-
+        MediaApplication applicationToDelete = mediaApplicationRepository
+                .findById(id).orElseThrow(() -> new NotFoundException(String.format(APPLICATION_NOT_FOUND, id)));
         log.info(writeLog(UserActions.DELETE_MEDIA_APPLICATION, applicationToDelete.getId().toString()));
 
         azureBlobService.deleteBlob(applicationToDelete.getImage());
         mediaApplicationRepository.delete(applicationToDelete);
+    }
+
+    /**
+     * Send rejection email for a given applicant.
+     */
+    private String sendMediaApplicationRejectionEmail(UUID id, Map<String, List<String>> rejectionReasons) {
+        MediaApplication mediaApplication = this.getApplicationById(id);
+        boolean emailSent = publicationService.sendMediaAccountRejectionEmail(mediaApplication, rejectionReasons);
+        if (emailSent) {
+            return "email successfully sent to " + id;
+        } else {
+            return "email failed to send to " + id;
+        }
     }
 
     /**
@@ -162,9 +208,9 @@ public class MediaApplicationService {
      */
     private void processApplicationsForDeleting(List<MediaApplication> mediaApplications) {
         mediaApplicationRepository.deleteAllInBatch(
-            mediaApplications.stream().filter(app -> app.getStatus().equals(APPROVED)
-                || app.getStatus().equals(REJECTED))
-                .toList());
+                mediaApplications.stream().filter(app -> app.getStatus().equals(APPROVED)
+                                || app.getStatus().equals(REJECTED))
+                        .toList());
 
         log.info("Approved and Rejected media applications deleted");
     }

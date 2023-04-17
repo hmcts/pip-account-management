@@ -14,15 +14,22 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import uk.gov.hmcts.reform.pip.account.management.Application;
 import uk.gov.hmcts.reform.pip.account.management.config.AzureConfigurationClientTestConfiguration;
+import uk.gov.hmcts.reform.pip.account.management.model.MediaApplication;
+import uk.gov.hmcts.reform.pip.account.management.model.MediaApplicationStatus;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
 import uk.gov.hmcts.reform.pip.model.system.admin.ActionResult;
 import uk.gov.hmcts.reform.pip.model.system.admin.CreateSystemAdminAction;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static uk.gov.hmcts.reform.pip.account.management.helper.MediaApplicationHelper.createApplication;
 import static uk.gov.hmcts.reform.pip.account.management.helper.MediaApplicationHelper.createApplicationList;
 
 @ExtendWith(MockitoExtension.class)
@@ -129,6 +136,42 @@ class PublicationServiceTest {
             createApplicationList(2)),
                      "No application list sent");
     }
+
+    @Test
+    void testSendMediaAccountRejectionEmail() {
+        mockPublicationServicesEndpoint.enqueue(new MockResponse().setBody(SENT_MESSAGE));
+
+        MediaApplication mediaApplication = new MediaApplication();
+        mediaApplication.setFullName("John Doe");
+        mediaApplication.setId(UUID.randomUUID());
+        mediaApplication.setEmail("john.doe@example.com");
+
+        Map<String, List<String>> reasons = new ConcurrentHashMap<>();
+        reasons.put("Reason A", List.of("Text A", "Text B"));
+
+        assertTrue(publicationService.sendMediaAccountRejectionEmail(mediaApplication, reasons),
+                   "Failed to send media account rejection email");
+
+        assertTrue(logCaptor.getInfoLogs().get(0).contains(SENT_MESSAGE), MESSAGES_MATCH);
+    }
+
+    @Test
+    void testSendMediaAccountRejectionEmailFailure() {
+        mockPublicationServicesEndpoint.enqueue(new MockResponse().setResponseCode(500));
+
+        MediaApplication mediaApplication = createApplication(MediaApplicationStatus.REJECTED);
+
+        Map<String, List<String>> reasons = new ConcurrentHashMap<>();
+        reasons.put("Reason A", List.of("Text A", "Text B"));
+
+        assertFalse(publicationService.sendMediaAccountRejectionEmail(mediaApplication, reasons),
+                    "Expected email sending to fail");
+
+        assertTrue(logCaptor.getErrorLogs().get(0).contains("Request failed with error message:"),
+                   "Expected error log message");
+    }
+
+
 
     @Test
     void testFailedMediaApplicationReportEmail() {

@@ -17,7 +17,9 @@ import uk.gov.hmcts.reform.pip.account.management.model.MediaApplicationStatus;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -40,6 +42,7 @@ import static uk.gov.hmcts.reform.pip.account.management.helper.MediaApplication
 @SuppressWarnings("PMD.TooManyMethods")
 class MediaApplicationServiceTest {
 
+    public static final String REJECTION_REASONS_GO_HERE = "Rejection reasons go here";
     @Mock
     private MediaApplicationRepository mediaApplicationRepository;
 
@@ -178,8 +181,12 @@ class MediaApplicationServiceTest {
         when(mediaApplicationRepository.save(mediaApplicationExample))
             .thenReturn(mediaApplicationExample);
 
+
+        Map<String, List<String>> reasons = new ConcurrentHashMap<>();
+        reasons.put("Reason A", List.of("Reason Text", "Reason Text"));
+
         MediaApplication returnedApplication = mediaApplicationService
-            .updateApplication(TEST_ID, MediaApplicationStatus.REJECTED);
+            .updateApplication(TEST_ID, MediaApplicationStatus.REJECTED, reasons);
 
         assertEquals(MediaApplicationStatus.REJECTED, returnedApplication.getStatus(),
                      "Application status was not updated");
