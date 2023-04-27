@@ -141,7 +141,7 @@ The above diagram is somewhat simplified for readability (e.g. it does not inclu
 
 ### Installation
 
-- Clone the repository
+- Clone the repository.
 - Ensure all required [environment variables](#environment-variables) have been set.
 - Build using the command `./gradlew clean build`
 - Start the service using the command `./gradlew bootrun` in the newly created directory.
