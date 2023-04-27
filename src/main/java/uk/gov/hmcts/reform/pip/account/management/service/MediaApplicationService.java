@@ -154,7 +154,6 @@ public class MediaApplicationService {
 
         log.info(writeLog(UserActions.UPDATE_MEDIA_APPLICATION, applicationToUpdate.getId().toString()));
 
-
         applicationToUpdate.setStatus(status);
         applicationToUpdate.setStatusDate(LocalDateTime.now());
 
@@ -182,14 +181,9 @@ public class MediaApplicationService {
     /**
      * Send rejection email for a given applicant.
      */
-    private String sendMediaApplicationRejectionEmail(UUID id, Map<String, List<String>> rejectionReasons) {
+    private void sendMediaApplicationRejectionEmail(UUID id, Map<String, List<String>> rejectionReasons) {
         MediaApplication mediaApplication = this.getApplicationById(id);
-        boolean emailSent = publicationService.sendMediaAccountRejectionEmail(mediaApplication, rejectionReasons);
-        if (emailSent) {
-            return "email successfully sent to " + id;
-        } else {
-            return "email failed to send to " + id;
-        }
+        publicationService.sendMediaAccountRejectionEmail(mediaApplication, rejectionReasons);
     }
 
     /**
@@ -198,7 +192,7 @@ public class MediaApplicationService {
     public void processApplicationsForReporting() {
         List<MediaApplication> mediaApplications = getApplications();
         if (!mediaApplications.isEmpty()) {
-            log.info(publicationService.sendMediaApplicationReportingEmail(mediaApplications));
+            publicationService.sendMediaApplicationReportingEmail(mediaApplications);
             processApplicationsForDeleting(mediaApplications);
         }
     }
@@ -212,6 +206,6 @@ public class MediaApplicationService {
                                 || app.getStatus().equals(REJECTED))
                         .toList());
 
-        log.info("Approved and Rejected media applications deleted");
+        log.info(writeLog("Approved and Rejected media applications deleted"));
     }
 }

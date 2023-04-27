@@ -184,15 +184,14 @@ public class AccountService {
             if (PI_AAD.equals(userToDelete.getUserProvenance())) {
                 azureUserService.deleteUser(userToDelete.getProvenanceUserId());
             }
+            log.info(writeLog(UserActions.REMOVE_ACCOUNT, userId.toString()));
         } catch (AzureCustomException ex) {
-            log.info(writeLog(String.format("Error when deleting an account from azure with Provenance user id: "
+            log.error(writeLog(String.format("Error when deleting an account from azure with Provenance user id: "
                                                 + "%s and error: %s",
                                             userToDelete.getProvenanceUserId(), ex.getMessage())));
         }
 
-        log.info(writeLog(
-            subscriptionService.sendSubscriptionDeletionRequest(userToDelete.getUserId().toString()))
-        );
+        subscriptionService.sendSubscriptionDeletionRequest(userToDelete.getUserId().toString());
         userRepository.delete(userToDelete);
         return String.format("User with ID %s has been deleted", userToDelete.getUserId());
     }
@@ -252,7 +251,9 @@ public class AccountService {
             try {
                 azureUserService.updateUserRole(userToUpdate.getProvenanceUserId(), updatedRole.toString());
             } catch (AzureCustomException ex) {
-                log.info(String.format("Failed to update user with ID %s in Azure", userToUpdate.getUserId()));
+                log.error(writeLog(
+                    String.format("Failed to update user with ID %s in Azure", userToUpdate.getUserId())
+                ));
             }
         }
 
@@ -261,7 +262,7 @@ public class AccountService {
 
         String returnMessage = String.format(
             "User with ID %s has been updated to a %s", userToUpdate.getUserId(), updatedRole);
-        log.info(returnMessage);
+        log.info(writeLog(returnMessage));
 
         return returnMessage;
     }
