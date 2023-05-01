@@ -230,7 +230,7 @@ dependencies {
   testImplementation group: 'org.springframework.boot', name: 'spring-boot-starter-test'
   testImplementation group: 'org.springframework.security', name: 'spring-security-test'
   testImplementation "io.zonky.test:embedded-database-spring-test:2.2.0"
-  testImplementation group: 'com.squareup.okhttp3', name: 'mockwebserver', version: '4.10.0'
+  testImplementation group: 'com.squareup.okhttp3', name: 'mockwebserver', version: '4.11.0'
   testImplementation group: 'io.github.hakky54', name: 'logcaptor', version: '2.9.0'
   testImplementation group: 'io.zonky.test', name: 'embedded-database-spring-test', version: '2.2.0'
   testImplementation group: 'org.awaitility', name: 'awaitility', version: '4.2.0'
