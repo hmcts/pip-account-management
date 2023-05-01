@@ -192,7 +192,7 @@ dependencies {
   implementation group: 'org.springframework.boot', name: 'spring-boot-starter-oauth2-client'
   implementation group: 'org.postgresql', name: 'postgresql', version: '42.6.0'
   implementation group: 'com.azure.spring', name: 'spring-cloud-azure-starter-active-directory', version: '4.5.0'
-  implementation group: 'com.squareup.okhttp3', name: 'okhttp', version: '4.10.0'
+  implementation group: 'com.squareup.okhttp3', name: 'okhttp', version: '4.11.0'
   implementation group: 'com.opencsv', name: 'opencsv', version: '5.7.1'
   implementation group: 'commons-validator', name: 'commons-validator', version: '1.7'
 
@@ -230,7 +230,7 @@ dependencies {
   testImplementation group: 'org.springframework.boot', name: 'spring-boot-starter-test'
   testImplementation group: 'org.springframework.security', name: 'spring-security-test'
   testImplementation "io.zonky.test:embedded-database-spring-test:2.2.0"
-  testImplementation group: 'com.squareup.okhttp3', name: 'mockwebserver', version: '4.10.0'
+  testImplementation group: 'com.squareup.okhttp3', name: 'mockwebserver', version: '4.11.0'
   testImplementation group: 'io.github.hakky54', name: 'logcaptor', version: '2.9.0'
   testImplementation group: 'io.zonky.test', name: 'embedded-database-spring-test', version: '2.2.0'
   testImplementation group: 'org.awaitility', name: 'awaitility', version: '4.2.0'
