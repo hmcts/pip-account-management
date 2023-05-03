@@ -53,10 +53,10 @@ public class InactiveAccountManagementService {
     public void sendMediaUsersForVerification() {
         userRepository.findVerifiedUsersByLastVerifiedDate(mediaAccountVerificationDays).forEach(user -> {
             try {
-                log.info(writeLog(publicationService.sendAccountVerificationEmail(
+                publicationService.sendAccountVerificationEmail(
                     user.getEmail(),
                     azureUserService.getUser(user.getEmail()).givenName
-                )));
+                );
             } catch (AzureCustomException ex) {
                 log.error(writeLog("Error when getting user from azure: " + ex.getMessage()));
             }
@@ -71,11 +71,12 @@ public class InactiveAccountManagementService {
         userRepository.findAadAdminUsersByLastSignedInDate(aadAdminAccountSignInNotificationDays)
             .forEach(user -> {
                 try {
-                    log.info(writeLog(publicationService.sendInactiveAccountSignInNotificationEmail(
+                    publicationService.sendInactiveAccountSignInNotificationEmail(
                         user.getEmail(),
                         azureUserService.getUser(user.getEmail()).givenName,
                         user.getUserProvenance(),
-                        DateTimeHelper.localDateTimeToDateString(user.getLastSignedInDate()))));
+                        DateTimeHelper.localDateTimeToDateString(user.getLastSignedInDate())
+                    );
                 } catch (AzureCustomException ex) {
                     log.error(writeLog("Error when getting user from azure: " + ex.getMessage()));
                 }
@@ -88,12 +89,12 @@ public class InactiveAccountManagementService {
      */
     public void notifyIdamUsersToSignIn() {
         userRepository.findIdamUsersByLastSignedInDate(idamAccountSignInNotificationDays)
-            .forEach(user -> log.info(writeLog(publicationService.sendInactiveAccountSignInNotificationEmail(
+            .forEach(user -> publicationService.sendInactiveAccountSignInNotificationEmail(
                 user.getEmail(),
                 user.getForenames() + " " + user.getSurname(),
                 user.getUserProvenance(),
-                DateTimeHelper.localDateTimeToDateString(user.getLastSignedInDate()))))
-            );
+                DateTimeHelper.localDateTimeToDateString(user.getLastSignedInDate())
+            ));
     }
 
     /**
@@ -102,9 +103,7 @@ public class InactiveAccountManagementService {
      */
     public void findMediaAccountsForDeletion() {
         userRepository.findVerifiedUsersByLastVerifiedDate(mediaAccountDeletionDays)
-            .forEach(user -> log.info(writeLog(accountService.deleteAccount(
-                user.getUserId())
-            )));
+            .forEach(user -> accountService.deleteAccount(user.getUserId()));
     }
 
     /**
@@ -113,9 +112,7 @@ public class InactiveAccountManagementService {
      */
     public void findAdminAccountsForDeletion() {
         userRepository.findAadAdminUsersByLastSignedInDate(aadAdminAccountDeletionDays)
-            .forEach(user -> log.info(writeLog(accountService.deleteAccount(
-                user.getUserId())
-            )));
+            .forEach(user -> accountService.deleteAccount(user.getUserId()));
     }
 
     /**
@@ -124,9 +121,7 @@ public class InactiveAccountManagementService {
      */
     public void findIdamAccountsForDeletion() {
         userRepository.findIdamUsersByLastSignedInDate(idamAccountDeletionDays)
-            .forEach(user -> log.info(writeLog(accountService.deleteAccount(
-                user.getUserId())
-            )));
+            .forEach(user -> accountService.deleteAccount(user.getUserId()));
     }
 }
 

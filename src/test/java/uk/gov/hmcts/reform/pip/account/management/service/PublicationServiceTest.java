@@ -26,7 +26,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static uk.gov.hmcts.reform.pip.account.management.helper.MediaApplicationHelper.createApplication;
@@ -42,10 +41,11 @@ class PublicationServiceTest {
     private static MockWebServer mockPublicationServicesEndpoint;
 
     private static final String SENT_MESSAGE = "test email sent";
-    private static final String MESSAGES_MATCH = "Returned messages should match";
     private static final String EMAIL = "test@email.com";
     private static final String FULL_NAME = "FULL_NAME";
     private static final String LAST_SIGNED_IN_DATE = "15 July 2022";
+    private static final String ERROR_LOG_EMPTY_MESSAGE = "Error log is not empty";
+    private static final String ERROR_LOG_MATCH_MESSAGE = "Error log does not match";
 
     @Autowired
     PublicationService publicationService;
@@ -67,25 +67,19 @@ class PublicationServiceTest {
     void testSendEmail() {
         mockPublicationServicesEndpoint.enqueue(new MockResponse().setBody(SENT_MESSAGE));
 
-        assertTrue(publicationService.sendNotificationEmail(EMAIL,
-                                                            "forename",
-                                                             "surname"
-        ), "No trigger sent");
-
-        assertTrue(logCaptor.getInfoLogs().get(0).contains(SENT_MESSAGE), MESSAGES_MATCH);
+        assertTrue(publicationService.sendNotificationEmail(EMAIL, "forename", "surname"),
+                   "No trigger sent");
+        assertTrue(logCaptor.getErrorLogs().isEmpty(), ERROR_LOG_EMPTY_MESSAGE);
     }
 
     @Test
     void testFailedEmailSend() {
         mockPublicationServicesEndpoint.enqueue(new MockResponse().setResponseCode(400));
 
-        assertFalse(publicationService.sendNotificationEmail(EMAIL,
-                                                             "forename",
-                                                             "surname"),
-                     "trigger sent in error"
-        );
-        assertTrue(logCaptor.getErrorLogs().get(0).contains("Request failed with error message:"),
-                   "Error logs not being captured.");
+        assertFalse(publicationService.sendNotificationEmail(EMAIL, "forename", "surname"),
+                    "trigger sent in error");
+        assertTrue(logCaptor.getErrorLogs().get(0).contains("Admin account welcome email failed to send with error:"),
+                   ERROR_LOG_MATCH_MESSAGE);
     }
 
     @Test
@@ -94,7 +88,7 @@ class PublicationServiceTest {
 
         assertTrue(publicationService.sendMediaNotificationEmail(EMAIL, FULL_NAME, true),
                    "Should return true");
-        assertTrue(logCaptor.getInfoLogs().get(0).contains(SENT_MESSAGE), MESSAGES_MATCH);
+        assertTrue(logCaptor.getErrorLogs().isEmpty(), ERROR_LOG_EMPTY_MESSAGE);
     }
 
     @Test
@@ -103,38 +97,45 @@ class PublicationServiceTest {
 
         assertFalse(publicationService.sendMediaNotificationEmail(EMAIL, FULL_NAME, true),
                     "Should return false");
-        assertTrue(logCaptor.getErrorLogs().get(0).contains(
-            "Request to publication services /notify/welcome-email failed"), MESSAGES_MATCH);
+        assertTrue(logCaptor.getErrorLogs().get(0).contains("Media account welcome email failed to send with error:"),
+                   ERROR_LOG_MATCH_MESSAGE);
     }
 
     @Test
     void testSendDuplicateMediaAccountEmail() {
         mockPublicationServicesEndpoint.enqueue(new MockResponse().setBody(SENT_MESSAGE));
 
-        assertTrue(publicationService.sendNotificationEmailForDuplicateMediaAccount(
-            EMAIL, FULL_NAME),
-                     "No duplicate media account email sent");
-        assertTrue(logCaptor.getInfoLogs().get(0).contains(SENT_MESSAGE), MESSAGES_MATCH);
+        assertTrue(publicationService.sendNotificationEmailForDuplicateMediaAccount(EMAIL, FULL_NAME),
+                   "No duplicate media account email sent");
+        assertTrue(logCaptor.getErrorLogs().isEmpty(), ERROR_LOG_EMPTY_MESSAGE);
     }
 
     @Test
     void testFailedDuplicateMediaAccountEmail() {
         mockPublicationServicesEndpoint.enqueue(new MockResponse().setResponseCode(400));
 
-        assertFalse(publicationService.sendNotificationEmailForDuplicateMediaAccount(
-            EMAIL, FULL_NAME), "Expected error message not in response");
-
-        assertTrue(logCaptor.getErrorLogs().get(0).contains(
-            "Request failed with error message"), MESSAGES_MATCH);
+        assertFalse(publicationService.sendNotificationEmailForDuplicateMediaAccount(EMAIL, FULL_NAME),
+                    "Expected error message not in response");
+        assertTrue(logCaptor.getErrorLogs().get(0).contains("Duplicate media account email failed to send with error:"),
+                   ERROR_LOG_MATCH_MESSAGE);
     }
 
     @Test
     void testSendMediaApplicationReportingEmail() {
         mockPublicationServicesEndpoint.enqueue(new MockResponse().setBody(SENT_MESSAGE));
 
-        assertEquals(SENT_MESSAGE, publicationService.sendMediaApplicationReportingEmail(
-            createApplicationList(2)),
-                     "No application list sent");
+        publicationService.sendMediaApplicationReportingEmail(createApplicationList(2));
+        assertTrue(logCaptor.getErrorLogs().isEmpty(), ERROR_LOG_EMPTY_MESSAGE);
+    }
+
+    @Test
+    void testFailedMediaApplicationReportEmail() {
+        mockPublicationServicesEndpoint.enqueue(new MockResponse().setResponseCode(400));
+
+        publicationService.sendMediaApplicationReportingEmail(createApplicationList(2));
+        assertTrue(logCaptor.getErrorLogs().get(0)
+                       .contains("Media application reporting email failed to send with error:"),
+                   ERROR_LOG_MATCH_MESSAGE);
     }
 
     @Test
@@ -149,10 +150,8 @@ class PublicationServiceTest {
         Map<String, List<String>> reasons = new ConcurrentHashMap<>();
         reasons.put("Reason A", List.of("Text A", "Text B"));
 
-        assertTrue(publicationService.sendMediaAccountRejectionEmail(mediaApplication, reasons),
-                   "Failed to send media account rejection email");
-
-        assertTrue(logCaptor.getInfoLogs().get(0).contains(SENT_MESSAGE), MESSAGES_MATCH);
+        publicationService.sendMediaAccountRejectionEmail(mediaApplication, reasons);
+        assertTrue(logCaptor.getErrorLogs().isEmpty(), ERROR_LOG_EMPTY_MESSAGE);
     }
 
     @Test
@@ -164,83 +163,70 @@ class PublicationServiceTest {
         Map<String, List<String>> reasons = new ConcurrentHashMap<>();
         reasons.put("Reason A", List.of("Text A", "Text B"));
 
-        assertFalse(publicationService.sendMediaAccountRejectionEmail(mediaApplication, reasons),
-                    "Expected email sending to fail");
-
-        assertTrue(logCaptor.getErrorLogs().get(0).contains("Request failed with error message:"),
-                   "Expected error log message");
-    }
-
-
-
-    @Test
-    void testFailedMediaApplicationReportEmail() {
-        mockPublicationServicesEndpoint.enqueue(new MockResponse().setResponseCode(400));
-        String expectedResponse = String.format(
-            "Email request failed to send with list of applications: %s",
-            createApplicationList(2));
-
-        assertTrue(publicationService.sendMediaApplicationReportingEmail(createApplicationList(2))
-                       .contains(expectedResponse), "Expected error message not in response");
+        publicationService.sendMediaAccountRejectionEmail(mediaApplication, reasons);
+        assertTrue(logCaptor.getErrorLogs().get(0).contains("Media account rejection email failed to send with error:"),
+                   ERROR_LOG_MATCH_MESSAGE);
     }
 
     @Test
     void testSendAccountVerificationEmail() {
         mockPublicationServicesEndpoint.enqueue(new MockResponse().setBody(SENT_MESSAGE));
 
-        assertEquals(SENT_MESSAGE, publicationService.sendAccountVerificationEmail(EMAIL, FULL_NAME),
-                     "No user data sent");
+        publicationService.sendAccountVerificationEmail(EMAIL, FULL_NAME);
+        assertTrue(logCaptor.getErrorLogs().isEmpty(), ERROR_LOG_EMPTY_MESSAGE);
     }
 
     @Test
     void testFailedAccountVerificationEmail() {
         mockPublicationServicesEndpoint.enqueue(new MockResponse().setResponseCode(400));
 
-        assertTrue(publicationService.sendAccountVerificationEmail(EMAIL, FULL_NAME)
+        publicationService.sendAccountVerificationEmail(EMAIL, FULL_NAME);
+        assertTrue(logCaptor.getErrorLogs().get(0)
                        .contains("Media account verification email failed to send with error:"),
-                   "No error was sent back");
+                   ERROR_LOG_MATCH_MESSAGE);
     }
 
     @Test
     void testSendAccountSignInNotificationEmail() {
         mockPublicationServicesEndpoint.enqueue(new MockResponse().setBody(SENT_MESSAGE));
 
-        assertEquals(SENT_MESSAGE, publicationService.sendInactiveAccountSignInNotificationEmail(EMAIL, FULL_NAME,
-                                                                                                 UserProvenances.PI_AAD,
-                                                                                                 LAST_SIGNED_IN_DATE),
-                     "Notification email not sent");
+        publicationService.sendInactiveAccountSignInNotificationEmail(EMAIL, FULL_NAME, UserProvenances.PI_AAD,
+                                                                      LAST_SIGNED_IN_DATE);
+        assertTrue(logCaptor.getErrorLogs().isEmpty(), ERROR_LOG_EMPTY_MESSAGE);
     }
 
     @Test
     void testFailedAccountSignInNotificationEmail() {
         mockPublicationServicesEndpoint.enqueue(new MockResponse().setResponseCode(400));
 
-        assertTrue(publicationService.sendInactiveAccountSignInNotificationEmail(EMAIL, FULL_NAME,
-                                                                                 UserProvenances.PI_AAD,
-                                                                                 LAST_SIGNED_IN_DATE)
+        publicationService.sendInactiveAccountSignInNotificationEmail(EMAIL, FULL_NAME, UserProvenances.PI_AAD,
+                                                                      LAST_SIGNED_IN_DATE);
+        assertTrue(logCaptor.getErrorLogs().get(0)
                        .contains("Inactive user sign-in notification email failed to send with error:"),
-                   "No error was sent back");
+                   ERROR_LOG_MATCH_MESSAGE);
     }
 
     @Test
     void testSendSystemAdminAccountAction() {
-        var testSystemAdminAction = new CreateSystemAdminAction();
+        CreateSystemAdminAction testSystemAdminAction = new CreateSystemAdminAction();
         testSystemAdminAction.setAccountEmail("test@email.com");
         testSystemAdminAction.setActionResult(ActionResult.SUCCEEDED);
         mockPublicationServicesEndpoint.enqueue(new MockResponse().setBody(SENT_MESSAGE));
 
-        assertEquals(SENT_MESSAGE, publicationService.sendSystemAdminAccountAction(testSystemAdminAction),
-                     "Notification email not sent");
+        publicationService.sendSystemAdminAccountAction(testSystemAdminAction);
+        assertTrue(logCaptor.getErrorLogs().isEmpty(), ERROR_LOG_EMPTY_MESSAGE);
     }
 
     @Test
     void testFailedSendSystemAdminAccountAction() {
-        var testSystemAdminAction = new CreateSystemAdminAction();
+        CreateSystemAdminAction testSystemAdminAction = new CreateSystemAdminAction();
         testSystemAdminAction.setAccountEmail("test@email.com");
         testSystemAdminAction.setActionResult(ActionResult.FAILED);
         mockPublicationServicesEndpoint.enqueue(new MockResponse().setResponseCode(400));
 
-        assertTrue(publicationService.sendSystemAdminAccountAction(testSystemAdminAction).contains(
-            "Publishing of system admin account action failed with error:"), "No error was sent back");
+        publicationService.sendSystemAdminAccountAction(testSystemAdminAction);
+        assertTrue(logCaptor.getErrorLogs().get(0)
+                       .contains("Publishing of system admin account action failed with error:"),
+                   ERROR_LOG_MATCH_MESSAGE);
     }
 }
