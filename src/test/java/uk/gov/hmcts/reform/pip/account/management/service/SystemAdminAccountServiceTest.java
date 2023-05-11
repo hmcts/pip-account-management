@@ -32,6 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -233,14 +234,12 @@ class SystemAdminAccountServiceTest {
 
     @Test
     void testHandleNewSystemAdminAccountAction() {
-
         when(userRepository.findByRoles(Roles.SYSTEM_ADMIN)).thenReturn(List.of(expectedPiUser, expectedPiUser));
 
         ArgumentCaptor<CreateSystemAdminAction> systemAdminAccountArgumentCaptor =
             ArgumentCaptor.forClass(CreateSystemAdminAction.class);
 
-        when(publicationService.sendSystemAdminAccountAction(systemAdminAccountArgumentCaptor.capture())).thenReturn(
-            "Return Value");
+        doNothing().when(publicationService).sendSystemAdminAccountAction(systemAdminAccountArgumentCaptor.capture());
 
         systemAdminAccountService.handleNewSystemAdminAccountAction(SYSTEM_ADMIN_ACCOUNT, ID, ActionResult.ATTEMPTED,
                                                                     FORENAME);

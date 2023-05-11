@@ -314,7 +314,7 @@ class AccountServiceTest {
 
         try (LogCaptor logCaptor = LogCaptor.forClass(AccountService.class)) {
             accountService.deleteAccount(VALID_USER_ID);
-            assertEquals(2, logCaptor.getInfoLogs().size(),
+            assertEquals(1, logCaptor.getErrorLogs().size(),
                          "No logs were thrown");
         }
     }
@@ -510,7 +510,7 @@ class AccountServiceTest {
 
         try (LogCaptor logCaptor = LogCaptor.forClass(AccountService.class)) {
             accountService.updateAccountRole(UUID.randomUUID(), userId, SYSTEM_ADMIN);
-            assertEquals(2, logCaptor.getInfoLogs().size(),
+            assertEquals(1, logCaptor.getErrorLogs().size(),
                          "Should not log if failed creating account"
             );
         }

@@ -245,15 +245,13 @@ class MediaApplicationServiceTest {
     @Test
     void testProcessApplicationForReporting() {
         when(mediaApplicationRepository.findAll()).thenReturn(List.of(mediaApplicationExample));
-        when(publicationService.sendMediaApplicationReportingEmail(List.of(mediaApplicationExample)))
-            .thenReturn(EMAIL_SENT_MESSAGE);
+        doNothing().when(publicationService).sendMediaApplicationReportingEmail(List.of(mediaApplicationExample));
 
         mediaApplicationService.processApplicationsForReporting();
 
-        assertEquals(EMAIL_SENT_MESSAGE, logCaptor.getInfoLogs().get(0),
-                   "Publication service response logs not being captured.");
+        assertTrue(logCaptor.getErrorLogs().isEmpty(), "Error log not empty");
 
-        assertEquals("Approved and Rejected media applications deleted", logCaptor.getInfoLogs().get(1),
+        assertTrue(logCaptor.getInfoLogs().get(0).contains("Approved and Rejected media applications deleted"),
                    "Application deletion logs not being captured");
 
         verify(publicationService).sendMediaApplicationReportingEmail(List.of(mediaApplicationExample));
@@ -265,16 +263,14 @@ class MediaApplicationServiceTest {
         List<MediaApplication> applications = List.of(createApplication(MediaApplicationStatus.APPROVED),
                                                       createApplication(MediaApplicationStatus.REJECTED));
         when(mediaApplicationRepository.findAll()).thenReturn(applications);
-        when(publicationService.sendMediaApplicationReportingEmail(applications))
-            .thenReturn(EMAIL_SENT_MESSAGE);
+        doNothing().when(publicationService).sendMediaApplicationReportingEmail(applications);
 
         mediaApplicationService.processApplicationsForReporting();
 
-        assertEquals(EMAIL_SENT_MESSAGE, logCaptor.getInfoLogs().get(0),
-                     "Publication service response logs not being captured.");
+        assertTrue(logCaptor.getErrorLogs().isEmpty(), "Error log not empty");
 
-        assertEquals("Approved and Rejected media applications deleted", logCaptor.getInfoLogs().get(1),
-                     "Application deletion logs not being captured");
+        assertTrue(logCaptor.getInfoLogs().get(0).contains("Approved and Rejected media applications deleted"),
+                   "Application deletion logs not being captured");
 
         verify(publicationService).sendMediaApplicationReportingEmail(applications);
         verify(mediaApplicationRepository).deleteAllInBatch(applications);
