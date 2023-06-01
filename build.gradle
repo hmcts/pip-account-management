@@ -229,10 +229,10 @@ dependencies {
   testImplementation(platform('org.junit:junit-bom:5.9.3'))
   testImplementation group: 'org.springframework.boot', name: 'spring-boot-starter-test'
   testImplementation group: 'org.springframework.security', name: 'spring-security-test'
-  testImplementation "io.zonky.test:embedded-database-spring-test:2.2.0"
+  testImplementation "io.zonky.test:embedded-database-spring-test:2.3.0"
   testImplementation group: 'com.squareup.okhttp3', name: 'mockwebserver', version: '4.11.0'
   testImplementation group: 'io.github.hakky54', name: 'logcaptor', version: '2.9.0'
-  testImplementation group: 'io.zonky.test', name: 'embedded-database-spring-test', version: '2.2.0'
+  testImplementation group: 'io.zonky.test', name: 'embedded-database-spring-test', version: '2.3.0'
   testImplementation group: 'org.awaitility', name: 'awaitility', version: '4.2.0'
   testImplementation group: 'org.apiguardian', name: 'apiguardian-api', version: '1.1.2'
   testImplementation group: 'org.mockito', name: 'mockito-inline', version: '5.2.0'
