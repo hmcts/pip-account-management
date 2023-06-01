@@ -201,7 +201,7 @@ dependencies {
   }
 
   // Include the sdk as a dependency
-  implementation group: 'com.microsoft.graph', name: 'microsoft-graph', version: '5.55.0'
+  implementation group: 'com.microsoft.graph', name: 'microsoft-graph', version: '5.59.0'
   // Include Azure identity for authentication
   implementation group: 'com.azure', name: 'azure-identity', version: '1.8.2'
 
