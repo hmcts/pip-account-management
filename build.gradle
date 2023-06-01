@@ -216,7 +216,7 @@ dependencies {
     strictly("1.10.0")
   }
   // Include Azure storage blob for storing application images
-  implementation group: 'com.azure', name: 'azure-storage-blob', version: '12.22.0'
+  implementation group: 'com.azure', name: 'azure-storage-blob', version: '12.22.2'
 
   // Include Flyway for database migrations
   implementation group: 'org.flywaydb', name: 'flyway-core', version: '9.17.0'
