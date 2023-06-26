@@ -170,14 +170,14 @@ class TestingSupportApiTest {
 
     @Test
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
-    void testUnauthorizedTestingSupportDeleteAccounts() throws Exception {
+    void testUnauthorisedTestingSupportDeleteAccounts() throws Exception {
         mockMvc.perform(delete(TESTING_SUPPORT_ACCOUNT_URL + EMAIL_PREFIX))
             .andExpect(status().isForbidden());
     }
 
     @Test
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
-    void testUnauthorizedTestingSupportDeleteApplications() throws Exception {
+    void testUnauthorisedTestingSupportDeleteApplications() throws Exception {
         mockMvc.perform(delete(TESTING_SUPPORT_APPLICATION_URL + EMAIL_PREFIX))
             .andExpect(status().isForbidden());
     }
