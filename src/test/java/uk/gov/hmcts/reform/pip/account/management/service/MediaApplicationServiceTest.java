@@ -19,13 +19,16 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.never;
@@ -42,7 +45,6 @@ import static uk.gov.hmcts.reform.pip.account.management.helper.MediaApplication
 @SuppressWarnings("PMD.TooManyMethods")
 class MediaApplicationServiceTest {
 
-    public static final String REJECTION_REASONS_GO_HERE = "Rejection reasons go here";
     @Mock
     private MediaApplicationRepository mediaApplicationRepository;
 
@@ -65,8 +67,7 @@ class MediaApplicationServiceTest {
     private static final String IMAGE_NAME = "test-image.png";
     private static final String NOT_FOUND_MESSAGE = "Not found exception does not contain expected ID";
     private static final String NOT_FOUND_EXCEPTION_THROWN_MESSAGE = "Expected NotFoundException to be thrown";
-    private static final String EMAIL_SENT_MESSAGE = "Email sent";
-
+    private static final String EMAIL_PREFIX = "TEST_PIP_1234_";
 
     @BeforeEach
     void setup() {
@@ -240,6 +241,41 @@ class MediaApplicationServiceTest {
             mediaApplicationService.deleteApplication(TEST_ID), NOT_FOUND_EXCEPTION_THROWN_MESSAGE);
 
         assertTrue(notFoundException.getMessage().contains(String.valueOf(TEST_ID)), NOT_FOUND_MESSAGE);
+    }
+
+    @Test
+    void testDeleteAllApplicationsWithEmailPrefix() {
+        UUID id1 = UUID.randomUUID();
+        UUID id2 = UUID.randomUUID();
+
+        MediaApplication application1 = new MediaApplication();
+        application1.setId(id1);
+        application1.setEmail(EMAIL_PREFIX + "1@test.com");
+
+        MediaApplication application2 = new MediaApplication();
+        application2.setId(id2);
+        application2.setEmail(EMAIL_PREFIX + "2@test.com");
+
+        when(mediaApplicationRepository.findAllByEmailStartingWithIgnoreCase(EMAIL_PREFIX))
+            .thenReturn(List.of(application1, application2));
+
+        assertThat(mediaApplicationService.deleteAllApplicationsWithEmailPrefix(EMAIL_PREFIX))
+            .as("Media application deleted message does not match")
+            .isEqualTo("2 media application(s) deleted with email starting with " + EMAIL_PREFIX);
+
+        verify(mediaApplicationRepository).deleteByIdIn(List.of(id1, id2));
+    }
+
+    @Test
+    void testDeleteAllApplicationsWithEmailPrefixWhenApplicationNotFound() {
+        when(mediaApplicationRepository.findAllByEmailStartingWithIgnoreCase(EMAIL_PREFIX))
+            .thenReturn(Collections.emptyList());
+
+        assertThat(mediaApplicationService.deleteAllApplicationsWithEmailPrefix(EMAIL_PREFIX))
+            .as("Media application deleted message does not match")
+            .isEqualTo("0 media application(s) deleted with email starting with " + EMAIL_PREFIX);
+
+        verify(mediaApplicationRepository, never()).deleteByIdIn(anyList());
     }
 
     @Test

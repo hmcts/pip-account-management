@@ -8,6 +8,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import uk.gov.hmcts.reform.pip.account.management.database.UserRepository;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.AzureCustomException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.ForbiddenRoleUpdateException;
@@ -24,6 +27,7 @@ import uk.gov.hmcts.reform.pip.model.publication.ListType;
 import uk.gov.hmcts.reform.pip.model.publication.Sensitivity;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -33,6 +37,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -40,6 +45,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -47,10 +53,13 @@ import static org.mockito.Mockito.when;
 import static uk.gov.hmcts.reform.pip.model.account.Roles.SYSTEM_ADMIN;
 
 @ExtendWith(MockitoExtension.class)
-@SuppressWarnings("PMD.TooManyMethods")
+@SuppressWarnings({"PMD.TooManyMethods", "PMD.ExcessiveImports"})
 class AccountServiceTest {
     @Mock
     private AzureUserService azureUserService;
+
+    @Mock
+    private AccountFilteringService accountFilteringService;
 
     @Mock
     private Validator validator;
@@ -75,6 +84,7 @@ class AccountServiceTest {
     private static final String EMAIL = "test@hmcts.net";
     private static final UUID USER_UUID = UUID.randomUUID();
     private static final String INVALID_EMAIL = "ab.com";
+    private static final String EMAIL_PREFIX = "TEST_PIP_1234_";
     private static final String ID = "1234";
     private static final String VALIDATION_MESSAGE = "Validation Message";
     private static final String TEST = "Test";
@@ -317,6 +327,51 @@ class AccountServiceTest {
             assertEquals(1, logCaptor.getErrorLogs().size(),
                          "No logs were thrown");
         }
+    }
+
+    @Test
+    void testDeleteAllAccountsWithEmailPrefix() throws AzureCustomException {
+        UUID userId1 = UUID.randomUUID();
+        UUID userId2 = UUID.randomUUID();
+
+        PiUser user1 = new PiUser();
+        user1.setUserId(userId1);
+        user1.setUserProvenance(UserProvenances.PI_AAD);
+
+        PiUser user2 = new PiUser();
+        user2.setUserId(userId2);
+        user2.setUserProvenance(UserProvenances.PI_AAD);
+
+        when(accountFilteringService.findAllAccountsExceptThirdParty(
+            PageRequest.of(0, 25), EMAIL_PREFIX, "", Collections.emptyList(), Collections.emptyList(), "")
+        ).thenReturn(new PageImpl<>(List.of(user1, user2)));
+
+        when(userRepository.findByUserId(userId1)).thenReturn(Optional.of(user1));
+        when(userRepository.findByUserId(userId2)).thenReturn(Optional.of(user2));
+
+        assertThat(accountService.deleteAllAccountsWithEmailPrefix(EMAIL_PREFIX))
+            .as("Account deleted message does not match")
+            .isEqualTo("2 account(s) deleted with email starting with " + EMAIL_PREFIX);
+
+        verify(azureUserService, times(2)).deleteUser(any());
+        verify(subscriptionService, times(2)).sendSubscriptionDeletionRequest(any());
+        verify(userRepository, times(2)).delete(any());
+    }
+
+    @Test
+    void testDeleteAllAccountsWithEmailPrefixWhenAccountNoFound() throws AzureCustomException {
+        when(accountFilteringService.findAllAccountsExceptThirdParty(
+            PageRequest.of(0, 25), EMAIL_PREFIX, "", Collections.emptyList(), Collections.emptyList(), "")
+        ).thenReturn(Page.empty());
+
+        assertThat(accountService.deleteAllAccountsWithEmailPrefix(EMAIL_PREFIX))
+            .as("Account deleted message does not match")
+            .isEqualTo("0 account(s) deleted with email starting with " + EMAIL_PREFIX);
+
+        verify(userRepository, never()).findByUserId(any());
+        verify(azureUserService, never()).deleteUser(any());
+        verify(subscriptionService, never()).sendSubscriptionDeletionRequest(any());
+        verify(userRepository, never()).delete(any());
     }
 
     @Test

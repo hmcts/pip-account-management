@@ -2,6 +2,7 @@ package uk.gov.hmcts.reform.pip.account.management.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import uk.gov.hmcts.reform.pip.account.management.database.UserRepository;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.AzureCustomException;
@@ -23,6 +24,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -51,6 +53,9 @@ public class AccountService {
 
     @Autowired
     AzureAccountService azureAccountService;
+
+    @Autowired
+    AccountFilteringService accountFilteringService;
 
     @Autowired
     UserRepository userRepository;
@@ -194,6 +199,15 @@ public class AccountService {
         subscriptionService.sendSubscriptionDeletionRequest(userToDelete.getUserId().toString());
         userRepository.delete(userToDelete);
         return String.format("User with ID %s has been deleted", userToDelete.getUserId());
+    }
+
+    public String deleteAllAccountsWithEmailPrefix(String prefix) {
+        List<UUID> userIds = accountFilteringService.findAllAccountsExceptThirdParty(
+            PageRequest.of(0, 25), prefix, "", Collections.emptyList(), Collections.emptyList(), ""
+        ).stream().map(PiUser::getUserId).toList();
+
+        userIds.forEach(i -> deleteAccount(i));
+        return String.format("%s account(s) deleted with email starting with %s", userIds.size(), prefix);
     }
 
     /**

@@ -178,6 +178,18 @@ public class MediaApplicationService {
         mediaApplicationRepository.delete(applicationToDelete);
     }
 
+    public String deleteAllApplicationsWithEmailPrefix(String prefix) {
+        List<UUID> applicationIds = mediaApplicationRepository.findAllByEmailStartingWithIgnoreCase(prefix).stream()
+            .map(MediaApplication::getId)
+            .toList();
+
+        if (!applicationIds.isEmpty()) {
+            mediaApplicationRepository.deleteByIdIn(applicationIds);
+        }
+        return String.format("%s media application(s) deleted with email starting with %s",
+                             applicationIds.size(), prefix);
+    }
+
     /**
      * Send rejection email for a given applicant.
      */
