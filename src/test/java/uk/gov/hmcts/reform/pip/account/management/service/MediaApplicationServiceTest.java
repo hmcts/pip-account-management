@@ -28,13 +28,13 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static uk.gov.hmcts.reform.pip.account.management.helper.MediaApplicationHelper.FILE;
 import static uk.gov.hmcts.reform.pip.account.management.helper.MediaApplicationHelper.STATUS;
@@ -245,16 +245,19 @@ class MediaApplicationServiceTest {
 
     @Test
     void testDeleteAllApplicationsWithEmailPrefix() {
-        UUID id1 = UUID.randomUUID();
-        UUID id2 = UUID.randomUUID();
-
         MediaApplication application1 = new MediaApplication();
+        UUID id1 = UUID.randomUUID();
+        String image1 = "Image1";
         application1.setId(id1);
         application1.setEmail(EMAIL_PREFIX + "1@test.com");
+        application1.setImage(image1);
 
         MediaApplication application2 = new MediaApplication();
+        UUID id2 = UUID.randomUUID();
+        String image2 = "Image2";
         application2.setId(id2);
         application2.setEmail(EMAIL_PREFIX + "2@test.com");
+        application2.setImage(image2);
 
         when(mediaApplicationRepository.findAllByEmailStartingWithIgnoreCase(EMAIL_PREFIX))
             .thenReturn(List.of(application1, application2));
@@ -263,6 +266,8 @@ class MediaApplicationServiceTest {
             .as("Media application deleted message does not match")
             .isEqualTo("2 media application(s) deleted with email starting with " + EMAIL_PREFIX);
 
+        verify(azureBlobService).deleteBlob(image1);
+        verify(azureBlobService).deleteBlob(image2);
         verify(mediaApplicationRepository).deleteByIdIn(List.of(id1, id2));
     }
 
@@ -275,7 +280,8 @@ class MediaApplicationServiceTest {
             .as("Media application deleted message does not match")
             .isEqualTo("0 media application(s) deleted with email starting with " + EMAIL_PREFIX);
 
-        verify(mediaApplicationRepository, never()).deleteByIdIn(anyList());
+        verifyNoInteractions(azureBlobService);
+        verifyNoMoreInteractions(mediaApplicationRepository);
     }
 
     @Test

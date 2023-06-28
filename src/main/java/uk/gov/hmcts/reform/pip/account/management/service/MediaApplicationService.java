@@ -179,15 +179,19 @@ public class MediaApplicationService {
     }
 
     public String deleteAllApplicationsWithEmailPrefix(String prefix) {
-        List<UUID> applicationIds = mediaApplicationRepository.findAllByEmailStartingWithIgnoreCase(prefix).stream()
-            .map(MediaApplication::getId)
-            .toList();
+        List<MediaApplication> applicationsToDelete = mediaApplicationRepository
+            .findAllByEmailStartingWithIgnoreCase(prefix);
 
-        if (!applicationIds.isEmpty()) {
+        if (!applicationsToDelete.isEmpty()) {
+            applicationsToDelete.forEach(a -> azureBlobService.deleteBlob(a.getImage()));
+
+            List<UUID> applicationIds = applicationsToDelete.stream()
+                .map(MediaApplication::getId)
+                .toList();
             mediaApplicationRepository.deleteByIdIn(applicationIds);
         }
         return String.format("%s media application(s) deleted with email starting with %s",
-                             applicationIds.size(), prefix);
+                             applicationsToDelete.size(), prefix);
     }
 
     /**
