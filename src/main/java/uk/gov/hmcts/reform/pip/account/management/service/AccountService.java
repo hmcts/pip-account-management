@@ -45,6 +45,8 @@ import static uk.gov.hmcts.reform.pip.model.account.UserProvenances.PI_AAD;
 @Service
 public class AccountService {
 
+    private static final int MAX_PAGE_SIZE = 25;
+
     @Autowired
     Validator validator;
 
@@ -202,12 +204,26 @@ public class AccountService {
     }
 
     public String deleteAllAccountsWithEmailPrefix(String prefix) {
-        List<UUID> userIds = accountFilteringService.findAllAccountsExceptThirdParty(
-            PageRequest.of(0, 25), prefix, "", Collections.emptyList(), Collections.emptyList(), ""
-        ).stream().map(PiUser::getUserId).toList();
+        List<UUID> allUserIds = new ArrayList<>();
+        boolean noMoreAccounts = false;
 
-        userIds.forEach(i -> deleteAccount(i));
-        return String.format("%s account(s) deleted with email starting with %s", userIds.size(), prefix);
+        int pageCount = 0;
+        do {
+            List<UUID> userIds = accountFilteringService.findAllAccountsExceptThirdParty(
+                PageRequest.of(pageCount, MAX_PAGE_SIZE), prefix, "",
+                Collections.emptyList(), Collections.emptyList(), ""
+            ).stream().map(PiUser::getUserId).toList();
+
+            allUserIds.addAll(userIds);
+            pageCount++;
+
+            if (userIds.size() < MAX_PAGE_SIZE) {
+               noMoreAccounts = true;
+            }
+        } while(!noMoreAccounts);
+
+        allUserIds.forEach(i -> deleteAccount(i));
+        return String.format("%s account(s) deleted with email starting with %s", allUserIds.size(), prefix);
     }
 
     /**
