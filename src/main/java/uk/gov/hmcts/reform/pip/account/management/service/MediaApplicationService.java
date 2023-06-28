@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import static uk.gov.hmcts.reform.pip.account.management.model.MediaApplicationStatus.APPROVED;
+import static uk.gov.hmcts.reform.pip.account.management.model.MediaApplicationStatus.PENDING;
 import static uk.gov.hmcts.reform.pip.account.management.model.MediaApplicationStatus.REJECTED;
 import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
 
@@ -183,7 +184,11 @@ public class MediaApplicationService {
             .findAllByEmailStartingWithIgnoreCase(prefix);
 
         if (!applicationsToDelete.isEmpty()) {
-            applicationsToDelete.forEach(a -> azureBlobService.deleteBlob(a.getImage()));
+            applicationsToDelete.forEach(a -> {
+                if (PENDING.equals(a.getStatus())) {
+                    azureBlobService.deleteBlob(a.getImage());
+                }
+            });
 
             List<UUID> applicationIds = applicationsToDelete.stream()
                 .map(MediaApplication::getId)

@@ -67,6 +67,7 @@ class MediaApplicationServiceTest {
     private static final String IMAGE_NAME = "test-image.png";
     private static final String NOT_FOUND_MESSAGE = "Not found exception does not contain expected ID";
     private static final String NOT_FOUND_EXCEPTION_THROWN_MESSAGE = "Expected NotFoundException to be thrown";
+    private static final String APPLICATION_DELETE_MESSAGE = "Media application deleted message does not match";
     private static final String EMAIL_PREFIX = "TEST_PIP_1234_";
 
     @BeforeEach
@@ -251,6 +252,7 @@ class MediaApplicationServiceTest {
         application1.setId(id1);
         application1.setEmail(EMAIL_PREFIX + "1@test.com");
         application1.setImage(image1);
+        application1.setStatus(MediaApplicationStatus.PENDING);
 
         MediaApplication application2 = new MediaApplication();
         UUID id2 = UUID.randomUUID();
@@ -258,12 +260,13 @@ class MediaApplicationServiceTest {
         application2.setId(id2);
         application2.setEmail(EMAIL_PREFIX + "2@test.com");
         application2.setImage(image2);
+        application2.setStatus(MediaApplicationStatus.PENDING);
 
         when(mediaApplicationRepository.findAllByEmailStartingWithIgnoreCase(EMAIL_PREFIX))
             .thenReturn(List.of(application1, application2));
 
         assertThat(mediaApplicationService.deleteAllApplicationsWithEmailPrefix(EMAIL_PREFIX))
-            .as("Media application deleted message does not match")
+            .as(APPLICATION_DELETE_MESSAGE)
             .isEqualTo("2 media application(s) deleted with email starting with " + EMAIL_PREFIX);
 
         verify(azureBlobService).deleteBlob(image1);
@@ -272,12 +275,54 @@ class MediaApplicationServiceTest {
     }
 
     @Test
+    void testDeleteAllApplicationsWithEmailPrefixForApprovedStatus() {
+        MediaApplication application = new MediaApplication();
+        UUID id = UUID.randomUUID();
+        String image = "Image";
+        application.setId(id);
+        application.setEmail(EMAIL_PREFIX + "@test.com");
+        application.setImage(image);
+        application.setStatus(MediaApplicationStatus.APPROVED);
+
+        when(mediaApplicationRepository.findAllByEmailStartingWithIgnoreCase(EMAIL_PREFIX))
+            .thenReturn(List.of(application));
+
+        assertThat(mediaApplicationService.deleteAllApplicationsWithEmailPrefix(EMAIL_PREFIX))
+            .as(APPLICATION_DELETE_MESSAGE)
+            .isEqualTo("1 media application(s) deleted with email starting with " + EMAIL_PREFIX);
+
+        verifyNoInteractions(azureBlobService);
+        verify(mediaApplicationRepository).deleteByIdIn(List.of(id));
+    }
+
+    @Test
+    void testDeleteAllApplicationsWithEmailPrefixForRejectedStatus() {
+        MediaApplication application = new MediaApplication();
+        UUID id = UUID.randomUUID();
+        String image = "Image";
+        application.setId(id);
+        application.setEmail(EMAIL_PREFIX + "@test.com");
+        application.setImage(image);
+        application.setStatus(MediaApplicationStatus.REJECTED);
+
+        when(mediaApplicationRepository.findAllByEmailStartingWithIgnoreCase(EMAIL_PREFIX))
+            .thenReturn(List.of(application));
+
+        assertThat(mediaApplicationService.deleteAllApplicationsWithEmailPrefix(EMAIL_PREFIX))
+            .as(APPLICATION_DELETE_MESSAGE)
+            .isEqualTo("1 media application(s) deleted with email starting with " + EMAIL_PREFIX);
+
+        verifyNoInteractions(azureBlobService);
+        verify(mediaApplicationRepository).deleteByIdIn(List.of(id));
+    }
+
+    @Test
     void testDeleteAllApplicationsWithEmailPrefixWhenApplicationNotFound() {
         when(mediaApplicationRepository.findAllByEmailStartingWithIgnoreCase(EMAIL_PREFIX))
             .thenReturn(Collections.emptyList());
 
         assertThat(mediaApplicationService.deleteAllApplicationsWithEmailPrefix(EMAIL_PREFIX))
-            .as("Media application deleted message does not match")
+            .as(APPLICATION_DELETE_MESSAGE)
             .isEqualTo("0 media application(s) deleted with email starting with " + EMAIL_PREFIX);
 
         verifyNoInteractions(azureBlobService);
