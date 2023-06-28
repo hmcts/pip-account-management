@@ -218,9 +218,9 @@ public class AccountService {
             pageCount++;
 
             if (userIds.size() < MAX_PAGE_SIZE) {
-               noMoreAccounts = true;
+                noMoreAccounts = true;
             }
-        } while(!noMoreAccounts);
+        } while (!noMoreAccounts);
 
         allUserIds.forEach(i -> deleteAccount(i));
         return String.format("%s account(s) deleted with email starting with %s", allUserIds.size(), prefix);
