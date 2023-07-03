@@ -22,7 +22,7 @@
   </suppress>
   <suppress>
     <notes>Pull in by spring boot. The latest version of spring boot is still using netty 4.1.93 where the vulnerability still exists</notes>
-    <packageUrl regex="true">^pkg:maven/com.fasterxml.jackson.core/jackson-databind@2.13.5</packageUrl>
+    <packageUrl regex="true">^pkg:maven/io.netty/netty-buffer@4.1.92.Final</packageUrl>
     <cve>CVE-2023-34462</cve>
   </suppress>
 </suppressions>
