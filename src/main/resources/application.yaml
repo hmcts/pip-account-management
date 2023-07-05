@@ -102,6 +102,10 @@ azure:
 dbMigration:
   runOnStartup: ${RUN_DB_MIGRATION_ON_STARTUP:true}
 
+# Used to conditionally enable testing support API
+testingSupport:
+  enableApi: ${ENABLE_TESTING_SUPPORT_API:true}
+
 verification:
   media-account-verification-email-days: 350
   media-account-deletion-days: 365

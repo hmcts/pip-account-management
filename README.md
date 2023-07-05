@@ -188,6 +188,7 @@ Below is a table of currently used environment variables for starting the servic
 | CONNECTION_STRING              | Connection string for connecting to the Azure Blob Storage service. Only required when running the application locally via Azurite.                                                                                                                                    | Yes       |
 | STORAGE_ACCOUNT_NAME           | Azure storage account name used to construct the storage account endpoint. Not required when running the application locally.                                                                                                                                          | No        |
 | MAX_SYSTEM_ADMIN_ACCOUNTS      | The max number of system admin accounts that can exist. Default is 4.                                                                                                                                                                                                  | No        |
+| ENABLE_TESTING_SUPPORT_API     | Used to conditionally enable testing support API. Default to `false` for the production environment only.                                                                                                                                                              | No        |
 
 ##### Additional Test secrets
 
