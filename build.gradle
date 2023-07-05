@@ -216,7 +216,7 @@ dependencies {
   implementation group: 'com.azure', name: 'azure-storage-blob', version: '12.22.3'
 
   // Include Flyway for database migrations
-  implementation group: 'org.flywaydb', name: 'flyway-core', version: '9.19.1'
+  implementation group: 'org.flywaydb', name: 'flyway-core', version: '9.20.0'
 
   // Force upgrade snakeyaml version for CVE-2022-38752
   implementation( group: 'org.yaml', name: 'snakeyaml').version {
