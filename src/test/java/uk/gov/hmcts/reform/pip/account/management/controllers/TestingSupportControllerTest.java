@@ -1,0 +1,63 @@
+package uk.gov.hmcts.reform.pip.account.management.controllers;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import uk.gov.hmcts.reform.pip.account.management.service.AccountService;
+import uk.gov.hmcts.reform.pip.account.management.service.MediaApplicationService;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
+
+@ExtendWith(MockitoExtension.class)
+class TestingSupportControllerTest {
+    private static final String EMAIL_PREFIX = "TEST_PIP_1234_";
+
+    private static final String RESPONSE_STATUS_MESSAGE = "Response status does not match";
+    private static final String RESPONSE_BODY_MESSAGE = "Response body does not match";
+
+    @Mock
+    private AccountService accountService;
+
+    @Mock
+    private MediaApplicationService mediaApplicationService;
+
+    @InjectMocks
+    TestingSupportController testingSupportController;
+
+    @Test
+    void testDeleteAccountsWithEmailPrefixReturnsOk() {
+        String responseMessage = "2 account(s) deleted with email starting with " + EMAIL_PREFIX;
+        when(accountService.deleteAllAccountsWithEmailPrefix(EMAIL_PREFIX)).thenReturn(responseMessage);
+
+        ResponseEntity<String> response = testingSupportController.deleteAccountsWithEmailPrefix(EMAIL_PREFIX);
+
+        assertThat(response.getStatusCode())
+            .as(RESPONSE_STATUS_MESSAGE)
+            .isEqualTo(HttpStatus.OK);
+
+        assertThat(response.getBody())
+            .as(RESPONSE_BODY_MESSAGE)
+            .isEqualTo(responseMessage);
+    }
+
+    @Test
+    void testDeleteMediaApplicationsWithEmailPrefixReturnsOk() {
+        String responseMessage = "3 media application(s) deleted with email starting with " + EMAIL_PREFIX;
+        when(mediaApplicationService.deleteAllApplicationsWithEmailPrefix(EMAIL_PREFIX)).thenReturn(responseMessage);
+
+        ResponseEntity<String> response = testingSupportController.deleteMediaApplicationsWithEmailPrefix(EMAIL_PREFIX);
+
+        assertThat(response.getStatusCode())
+            .as(RESPONSE_STATUS_MESSAGE)
+            .isEqualTo(HttpStatus.OK);
+
+        assertThat(response.getBody())
+            .as(RESPONSE_BODY_MESSAGE)
+            .isEqualTo(responseMessage);
+    }
+}

@@ -153,12 +153,9 @@ def sonarExclusions = ["**/WebClientConfig.java"]
 
 sonarqube {
   properties {
+    property "sonar.projectName", "PIP Account Management"
     property "sonar.projectKey", "pip-account-management"
     property "sonar.exclusions", sonarExclusions.join(', ')
-    property "sonar.dynamicAnalysis", "reuseReports"
-    property "sonar.java.coveragePlugin", "jacoco"
-    property "sonar.coverage.jacoco.xmlReportPaths", "${jacocoTestReport.reports.xml.destination.path}"
-    property "sonar.dependencyCheck.reportPath", "${project.buildDir}/reports/dependency-check-report.xml"
   }
 }
 
@@ -201,7 +198,7 @@ dependencies {
   }
 
   // Include the sdk as a dependency
-  implementation group: 'com.microsoft.graph', name: 'microsoft-graph', version: '5.59.0'
+  implementation group: 'com.microsoft.graph', name: 'microsoft-graph', version: '5.62.0'
   // Include Azure identity for authentication
   implementation group: 'com.azure', name: 'azure-identity', version: '1.9.0'
 
