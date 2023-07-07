@@ -187,6 +187,7 @@ Below is a table of currently used environment variables for starting the servic
 | IDENTITY_ISSUER                | The identity issue of the Azure B2C instance.                                                                                                                                                                                                                          | Yes       |
 | CONNECTION_STRING              | Connection string for connecting to the Azure Blob Storage service.                                                                                                                                                                                                    | Yes       |
 | MAX_SYSTEM_ADMIN_ACCOUNTS      | The max number of system admin accounts that can exist. Default is 4.                                                                                                                                                                                                  | No        |
+| ENABLE_TESTING_SUPPORT_API     | Used to conditionally enable testing support API. Default to `false` for the production environment only.                                                                                                                                                              | No        |
 
 ##### Additional Test secrets
 
