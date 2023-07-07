@@ -1,5 +1,6 @@
 package uk.gov.hmcts.reform.pip.account.management.database;
 
+import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -13,7 +14,6 @@ import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import javax.transaction.Transactional;
 
 @SuppressWarnings("PMD.TooManyMethods")
 public interface UserRepository extends JpaRepository<PiUser, Long> {

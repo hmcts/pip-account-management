@@ -1,15 +1,14 @@
 package uk.gov.hmcts.reform.pip.account.management.model;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import uk.gov.hmcts.reform.pip.account.management.validation.annotations.AzureEmail;
 import uk.gov.hmcts.reform.pip.account.management.validation.annotations.NotSystemAdmin;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
-
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
 
 /**
  * Model that represents an Azure Account.
