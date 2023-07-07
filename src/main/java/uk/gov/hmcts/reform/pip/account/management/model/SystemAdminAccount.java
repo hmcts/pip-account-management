@@ -1,5 +1,7 @@
 package uk.gov.hmcts.reform.pip.account.management.model;
 
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -8,8 +10,6 @@ import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
 
 /**
  * Model which represents a system admin account request.

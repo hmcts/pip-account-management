@@ -3,6 +3,7 @@ package uk.gov.hmcts.reform.pip.account.management.controllers;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -30,7 +31,6 @@ import uk.gov.hmcts.reform.pip.model.authentication.roles.IsAdmin;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import javax.validation.Valid;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;

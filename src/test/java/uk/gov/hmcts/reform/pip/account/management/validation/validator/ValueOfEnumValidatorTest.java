@@ -1,5 +1,8 @@
 package uk.gov.hmcts.reform.pip.account.management.validation.validator;
 
+import jakarta.validation.Validation;
+import jakarta.validation.Validator;
+import jakarta.validation.ValidatorFactory;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -10,9 +13,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.hmcts.reform.pip.account.management.model.MediaApplicationDto;
 
 import java.util.Set;
-import javax.validation.Validation;
-import javax.validation.Validator;
-import javax.validation.ValidatorFactory;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 

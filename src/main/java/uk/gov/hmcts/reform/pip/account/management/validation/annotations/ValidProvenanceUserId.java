@@ -1,13 +1,13 @@
 package uk.gov.hmcts.reform.pip.account.management.validation.annotations;
 
+import jakarta.validation.Constraint;
+import jakarta.validation.Payload;
 import uk.gov.hmcts.reform.pip.account.management.validation.validator.ProvenanceUserIdValidator;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import javax.validation.Constraint;
-import javax.validation.Payload;
 
 /**
  * Annotation that is used to start the provenance user id Validator.

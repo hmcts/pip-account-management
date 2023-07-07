@@ -1,10 +1,9 @@
 package uk.gov.hmcts.reform.pip.account.management.validation.validator;
 
+import jakarta.validation.ConstraintValidator;
+import jakarta.validation.ConstraintValidatorContext;
 import uk.gov.hmcts.reform.pip.account.management.model.AzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.validation.annotations.NotSystemAdmin;
-
-import javax.validation.ConstraintValidator;
-import javax.validation.ConstraintValidatorContext;
 
 import static uk.gov.hmcts.reform.pip.model.account.Roles.SYSTEM_ADMIN;
 
