@@ -1,6 +1,6 @@
 service-to-service:
-  publication-services: localhost:8081
-  subscription-management: localhost:4550
+  publication-services: http://localhost:8081
+  subscription-management: http://localhost:4550
 
 dbMigration:
   runOnStartup: true

@@ -1,20 +1,30 @@
 package uk.gov.hmcts.reform.pip.account.management.config;
 
+import com.azure.spring.cloud.autoconfigure.implementation.aad.security.AadResourceServerHttpSecurityConfigurer;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
+@ExtendWith(MockitoExtension.class)
 class SpringSecurityConfigTest {
 
-    /**
-     * This test checks the creation of the config. Ideally this test isn't needed and we would just test the configure
-     * method, however this is marked as protected. Sonarqube flags this as coverage required, and rather than excluding
-     * this file globally, this test has been added as a placeholder.
-     */
+    @Mock
+    HttpSecurity httpSecurity;
+
     @Test
-    void testSpringSecurityConfigCreation() {
+    void testSpringSecurityConfigCreation() throws Exception {
         SpringSecurityConfig springSecurityConfig = new SpringSecurityConfig();
-        assertNotNull(springSecurityConfig, "Spring security config class not created");
+
+        springSecurityConfig.apiFilterChain(httpSecurity);
+
+        verify(httpSecurity, times(1)).apply(any(AadResourceServerHttpSecurityConfigurer.class));
+        verify(httpSecurity, times(1)).csrf(any());
     }
 
 }

@@ -1,5 +1,7 @@
 package uk.gov.hmcts.reform.pip.account.management.service;
 
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
@@ -31,8 +33,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import javax.validation.ConstraintViolation;
-import javax.validation.Validator;
 
 import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
 import static uk.gov.hmcts.reform.pip.model.account.UserProvenances.PI_AAD;

@@ -1,12 +1,12 @@
 package uk.gov.hmcts.reform.pip.account.management.validation.validator;
 
+import jakarta.validation.ConstraintValidator;
+import jakarta.validation.ConstraintValidatorContext;
 import org.apache.commons.validator.routines.EmailValidator;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
 import uk.gov.hmcts.reform.pip.account.management.validation.annotations.PiEmailConditionalValidation;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 
-import javax.validation.ConstraintValidator;
-import javax.validation.ConstraintValidatorContext;
 
 public class ConditionalEmailValidator implements ConstraintValidator<PiEmailConditionalValidation, PiUser> {
     /**

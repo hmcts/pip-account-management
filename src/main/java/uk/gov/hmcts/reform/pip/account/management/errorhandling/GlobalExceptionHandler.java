@@ -1,6 +1,7 @@
 package uk.gov.hmcts.reform.pip.account.management.errorhandling;
 
 import com.fasterxml.jackson.databind.JsonMappingException;
+import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,7 +20,6 @@ import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredSystemAdm
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import javax.validation.ConstraintViolationException;
 
 import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
 

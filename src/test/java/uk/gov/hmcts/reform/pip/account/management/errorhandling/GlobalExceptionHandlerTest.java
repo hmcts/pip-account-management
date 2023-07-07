@@ -1,6 +1,7 @@
 package uk.gov.hmcts.reform.pip.account.management.errorhandling;
 
 import com.fasterxml.jackson.databind.JsonMappingException;
+import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.HttpStatus;
@@ -17,7 +18,6 @@ import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredSystemAdm
 
 import java.util.List;
 import java.util.Map;
-import javax.validation.ConstraintViolationException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
