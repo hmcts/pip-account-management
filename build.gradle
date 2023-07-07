@@ -212,7 +212,7 @@ dependencies {
 
   implementation group: 'com.github.hmcts.java-logging', name: 'logging', version: reformLoggingVersion
   implementation group: 'com.github.hmcts.java-logging', name: 'logging-appinsights', version: reformLoggingVersion
-  implementation group: 'net.logstash.logback', name: 'logstash-logback-encoder', version: '7.3'
+  implementation group: 'net.logstash.logback', name: 'logstash-logback-encoder', version: '7.4'
 
   // Include Azure storage blob for storing application images
   implementation group: 'com.azure', name: 'azure-storage-blob', version: '12.22.2'
