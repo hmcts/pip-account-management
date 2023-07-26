@@ -93,7 +93,10 @@ azure:
     signInType: emailAddress
   blob:
     connection-string: ${CONNECTION_STRING}
+    storage-account-name: ${STORAGE_ACCOUNT_NAME}
     container-name: files
+  managed-identity:
+    client-id: ${MANAGED_IDENTITY_CLIENT_ID:}
 
 dbMigration:
   runOnStartup: ${RUN_DB_MIGRATION_ON_STARTUP:true}

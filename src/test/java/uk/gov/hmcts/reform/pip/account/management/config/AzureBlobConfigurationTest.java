@@ -1,61 +1,80 @@
 package uk.gov.hmcts.reform.pip.account.management.config;
 
-import com.azure.storage.blob.BlobClient;
 import com.azure.storage.blob.BlobContainerClient;
+import org.assertj.core.api.SoftAssertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.when;
 
 /**
  * Mock class for testing to mock out external calls to Azure.
  */
-@Configuration
-@Profile("test")
+@ExtendWith(MockitoExtension.class)
 class AzureBlobConfigurationTest {
+    private static final String TENANT_ID = "123";
+    private static final String MANAGED_IDENTITY_CLIENT_ID = "456";
+    private static final String LOCAL_STORAGE_ACCOUNT_NAME = "testAccount";
+    private static final String LOCAL_BLOB_ENDPOINT = "http://127.0.0.1:10000/" + LOCAL_STORAGE_ACCOUNT_NAME;
+    private static final String AZURE_STORAGE_ACCOUNT_NAME = "azureAccount";
+    private static final String AZURE_BLOB_ENDPOINT = "https://"
+        + AZURE_STORAGE_ACCOUNT_NAME
+        + ".blob.core.windows.net";
+    private static final String CONNECTION_STRING = "DefaultEndpointsProtocol=http;AccountName="
+        + LOCAL_STORAGE_ACCOUNT_NAME
+        + "; AccountKey=123/456; BlobEndpoint="
+        + LOCAL_BLOB_ENDPOINT;
+    private static final String CONTAINER_NAME = "publications";
 
     @Mock
-    BlobClient blobClientMock;
-
-    @Mock
-    BlobContainerClient blobContainerClientMock;
-
-    @Mock
-    AzureBlobConfigurationProperties azureBlobConfigurationProperties;
+    private AzureBlobConfigurationProperties blobConfigProperties;
 
     @InjectMocks
-    AzureBlobConfiguration azureBlobConfiguration;
+    private AzureBlobConfiguration azureBlobConfiguration;
 
-    public AzureBlobConfigurationTest() {
-        MockitoAnnotations.openMocks(this);
-    }
-
-    @Bean
-    public BlobContainerClient blobContainerClient() {
-        return blobContainerClientMock;
-    }
-
-    @Bean
-    public BlobClient blobClient() {
-        return blobClientMock;
+    @BeforeEach
+    void setup() {
+        ReflectionTestUtils.setField(azureBlobConfiguration, "tenantId", TENANT_ID);
+        when(blobConfigProperties.getContainerName()).thenReturn(CONTAINER_NAME);
     }
 
     @Test
-    void testBlobContainerClientBuilder() {
-        when(azureBlobConfigurationProperties.getConnectionString()).thenReturn(
-            "DefaultEndpointsProtocol=https;AccountName=test;AccountKey=test;EndpointSuffix=core.windows.net");
-        when(azureBlobConfigurationProperties.getContainerName()).thenReturn("12345");
+    void testCreationOfAzureBlobClientWithManagedIdentity() {
+        ReflectionTestUtils.setField(azureBlobConfiguration, "managedIdentityClientId", MANAGED_IDENTITY_CLIENT_ID);
+        when(blobConfigProperties.getStorageAccountName()).thenReturn(AZURE_STORAGE_ACCOUNT_NAME);
 
-        BlobContainerClient blobContainerClient =
-            azureBlobConfiguration.blobContainerClient(azureBlobConfigurationProperties);
+        BlobContainerClient blobContainerClient = azureBlobConfiguration.blobContainerClient(blobConfigProperties);
 
-        assertNotNull(blobContainerClient, "Blob container created successfully");
+        SoftAssertions softly = new SoftAssertions();
+
+        softly.assertThat(blobContainerClient).isNotNull();
+        softly.assertThat(blobContainerClient.getAccountUrl()).isEqualTo(AZURE_BLOB_ENDPOINT);
+        softly.assertThat(blobContainerClient.getAccountName()).isEqualTo(AZURE_STORAGE_ACCOUNT_NAME);
+        softly.assertThat(blobContainerClient.getBlobContainerName()).isEqualTo(CONTAINER_NAME);
+
+        softly.assertAll();
+    }
+
+    @Test
+    void testCreationOfAzureBlobClientWithoutManagedIdentity() {
+        ReflectionTestUtils.setField(azureBlobConfiguration, "managedIdentityClientId", "");
+        when(blobConfigProperties.getConnectionString()).thenReturn(CONNECTION_STRING);
+
+        BlobContainerClient blobContainerClient = azureBlobConfiguration.blobContainerClient(blobConfigProperties);
+
+        SoftAssertions softly = new SoftAssertions();
+
+        softly.assertThat(blobContainerClient).isNotNull();
+        softly.assertThat(blobContainerClient.getAccountUrl()).isEqualTo(LOCAL_BLOB_ENDPOINT);
+        softly.assertThat(blobContainerClient.getAccountName()).isEqualTo(LOCAL_STORAGE_ACCOUNT_NAME);
+        softly.assertThat(blobContainerClient.getBlobContainerName()).isEqualTo(CONTAINER_NAME);
+
+        softly.assertAll();
     }
 }
 
