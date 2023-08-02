@@ -194,7 +194,7 @@ dependencies {
   implementation group: 'org.postgresql', name: 'postgresql', version: '42.6.0'
   implementation group: 'com.azure.spring', name: 'spring-cloud-azure-starter-active-directory', version: '5.2.0'
   implementation group: 'com.squareup.okhttp3', name: 'okhttp', version: '4.11.0'
-  implementation group: 'com.opencsv', name: 'opencsv', version: '5.7.1'
+  implementation group: 'com.opencsv', name: 'opencsv', version: '5.8'
   implementation group: 'commons-validator', name: 'commons-validator', version: '1.7'
 
   implementation group: 'com.github.hmcts', name: 'pip-data-models', version: '2.1.2', {
