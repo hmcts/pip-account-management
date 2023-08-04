@@ -79,8 +79,6 @@ service-to-service:
   subscription-management: ${SUBSCRIPTION_MANAGEMENT_URL:https://pip-subscription-management.staging.platform.hmcts.net}
 
 azure:
-  application-insights:
-    instrumentation-key: ${INSTRUMENTATION_KEY:00000000-0000-0000-0000-000000000000}
   id:
     client-id: ${CLIENT_ID_B2C:00000000-0000-0000-0000-000000000000}
     client-secret: ${CLIENT_SECRET_B2C}
