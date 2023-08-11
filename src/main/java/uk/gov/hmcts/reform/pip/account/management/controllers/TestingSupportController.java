@@ -49,7 +49,7 @@ public class TestingSupportController {
     @ApiResponse(responseCode = BAD_REQUEST_CODE, description = "Failed to create user account")
     @Operation(summary = "Create an account with supplied email and password")
     @PostMapping("/account")
-    public ResponseEntity createAccount(@Valid @RequestBody AzureAccount azureAccount) {
+    public ResponseEntity createAccount(@RequestBody AzureAccount azureAccount) {
         Pair<CreationEnum, Object> returnedUser = accountService.addUserWithSuppliedPassword(azureAccount);
         if (returnedUser.getKey() == CreationEnum.CREATED_ACCOUNTS) {
             return ResponseEntity.status(HttpStatus.CREATED)
