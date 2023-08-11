@@ -106,9 +106,7 @@ public class AccountService {
             } else if (constraintViolationSet.isEmpty()) {
                 PiUser addedUser = userRepository.save(user);
                 createdAccounts.add(addedUser.getUserId());
-                if (issuerId != null) {
-                    log.info(writeLog(issuerId, UserActions.CREATE_ACCOUNT, addedUser.getUserId().toString()));
-                }
+                log.info(writeLog(issuerId, UserActions.CREATE_ACCOUNT, addedUser.getUserId().toString()));
             } else {
                 ErroredPiUser erroredUser = new ErroredPiUser(user);
                 erroredUser.setErrorMessages(constraintViolationSet
@@ -320,13 +318,13 @@ public class AccountService {
      * @param azureAccount  The user to be added.
      * @return The created account wrapped in Optional if success, otherwise nothing.
      */
-    public Pair<CreationEnum, Object> addUserWithSuppliedPassword(AzureAccount azureAccount) {
+    public Pair<CreationEnum, Object> addUserWithSuppliedPassword(AzureAccount azureAccount, String issuerId) {
         if (StringUtils.isBlank(azureAccount.getPassword())) {
             return Pair.of(CreationEnum.ERRORED_ACCOUNTS, "Password must not be blank");
         }
 
         Map<CreationEnum, List<? extends AzureAccount>> processedAzureAccounts = azureAccountService
-            .addAzureAccounts(List.of(azureAccount), null, false, true);
+            .addAzureAccounts(List.of(azureAccount), issuerId, false, true);
 
         if (!processedAzureAccounts.get(CreationEnum.CREATED_ACCOUNTS).isEmpty()) {
             List<AzureAccount> createdAzureAccounts = processedAzureAccounts.get(CreationEnum.CREATED_ACCOUNTS).stream()
@@ -334,7 +332,7 @@ public class AccountService {
                 .toList();
 
             PiUser user = createdAccountToPiUser(createdAzureAccounts.get(0));
-            Map<CreationEnum, List<?>> processedPiAccounts = addUsers(List.of(user), null);
+            Map<CreationEnum, List<?>> processedPiAccounts = addUsers(List.of(user), issuerId);
 
             if (processedPiAccounts.get(CreationEnum.CREATED_ACCOUNTS).isEmpty()) {
                 return Pair.of(

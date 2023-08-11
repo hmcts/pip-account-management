@@ -30,6 +30,7 @@ import uk.gov.hmcts.reform.pip.model.authentication.roles.IsAdmin;
 @ConditionalOnProperty(prefix = "testingSupport", name = "enableApi", havingValue = "true")
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
 public class TestingSupportController {
+    private static final String ISSUER_ID = "TESTING-SUPPORT";
     private static final String NOT_AUTHORIZED_MESSAGE = "User has not been authorized";
 
     private static final String OK_CODE = "200";
@@ -49,7 +50,7 @@ public class TestingSupportController {
     @Operation(summary = "Create an account with supplied email and password")
     @PostMapping("/account")
     public ResponseEntity createAccount(@RequestBody AzureAccount azureAccount) {
-        Pair<CreationEnum, Object> returnedUser = accountService.addUserWithSuppliedPassword(azureAccount);
+        Pair<CreationEnum, Object> returnedUser = accountService.addUserWithSuppliedPassword(azureAccount, ISSUER_ID);
         if (returnedUser.getKey() == CreationEnum.CREATED_ACCOUNTS) {
             return ResponseEntity.status(HttpStatus.CREATED)
                 .body(returnedUser.getValue());

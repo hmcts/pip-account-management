@@ -615,7 +615,7 @@ class AccountServiceTest {
             CreationEnum.ERRORED_ACCOUNTS,
             Collections.emptyList()
         );
-        when(azureAccountService.addAzureAccounts(List.of(azureAccount), null, false, true))
+        when(azureAccountService.addAzureAccounts(List.of(azureAccount), ISSUER_ID, false, true))
             .thenReturn(returnedAzureAccount);
 
         UUID createdUserId = UUID.randomUUID();
@@ -624,7 +624,7 @@ class AccountServiceTest {
         when(validator.validate(any())).thenReturn(Collections.emptySet());
         when(userRepository.save(any())).thenReturn(createdUser);
 
-        Pair<CreationEnum, Object> result = accountService.addUserWithSuppliedPassword(azureAccount);
+        Pair<CreationEnum, Object> result = accountService.addUserWithSuppliedPassword(azureAccount, ISSUER_ID);
 
         assertThat(result.getKey())
             .as(RETURN_USER_ERROR)
@@ -657,10 +657,10 @@ class AccountServiceTest {
             CreationEnum.ERRORED_ACCOUNTS,
             List.of(erroredAzureAccount)
         );
-        when(azureAccountService.addAzureAccounts(List.of(azureAccount), null, false, true))
+        when(azureAccountService.addAzureAccounts(List.of(azureAccount), ISSUER_ID, false, true))
             .thenReturn(returnedAzureAccount);
 
-        Pair<CreationEnum, Object> result = accountService.addUserWithSuppliedPassword(azureAccount);
+        Pair<CreationEnum, Object> result = accountService.addUserWithSuppliedPassword(azureAccount, ISSUER_ID);
         assertThat(result.getKey())
             .as(RETURN_USER_ERROR)
             .isEqualTo(CreationEnum.ERRORED_ACCOUNTS);
@@ -680,12 +680,12 @@ class AccountServiceTest {
             CreationEnum.CREATED_ACCOUNTS,
             List.of(azureAccount)
         );
-        when(azureAccountService.addAzureAccounts(List.of(azureAccount), null, false, true))
+        when(azureAccountService.addAzureAccounts(List.of(azureAccount), ISSUER_ID, false, true))
             .thenReturn(returnedAzureAccount);
         when(constraintViolation.getMessage()).thenReturn(VALIDATION_MESSAGE);
         doReturn(Set.of(constraintViolation)).when(validator).validate(any());
 
-        Pair<CreationEnum, Object> result = accountService.addUserWithSuppliedPassword(azureAccount);
+        Pair<CreationEnum, Object> result = accountService.addUserWithSuppliedPassword(azureAccount, ISSUER_ID);
         assertThat(result.getKey())
             .as(RETURN_USER_ERROR)
             .isEqualTo(CreationEnum.ERRORED_ACCOUNTS);
@@ -702,7 +702,7 @@ class AccountServiceTest {
         AzureAccount azureAccount = new AzureAccount(ID, EMAIL, null, FORENAME, SURNAME,
                                                      Roles.VERIFIED, null);
 
-        Pair<CreationEnum, Object> result = accountService.addUserWithSuppliedPassword(azureAccount);
+        Pair<CreationEnum, Object> result = accountService.addUserWithSuppliedPassword(azureAccount, ISSUER_ID);
         assertThat(result.getKey())
             .as(RETURN_USER_ERROR)
             .isEqualTo(CreationEnum.ERRORED_ACCOUNTS);
@@ -721,7 +721,7 @@ class AccountServiceTest {
         AzureAccount azureAccount = new AzureAccount(ID, EMAIL, "", FORENAME, SURNAME,
                                                      Roles.VERIFIED, null);
 
-        Pair<CreationEnum, Object> result = accountService.addUserWithSuppliedPassword(azureAccount);
+        Pair<CreationEnum, Object> result = accountService.addUserWithSuppliedPassword(azureAccount, ISSUER_ID);
         assertThat(result.getKey())
             .as(RETURN_USER_ERROR)
             .isEqualTo(CreationEnum.ERRORED_ACCOUNTS);

@@ -21,6 +21,7 @@ import static org.mockito.Mockito.when;
 class TestingSupportControllerTest {
     private static final String EMAIL_PREFIX = "TEST_PIP_1234_";
     private static final String EMAIL = "test@test.com";
+    private static final String ISSUER_ID = "TESTING-SUPPORT";
     private static final String MESSAGE = "Failed to create user";
 
     private static final String RESPONSE_STATUS_MESSAGE = "Response status does not match";
@@ -41,7 +42,7 @@ class TestingSupportControllerTest {
         PiUser user = new PiUser();
         user.setEmail(EMAIL);
 
-        when(accountService.addUserWithSuppliedPassword(account))
+        when(accountService.addUserWithSuppliedPassword(account, ISSUER_ID))
             .thenReturn(Pair.of(CreationEnum.CREATED_ACCOUNTS, user));
         ResponseEntity response = testingSupportController.createAccount(account);
 
@@ -62,7 +63,7 @@ class TestingSupportControllerTest {
     @Test
     void testCreateAccountReturnsBadRequest() {
         AzureAccount account = new AzureAccount();
-        when(accountService.addUserWithSuppliedPassword(account))
+        when(accountService.addUserWithSuppliedPassword(account, ISSUER_ID))
             .thenReturn(Pair.of(CreationEnum.ERRORED_ACCOUNTS, MESSAGE));
         ResponseEntity response = testingSupportController.createAccount(account);
 
