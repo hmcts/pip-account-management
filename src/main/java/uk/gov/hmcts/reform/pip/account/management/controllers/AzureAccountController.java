@@ -52,7 +52,7 @@ public class AzureAccountController {
     @PostMapping("/add/azure")
     public ResponseEntity<Map<CreationEnum, List<? extends AzureAccount>>> createAzureAccount(//NOSONAR
         @RequestHeader(ISSUER_ID) String issuerId, @RequestBody List<AzureAccount> azureAccounts) {
-        return ResponseEntity.ok(azureAccountService.addAzureAccounts(azureAccounts, issuerId, false));
+        return ResponseEntity.ok(azureAccountService.addAzureAccounts(azureAccounts, issuerId, false, false));
     }
 
     @ApiResponse(responseCode = OK_CODE, description = "P&I Azure User Information")

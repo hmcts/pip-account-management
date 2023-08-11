@@ -4,6 +4,7 @@ import com.microsoft.graph.models.User;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
 import nl.altindag.log.LogCaptor;
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,6 +23,7 @@ import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.UserW
 import uk.gov.hmcts.reform.pip.account.management.model.AzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
+import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredAzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredPiUser;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
@@ -76,12 +78,16 @@ class AccountServiceTest {
     @Mock
     private SubscriptionService subscriptionService;
 
+    @Mock
+    AzureAccountService azureAccountService;
+
     @InjectMocks
     private AccountService accountService;
 
     private static final String FULL_NAME = "Full name";
     private static final String ISSUER_ID = "abcdef";
     private static final String EMAIL = "test@hmcts.net";
+    private static final String PASSWORD = "Password123!";
     private static final UUID USER_UUID = UUID.randomUUID();
     private static final String INVALID_EMAIL = "ab.com";
     private static final String EMAIL_PREFIX = "TEST_PIP_1234_";
@@ -597,5 +603,135 @@ class AccountServiceTest {
 
         assertTrue(notFoundException.getMessage().contains(userId.toString()),
                    "Exception message thrown does not contain the user ID");
+    }
+
+    @Test
+    void testAddUserWithSuppliedPasswordSuccess() {
+        AzureAccount azureAccount = new AzureAccount(ID, EMAIL, PASSWORD, FORENAME, SURNAME,
+                                              Roles.VERIFIED, null);
+        Map<CreationEnum, List<? extends AzureAccount>> returnedAzureAccount = Map.of(
+            CreationEnum.CREATED_ACCOUNTS,
+            List.of(azureAccount),
+            CreationEnum.ERRORED_ACCOUNTS,
+            Collections.emptyList()
+        );
+        when(azureAccountService.addAzureAccounts(List.of(azureAccount), null, false, true))
+            .thenReturn(returnedAzureAccount);
+
+        UUID createdUserId = UUID.randomUUID();
+        PiUser createdUser = new PiUser(createdUserId, UserProvenances.PI_AAD, ID, EMAIL, Roles.VERIFIED,
+                                 FORENAME, SURNAME, null, null, null);
+        when(validator.validate(any())).thenReturn(Collections.emptySet());
+        when(userRepository.save(any())).thenReturn(createdUser);
+
+        Pair<CreationEnum, Object> result = accountService.addUserWithSuppliedPassword(azureAccount);
+
+        assertThat(result.getKey())
+            .as(RETURN_USER_ERROR)
+            .isEqualTo(CreationEnum.CREATED_ACCOUNTS);
+
+        PiUser returnedUser = (PiUser) result.getValue();
+        assertThat(returnedUser.getEmail())
+            .as("Returned user email does not match")
+            .isEqualTo(EMAIL);
+
+        assertThat(returnedUser.getUserId())
+            .as("Returned user ID does not match")
+            .isEqualTo(createdUserId);
+
+        assertThat(returnedUser.getProvenanceUserId())
+            .as("Returned provenance user ID does not match")
+            .isEqualTo(ID);
+    }
+
+    @Test
+    void testAddUserWithSuppliedPasswordIfAddAzureAccountErrored() {
+        AzureAccount azureAccount = new AzureAccount(ID, EMAIL, PASSWORD, FORENAME, SURNAME,
+                                                     Roles.VERIFIED, null);
+        ErroredAzureAccount erroredAzureAccount = new ErroredAzureAccount(azureAccount);
+        erroredAzureAccount.setErrorMessages(List.of(VALIDATION_MESSAGE));
+
+        Map<CreationEnum, List<? extends AzureAccount>> returnedAzureAccount = Map.of(
+            CreationEnum.CREATED_ACCOUNTS,
+            Collections.emptyList(),
+            CreationEnum.ERRORED_ACCOUNTS,
+            List.of(erroredAzureAccount)
+        );
+        when(azureAccountService.addAzureAccounts(List.of(azureAccount), null, false, true))
+            .thenReturn(returnedAzureAccount);
+
+        Pair<CreationEnum, Object> result = accountService.addUserWithSuppliedPassword(azureAccount);
+        assertThat(result.getKey())
+            .as(RETURN_USER_ERROR)
+            .isEqualTo(CreationEnum.ERRORED_ACCOUNTS);
+
+        assertThat(result.getValue())
+            .as(RETURN_USER_ERROR)
+            .isEqualTo(List.of(VALIDATION_MESSAGE).toString());
+
+        verifyNoInteractions(userRepository);
+    }
+
+    @Test
+    void testAddUserWithSuppliedPasswordIfAddPiUserErrored() {
+        AzureAccount azureAccount = new AzureAccount(ID, EMAIL, PASSWORD, FORENAME, SURNAME,
+                                                     Roles.VERIFIED, null);
+        Map<CreationEnum, List<? extends AzureAccount>> returnedAzureAccount = Map.of(
+            CreationEnum.CREATED_ACCOUNTS,
+            List.of(azureAccount)
+        );
+        when(azureAccountService.addAzureAccounts(List.of(azureAccount), null, false, true))
+            .thenReturn(returnedAzureAccount);
+        when(constraintViolation.getMessage()).thenReturn(VALIDATION_MESSAGE);
+        doReturn(Set.of(constraintViolation)).when(validator).validate(any());
+
+        Pair<CreationEnum, Object> result = accountService.addUserWithSuppliedPassword(azureAccount);
+        assertThat(result.getKey())
+            .as(RETURN_USER_ERROR)
+            .isEqualTo(CreationEnum.ERRORED_ACCOUNTS);
+
+        assertThat(result.getValue())
+            .as(RETURN_USER_ERROR)
+            .isEqualTo(List.of(VALIDATION_MESSAGE).toString());
+
+        verifyNoInteractions(userRepository);
+    }
+
+    @Test
+    void testAddUserWithSuppliedPasswordIfPasswordMissing() {
+        AzureAccount azureAccount = new AzureAccount(ID, EMAIL, null, FORENAME, SURNAME,
+                                                     Roles.VERIFIED, null);
+
+        Pair<CreationEnum, Object> result = accountService.addUserWithSuppliedPassword(azureAccount);
+        assertThat(result.getKey())
+            .as(RETURN_USER_ERROR)
+            .isEqualTo(CreationEnum.ERRORED_ACCOUNTS);
+
+        assertThat(result.getValue())
+            .as(RETURN_USER_ERROR)
+            .isEqualTo("Password must not be blank");
+
+        verifyNoInteractions(azureAccountService);
+        verifyNoInteractions(validator);
+        verifyNoInteractions(userRepository);
+    }
+
+    @Test
+    void testAddUserWithSuppliedPasswordIfPasswordEmpty() {
+        AzureAccount azureAccount = new AzureAccount(ID, EMAIL, "", FORENAME, SURNAME,
+                                                     Roles.VERIFIED, null);
+
+        Pair<CreationEnum, Object> result = accountService.addUserWithSuppliedPassword(azureAccount);
+        assertThat(result.getKey())
+            .as(RETURN_USER_ERROR)
+            .isEqualTo(CreationEnum.ERRORED_ACCOUNTS);
+
+        assertThat(result.getValue())
+            .as(RETURN_USER_ERROR)
+            .isEqualTo("Password must not be blank");
+
+        verifyNoInteractions(azureAccountService);
+        verifyNoInteractions(validator);
+        verifyNoInteractions(userRepository);
     }
 }

@@ -37,8 +37,10 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -66,8 +68,10 @@ class AzureAccountServiceTest {
     private static final String VALIDATION_MESSAGE = "Validation Message";
     private static final String EMAIL_VALIDATION_MESSAGE = "AzureAccount should have expected email";
     private static final String ERRORED_ACCOUNTS_VALIDATION_MESSAGE = "Should contain ERRORED_ACCOUNTS key";
+    private static final String CREATED_ACCOUNTS_KEY = "CREATED_ACCOUNTS key";
     private static final String ERRORED_ACCOUNTS_KEY = "ERRORED_ACCOUNTS key";
     private static final String RETURN_USER_ERROR = "Returned user does not match expected user";
+    private static final String AZURE_ACCOUNT_ERROR = "AzureAccount should have azure object ID";
 
     @Mock
     private AzureUserService azureUserService;
@@ -119,23 +123,23 @@ class AzureAccountServiceTest {
 
         when(azureUserService.getUser(EMAIL)).thenReturn(null);
 
-        when(azureUserService.createUser(argThat(user -> user.getEmail().equals(azureAccount.getEmail()))))
-            .thenReturn(expectedUser);
+        when(azureUserService.createUser(argThat(user -> user.getEmail().equals(azureAccount.getEmail())),
+                                         anyBoolean())).thenReturn(expectedUser);
 
         when(publicationService.sendNotificationEmail(any(), any(), any())).thenReturn(TRUE);
 
         Map<CreationEnum, List<? extends AzureAccount>> createdAccounts =
-            azureAccountService.addAzureAccounts(List.of(azureAccount), ISSUER_ID, FALSE);
+            azureAccountService.addAzureAccounts(List.of(azureAccount), ISSUER_ID, FALSE, FALSE);
 
-        assertTrue(createdAccounts.containsKey(CreationEnum.CREATED_ACCOUNTS), SHOULD_CONTAIN
-            + "CREATED_ACCOUNTS key");
+        assertTrue(createdAccounts.containsKey(CreationEnum.CREATED_ACCOUNTS), SHOULD_CONTAIN + CREATED_ACCOUNTS_KEY);
         List<? extends AzureAccount> accounts = createdAccounts.get(CreationEnum.CREATED_ACCOUNTS);
         assertEquals(azureAccount.getEmail(), accounts.get(0).getEmail(), EMAIL_VALIDATION_MESSAGE);
-        assertEquals(ID, azureAccount.getAzureAccountId(), "AzureAccount should have azure "
-            + "object ID");
+        assertEquals(ID, azureAccount.getAzureAccountId(), AZURE_ACCOUNT_ERROR);
         assertEquals(0, createdAccounts.get(CreationEnum.ERRORED_ACCOUNTS).size(),
                      "Map should have no errored accounts"
         );
+
+        verify(azureUserService).createUser(azureAccount, FALSE);
     }
 
     @Test
@@ -147,24 +151,55 @@ class AzureAccountServiceTest {
 
         when(azureUserService.getUser(EMAIL)).thenReturn(null);
 
-        when(azureUserService.createUser(argThat(user -> user.getEmail().equals(azureAccount.getEmail()))))
-            .thenReturn(expectedUser);
+        when(azureUserService.createUser(argThat(user -> user.getEmail().equals(azureAccount.getEmail())),
+                                         anyBoolean())).thenReturn(expectedUser);
 
         when(publicationService.sendMediaNotificationEmail(azureAccount.getEmail(), TEST, false))
             .thenReturn(TRUE);
 
         Map<CreationEnum, List<? extends AzureAccount>> createdAccounts =
-            azureAccountService.addAzureAccounts(List.of(azureAccount), ISSUER_ID, FALSE);
+            azureAccountService.addAzureAccounts(List.of(azureAccount), ISSUER_ID, FALSE, FALSE);
 
         assertTrue(createdAccounts.containsKey(CreationEnum.CREATED_ACCOUNTS), SHOULD_CONTAIN
-            + "CREATED_ACCOUNTS key");
+            + CREATED_ACCOUNTS_KEY);
         List<? extends AzureAccount> accounts = createdAccounts.get(CreationEnum.CREATED_ACCOUNTS);
         assertEquals(azureAccount.getEmail(), accounts.get(0).getEmail(), EMAIL_VALIDATION_MESSAGE);
-        assertEquals(ID, azureAccount.getAzureAccountId(), "AzureAccount should have azure "
-            + "object ID");
+        assertEquals(ID, azureAccount.getAzureAccountId(), AZURE_ACCOUNT_ERROR);
         assertEquals(0, createdAccounts.get(CreationEnum.ERRORED_ACCOUNTS).size(),
                      "Map should have no errored accounts"
         );
+
+        verify(azureUserService).createUser(azureAccount, FALSE);
+    }
+
+    @Test
+    void testVerifiedAccountCreatedWithSuppliedPassword() throws AzureCustomException {
+        azureAccount.setRole(Roles.VERIFIED);
+
+        when(validator.validate(argThat(sub -> ((AzureAccount) sub).getEmail().equals(azureAccount.getEmail()))))
+            .thenReturn(Set.of());
+
+        when(azureUserService.getUser(EMAIL)).thenReturn(null);
+
+        when(azureUserService.createUser(argThat(user -> user.getEmail().equals(azureAccount.getEmail())),
+                                         anyBoolean())).thenReturn(expectedUser);
+
+        when(publicationService.sendMediaNotificationEmail(azureAccount.getEmail(), TEST, false))
+            .thenReturn(TRUE);
+
+        Map<CreationEnum, List<? extends AzureAccount>> createdAccounts =
+            azureAccountService.addAzureAccounts(List.of(azureAccount), ISSUER_ID, FALSE, TRUE);
+
+        assertTrue(createdAccounts.containsKey(CreationEnum.CREATED_ACCOUNTS), SHOULD_CONTAIN
+            + CREATED_ACCOUNTS_KEY);
+        List<? extends AzureAccount> accounts = createdAccounts.get(CreationEnum.CREATED_ACCOUNTS);
+        assertEquals(azureAccount.getEmail(), accounts.get(0).getEmail(), EMAIL_VALIDATION_MESSAGE);
+        assertEquals(ID, azureAccount.getAzureAccountId(), AZURE_ACCOUNT_ERROR);
+        assertEquals(0, createdAccounts.get(CreationEnum.ERRORED_ACCOUNTS).size(),
+                     "Map should have no errored accounts"
+        );
+
+        verify(azureUserService).createUser(azureAccount, TRUE);
     }
 
     @Test
@@ -181,7 +216,7 @@ class AzureAccountServiceTest {
         when(azureUserService.getUser(EMAIL)).thenReturn(azUser);
 
         Map<CreationEnum, List<? extends AzureAccount>> createdAccounts =
-            azureAccountService.addAzureAccounts(List.of(azureAccount), ISSUER_ID, FALSE);
+            azureAccountService.addAzureAccounts(List.of(azureAccount), ISSUER_ID, FALSE, FALSE);
 
         assertTrue(createdAccounts.containsKey(CreationEnum.ERRORED_ACCOUNTS), SHOULD_CONTAIN
             + ERRORED_ACCOUNTS_KEY);
@@ -201,7 +236,7 @@ class AzureAccountServiceTest {
         when(azureUserService.getUser(EMAIL)).thenReturn(azUser);
         when(publicationService.sendNotificationEmailForDuplicateMediaAccount(any(), any())).thenReturn(TRUE);
         Map<CreationEnum, List<? extends AzureAccount>> createdAccounts =
-            azureAccountService.addAzureAccounts(List.of(azureAccount), ISSUER_ID, FALSE);
+            azureAccountService.addAzureAccounts(List.of(azureAccount), ISSUER_ID, FALSE, FALSE);
 
         assertTrue(createdAccounts.containsKey(CreationEnum.CREATED_ACCOUNTS), SHOULD_CONTAIN
             + ERRORED_ACCOUNTS_KEY);
@@ -222,10 +257,10 @@ class AzureAccountServiceTest {
 
         when(azureUserService.getUser(EMAIL)).thenReturn(azUser);
         when(publicationService.sendNotificationEmailForDuplicateMediaAccount(any(), any())).thenReturn(TRUE);
-        when(azureUserService.createUser(argThat(user -> user.getEmail().equals(azureAccount.getEmail()))))
-            .thenReturn(expectedUser);
+        when(azureUserService.createUser(argThat(user -> user.getEmail().equals(azureAccount.getEmail())),
+                                         anyBoolean())).thenReturn(expectedUser);
         Map<CreationEnum, List<? extends AzureAccount>> createdAccounts =
-            azureAccountService.addAzureAccounts(List.of(azureAccount), ISSUER_ID, FALSE);
+            azureAccountService.addAzureAccounts(List.of(azureAccount), ISSUER_ID, FALSE, FALSE);
 
         assertTrue(createdAccounts.containsKey(CreationEnum.CREATED_ACCOUNTS), SHOULD_CONTAIN
             + ERRORED_ACCOUNTS_KEY);
@@ -246,10 +281,10 @@ class AzureAccountServiceTest {
 
         when(azureUserService.getUser(EMAIL)).thenReturn(azUser);
         when(publicationService.sendNotificationEmailForDuplicateMediaAccount(any(), any())).thenReturn(TRUE);
-        when(azureUserService.createUser(argThat(user -> user.getEmail().equals(azureAccount.getEmail()))))
-            .thenReturn(expectedUser);
+        when(azureUserService.createUser(argThat(user -> user.getEmail().equals(azureAccount.getEmail())),
+                                         anyBoolean())).thenReturn(expectedUser);
         Map<CreationEnum, List<? extends AzureAccount>> createdAccounts =
-            azureAccountService.addAzureAccounts(List.of(azureAccount), ISSUER_ID, FALSE);
+            azureAccountService.addAzureAccounts(List.of(azureAccount), ISSUER_ID, FALSE, FALSE);
 
         assertTrue(createdAccounts.containsKey(CreationEnum.CREATED_ACCOUNTS), SHOULD_CONTAIN
             + ERRORED_ACCOUNTS_KEY);
@@ -269,7 +304,7 @@ class AzureAccountServiceTest {
             azureUserService.getUser(any());
         });
 
-        azureAccountService.addAzureAccounts(List.of(azureAccount), ISSUER_ID, FALSE);
+        azureAccountService.addAzureAccounts(List.of(azureAccount), ISSUER_ID, FALSE, FALSE);
 
         assertEquals(
             "Error when checking account into Azure.",
@@ -285,11 +320,11 @@ class AzureAccountServiceTest {
 
         when(azureUserService.getUser(EMAIL)).thenReturn(null);
 
-        when(azureUserService.createUser(argThat(user -> user.getEmail().equals(azureAccount.getEmail()))))
-            .thenThrow(new AzureCustomException(ERROR_MESSAGE));
+        when(azureUserService.createUser(argThat(user -> user.getEmail().equals(azureAccount.getEmail())),
+                                         anyBoolean())).thenThrow(new AzureCustomException(ERROR_MESSAGE));
 
         Map<CreationEnum, List<? extends AzureAccount>> createdAccounts =
-            azureAccountService.addAzureAccounts(List.of(azureAccount), ISSUER_ID, FALSE);
+            azureAccountService.addAzureAccounts(List.of(azureAccount), ISSUER_ID, FALSE, FALSE);
 
         assertTrue(createdAccounts.containsKey(CreationEnum.ERRORED_ACCOUNTS), ERRORED_ACCOUNTS_VALIDATION_MESSAGE);
         List<? extends AzureAccount> accounts = createdAccounts.get(CreationEnum.ERRORED_ACCOUNTS);
@@ -311,11 +346,11 @@ class AzureAccountServiceTest {
 
         when(azureUserService.getUser(EMAIL)).thenReturn(null);
 
-        when(azureUserService.createUser(argThat(user -> user.getEmail().equals(azureAccount.getEmail()))))
-            .thenReturn(expectedUser);
+        when(azureUserService.createUser(argThat(user -> user.getEmail().equals(azureAccount.getEmail())),
+                                         anyBoolean())).thenReturn(expectedUser);
 
         Map<CreationEnum, List<? extends AzureAccount>> createdAccounts =
-            azureAccountService.addAzureAccounts(List.of(azureAccount), ISSUER_ID, FALSE);
+            azureAccountService.addAzureAccounts(List.of(azureAccount), ISSUER_ID, FALSE, FALSE);
 
         assertTrue(createdAccounts.containsKey(CreationEnum.ERRORED_ACCOUNTS), ERRORED_ACCOUNTS_VALIDATION_MESSAGE);
         List<? extends AzureAccount> accounts = createdAccounts.get(CreationEnum.ERRORED_ACCOUNTS);
@@ -338,7 +373,7 @@ class AzureAccountServiceTest {
             .thenReturn(Set.of(constraintViolation));
 
         Map<CreationEnum, List<? extends AzureAccount>> createdAccounts =
-            azureAccountService.addAzureAccounts(List.of(azureAccount), ISSUER_ID, FALSE);
+            azureAccountService.addAzureAccounts(List.of(azureAccount), ISSUER_ID, FALSE, FALSE);
 
         assertTrue(createdAccounts.containsKey(CreationEnum.ERRORED_ACCOUNTS), ERRORED_ACCOUNTS_VALIDATION_MESSAGE);
         List<? extends AzureAccount> accounts = createdAccounts.get(CreationEnum.ERRORED_ACCOUNTS);
@@ -361,18 +396,17 @@ class AzureAccountServiceTest {
         when(validator.validate(argThat(sub -> ((AzureAccount) sub).getEmail().equals(azureAccount.getEmail()))))
             .thenReturn(Set.of());
 
-        when(azureUserService.createUser(argThat(user -> user.getEmail().equals(azureAccount.getEmail()))))
-            .thenReturn(expectedUser);
+        when(azureUserService.createUser(argThat(user -> user.getEmail().equals(azureAccount.getEmail())),
+                                         anyBoolean())).thenReturn(expectedUser);
 
         when(publicationService.sendNotificationEmail(any(), any(), any())).thenReturn(FALSE);
 
         Map<CreationEnum, List<? extends AzureAccount>> erroredAccounts =
-            azureAccountService.addAzureAccounts(List.of(azureAccount), ISSUER_ID, FALSE);
+            azureAccountService.addAzureAccounts(List.of(azureAccount), ISSUER_ID, FALSE, FALSE);
 
         List<? extends AzureAccount> accounts = erroredAccounts.get(CreationEnum.ERRORED_ACCOUNTS);
         assertEquals(azureAccount.getEmail(), accounts.get(0).getEmail(), EMAIL_VALIDATION_MESSAGE);
-        assertEquals(ID, azureAccount.getAzureAccountId(), "AzureAccount should have azure "
-            + "object ID");
+        assertEquals(ID, azureAccount.getAzureAccountId(), AZURE_ACCOUNT_ERROR);
     }
 
     @Test
@@ -386,16 +420,16 @@ class AzureAccountServiceTest {
         doReturn(Set.of(constraintViolation)).when(validator).validate(argThat(sub -> ((AzureAccount) sub)
             .getEmail().equals(erroredAzureAccount.getEmail())));
 
-        when(azureUserService.createUser(argThat(user -> user.getEmail().equals(azureAccount.getEmail()))))
-            .thenReturn(expectedUser);
+        when(azureUserService.createUser(argThat(user -> user.getEmail().equals(azureAccount.getEmail())),
+                                         anyBoolean())).thenReturn(expectedUser);
 
         when(publicationService.sendNotificationEmail(any(), any(), any())).thenReturn(TRUE);
 
         Map<CreationEnum, List<? extends AzureAccount>> createdAccounts =
-            azureAccountService.addAzureAccounts(List.of(azureAccount, erroredAzureAccount), ISSUER_ID, FALSE);
+            azureAccountService.addAzureAccounts(List.of(azureAccount, erroredAzureAccount), ISSUER_ID, FALSE, FALSE);
 
         assertTrue(createdAccounts.containsKey(CreationEnum.CREATED_ACCOUNTS), SHOULD_CONTAIN
-            + "CREATED_ACCOUNTS key");
+            + CREATED_ACCOUNTS_KEY);
         List<? extends AzureAccount> accounts = createdAccounts.get(CreationEnum.CREATED_ACCOUNTS);
         assertEquals(azureAccount.getEmail(), accounts.get(0).getEmail(), EMAIL_VALIDATION_MESSAGE);
 
@@ -413,10 +447,10 @@ class AzureAccountServiceTest {
     void testAzureAdminAccountFailedDoesntTriggerEmail() throws AzureCustomException {
         when(validator.validate(argThat(sub -> ((AzureAccount) sub).getEmail().equals(azureAccount.getEmail()))))
             .thenReturn(Set.of());
-        when(azureUserService.createUser(azureAccount)).thenThrow(new AzureCustomException(TEST));
+        when(azureUserService.createUser(azureAccount, false)).thenThrow(new AzureCustomException(TEST));
 
         try (LogCaptor logCaptor = LogCaptor.forClass(AccountService.class)) {
-            azureAccountService.addAzureAccounts(List.of(azureAccount), ISSUER_ID, FALSE);
+            azureAccountService.addAzureAccounts(List.of(azureAccount), ISSUER_ID, FALSE, FALSE);
             assertEquals(0, logCaptor.getInfoLogs().size(),
                          "Should not log if failed creating account"
             );

@@ -53,7 +53,7 @@ public class BulkAccountCreationService {
         Map<CreationEnum, List<?>> completedAccounts = new ConcurrentHashMap<>();
 
         azureAccounts = azureAccountService.addAzureAccounts(
-            accountModelMapperService.createAzureUsersFromCsv(accounts), issuerId, true
+            accountModelMapperService.createAzureUsersFromCsv(accounts), issuerId, true, false
         );
         piUserAccounts = accountService.addUsers(
             accountModelMapperService

@@ -95,7 +95,7 @@ class AzureUserServiceTest {
         when(clientConfiguration.getExtensionId()).thenReturn(EXTENSION_ID);
         when(userCollectionRequest.post(any())).thenReturn(user);
 
-        User returnedUser = azureUserService.createUser(azureAccount);
+        User returnedUser = azureUserService.createUser(azureAccount, false);
 
         assertEquals(ID, returnedUser.id, "The ID is equal to the expected user ID");
     }
@@ -111,7 +111,7 @@ class AzureUserServiceTest {
         when(userCollectionRequest.post(any())).thenThrow(graphServiceException);
 
         AzureCustomException azureCustomException = assertThrows(AzureCustomException.class, () -> {
-            azureUserService.createUser(azureAccount);
+            azureUserService.createUser(azureAccount, false);
         });
 
         assertEquals("Error when persisting account into Azure. "
@@ -133,7 +133,7 @@ class AzureUserServiceTest {
         azureAccount.setEmail(EMAIL);
         azureAccount.setFirstName(FIRST_NAME);
         azureAccount.setSurname(SURNAME);
-        azureUserService.createUser(azureAccount);
+        azureUserService.createUser(azureAccount, false);
 
         ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
         verify(userCollectionRequest, times(1)).post(captor.capture());
@@ -167,7 +167,7 @@ class AzureUserServiceTest {
         when(userConfiguration.getIdentityIssuer()).thenReturn("IdentityIssuer");
 
         azureAccount.setEmail(EMAIL);
-        azureUserService.createUser(azureAccount);
+        azureUserService.createUser(azureAccount, false);
 
         ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
         verify(userCollectionRequest, times(1)).post(captor.capture());
@@ -195,7 +195,7 @@ class AzureUserServiceTest {
         when(userCollectionRequest.post(any())).thenReturn(userToReturn);
 
         azureAccount.setEmail(EMAIL);
-        azureUserService.createUser(azureAccount);
+        azureUserService.createUser(azureAccount, false);
 
         ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
         verify(userCollectionRequest, times(1)).post(captor.capture());
