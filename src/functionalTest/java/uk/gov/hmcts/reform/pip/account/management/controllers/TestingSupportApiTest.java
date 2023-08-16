@@ -192,7 +192,7 @@ class TestingSupportApiTest {
             responseGetUser.getResponse().getContentAsString(),
             PiUser.class
         );
-        assertEquals(createdAccount.getUserId(), returnedUser.getUserId(), "Users should match");
+        assertEquals(EMAIL, returnedUser.getEmail(), "Users should match");
 
         //Delete test user
         MvcResult deleteResponse = mockMvc.perform(delete(TESTING_SUPPORT_ACCOUNT_URL + EMAIL_PREFIX))
