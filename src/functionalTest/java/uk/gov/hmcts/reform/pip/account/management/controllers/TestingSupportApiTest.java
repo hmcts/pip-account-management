@@ -61,7 +61,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles(profiles = "functional")
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
 @WithMockUser(username = "admin", authorities = {"APPROLE_api.request.admin"})
-@SuppressWarnings("PMD.JUnitTestsShouldIncludeAssert")
+
+@SuppressWarnings({"PMD.TooManyMethods", "PMD.ExcessiveImports", "PMD.JUnitTestsShouldIncludeAssert"})
 class TestingSupportApiTest {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
@@ -139,7 +140,21 @@ class TestingSupportApiTest {
     void testTestingSupportCreateAccount() throws Exception {
 
         //Azure mock setup
-        azureMockSetup();
+        User userToReturn = new User();
+        userToReturn.id = ID;
+        userToReturn.givenName = GIVEN_NAME;
+
+        when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
+        when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
+        when(userCollectionRequest.post(any())).thenReturn(userToReturn);
+
+        userCollectionPage = new UserCollectionPage(new ArrayList<>(), userCollectionRequestBuilder);
+
+        when(clientConfiguration.getB2cUrl()).thenReturn(B2C_URL);
+        when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
+        when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
+        when(userCollectionRequest.filter(any())).thenReturn(userCollectionRequest);
+        when(userCollectionRequest.get()).thenReturn(userCollectionPage);
 
         //Create new test user account
         AzureAccount newAccount = createAccount(PASSWORD);
@@ -161,7 +176,7 @@ class TestingSupportApiTest {
         );
 
         //Reset azure mock setup
-        resetAzureMockSetup();
+        Mockito.reset(graphClient, userCollectionRequest, userCollectionRequestBuilder);
 
         //User mock setup
         when(graphClient.users(any())).thenReturn(userRequestBuilder);
@@ -196,7 +211,21 @@ class TestingSupportApiTest {
     @Test
     void testBadRequestTestingSupportCreateAccount() throws Exception {
 
-        azureMockSetup();
+        User userToReturn = new User();
+        userToReturn.id = ID;
+        userToReturn.givenName = GIVEN_NAME;
+
+        when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
+        when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
+        when(userCollectionRequest.post(any())).thenReturn(userToReturn);
+
+        userCollectionPage = new UserCollectionPage(new ArrayList<>(), userCollectionRequestBuilder);
+
+        when(clientConfiguration.getB2cUrl()).thenReturn(B2C_URL);
+        when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
+        when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
+        when(userCollectionRequest.filter(any())).thenReturn(userCollectionRequest);
+        when(userCollectionRequest.get()).thenReturn(userCollectionPage);
 
         AzureAccount newAccount = createAccount("");
 
@@ -323,28 +352,6 @@ class TestingSupportApiTest {
         newAccount.setFirstName(GIVEN_NAME);
         newAccount.setSurname(SURNAME);
         return newAccount;
-    }
-
-    private void resetAzureMockSetup() {
-        Mockito.reset(graphClient, userCollectionRequest, userCollectionRequestBuilder);
-    }
-
-    private void azureMockSetup() {
-        User userToReturn = new User();
-        userToReturn.id = ID;
-        userToReturn.givenName = GIVEN_NAME;
-
-        when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
-        when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
-        when(userCollectionRequest.post(any())).thenReturn(userToReturn);
-
-        userCollectionPage = new UserCollectionPage(new ArrayList<>(), userCollectionRequestBuilder);
-
-        when(clientConfiguration.getB2cUrl()).thenReturn(B2C_URL);
-        when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
-        when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
-        when(userCollectionRequest.filter(any())).thenReturn(userCollectionRequest);
-        when(userCollectionRequest.get()).thenReturn(userCollectionPage);
     }
 
     private MediaApplication createApplication() throws Exception {
