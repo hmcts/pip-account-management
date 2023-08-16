@@ -135,7 +135,7 @@ class SystemAdminAccountServiceTest {
     }
 
     @Test
-    void testConstraintViolationException() throws AzureCustomException {
+    void testConstraintViolationException() {
         AzureAccount azUser = new AzureAccount();
         azUser.setDisplayName(FORENAME);
 
@@ -143,7 +143,7 @@ class SystemAdminAccountServiceTest {
             .thenReturn(Optional.ofNullable(expectedPiUser));
         when(azureAccountService.retrieveAzureAccount(any()))
             .thenReturn(azUser);
-        when(validator.validate(any(), any())).thenReturn(Set.of(constraintViolation));
+        when(validator.validate(any())).thenReturn(Set.of(constraintViolation));
         when(constraintViolation.getMessage()).thenReturn("This is a message");
         when(constraintViolation.getPropertyPath()).thenReturn(path);
 

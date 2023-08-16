@@ -2,15 +2,15 @@ plugins {
   id 'application'
   id 'checkstyle'
   id 'com.github.ben-manes.versions' version '0.47.0'
-  id 'io.spring.dependency-management' version '1.1.0'
+  id 'io.spring.dependency-management' version '1.1.2'
   id 'jacoco'
   id 'org.springframework.boot' version '3.0.9'
   id 'org.owasp.dependencycheck' version '8.3.1'
-  id 'org.sonarqube' version '4.2.1.3168'
+  id 'org.sonarqube' version '4.3.0.3225'
   id 'pmd'
-  id 'org.jetbrains.kotlin.jvm' version '1.8.22'
+  id 'org.jetbrains.kotlin.jvm' version '1.9.0'
   id 'io.freefair.lombok' version '8.1.0'
-  id 'org.flywaydb.flyway' version '9.20.0'
+  id 'org.flywaydb.flyway' version '9.21.1'
 }
 
 apply plugin: 'org.owasp.dependencycheck'
@@ -192,21 +192,21 @@ dependencies {
   implementation group: 'org.springframework.boot', name: 'spring-boot-starter-data-jpa'
   implementation group: 'org.springframework.boot', name: 'spring-boot-starter-oauth2-client'
   implementation group: 'org.postgresql', name: 'postgresql', version: '42.6.0'
-  implementation group: 'com.azure.spring', name: 'spring-cloud-azure-starter-active-directory', version: '5.2.0'
+  implementation group: 'com.azure.spring', name: 'spring-cloud-azure-starter-active-directory', version: '5.3.0'
   implementation group: 'com.squareup.okhttp3', name: 'okhttp', version: '4.11.0'
-  implementation group: 'com.opencsv', name: 'opencsv', version: '5.7.1'
+  implementation group: 'com.opencsv', name: 'opencsv', version: '5.8'
   implementation group: 'commons-validator', name: 'commons-validator', version: '1.7'
 
-  implementation group: 'com.github.hmcts', name: 'pip-data-models', version: '2.1.2', {
+  implementation group: 'com.github.hmcts', name: 'pip-data-models', version: '2.1.4', {
     exclude group: 'org.springframework.boot', module: 'spring-boot-starter-data-jpa'
   }
 
   implementation group: 'com.vladmihalcea', name: 'hibernate-types-60', version: '2.21.1'
 
   // Include the sdk as a dependency
-  implementation group: 'com.microsoft.graph', name: 'microsoft-graph', version: '5.62.0'
+  implementation group: 'com.microsoft.graph', name: 'microsoft-graph', version: '5.66.0'
   // Include Azure identity for authentication
-  implementation group: 'com.azure', name: 'azure-identity', version: '1.9.1'
+  implementation group: 'com.azure', name: 'azure-identity', version: '1.9.2'
 
   implementation group: 'org.springdoc', name: 'springdoc-openapi-starter-webmvc-ui', version: '2.1.0'
 
@@ -218,7 +218,7 @@ dependencies {
   implementation group: 'com.azure', name: 'azure-storage-blob', version: '12.22.3'
 
   // Include Flyway for database migrations
-  implementation group: 'org.flywaydb', name: 'flyway-core', version: '9.19.4'
+  implementation group: 'org.flywaydb', name: 'flyway-core', version: '9.21.1'
 
   // Force upgrade snakeyaml version for CVE-2022-38752
   implementation( group: 'org.yaml', name: 'snakeyaml').version {
@@ -227,7 +227,7 @@ dependencies {
 
   runtimeOnly("org.springframework.boot:spring-boot-properties-migrator")
 
-  testImplementation(platform('org.junit:junit-bom:5.9.3'))
+  testImplementation(platform('org.junit:junit-bom:5.10.0'))
   testImplementation group: 'org.springframework.boot', name: 'spring-boot-starter-test'
   testImplementation group: 'org.springframework.security', name: 'spring-security-test'
   testImplementation "io.zonky.test:embedded-database-spring-test:2.3.0"
