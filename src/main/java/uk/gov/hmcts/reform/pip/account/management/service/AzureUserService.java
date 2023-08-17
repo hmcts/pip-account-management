@@ -36,13 +36,14 @@ public class AzureUserService {
 
     /**
      * Creates a new azureAccount in the Azure active directory.
-     * @param azureAccount The azureAccount to add in the azure active directory.
+     * @param azureAccount          The azureAccount to add in the azure active directory.
+     * @param useSuppliedPassword   Create password using the supplied value.
      * @return The created user if it was successful.
-     * @throws AzureCustomException thrown if theres an error with communicating with Azure.
+     * @throws AzureCustomException thrown if there is an error with communicating with Azure.
      */
-    public User createUser(AzureAccount azureAccount) throws AzureCustomException {
+    public User createUser(AzureAccount azureAccount, boolean useSuppliedPassword) throws AzureCustomException {
         try {
-            User user = createUserObject(azureAccount);
+            User user = createUserObject(azureAccount, useSuppliedPassword);
             return graphClient.users()
                 .buildRequest()
                 .post(user);
@@ -52,7 +53,7 @@ public class AzureUserService {
         }
     }
 
-    private User createUserObject(AzureAccount azureAccount) {
+    private User createUserObject(AzureAccount azureAccount, boolean useSuppliedPassword) {
         User user = new User();
         user.accountEnabled = true;
         user.displayName = azureAccount.getFirstName() + " " + azureAccount.getSurname();
@@ -72,8 +73,13 @@ public class AzureUserService {
 
         PasswordProfile passwordProfile = new PasswordProfile();
 
-        passwordProfile.password = RandomStringUtils.randomAscii(20);
-        passwordProfile.forceChangePasswordNextSignIn = true;
+        if (useSuppliedPassword) {
+            passwordProfile.password = azureAccount.getPassword();
+            passwordProfile.forceChangePasswordNextSignIn = false;
+        } else {
+            passwordProfile.password = RandomStringUtils.randomAscii(20);
+            passwordProfile.forceChangePasswordNextSignIn = true;
+        }
         user.passwordProfile = passwordProfile;
         user.identities = identitiesList;
 

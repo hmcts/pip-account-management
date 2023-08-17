@@ -43,7 +43,7 @@ class AzureAccountControllerTest {
         List<AzureAccount> azureAccounts = List.of(azureAccount);
 
         when(azureAccountService.addAzureAccounts(argThat(arg -> arg.equals(azureAccounts)),
-                                             eq("b@c.com"), eq(false))).thenReturn(accountsMap);
+                                             eq("b@c.com"), eq(false), eq(false))).thenReturn(accountsMap);
 
         ResponseEntity<Map<CreationEnum, List<? extends AzureAccount>>> response =
             azureAccountController.createAzureAccount("b@c.com", azureAccounts);

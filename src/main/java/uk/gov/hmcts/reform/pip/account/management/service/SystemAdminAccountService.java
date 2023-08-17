@@ -70,7 +70,7 @@ public class SystemAdminAccountService {
 
         validateSystemAdminAccount(account, issuerId, displayName);
         try {
-            User user = azureUserService.createUser(account.convertToAzureAccount());
+            User user = azureUserService.createUser(account.convertToAzureAccount(), false);
             PiUser createdUser = userRepository.save(account.convertToPiUser(user.id));
             handleNewSystemAdminAccountAction(account, issuerId, ActionResult.SUCCEEDED, displayName);
 

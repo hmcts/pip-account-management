@@ -1,8 +1,10 @@
 package uk.gov.hmcts.reform.pip.account.management.service;
 
+import io.micrometer.common.util.StringUtils;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -12,8 +14,10 @@ import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.Forbi
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.NotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.UserNotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.UserWithProvenanceNotFoundException;
+import uk.gov.hmcts.reform.pip.account.management.model.AzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
+import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredAzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredPiUser;
 import uk.gov.hmcts.reform.pip.account.management.service.helpers.DateTimeHelper;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
@@ -43,6 +47,7 @@ import static uk.gov.hmcts.reform.pip.model.account.UserProvenances.PI_AAD;
  */
 @Slf4j
 @Service
+@SuppressWarnings("PMD.TooManyMethods")
 public class AccountService {
 
     private static final int MAX_PAGE_SIZE = 25;
@@ -101,7 +106,6 @@ public class AccountService {
             } else if (constraintViolationSet.isEmpty()) {
                 PiUser addedUser = userRepository.save(user);
                 createdAccounts.add(addedUser.getUserId());
-
                 log.info(writeLog(issuerId, UserActions.CREATE_ACCOUNT, addedUser.getUserId().toString()));
             } else {
                 ErroredPiUser erroredUser = new ErroredPiUser(user);
@@ -306,5 +310,63 @@ public class AccountService {
     public PiUser getUserById(UUID userId) {
         return userRepository.findByUserId(userId).orElseThrow(() -> new NotFoundException(String.format(
             "User with supplied user id: %s could not be found", userId)));
+    }
+
+    /**
+     * Create a new user with the supplied information (including the password). This is only used for testing support.
+     *
+     * @param azureAccount  The user to be added.
+     * @return The created account wrapped in Optional if success, otherwise nothing.
+     */
+    public Pair<CreationEnum, Object> addUserWithSuppliedPassword(AzureAccount azureAccount, String issuerId) {
+        if (StringUtils.isBlank(azureAccount.getPassword())) {
+            return Pair.of(CreationEnum.ERRORED_ACCOUNTS, "Password must not be blank");
+        }
+
+        Map<CreationEnum, List<? extends AzureAccount>> processedAzureAccounts = azureAccountService
+            .addAzureAccounts(List.of(azureAccount), issuerId, false, true);
+
+        if (!processedAzureAccounts.get(CreationEnum.CREATED_ACCOUNTS).isEmpty()) {
+            List<AzureAccount> createdAzureAccounts = processedAzureAccounts.get(CreationEnum.CREATED_ACCOUNTS).stream()
+                .map(a -> (AzureAccount) a)
+                .toList();
+
+            PiUser user = createdAccountToPiUser(createdAzureAccounts.get(0));
+            Map<CreationEnum, List<?>> processedPiAccounts = addUsers(List.of(user), issuerId);
+
+            if (processedPiAccounts.get(CreationEnum.CREATED_ACCOUNTS).isEmpty()) {
+                return Pair.of(
+                    CreationEnum.ERRORED_ACCOUNTS,
+                    processedPiAccounts.get(CreationEnum.ERRORED_ACCOUNTS).stream()
+                        .map(a -> (ErroredPiUser) a)
+                        .toList().get(0)
+                        .getErrorMessages().toString()
+                );
+            } else {
+                List<UUID> createdPiUserIds = processedPiAccounts.get(CreationEnum.CREATED_ACCOUNTS).stream()
+                    .map(a -> (UUID) a)
+                    .toList();
+                user.setUserId(createdPiUserIds.get(0));
+                return Pair.of(CreationEnum.CREATED_ACCOUNTS, user);
+            }
+        }
+        return Pair.of(
+            CreationEnum.ERRORED_ACCOUNTS,
+            processedAzureAccounts.get(CreationEnum.ERRORED_ACCOUNTS).stream()
+                .map(a -> (ErroredAzureAccount) a)
+                .toList().get(0)
+                .getErrorMessages().toString()
+        );
+    }
+
+    private PiUser createdAccountToPiUser(AzureAccount createdAccount) {
+        PiUser user = new PiUser();
+        user.setEmail(createdAccount.getEmail());
+        user.setForenames(createdAccount.getFirstName());
+        user.setSurname(createdAccount.getSurname());
+        user.setRoles(createdAccount.getRole());
+        user.setProvenanceUserId(createdAccount.getAzureAccountId());
+        user.setUserProvenance(PI_AAD);
+        return user;
     }
 }

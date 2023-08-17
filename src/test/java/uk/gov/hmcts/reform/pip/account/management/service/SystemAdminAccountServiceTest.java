@@ -31,6 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
@@ -96,7 +97,7 @@ class SystemAdminAccountServiceTest {
         AzureAccount azUser = new AzureAccount();
         azUser.setDisplayName(FORENAME);
 
-        when(azureUserService.createUser(argThat(user -> EMAIL.equals(user.getEmail()))))
+        when(azureUserService.createUser(argThat(user -> EMAIL.equals(user.getEmail())), anyBoolean()))
             .thenReturn(expectedUser);
         when(userRepository.save(any())).thenReturn(expectedPiUser);
         when(azureAccountService.retrieveAzureAccount(any()))
@@ -120,7 +121,7 @@ class SystemAdminAccountServiceTest {
             .thenReturn(Optional.ofNullable(expectedPiUser));
         when(azureAccountService.retrieveAzureAccount(any()))
             .thenReturn(azUser);
-        when(azureUserService.createUser(argThat(user -> EMAIL.equals(user.getEmail()))))
+        when(azureUserService.createUser(argThat(user -> EMAIL.equals(user.getEmail())), anyBoolean()))
             .thenThrow(new AzureCustomException("Test error"));
 
         SystemAdminAccountException systemAdminAccountException =
@@ -160,7 +161,7 @@ class SystemAdminAccountServiceTest {
         azUser.setDisplayName(FORENAME);
 
         expectedPiUser.setRoles(Roles.VERIFIED);
-        when(azureUserService.createUser(argThat(user -> EMAIL.equals(user.getEmail()))))
+        when(azureUserService.createUser(argThat(user -> EMAIL.equals(user.getEmail())), anyBoolean()))
             .thenReturn(expectedUser);
         when(userRepository.save(any())).thenReturn(expectedPiUser);
         when(publicationService.sendNotificationEmail(EMAIL, FORENAME, SURNAME)).thenReturn(Boolean.FALSE);
@@ -179,7 +180,7 @@ class SystemAdminAccountServiceTest {
         azUser.setDisplayName(FORENAME);
 
         expectedPiUser.setRoles(Roles.VERIFIED);
-        when(azureUserService.createUser(argThat(user -> EMAIL.equals(user.getEmail()))))
+        when(azureUserService.createUser(argThat(user -> EMAIL.equals(user.getEmail())), anyBoolean()))
             .thenReturn(expectedUser);
         when(userRepository.save(any())).thenReturn(expectedPiUser);
         when(publicationService.sendNotificationEmail(EMAIL, FORENAME, SURNAME)).thenReturn(Boolean.FALSE);

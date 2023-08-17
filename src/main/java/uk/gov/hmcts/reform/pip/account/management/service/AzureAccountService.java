@@ -49,12 +49,13 @@ public class AzureAccountService {
     /**
      * Method to create new accounts in azure.
      *
-     * @param azureAccounts The accounts to be created.
-     * @param issuerId      The id of the user who created the accounts.
+     * @param azureAccounts         The accounts to be created.
+     * @param issuerId              The id of the user who created the accounts.
+     * @param useSuppliedPassword   Create password using the supplied value
      * @return Returns a map which contains two lists, Errored and Created accounts. Created will have object ID set.
      **/
     public Map<CreationEnum, List<? extends AzureAccount>> addAzureAccounts(//NOSONAR
-        List<AzureAccount> azureAccounts, String issuerId, boolean isExisting) {
+        List<AzureAccount> azureAccounts, String issuerId, boolean isExisting, boolean useSuppliedPassword) {
 
         Map<CreationEnum, List<? extends AzureAccount>> processedAccounts = new ConcurrentHashMap<>();
 
@@ -73,7 +74,7 @@ public class AzureAccountService {
 
             try {
                 if (!checkUserAlreadyExists(azureAccount, erroredAccounts)) {
-                    User user = azureUserService.createUser(azureAccount);
+                    User user = azureUserService.createUser(azureAccount, useSuppliedPassword);
 
                     azureAccount.setAzureAccountId(user.id);
                     createdAzureAccounts.add(azureAccount);

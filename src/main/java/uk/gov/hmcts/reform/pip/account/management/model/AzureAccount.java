@@ -34,6 +34,11 @@ public class AzureAccount {
     private String email;
 
     /**
+     * The password for the account (used for testing support only).
+     */
+    private String password;
+
+    /**
      * The first name of the account.
      */
     @NotEmpty

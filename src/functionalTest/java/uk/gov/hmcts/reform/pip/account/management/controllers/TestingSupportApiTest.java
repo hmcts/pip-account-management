@@ -4,8 +4,12 @@ import com.azure.storage.blob.BlobClient;
 import com.azure.storage.blob.BlobContainerClient;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.microsoft.graph.http.GraphServiceException;
 import com.microsoft.graph.models.User;
 import com.microsoft.graph.requests.GraphServiceClient;
+import com.microsoft.graph.requests.UserCollectionPage;
+import com.microsoft.graph.requests.UserCollectionRequest;
+import com.microsoft.graph.requests.UserCollectionRequestBuilder;
 import com.microsoft.graph.requests.UserRequest;
 import com.microsoft.graph.requests.UserRequestBuilder;
 import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
@@ -13,6 +17,7 @@ import okhttp3.Request;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -26,6 +31,8 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import uk.gov.hmcts.reform.pip.account.management.Application;
 import uk.gov.hmcts.reform.pip.account.management.config.AzureConfigurationClientTestConfiguration;
+import uk.gov.hmcts.reform.pip.account.management.config.ClientConfiguration;
+import uk.gov.hmcts.reform.pip.account.management.model.AzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.MediaApplication;
 import uk.gov.hmcts.reform.pip.account.management.model.MediaApplicationDto;
@@ -34,11 +41,13 @@ import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
 
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -52,24 +61,29 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles(profiles = "functional")
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
 @WithMockUser(username = "admin", authorities = {"APPROLE_api.request.admin"})
-@SuppressWarnings("PMD.JUnitTestsShouldIncludeAssert")
+
+@SuppressWarnings({"PMD.TooManyMethods", "PMD.ExcessiveImports", "PMD.JUnitTestsShouldIncludeAssert"})
 class TestingSupportApiTest {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private static final String TESTING_SUPPORT_BASE_URL = "/testing-support/";
     private static final String TESTING_SUPPORT_ACCOUNT_URL = TESTING_SUPPORT_BASE_URL + "account/";
     private static final String TESTING_SUPPORT_APPLICATION_URL = TESTING_SUPPORT_BASE_URL + "application/";
+    private static final String TESTING_SUPPORT_CREATE_ACCOUNT_URL = TESTING_SUPPORT_BASE_URL + "account";
 
     private static final String ACCOUNT_URL = "/account/";
     private static final String ACCOUNT_ADD_USER_URL = ACCOUNT_URL + "add/pi";
     private static final String APPLICATION_URL = "/application";
     private static final String BLOB_IMAGE_URL = "https://localhost";
+    private static final String B2C_URL = "URL";
 
     private static final String ISSUER_HEADER = "x-issuer-id";
     private static final String ISSUER_ID = "1234-1234-1234-1234";
 
     private static final String EMAIL_PREFIX = "TEST_789_";
     private static final String EMAIL = EMAIL_PREFIX + "user123@test.com";
+    private static final String PASSWORD = "P@55word11";
+    private static final String ID = "1234";
 
     private static final String PROVENANCE_USER_ID = UUID.randomUUID().toString();
     private static final UserProvenances PROVENANCE = UserProvenances.PI_AAD;
@@ -102,10 +116,145 @@ class TestingSupportApiTest {
     @Mock
     private UserRequest userRequest;
 
+    @Autowired
+    UserCollectionRequestBuilder userCollectionRequestBuilder;
+
+    @Autowired
+    UserCollectionRequest userCollectionRequest;
+
+    @Autowired
+    GraphServiceException graphServiceException;
+
+    @Mock
+    private UserCollectionPage userCollectionPage;
+
+    @Mock
+    private ClientConfiguration clientConfiguration;
+
     @BeforeAll
     static void startup() {
         OBJECT_MAPPER.findAndRegisterModules();
     }
+
+    @Test
+    void testTestingSupportCreateAccount() throws Exception {
+
+        //Azure mock setup
+        User userToReturn = new User();
+        userToReturn.id = ID;
+        userToReturn.givenName = GIVEN_NAME;
+
+        when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
+        when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
+        when(userCollectionRequest.post(any())).thenReturn(userToReturn);
+
+        userCollectionPage = new UserCollectionPage(new ArrayList<>(), userCollectionRequestBuilder);
+
+        when(clientConfiguration.getB2cUrl()).thenReturn(B2C_URL);
+        when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
+        when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
+        when(userCollectionRequest.filter(any())).thenReturn(userCollectionRequest);
+        when(userCollectionRequest.get()).thenReturn(userCollectionPage);
+
+        //Create new test user account
+        AzureAccount newAccount = createAccount(PASSWORD);
+
+        MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
+            .post(TESTING_SUPPORT_CREATE_ACCOUNT_URL)
+            .content(OBJECT_MAPPER.writeValueAsString(newAccount))
+            .header(ISSUER_HEADER, ISSUER_ID)
+            .contentType(MediaType.APPLICATION_JSON);
+
+        MvcResult postResponse = mockMvc.perform(mockHttpServletRequestBuilder)
+            .andExpect(status().isCreated())
+            .andReturn();
+
+        PiUser createdAccount = OBJECT_MAPPER.readValue(postResponse.getResponse().getContentAsString(), PiUser.class);
+
+        assertEquals(EMAIL, createdAccount.getEmail(),
+                     "Azure account creation error"
+        );
+
+        //Reset azure mock setup
+        Mockito.reset(graphClient, userCollectionRequest, userCollectionRequestBuilder);
+
+        //User mock setup
+        when(graphClient.users(any())).thenReturn(userRequestBuilder);
+        when(userRequestBuilder.buildRequest()).thenReturn(userRequest);
+        when(userRequest.get()).thenReturn(new User());
+
+        //Check whether account is created in Pi user table
+        MockHttpServletRequestBuilder getPiUserRequest = get(ACCOUNT_URL + createdAccount.getUserId());
+
+        MvcResult responseGetUser = mockMvc.perform(getPiUserRequest).andExpect(status().isOk()).andReturn();
+
+        PiUser returnedUser = OBJECT_MAPPER.readValue(
+            responseGetUser.getResponse().getContentAsString(),
+            PiUser.class
+        );
+        assertEquals(EMAIL, returnedUser.getEmail(), "Users should match");
+
+        //Delete test user
+        MvcResult deleteResponse = mockMvc.perform(delete(TESTING_SUPPORT_ACCOUNT_URL + EMAIL_PREFIX))
+            .andExpect(status().isOk())
+            .andReturn();
+
+        assertThat(deleteResponse.getResponse().getContentAsString())
+            .as("User account delete response does not match")
+            .isEqualTo("1 account(s) deleted with email starting with " + EMAIL_PREFIX);
+
+        //Check whether the user deleted in Pi user table
+        mockMvc.perform(get(ACCOUNT_URL + createdAccount.getUserId()))
+            .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void testBadRequestTestingSupportCreateAccount() throws Exception {
+
+        User userToReturn = new User();
+        userToReturn.id = ID;
+        userToReturn.givenName = GIVEN_NAME;
+
+        when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
+        when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
+        when(userCollectionRequest.post(any())).thenReturn(userToReturn);
+
+        userCollectionPage = new UserCollectionPage(new ArrayList<>(), userCollectionRequestBuilder);
+
+        when(clientConfiguration.getB2cUrl()).thenReturn(B2C_URL);
+        when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
+        when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
+        when(userCollectionRequest.filter(any())).thenReturn(userCollectionRequest);
+        when(userCollectionRequest.get()).thenReturn(userCollectionPage);
+
+        AzureAccount newAccount = createAccount("");
+
+        MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
+            .post(TESTING_SUPPORT_CREATE_ACCOUNT_URL)
+            .content(OBJECT_MAPPER.writeValueAsString(newAccount))
+            .header(ISSUER_HEADER, ISSUER_ID)
+            .contentType(MediaType.APPLICATION_JSON);
+
+        mockMvc.perform(mockHttpServletRequestBuilder)
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
+    void testUnauthorisedTestingSupportCreateAccount() throws Exception {
+
+        AzureAccount newAccount = createAccount(PASSWORD);
+
+        MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
+            .post(TESTING_SUPPORT_CREATE_ACCOUNT_URL)
+            .content(OBJECT_MAPPER.writeValueAsString(newAccount))
+            .header(ISSUER_HEADER, ISSUER_ID)
+            .contentType(MediaType.APPLICATION_JSON);
+
+        mockMvc.perform(mockHttpServletRequestBuilder)
+            .andExpect(status().isForbidden());
+    }
+
 
     @Test
     void testTestingSupportDeleteAccountsWithEmailPrefix() throws Exception {
@@ -126,8 +275,9 @@ class TestingSupportApiTest {
             .andReturn();
 
         ConcurrentHashMap<CreationEnum, List<String>> mappedResponse = OBJECT_MAPPER.readValue(
-            postResponse.getResponse().getContentAsString(), new TypeReference<>() { }
-            );
+            postResponse.getResponse().getContentAsString(), new TypeReference<>() {
+            }
+        );
 
         assertThat(mappedResponse.get(CreationEnum.CREATED_ACCOUNTS))
             .as("No account created")
@@ -191,6 +341,17 @@ class TestingSupportApiTest {
         user.setForenames(GIVEN_NAME);
         user.setSurname(SURNAME);
         return user;
+    }
+
+    private AzureAccount createAccount(String password) {
+        AzureAccount newAccount = new AzureAccount();
+        newAccount.setEmail(EMAIL);
+        newAccount.setPassword(password);
+        newAccount.setDisplayName(GIVEN_NAME);
+        newAccount.setRole(ROLE);
+        newAccount.setFirstName(GIVEN_NAME);
+        newAccount.setSurname(SURNAME);
+        return newAccount;
     }
 
     private MediaApplication createApplication() throws Exception {

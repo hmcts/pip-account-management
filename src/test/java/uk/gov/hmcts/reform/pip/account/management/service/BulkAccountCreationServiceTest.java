@@ -67,7 +67,7 @@ class BulkAccountCreationServiceTest {
 
         when(accountModelMapperService.createAzureUsersFromCsv(any())).thenReturn(azureAccounts);
         when(accountModelMapperService.createPiUsersFromAzureAccounts(azureAccounts)).thenReturn(azureUsers);
-        when(azureAccountService.addAzureAccounts(azureAccounts, EMAIL, true))
+        when(azureAccountService.addAzureAccounts(azureAccounts, EMAIL, true, false))
             .thenReturn(Map.of(
                 CreationEnum.CREATED_ACCOUNTS, azureAccounts,
                 CreationEnum.ERRORED_ACCOUNTS, Collections.emptyList()
