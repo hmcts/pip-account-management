@@ -63,7 +63,7 @@ All interactions with `pip-account-management` are performed through the API (sp
 - Manages the account application process for PI_AAD users.
 - Provides MI reporting endpoints, which are used to produce the MI report.
 - Flyway for database modifications via SQL ingestion.
-- Secure/Insecure Mode: Use of bearer tokens for authentication with the secure instance (if desired)
+- Secure/Insecure Mode: Use of bearer tokens for authentication with the secure instance (if desired).
 - OpenAPI Spec/Swagger-UI: Documents and allows users or developers to access API resources within the browser.
 - Integration tests using TestContainers for dummy database operations.
 
