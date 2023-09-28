@@ -6,7 +6,7 @@ terraform {
       version = "3.71.0"
     }
     postgresql = {
-      source = "cyrilgdn/postgresql"
+      source  = "cyrilgdn/postgresql"
       version = ">=1.17.1"
     }
   }
@@ -14,6 +14,13 @@ terraform {
 
 provider "azurerm" {
   features {}
+}
+
+provider "azurerm" {
+  features {}
+  skip_provider_registration = true
+  alias                      = "postgres_network"
+  subscription_id            = var.aks_subscription_id
 }
 
 provider "postgresql" {
