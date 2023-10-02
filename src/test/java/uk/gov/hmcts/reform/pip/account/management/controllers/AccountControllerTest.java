@@ -31,11 +31,7 @@ import static org.mockito.Mockito.when;
 class AccountControllerTest {
 
     private static final String EMAIL = "a@b.com";
-
-    private static final String TEST_BODY = "This is a returned string";
     private static final String STATUS_CODE_MATCH = "Status code responses should match";
-
-    private static final String BODY_MATCH = "Body should match";
 
     private static final String TEST_ID_STRING_1 = "0b8968b4-5c79-4e4e-8f66-f6a552d9fa67";
     private static final String TEST_ID_STRING_2 = "0b8968b4-5c79-4e4e-8f66-f6a552d9fa68";

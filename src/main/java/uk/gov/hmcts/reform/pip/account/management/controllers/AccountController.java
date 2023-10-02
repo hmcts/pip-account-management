@@ -159,7 +159,7 @@ public class AccountController {
     public ResponseEntity<String> updateAccountRoleById(@PathVariable UUID userId,
                                                         @PathVariable Roles role,
                                                         @RequestHeader(value = "x-admin-id", required = false)
-                                                            UUID adminUser) {
+                                                            UUID adminUserId) {
         return ResponseEntity.ok(accountService.updateAccountRole(userId, role));
     }
 }
