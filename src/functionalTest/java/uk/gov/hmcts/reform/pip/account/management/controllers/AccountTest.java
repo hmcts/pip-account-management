@@ -659,13 +659,8 @@ class AccountTest {
             .put(ROOT_URL + UPDATE_PATH + createdUserId + "/" + Roles.INTERNAL_ADMIN_LOCAL)
             .header(ADMIN_HEADER, createdUserId);
 
-        MvcResult responseUpdatedUser = mockMvc.perform(updateRequest)
-            .andExpect(status().isForbidden()).andReturn();
-
-        assertTrue(responseUpdatedUser.getResponse().getContentAsString().contains(
-            "User with id " + createdUserId + " is unable to update user ID " + createdUserId),
-                   "Failed to update account"
-        );
+        mockMvc.perform(updateRequest)
+            .andExpect(status().isForbidden());
     }
 
     @Test

@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -133,16 +134,30 @@ public class AccountController {
         return ResponseEntity.ok("User deleted");
     }
 
+    @ApiResponse(responseCode = OK_CODE, description = "User deleted")
+    @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
+    @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description = "User not found")
+    @ApiResponse(responseCode = FORBIDDEN_ERROR_CODE, description = "User with id %s is unable to delete user ID %s")
+    @Operation(summary = "Delete a user by their id")
+    @DeleteMapping("/v2/{userId}")
+    @PreAuthorize("@authorisationService.userCanDeleteAccount(#userId, #adminUserId)")
+    public ResponseEntity<String> deleteAccountV2(@PathVariable UUID userId,
+                                                @RequestHeader("x-admin-id") UUID adminUserId) {
+        accountService.deleteAccount(userId);
+        return ResponseEntity.ok("User deleted");
+    }
+
     @ApiResponse(responseCode = OK_CODE, description = "String confirming update")
     @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
     @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description = "User not found")
     @ApiResponse(responseCode = FORBIDDEN_ERROR_CODE, description = "User with id %s is unable to update user ID %s")
     @Operation(summary = "Update a users role by their id")
     @PutMapping("/update/{userId}/{role}")
+    @PreAuthorize("@authorisationService.userCanUpdateAccount(#userId, #adminUserId)")
     public ResponseEntity<String> updateAccountRoleById(@PathVariable UUID userId,
                                                         @PathVariable Roles role,
                                                         @RequestHeader(value = "x-admin-id", required = false)
                                                             UUID adminUser) {
-        return ResponseEntity.ok(accountService.updateAccountRole(adminUser, userId, role));
+        return ResponseEntity.ok(accountService.updateAccountRole(userId, role));
     }
 }

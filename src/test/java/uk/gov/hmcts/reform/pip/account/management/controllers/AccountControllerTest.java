@@ -184,40 +184,9 @@ class AccountControllerTest {
     }
 
     @Test
-    void testUpdateAccountRoleByIdWithoutAdminUser() {
-        UUID userId = UUID.randomUUID();
-
-        when(accountService.updateAccountRole(null, userId, Roles.SYSTEM_ADMIN))
-            .thenReturn(TEST_BODY);
-
-        ResponseEntity<String> response =
-            accountController.updateAccountRoleById(userId, Roles.SYSTEM_ADMIN, null);
-
-        assertThat(response.getStatusCode())
+    void testDeleteV2Account() {
+        assertThat(accountController.deleteAccountV2(UUID.randomUUID(), UUID.randomUUID()).getStatusCode())
             .as(STATUS_CODE_MATCH)
             .isEqualTo(HttpStatus.OK);
-
-        assertThat(response.getBody())
-            .as(BODY_MATCH)
-            .isEqualTo(TEST_BODY);
-    }
-
-    @Test
-    void testUpdateAccountRoleByIdWithAdminUser() {
-        UUID userId = UUID.randomUUID();
-        UUID adminId = UUID.randomUUID();
-
-        when(accountService.updateAccountRole(adminId, userId, Roles.SYSTEM_ADMIN))
-            .thenReturn(TEST_BODY);
-
-        ResponseEntity<String> response = accountController.updateAccountRoleById(userId, Roles.SYSTEM_ADMIN, adminId);
-
-        assertThat(response.getStatusCode())
-            .as(STATUS_CODE_MATCH)
-            .isEqualTo(HttpStatus.OK);
-
-        assertThat(response.getBody())
-            .as(BODY_MATCH)
-            .isEqualTo(TEST_BODY);
     }
 }

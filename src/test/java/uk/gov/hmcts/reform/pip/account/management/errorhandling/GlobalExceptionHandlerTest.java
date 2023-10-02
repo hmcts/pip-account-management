@@ -10,7 +10,6 @@ import org.springframework.validation.BindException;
 import org.springframework.web.bind.MissingRequestHeaderException;
 import uk.gov.hmcts.reform.pip.account.management.controllers.AccountController;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.CsvParseException;
-import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.ForbiddenRoleUpdateException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.NotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.SystemAdminAccountException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.UserWithProvenanceNotFoundException;
@@ -81,18 +80,6 @@ class GlobalExceptionHandlerTest {
         assertNotNull(responseEntity.getBody(), RESPONSE_SHOULD_CONTAIN_A_BODY);
         assertEquals(ERROR_MESSAGE,
                      responseEntity.getBody().getMessage(), EXCEPTION_BODY_NOT_MATCH);
-    }
-
-    @Test
-    void testForbiddenRoleUpdateException() {
-        ForbiddenRoleUpdateException forbiddenRoleUpdateException = new ForbiddenRoleUpdateException(ERROR_MESSAGE);
-        ResponseEntity<ExceptionResponse> responseEntity = globalExceptionHandler.handle(forbiddenRoleUpdateException);
-
-        assertEquals(HttpStatus.FORBIDDEN, responseEntity.getStatusCode(), "Status code should be not found");
-        assertNotNull(responseEntity.getBody(), RESPONSE_SHOULD_CONTAIN_A_BODY);
-        assertEquals(ERROR_MESSAGE,
-                     responseEntity.getBody().getMessage(), EXCEPTION_BODY_NOT_MATCH
-        );
     }
 
     @Test
