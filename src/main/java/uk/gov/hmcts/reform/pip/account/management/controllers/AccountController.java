@@ -137,7 +137,8 @@ public class AccountController {
     @ApiResponse(responseCode = OK_CODE, description = "User deleted")
     @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
     @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description = "User not found")
-    @ApiResponse(responseCode = FORBIDDEN_ERROR_CODE, description = "User with id %s is unable to delete user ID %s")
+    @ApiResponse(responseCode = FORBIDDEN_ERROR_CODE,
+        description = "User with ID %s is forbidden to remove user with ID %s")
     @Operation(summary = "Delete a user by their id")
     @DeleteMapping("/v2/{userId}")
     @PreAuthorize("@authorisationService.userCanDeleteAccount(#userId, #adminUserId)")
@@ -150,7 +151,8 @@ public class AccountController {
     @ApiResponse(responseCode = OK_CODE, description = "String confirming update")
     @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
     @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description = "User not found")
-    @ApiResponse(responseCode = FORBIDDEN_ERROR_CODE, description = "User with id %s is unable to update user ID %s")
+    @ApiResponse(responseCode = FORBIDDEN_ERROR_CODE,
+        description = "User with ID %s is forbidden to update user with ID %s")
     @Operation(summary = "Update a users role by their id")
     @PutMapping("/update/{userId}/{role}")
     @PreAuthorize("@authorisationService.userCanUpdateAccount(#userId, #adminUserId)")
