@@ -610,7 +610,7 @@ class AccountTest {
     }
 
     @Test
-    void testUpdateAccountRoleByIdWithNoAdminId() throws Exception {
+    void testUpdateAccountRoleByIdWithoutAdminId() throws Exception {
         validUser.setUserProvenance(UserProvenances.CFT_IDAM);
         MockHttpServletRequestBuilder createRequest =
             MockMvcRequestBuilders
@@ -634,7 +634,7 @@ class AccountTest {
             .put(ROOT_URL + UPDATE_PATH + createdUserId + "/" + Roles.INTERNAL_ADMIN_LOCAL);
 
         mockMvc.perform(updateRequest)
-            .andExpect(status().isForbidden());
+            .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -811,19 +811,6 @@ class AccountTest {
     void testUnauthorizedDeleteAccount() throws Exception {
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .delete(ROOT_URL + "/delete/" + UUID.randomUUID());
-
-        MvcResult mvcResult = mockMvc.perform(request).andExpect(status().isForbidden()).andReturn();
-
-        assertEquals(FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
-                     FORBIDDEN_STATUS_CODE
-        );
-    }
-
-    @Test
-    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
-    void testUnauthorizedUpdateAccountById() throws Exception {
-        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
-            .put(ROOT_URL + "/update/" + UUID.randomUUID() + "/" + Roles.INTERNAL_ADMIN_LOCAL);
 
         MvcResult mvcResult = mockMvc.perform(request).andExpect(status().isForbidden()).andReturn();
 

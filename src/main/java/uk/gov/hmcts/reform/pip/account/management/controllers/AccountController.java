@@ -158,8 +158,7 @@ public class AccountController {
     @PreAuthorize("@authorisationService.userCanUpdateAccount(#userId, #adminUserId)")
     public ResponseEntity<String> updateAccountRoleById(@PathVariable UUID userId,
                                                         @PathVariable Roles role,
-                                                        @RequestHeader(value = "x-admin-id", required = false)
-                                                            UUID adminUserId) {
+                                                        @RequestHeader("x-admin-id") UUID adminUserId) {
         return ResponseEntity.ok(accountService.updateAccountRole(userId, role));
     }
 }

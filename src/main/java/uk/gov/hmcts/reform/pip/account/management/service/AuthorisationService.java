@@ -34,7 +34,7 @@ public class AuthorisationService {
     public boolean userCanUpdateAccount(UUID userId, UUID adminUserId) {
         if (adminUserId != null && adminUserId.equals(userId)) {
             log.error(writeLog(
-                String.format("User with ID %s is forbidden to update their owned account", userId)
+                String.format("User with ID %s is forbidden to update their own account", userId)
             ));
             return false;
         }

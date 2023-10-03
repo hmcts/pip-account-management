@@ -29,8 +29,8 @@ class AuthorisationServiceTest {
 
     private static final String DELETE_ERROR_LOG = "User with ID %s is forbidden to remove user with ID %s";
     private static final String UPDATE_ERROR_LOG = "User with ID %s is forbidden to update user with ID %s";
-    private static final String UPDATE_OWNED_ACCOUNT_ERROR_LOG =
-        "User with ID %s is forbidden to update their owned account";
+    private static final String UPDATE_OWN_ACCOUNT_ERROR_LOG =
+        "User with ID %s is forbidden to update their own account";
 
     private static final String CAN_DELETE_ACCOUNT_MESSAGE = "User should be able to delete account";
     private static final String CANNOT_DELETE_ACCOUNT_MESSAGE = "User should not be able to delete account";
@@ -466,7 +466,7 @@ class AuthorisationServiceTest {
     }
 
     @Test
-    void testUserCannotUpdateTheirOwnedAccount() {
+    void testUserCannotUpdateTheirOwnAccount() {
         user.setRoles(Roles.INTERNAL_SUPER_ADMIN_LOCAL);
 
         PiUser adminUser = new PiUser();
@@ -486,7 +486,7 @@ class AuthorisationServiceTest {
 
             softly.assertThat(logCaptor.getErrorLogs().get(0))
                 .as(LOG_MATCHED_MESSAGE)
-                .contains(String.format(UPDATE_OWNED_ACCOUNT_ERROR_LOG, USER_ID));
+                .contains(String.format(UPDATE_OWN_ACCOUNT_ERROR_LOG, USER_ID));
 
             softly.assertAll();
 
