@@ -619,7 +619,7 @@ class AccountTest {
     void testV2SystemAdminDeletesSuperAdminUser() throws Exception {
         superAdminUser.setUserProvenance(UserProvenances.CFT_IDAM);
         String superAdminUserId = getSuperAdminUserId(superAdminUser);
-        String systemAdminUserId = getSystemAdminUserId(SYSTEM_ADMIN_EMAIL);
+        String systemAdminUserId = getSystemAdminUserId("test_account_system-admin2@hmcts.net");
 
         MockHttpServletRequestBuilder deleteRequest = MockMvcRequestBuilders
             .delete(ROOT_URL + DELETE_PATH_V2 + superAdminUserId)
@@ -681,11 +681,11 @@ class AccountTest {
 
     @Test
     void testV2DeleteAccountNotFound() throws Exception {
-        String systemAdminUserId = getSystemAdminUserId(SYSTEM_ADMIN_EMAIL);
+        String superAdminUserId = getSuperAdminUserId(superAdminUser);
 
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .delete(ROOT_URL + DELETE_PATH_V2 + UUID.randomUUID())
-            .header(ADMIN_HEADER, systemAdminUserId);
+            .header(ADMIN_HEADER, superAdminUserId);
 
         MvcResult mvcResult = mockMvc.perform(request).andExpect(status().isNotFound()).andReturn();
 
