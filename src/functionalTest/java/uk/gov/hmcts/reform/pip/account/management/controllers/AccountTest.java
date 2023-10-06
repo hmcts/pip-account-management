@@ -33,6 +33,7 @@ import uk.gov.hmcts.reform.pip.account.management.Application;
 import uk.gov.hmcts.reform.pip.account.management.config.AzureConfigurationClientTestConfiguration;
 import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
+import uk.gov.hmcts.reform.pip.account.management.model.SystemAdminAccount;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
 import uk.gov.hmcts.reform.pip.model.publication.ListType;
@@ -98,10 +99,15 @@ class AccountTest {
     private static final String GET_PROVENANCE_USER_URL = ROOT_URL + "/provenance/";
     private static final String UPDATE_ACCOUNT_URL = ROOT_URL + "/provenance/";
     private static final String EMAIL_URL = ROOT_URL + "/emails";
+    private static final String CREATE_SYSTEM_ADMIN_URL = ROOT_URL + "/add/system-admin";
 
     private static final String EMAIL = "test_account_admin@hmcts.net";
+    private static final String SYSTEM_ADMIN_EMAIL = "test_account_system-admin@hmcts.net";
+    private static final String SYSTEM_ADMIN_ISSUER_ID = "87f907d2-eb28-42cc-b6e1-ae2b03f7bba2";
+
     private static final String INVALID_EMAIL = "ab";
     private static final String SURNAME = "Surname";
+    private static final String FIRST_NAME = "firstname";
     private static final UserProvenances PROVENANCE = UserProvenances.PI_AAD;
     private static final Roles ROLE = Roles.INTERNAL_ADMIN_CTSC;
     private static final String ISSUER_ID = "1234-1234-1234-1234";
@@ -118,9 +124,12 @@ class AccountTest {
     private static final String TEST_UUID_STRING = UUID.randomUUID().toString();
     private static final String USER_SHOULD_MATCH = "Users should match";
     private static final String DELETE_PATH = "/delete/";
+    private static final String DELETE_PATH_V2 = "/v2/";
     private static final String UPDATE_PATH = "/update/";
     private static final String REPLACE_STRING = "%s/%s/%s";
     private static final String FORBIDDEN_STATUS_CODE = "Status code does not match forbidden";
+    private static final String DELETE_USER_FAILURE = "Failed to delete user account";
+    private static final String DELETE_USER_SUCCESS = "User deleted";
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
@@ -556,7 +565,7 @@ class AccountTest {
             .delete(ROOT_URL + DELETE_PATH + createdUserId);
 
         MvcResult mvcResult = mockMvc.perform(deleteRequest).andExpect(status().isOk()).andReturn();
-        assertEquals("User deleted", mvcResult.getResponse().getContentAsString(),
+        assertEquals(DELETE_USER_SUCCESS, mvcResult.getResponse().getContentAsString(),
                      "Failed to delete user"
         );
     }
@@ -565,6 +574,118 @@ class AccountTest {
     void testDeleteAccountNotFound() throws Exception {
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .delete(ROOT_URL + DELETE_PATH + UUID.randomUUID());
+
+        MvcResult mvcResult = mockMvc.perform(request).andExpect(status().isNotFound()).andReturn();
+
+        assertEquals(NOT_FOUND.value(), mvcResult.getResponse().getStatus(),
+                     NOT_FOUND_STATUS_CODE_MESSAGE
+        );
+    }
+
+    @Test
+    void testV2SystemAdminDeletesVerifiedUser() throws Exception {
+        validUser.setUserProvenance(UserProvenances.CFT_IDAM);
+        validUser.setRoles(Roles.VERIFIED);
+        MockHttpServletRequestBuilder createRequest =
+            MockMvcRequestBuilders
+                .post(PI_URL)
+                .content(OBJECT_MAPPER.writeValueAsString(List.of(validUser)))
+                .header(ISSUER_HEADER, ISSUER_ID)
+                .contentType(MediaType.APPLICATION_JSON);
+
+        MvcResult responseCreateUser = mockMvc.perform(createRequest)
+            .andExpect(status().isCreated()).andReturn();
+        ConcurrentHashMap<CreationEnum, List<Object>> mappedResponse =
+            OBJECT_MAPPER.readValue(
+                responseCreateUser.getResponse().getContentAsString(),
+                new TypeReference<>() {
+                }
+            );
+
+        String createdUserId = mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).get(0).toString();
+        String systemAdminUserId = getSystemAdminUserId(SYSTEM_ADMIN_EMAIL);
+
+        MockHttpServletRequestBuilder deleteRequest = MockMvcRequestBuilders
+            .delete(ROOT_URL + DELETE_PATH_V2 + createdUserId)
+            .header(ADMIN_HEADER, systemAdminUserId);
+
+        MvcResult mvcResult = mockMvc.perform(deleteRequest).andExpect(status().isOk()).andReturn();
+        assertEquals(DELETE_USER_SUCCESS, mvcResult.getResponse().getContentAsString(),
+                     DELETE_USER_FAILURE
+        );
+    }
+
+    @Test
+    void testV2SystemAdminDeletesSuperAdminUser() throws Exception {
+        superAdminUser.setUserProvenance(UserProvenances.CFT_IDAM);
+        String superAdminUserId = getSuperAdminUserId(superAdminUser);
+        String systemAdminUserId = getSystemAdminUserId(SYSTEM_ADMIN_EMAIL);
+
+        MockHttpServletRequestBuilder deleteRequest = MockMvcRequestBuilders
+            .delete(ROOT_URL + DELETE_PATH_V2 + superAdminUserId)
+            .header(ADMIN_HEADER, systemAdminUserId);
+
+        MvcResult mvcResult = mockMvc.perform(deleteRequest).andExpect(status().isOk()).andReturn();
+        assertEquals(DELETE_USER_SUCCESS, mvcResult.getResponse().getContentAsString(),
+                     DELETE_USER_FAILURE
+        );
+    }
+
+    @Test
+    void testV2SuperAdminDeletesVerifiedUser() throws Exception {
+        validUser.setUserProvenance(UserProvenances.CFT_IDAM);
+        validUser.setRoles(Roles.VERIFIED);
+        MockHttpServletRequestBuilder createRequest =
+            MockMvcRequestBuilders
+                .post(PI_URL)
+                .content(OBJECT_MAPPER.writeValueAsString(List.of(validUser)))
+                .header(ISSUER_HEADER, ISSUER_ID)
+                .contentType(MediaType.APPLICATION_JSON);
+
+        MvcResult responseCreateUser = mockMvc.perform(createRequest)
+            .andExpect(status().isCreated()).andReturn();
+        ConcurrentHashMap<CreationEnum, List<Object>> mappedResponse =
+            OBJECT_MAPPER.readValue(
+                responseCreateUser.getResponse().getContentAsString(),
+                new TypeReference<>() {
+                }
+            );
+
+        String createdUserId = mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).get(0).toString();
+        String superAdminUserId = getSuperAdminUserId(superAdminUser);
+
+        MockHttpServletRequestBuilder deleteRequest = MockMvcRequestBuilders
+            .delete(ROOT_URL + DELETE_PATH_V2 + createdUserId)
+            .header(ADMIN_HEADER, superAdminUserId);
+
+        mockMvc.perform(deleteRequest).andExpect(status().isForbidden()).andReturn();
+    }
+
+    @Test
+    void testV2SuperAdminDeletesSuperAdminUser() throws Exception {
+        String superAdminUserId = getSuperAdminUserId(superAdminUser);
+
+        superAdminUser.setUserProvenance(UserProvenances.CFT_IDAM);
+        superAdminUser.setEmail("superAdminToDelete@justice.gov.uk");
+        String superAdminUserIdToDelete = getSuperAdminUserId(superAdminUser);
+
+        MockHttpServletRequestBuilder deleteRequest = MockMvcRequestBuilders
+            .delete(ROOT_URL + DELETE_PATH_V2 + superAdminUserIdToDelete)
+            .header(ADMIN_HEADER, superAdminUserId);
+
+        MvcResult mvcResult = mockMvc.perform(deleteRequest).andExpect(status().isOk()).andReturn();
+        assertEquals(DELETE_USER_SUCCESS, mvcResult.getResponse().getContentAsString(),
+                     DELETE_USER_FAILURE
+        );
+    }
+
+    @Test
+    void testV2DeleteAccountNotFound() throws Exception {
+        String systemAdminUserId = getSystemAdminUserId(SYSTEM_ADMIN_EMAIL);
+
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+            .delete(ROOT_URL + DELETE_PATH_V2 + UUID.randomUUID())
+            .header(ADMIN_HEADER, systemAdminUserId);
 
         MvcResult mvcResult = mockMvc.perform(request).andExpect(status().isNotFound()).andReturn();
 
@@ -838,5 +959,29 @@ class AccountTest {
             );
 
         return mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).get(0).toString();
+    }
+
+    private String getSystemAdminUserId(String email) throws Exception {
+        SystemAdminAccount systemAdmin = new SystemAdminAccount();
+        systemAdmin.setFirstName(FIRST_NAME);
+        systemAdmin.setSurname(SURNAME);
+        systemAdmin.setEmail(email);
+
+        MockHttpServletRequestBuilder createRequest =
+            MockMvcRequestBuilders
+                .post(CREATE_SYSTEM_ADMIN_URL)
+                .content(OBJECT_MAPPER.writeValueAsString(systemAdmin))
+                .header(ISSUER_HEADER, SYSTEM_ADMIN_ISSUER_ID)
+                .contentType(MediaType.APPLICATION_JSON);
+
+        MvcResult responseCreateSystemAdminUser = mockMvc.perform(createRequest)
+            .andExpect(status().isOk()).andReturn();
+
+        PiUser returnedUser = OBJECT_MAPPER.readValue(
+            responseCreateSystemAdminUser.getResponse().getContentAsString(),
+            PiUser.class
+        );
+
+        return returnedUser.getUserId().toString();
     }
 }
