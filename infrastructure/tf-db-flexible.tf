@@ -34,8 +34,8 @@ module "postgresql" {
 }
 
 # SDP access and MV required in here. Will be done at migration
-resource "postgresql_role" "create_sdp_access" {
-  provider = "postgresql.postgres-flexible"
+resource "postgresql_role" "create_sdp_access-flexible" {
+  provider            = postgresql.postgres-flexible
 
   name                = data.azurerm_key_vault_secret.sdp-user.value
   login               = true
@@ -45,8 +45,8 @@ resource "postgresql_role" "create_sdp_access" {
   count               = var.env == "sbox" ? 1 : 0
 }
 
-resource "postgresql_grant" "readonly_mv" {
-  provider = "postgresql.postgres-flexible"
+resource "postgresql_grant" "readonly_mv-flexible" {
+  provider    = postgresql.postgres-flexible
 
   database    = module.postgresql.postgresql_database
   role        = data.azurerm_key_vault_secret.sdp-user.value
