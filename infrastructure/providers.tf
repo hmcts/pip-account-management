@@ -24,11 +24,26 @@ provider "azurerm" {
 }
 
 provider "postgresql" {
+  alias           = "postgres-v11"
+
   host            = module.database.host_name
   port            = module.database.postgresql_listen_port
   database        = module.database.postgresql_database
   username        = module.database.user_name
   password        = module.database.postgresql_password
+  superuser       = false
+  sslmode         = "require"
+  connect_timeout = 15
+}
+
+provider "postgresql" {
+  alias           = "postgres-flexible"
+
+  host            = module.postgresql.host_name
+  port            = module.postgresql.postgresql_listen_port
+  database        = module.postgresql.postgresql_database
+  username        = module.postgresql.user_name
+  password        = module.postgresql.postgresql_password
   superuser       = false
   sslmode         = "require"
   connect_timeout = 15
