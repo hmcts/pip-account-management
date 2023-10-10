@@ -39,11 +39,11 @@ provider "postgresql" {
 provider "postgresql" {
   alias           = "postgres-flexible"
 
-  host            = module.postgresql.host_name
-  port            = module.postgresql.postgresql_listen_port
-  database        = module.postgresql.postgresql_database
-  username        = module.postgresql.user_name
-  password        = module.postgresql.postgresql_password
+  host            = module.postgresql.fqdn
+  port            = 5432
+  database        = "flexible-${var.product}-${var.component}"
+  username        = module.postgresql.username
+  password        = module.postgresql.password
   superuser       = false
   sslmode         = "require"
   connect_timeout = 15
