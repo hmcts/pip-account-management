@@ -23,18 +23,24 @@ module "database" {
 }
 
 resource "postgresql_role" "create_sdp_access" {
+  provider            = postgresql.postgres-v11
+
   name                = data.azurerm_key_vault_secret.sdp-user.value
   login               = true
   password            = data.azurerm_key_vault_secret.sdp-pass.value
   skip_reassign_owned = true
   skip_drop_role      = true
+  count               = var.env == "sbox" || var.env == "demo" || var.env == "test" ? 0 : 1
 }
 
 resource "postgresql_grant" "readonly_mv" {
+  provider    = postgresql.postgres-v11
+
   database    = module.database.postgresql_database
   role        = data.azurerm_key_vault_secret.sdp-user.value
   schema      = "public"
   object_type = "table"
   privileges  = ["SELECT"]
   objects     = ["sdp_mat_view_pi_user"]
+  count       = var.env == "sbox" || var.env == "demo" || var.env == "test" ? 0 : 1
 }
