@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.CsvParseException;
-import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.ForbiddenRoleUpdateException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.NotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.SystemAdminAccountException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.UserWithProvenanceNotFoundException;
@@ -60,14 +59,6 @@ public class GlobalExceptionHandler {
         log.error(writeLog("400, Error while validating the JSON provided"));
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-            .body(generateExceptionResponse(ex.getMessage()));
-    }
-
-    @ExceptionHandler(ForbiddenRoleUpdateException.class)
-    public ResponseEntity<ExceptionResponse> handle(ForbiddenRoleUpdateException ex) {
-        log.error(writeLog("403, " + ex.getMessage()));
-
-        return ResponseEntity.status(HttpStatus.FORBIDDEN)
             .body(generateExceptionResponse(ex.getMessage()));
     }
 
