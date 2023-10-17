@@ -10,7 +10,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import uk.gov.hmcts.reform.pip.account.management.database.UserRepository;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.AzureCustomException;
-import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.ForbiddenRoleUpdateException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.NotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.UserNotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.UserWithProvenanceNotFoundException;
@@ -266,19 +265,15 @@ public class AccountService {
     /**
      * Process updating a role for an account.
      *
-     * @param adminId The Admin ID of the user who is performing the action.
      * @param userId The ID of the user to update.
      * @param updatedRole The updated role of the user.
      * @return A confirmation string that the user has been updated with the new role.
      */
-    public String updateAccountRole(UUID adminId, UUID userId, Roles updatedRole) {
-        if (adminId != null && adminId.equals(userId)) {
-            throw new ForbiddenRoleUpdateException(
-                String.format("User with id %s is unable to update user ID %s", adminId, userId));
-        }
-
-        PiUser userToUpdate = userRepository.findByUserId(userId).orElseThrow(() -> new NotFoundException(String.format(
-            "User with supplied user id: %s could not be found", userId)));
+    public String updateAccountRole(UUID userId, Roles updatedRole) {
+        PiUser userToUpdate = userRepository.findByUserId(userId)
+            .orElseThrow(() -> new NotFoundException(
+                String.format("User with supplied user id: %s could not be found", userId)
+            ));
 
         // If they are a PI AAD user then try update the users role in B2C
         if (PI_AAD.equals(userToUpdate.getUserProvenance())) {
