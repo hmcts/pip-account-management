@@ -1,6 +1,8 @@
 locals {
   secret_prefix = "${var.component}-POSTGRES"
 
+  //Needed to change the old details to the new Flexible Server details, as Flyway on the pipeline only picks up
+  //a specific naming convention.
   secrets = var.env == "sbox" || var.env == "demo" || var.env == "test" || var.env == "ithc" ? [
     {
       name_suffix = "PASS"
