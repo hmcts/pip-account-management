@@ -42,7 +42,7 @@ resource "azurerm_key_vault_secret" "secret" {
   expiration_date = timeadd(timestamp(), "8760h")
 
   depends_on = [
-    module.database
+    module.postgresql
   ]
 
 }
