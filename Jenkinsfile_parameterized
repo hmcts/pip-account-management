@@ -5,8 +5,17 @@
 def type = "java"
 def product = "pip"
 def component = "account-management"
+def kv = product + '-ss-kv'
 
-withPipeline(type, product, component) {
+withParameterizedPipeline(type, product, component, 'sbox', 'sbox') {
 
+  enableDbMigration(kv)
   enableSlackNotifications('#pip-build-notices')
+
+  enableAksStagingDeployment()
+  disableLegacyDeployment()
+  enableApiGatewayTest()
+
+  def branchName = env.CHANGE_BRANCH ?: env.BRANCH_NAME
 }
+
