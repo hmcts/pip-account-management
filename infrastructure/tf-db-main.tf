@@ -20,7 +20,7 @@ module "database" {
   key_vault_rg   = "genesis-rg"
   key_vault_name = "dtssharedservices${var.env}kv"
 
-  count    = var.env == "sbox" || var.env == "test" || var.env == "demo" ? 0 : 1
+  count    = var.env == "sbox" || var.env == "test" || var.env == "demo" || var.env == "ithc" || var.env == "stg" ? 0 : 1
 }
 
 moved {
