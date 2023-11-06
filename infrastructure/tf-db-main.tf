@@ -20,27 +20,10 @@ module "database" {
   key_vault_rg   = "genesis-rg"
   key_vault_name = "dtssharedservices${var.env}kv"
 
+  count    = var.env == "sbox" || var.env == "test" || var.env == "demo" || var.env == "ithc" || var.env == "stg" ? 0 : 1
 }
 
-resource "postgresql_role" "create_sdp_access" {
-  provider            = postgresql.postgres-v11
-
-  name                = data.azurerm_key_vault_secret.sdp-user.value
-  login               = true
-  password            = data.azurerm_key_vault_secret.sdp-pass.value
-  skip_reassign_owned = true
-  skip_drop_role      = true
-  count               = var.env == "sbox" || var.env == "demo" || var.env == "test" || var.env == "stg" || var.env == "ithc" ? 0 : 1
-}
-
-resource "postgresql_grant" "readonly_mv" {
-  provider    = postgresql.postgres-v11
-
-  database    = module.database.postgresql_database
-  role        = data.azurerm_key_vault_secret.sdp-user.value
-  schema      = "public"
-  object_type = "table"
-  privileges  = ["SELECT"]
-  objects     = ["sdp_mat_view_pi_user"]
-  count       = var.env == "sbox" || var.env == "demo" || var.env == "test" || var.env == "stg" || var.env == "ithc" ? 0 : 1
+moved {
+  from = module.database
+  to   = module.database[0]
 }
