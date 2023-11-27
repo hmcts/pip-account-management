@@ -1,6 +1,9 @@
 package uk.gov.hmcts.reform.pip.account.management.controllers;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,6 +11,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -41,8 +45,17 @@ public class AccountFilteringController {
 
     private static final String PI_USER = "{piUser}";
 
-    @ApiResponse(responseCode = OK_CODE, description = "Account Management - MI Data request accepted.")
-    @Operation(summary = "Returns a list of (anonymized) account data for MI reporting.")
+    @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
+    @ApiResponse(responseCode = OK_CODE, description = "A CSV like structure which contains the data. "
+        + "See example for headers ", content = {
+            @Content(examples = {@ExampleObject("user_id,provenance_user_id,user_provenance,roles,"
+                    + "created_date,last_signed_in_date")},
+                    mediaType = MediaType.TEXT_PLAIN_VALUE,
+                    schema = @Schema(implementation = String.class))
+        }
+    )
+    @Operation(summary = "Returns a list of (anonymized) account data for MI reporting. This endpoint will be "
+        + "deprecated in the future, in favour of returning a JSON model")
     @GetMapping("/mi-data")
     public ResponseEntity<String> getMiData() {
         return ResponseEntity.status(HttpStatus.OK).body(accountFilteringService.getAccManDataForMiReporting());
