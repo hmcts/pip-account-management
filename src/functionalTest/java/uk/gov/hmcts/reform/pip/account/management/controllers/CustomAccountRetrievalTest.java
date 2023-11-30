@@ -86,6 +86,7 @@ class CustomAccountRetrievalTest {
 
     @Test
     void testMiAccountDataRequestSuccess() throws Exception {
+        VALID_USER.setProvenanceUserId(UUID.randomUUID().toString());
         MockHttpServletRequestBuilder createRequest =
             MockMvcRequestBuilders
                 .post(PI_URL)
