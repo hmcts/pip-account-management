@@ -61,6 +61,8 @@ class CustomAccountRetrievalTest {
 
     private static final String UNAUTHORIZED_ROLE = "APPROLE_unknown.authorized";
     private static final String UNAUTHORIZED_USERNAME = "unauthorized_isAuthorized";
+    private static final String EXPECTED_HEADERS = "user_id,provenance_user_id,user_provenance,roles,"
+        + "created_date,last_signed_in_date";
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final PiUser VALID_USER = createUser(true, UUID.randomUUID().toString());
@@ -108,10 +110,15 @@ class CustomAccountRetrievalTest {
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .get(MI_REPORTING_ACCOUNT_DATA_URL);
 
-        MvcResult responseMiData = mockMvc.perform(request).andExpect(status().isOk()).andReturn();
+        String responseMiData = mockMvc.perform(request).andExpect(status().isOk()).andReturn()
+            .getResponse().getContentAsString();
+
+        assertEquals(EXPECTED_HEADERS, responseMiData.split("\n")[0],
+                     "Should successfully retrieve MI data headers"
+        );
 
         assertTrue(
-            responseMiData.getResponse().getContentAsString().contains(createdUserId),
+            responseMiData.contains(createdUserId),
             "Should successfully retrieve MI data"
         );
     }
