@@ -253,6 +253,14 @@ curl --request POST \
   ]'
 ```
 
+## Azure Blob Storage
+
+This service uses Azure Blob storage to store the raw artefact data. This is configured in [AzureBlobConfiguration](./src/main/java/uk/gov/hmcts/reform/pip/account/management/config/AzureBlobConfiguration.java).
+
+The Workload Identity is used by default to authenticate with Azure Blob Storage which is present in the Azure environments. If the workload identity is not present (such as in a local environment), a connection string can be used instead by setting the CONNECTION_STRING environment variable.
+
+For the local environment, Azurite docker images can be used to provide a local instance of Blob Storage.
+
 ## Deployment
 We use [Jenkins](https://www.jenkins.io/) as our CI/CD system. The deployment of this can be controlled within our application logic using the various `Jenkinsfile`-prepended files within the root directory of the repository.
 
@@ -263,13 +271,18 @@ If your debugging leads you to conclude that you need to implement a pipeline fi
 ## Creating or debugging of SQL scripts with Flyway
 Flyway is used to apply incremental schema changes (migrations) to our database.
 
+Any modifications to the database schema must be done through flyway. Changes to the models will no longer be automatically applied to the database.
+
+This behaviour can be overridden using the DB_UPDATE environment variable. This is useful for local development, but should not be used in production.
+
 ### Pipeline
-Flyway is enabled on the pipeline, but is run at startup then switched off.
+Flyway is enabled on the pipeline. It is only run on the pipeline, and not on startup. On startup, the app will validate that the flyway scripts have been applied.
 
 ### Local
 For local development, flyway is turned off by default. This is due to all tables existing within a single database locally. This can cause flyway to fail at startup due to mismatching scripts.
 
 ## Monitoring and Logging
+
 We utilise [Azure Application Insights](https://learn.microsoft.com/en-us/azure/azure-monitor/app/app-insights-overview) to store our logs. Ask a teammate for the specific resource in Azure to access these.
 Locally, we use [Log4j](https://logging.apache.org/log4j/2.x/).
 
