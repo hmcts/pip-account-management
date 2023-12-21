@@ -29,6 +29,7 @@
   - [Requesting a bearer token](#requesting-a-bearer-token)
   - [Using the bearer token](#using-the-bearer-token)
 - [Deployment](#deployment)
+- [Azure blob storage](#azure-blob-storage)
 - [Creating or debugging of SQL scripts with Flyway](#creating-or-debugging-of-sql-scripts-with-flyway)
   - [Pipeline](#pipeline)
   - [Local](#local)
