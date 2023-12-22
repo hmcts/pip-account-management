@@ -37,10 +37,6 @@ import java.util.UUID;
 @Validated
 @IsAdmin
 public class AccountController {
-
-    @Autowired
-    private AccountService accountService;
-
     private static final String ISSUER_ID = "x-issuer-id";
     private static final String NOT_AUTHORIZED_MESSAGE = "User has not been authorized";
 
@@ -50,6 +46,13 @@ public class AccountController {
     private static final String NOT_FOUND_ERROR_CODE = "404";
 
     private static final String PI_USER = "{piUser}";
+
+    private final AccountService accountService;
+
+    @Autowired
+    public AccountController(AccountService accountService) {
+        this.accountService = accountService;
+    }
 
     /**
      * POST endpoint to create a new user in the P&I postgres database.

@@ -51,32 +51,38 @@ public class AccountService {
 
     private static final int MAX_PAGE_SIZE = 25;
 
-    @Autowired
-    Validator validator;
+    private final Validator validator;
+
+    private final AzureUserService azureUserService;
+
+    private final AzureAccountService azureAccountService;
+
+    private final AccountFilteringService accountFilteringService;
+
+    private final UserRepository userRepository;
+
+    private final SensitivityService sensitivityService;
+
+    private final SubscriptionService subscriptionService;
 
     @Autowired
-    AzureUserService azureUserService;
-
-    @Autowired
-    AzureAccountService azureAccountService;
-
-    @Autowired
-    AccountFilteringService accountFilteringService;
-
-    @Autowired
-    UserRepository userRepository;
-
-    @Autowired
-    PublicationService publicationService;
-
-    @Autowired
-    SensitivityService sensitivityService;
-
-    @Autowired
-    AccountModelMapperService accountModelMapperService;
-
-    @Autowired
-    SubscriptionService subscriptionService;
+    public AccountService(
+        Validator validator,
+        AzureUserService azureUserService,
+        AzureAccountService azureAccountService,
+        AccountFilteringService accountFilteringService,
+        UserRepository userRepository,
+        SensitivityService sensitivityService,
+        SubscriptionService subscriptionService
+    ) {
+        this.validator = validator;
+        this.azureUserService = azureUserService;
+        this.azureAccountService = azureAccountService;
+        this.accountFilteringService = accountFilteringService;
+        this.userRepository = userRepository;
+        this.sensitivityService = sensitivityService;
+        this.subscriptionService = subscriptionService;
+    }
 
     /**
      * Method to add users to P&I database, loops through the list and validates the email provided then adds them to
@@ -225,7 +231,7 @@ public class AccountService {
             }
         } while (!noMoreAccounts);
 
-        allUserIds.forEach(i -> deleteAccount(i));
+        allUserIds.forEach(this::deleteAccount);
         return String.format("%s account(s) deleted with email starting with %s", allUserIds.size(), prefix);
     }
 

@@ -21,14 +21,18 @@ import uk.gov.hmcts.reform.pip.model.authentication.roles.IsAdmin;
 @Validated
 @IsAdmin
 public class InactiveAccountManagementController {
-    @Autowired
-    private InactiveAccountManagementService inactiveAccountManagementService;
-
     private static final String NO_CONTENT_MESSAGE = "The request has been successfully fulfilled";
     private static final String NOT_AUTHORIZED_MESSAGE = "User has not been authorized";
 
     private static final String AUTH_ERROR_CODE = "403";
     private static final String NO_CONTENT_CODE = "204";
+
+    private final InactiveAccountManagementService inactiveAccountManagementService;
+
+    @Autowired
+    public InactiveAccountManagementController(InactiveAccountManagementService inactiveAccountManagementService) {
+        this.inactiveAccountManagementService = inactiveAccountManagementService;
+    }
 
     @ApiResponse(responseCode = NO_CONTENT_CODE, description = NO_CONTENT_MESSAGE)
     @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NO_CONTENT_MESSAGE)

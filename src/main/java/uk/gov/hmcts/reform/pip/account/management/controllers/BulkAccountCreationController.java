@@ -25,11 +25,15 @@ import java.util.Map;
 @Validated
 @IsAdmin
 public class BulkAccountCreationController {
-    @Autowired
-    private BulkAccountCreationService bulkAccountCreationService;
-
     private static final String ISSUER_ID = "x-issuer-id";
     private static final String OK_CODE = "200";
+
+    private final BulkAccountCreationService bulkAccountCreationService;
+
+    @Autowired
+    public BulkAccountCreationController(BulkAccountCreationService bulkAccountCreationService) {
+        this.bulkAccountCreationService = bulkAccountCreationService;
+    }
 
     @ApiResponse(responseCode = OK_CODE,
         description = "CREATED_ACCOUNTS:[{Created user ids}], ERRORED_ACCOUNTS: [{failed accounts}]")

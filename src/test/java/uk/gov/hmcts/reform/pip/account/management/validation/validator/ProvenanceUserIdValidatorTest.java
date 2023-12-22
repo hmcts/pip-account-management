@@ -56,7 +56,7 @@ class ProvenanceUserIdValidatorTest {
 
     @Test
     void testNullRepositoryReturnsTrue() {
-        ProvenanceUserIdValidator provenanceUserIdValidator = new ProvenanceUserIdValidator();
+        ProvenanceUserIdValidator provenanceUserIdValidator = new ProvenanceUserIdValidator(userRepository);
         assertTrue(provenanceUserIdValidator.isValid(piUser, null),
                    "Should return true");
     }

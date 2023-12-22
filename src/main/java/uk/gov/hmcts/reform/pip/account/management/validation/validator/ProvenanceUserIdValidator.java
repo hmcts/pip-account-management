@@ -11,8 +11,12 @@ import java.util.List;
 
 public class ProvenanceUserIdValidator implements ConstraintValidator<ValidProvenanceUserId, PiUser> {
 
-    @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    ProvenanceUserIdValidator(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
 
     @Override
     public boolean isValid(PiUser piUser, ConstraintValidatorContext constraintValidatorContext) {

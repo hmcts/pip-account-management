@@ -17,8 +17,12 @@ import static uk.gov.hmcts.reform.pip.model.account.Roles.ALL_NON_THIRD_PARTY_RO
 @Service("authorisationService")
 @Slf4j
 public class AuthorisationService {
+    private final UserRepository userRepository;
+
     @Autowired
-    UserRepository userRepository;
+    public AuthorisationService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
 
     public boolean userCanDeleteAccount(UUID userId, UUID adminUserId) {
         boolean isAuthorised = isAuthorisedRole(userId, adminUserId);
