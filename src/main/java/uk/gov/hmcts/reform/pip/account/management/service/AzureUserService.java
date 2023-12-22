@@ -32,7 +32,11 @@ public class AzureUserService {
     private final ClientConfiguration clientConfiguration;
 
     @Autowired
-    public AzureUserService(GraphServiceClient<Request> graphClient, UserConfiguration userConfiguration, ClientConfiguration clientConfiguration) {
+    public AzureUserService(
+        GraphServiceClient<Request> graphClient,
+        UserConfiguration userConfiguration,
+        ClientConfiguration clientConfiguration
+    ) {
         this.graphClient = graphClient;
         this.userConfiguration = userConfiguration;
         this.clientConfiguration = clientConfiguration;

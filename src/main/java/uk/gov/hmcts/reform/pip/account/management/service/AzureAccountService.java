@@ -43,8 +43,12 @@ public class AzureAccountService {
     private final PublicationService publicationService;
 
     @Autowired
-    public AzureAccountService(Validator validator, AzureUserService azureUserService, UserRepository userRepository,
-                               PublicationService publicationService) {
+    public AzureAccountService(
+        Validator validator,
+        AzureUserService azureUserService,
+        UserRepository userRepository,
+        PublicationService publicationService
+    ) {
         this.validator = validator;
         this.azureUserService = azureUserService;
         this.userRepository = userRepository;

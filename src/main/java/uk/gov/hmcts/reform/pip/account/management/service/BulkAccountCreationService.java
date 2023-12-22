@@ -27,7 +27,11 @@ public class BulkAccountCreationService {
     private final AccountModelMapperService accountModelMapperService;
 
     @Autowired
-    public BulkAccountCreationService(AccountService accountService, AzureAccountService azureAccountService, AccountModelMapperService accountModelMapperService) {
+    public BulkAccountCreationService(
+        AccountService accountService,
+        AzureAccountService azureAccountService,
+        AccountModelMapperService accountModelMapperService
+    ) {
         this.accountService = accountService;
         this.azureAccountService = azureAccountService;
         this.accountModelMapperService = accountModelMapperService;

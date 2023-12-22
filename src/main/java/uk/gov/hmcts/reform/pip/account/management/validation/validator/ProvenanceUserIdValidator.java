@@ -11,7 +11,7 @@ import java.util.List;
 
 public class ProvenanceUserIdValidator implements ConstraintValidator<ValidProvenanceUserId, PiUser> {
 
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
     @Autowired
     ProvenanceUserIdValidator(UserRepository userRepository) {
