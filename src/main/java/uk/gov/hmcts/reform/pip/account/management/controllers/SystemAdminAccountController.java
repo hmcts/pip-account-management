@@ -28,8 +28,12 @@ public class SystemAdminAccountController {
     private static final String PI_USER = "{piUser}";
     private static final String NOT_AUTHORIZED_MESSAGE = "User has not been authorized";
 
+    private final SystemAdminAccountService systemAdminAccountService;
+
     @Autowired
-    private SystemAdminAccountService systemAdminAccountService;
+    public SystemAdminAccountController(SystemAdminAccountService systemAdminAccountService) {
+        this.systemAdminAccountService = systemAdminAccountService;
+    }
 
     /**
      * POST endpoint that deals with creating a new System Admin Account (including PI and Azure)

@@ -34,17 +34,21 @@ public class AzureAccountService {
     private static final String EMAIL_NOT_SENT_MESSAGE =
         "Account has been successfully created, however email has failed to send.";
 
-    @Autowired
-    Validator validator;
+    private final Validator validator;
+
+    private final AzureUserService azureUserService;
+
+    private final UserRepository userRepository;
+
+    private final PublicationService publicationService;
 
     @Autowired
-    AzureUserService azureUserService;
-
-    @Autowired
-    UserRepository userRepository;
-
-    @Autowired
-    PublicationService publicationService;
+    public AzureAccountService(Validator validator, AzureUserService azureUserService, UserRepository userRepository, PublicationService publicationService) {
+        this.validator = validator;
+        this.azureUserService = azureUserService;
+        this.userRepository = userRepository;
+        this.publicationService = publicationService;
+    }
 
     /**
      * Method to create new accounts in azure.

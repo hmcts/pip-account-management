@@ -19,8 +19,12 @@ import static uk.gov.hmcts.reform.pip.model.account.UserProvenances.ALL_NON_THIR
 
 @Service
 public class AccountFilteringService {
+    private final UserRepository userRepository;
+
     @Autowired
-    UserRepository userRepository;
+    public AccountFilteringService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
 
     public String getAccManDataForMiReporting() {
         StringBuilder builder = new StringBuilder(85);

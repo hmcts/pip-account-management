@@ -19,8 +19,12 @@ public class SubscriptionService {
     @Value("${service-to-service.subscription-management}")
     private String url;
 
+    private final WebClient webClient;
+
     @Autowired
-    WebClient webClient;
+    public SubscriptionService(WebClient webClient) {
+        this.webClient = webClient;
+    }
 
     /**
      * Method which sends a request to subscription management to delete all subscriptions for a user.

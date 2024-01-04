@@ -29,15 +29,19 @@ import java.util.Map;
 @Validated
 @IsAdmin
 public class AzureAccountController {
-    @Autowired
-    private AzureAccountService azureAccountService;
-
     private static final String ISSUER_ID = "x-issuer-id";
     private static final String NOT_AUTHORIZED_MESSAGE = "User has not been authorized";
 
     private static final String AUTH_ERROR_CODE = "403";
     private static final String OK_CODE = "200";
     private static final String NOT_FOUND_ERROR_CODE = "404";
+
+    private final AzureAccountService azureAccountService;
+
+    @Autowired
+    public AzureAccountController(AzureAccountService azureAccountService) {
+        this.azureAccountService = azureAccountService;
+    }
 
     /**
      * POST endpoint to create a new azure account.
