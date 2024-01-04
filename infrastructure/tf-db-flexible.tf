@@ -1,5 +1,5 @@
 locals {
-  db_host_name = "flexible-${var.product}-${var.component}"
+  db_host_name    = "flexible-${var.product}-${var.component}"
   db_name         = replace(var.component, "-", "")
   postgresql_user = "${local.db_name}_user"
 }
@@ -39,7 +39,7 @@ module "postgresql" {
 
 # SDP access and MV required in here. Will be done at migration
 resource "postgresql_role" "create_sdp_access-flexible" {
-  provider            = postgresql.postgres-flexible
+  provider = postgresql.postgres-flexible
 
   name                = data.azurerm_key_vault_secret.sdp-user.value
   login               = true
@@ -49,7 +49,7 @@ resource "postgresql_role" "create_sdp_access-flexible" {
 }
 
 resource "postgresql_grant" "readonly_mv-flexible" {
-  provider    = postgresql.postgres-flexible
+  provider = postgresql.postgres-flexible
 
   database    = local.db_name
   role        = data.azurerm_key_vault_secret.sdp-user.value

@@ -24,7 +24,7 @@ provider "azurerm" {
 }
 
 provider "postgresql" {
-  alias           = "postgres-flexible"
+  alias = "postgres-flexible"
 
   host            = module.postgresql.fqdn
   port            = 5432
