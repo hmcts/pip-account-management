@@ -66,7 +66,15 @@ public class AccountService {
     private final SubscriptionService subscriptionService;
 
     @Autowired
-    public AccountService(Validator validator, AzureUserService azureUserService, AzureAccountService azureAccountService, AccountFilteringService accountFilteringService, UserRepository userRepository, SensitivityService sensitivityService, SubscriptionService subscriptionService) {
+    public AccountService(
+        Validator validator,
+        AzureUserService azureUserService,
+        AzureAccountService azureAccountService,
+        AccountFilteringService accountFilteringService,
+        UserRepository userRepository,
+        SensitivityService sensitivityService,
+        SubscriptionService subscriptionService
+    ) {
         this.validator = validator;
         this.azureUserService = azureUserService;
         this.azureAccountService = azureAccountService;
