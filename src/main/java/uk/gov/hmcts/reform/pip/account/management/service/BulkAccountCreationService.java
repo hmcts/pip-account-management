@@ -20,14 +20,22 @@ import java.util.stream.Stream;
 
 @Service
 public class BulkAccountCreationService {
-    @Autowired
-    AccountService accountService;
+    private final AccountService accountService;
+
+    private final AzureAccountService azureAccountService;
+
+    private final AccountModelMapperService accountModelMapperService;
 
     @Autowired
-    AzureAccountService azureAccountService;
-
-    @Autowired
-    AccountModelMapperService accountModelMapperService;
+    public BulkAccountCreationService(
+        AccountService accountService,
+        AzureAccountService azureAccountService,
+        AccountModelMapperService accountModelMapperService
+    ) {
+        this.accountService = accountService;
+        this.azureAccountService = azureAccountService;
+        this.accountModelMapperService = accountModelMapperService;
+    }
 
     public Map<CreationEnum, List<?>> uploadMediaFromCsv(MultipartFile mediaCsv, String issuerId) { //NOSONAR
         List<MediaCsv> mediaList;

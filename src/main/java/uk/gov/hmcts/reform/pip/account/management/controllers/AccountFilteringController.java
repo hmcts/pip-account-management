@@ -34,9 +34,6 @@ import java.util.List;
 @Validated
 @IsAdmin
 public class AccountFilteringController {
-    @Autowired
-    private AccountFilteringService accountFilteringService;
-
     private static final String NOT_AUTHORIZED_MESSAGE = "User has not been authorized";
 
     private static final String AUTH_ERROR_CODE = "403";
@@ -44,6 +41,13 @@ public class AccountFilteringController {
     private static final String NOT_FOUND_ERROR_CODE = "404";
 
     private static final String PI_USER = "{piUser}";
+
+    private final AccountFilteringService accountFilteringService;
+
+    @Autowired
+    public AccountFilteringController(AccountFilteringService accountFilteringService) {
+        this.accountFilteringService = accountFilteringService;
+    }
 
     @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
     @ApiResponse(responseCode = OK_CODE, description = "A CSV like structure which contains the data. "

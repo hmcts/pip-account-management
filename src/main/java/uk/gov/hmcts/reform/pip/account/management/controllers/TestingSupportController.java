@@ -38,11 +38,15 @@ public class TestingSupportController {
     private static final String BAD_REQUEST_CODE = "400";
     private static final String AUTH_ERROR_CODE = "403";
 
-    @Autowired
-    private AccountService accountService;
+    private final AccountService accountService;
+
+    private final MediaApplicationService mediaApplicationService;
 
     @Autowired
-    private MediaApplicationService mediaApplicationService;
+    public TestingSupportController(AccountService accountService, MediaApplicationService mediaApplicationService) {
+        this.accountService = accountService;
+        this.mediaApplicationService = mediaApplicationService;
+    }
 
     @ApiResponse(responseCode = CREATED_CODE, description = "{PiUser}")
     @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)

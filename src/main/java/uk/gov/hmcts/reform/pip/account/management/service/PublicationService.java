@@ -36,8 +36,12 @@ public class PublicationService {
     private static final String USER_PROVENANCE = "userProvenance";
     private static final String LAST_SIGNED_IN_DATE = "lastSignedInDate";
 
+    private final WebClient webClient;
+
     @Autowired
-    WebClient webClient;
+    public PublicationService(WebClient webClient) {
+        this.webClient = webClient;
+    }
 
     /**
      * Method which sends a request to the publication-services microservice which will send an email to the user

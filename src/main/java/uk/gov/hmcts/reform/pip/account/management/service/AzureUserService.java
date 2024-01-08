@@ -25,14 +25,22 @@ import java.util.List;
 @Service
 public class AzureUserService {
 
-    @Autowired
-    private GraphServiceClient<Request> graphClient;
+    private final GraphServiceClient<Request> graphClient;
+
+    private final UserConfiguration userConfiguration;
+
+    private final ClientConfiguration clientConfiguration;
 
     @Autowired
-    private UserConfiguration userConfiguration;
-
-    @Autowired
-    private ClientConfiguration clientConfiguration;
+    public AzureUserService(
+        GraphServiceClient<Request> graphClient,
+        UserConfiguration userConfiguration,
+        ClientConfiguration clientConfiguration
+    ) {
+        this.graphClient = graphClient;
+        this.userConfiguration = userConfiguration;
+        this.clientConfiguration = clientConfiguration;
+    }
 
     /**
      * Creates a new azureAccount in the Azure active directory.
