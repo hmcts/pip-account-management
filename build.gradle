@@ -207,7 +207,7 @@ dependencies {
   implementation group: 'com.github.hmcts', name: 'pip-data-models', version: '2.1.17', {
     exclude group: 'org.springframework.boot', module: 'spring-boot-starter-data-jpa'
   }
-  implementation group: 'io.hypersistence', name: 'hypersistence-utils-hibernate-62', version: '3.7.0'
+  implementation group: 'io.hypersistence', name: 'hypersistence-utils-hibernate-62', version: '3.7.1'
 
   // Include the sdk as a dependency
   implementation group: 'com.microsoft.graph', name: 'microsoft-graph', version: '5.77.0'
