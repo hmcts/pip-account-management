@@ -2,6 +2,7 @@ package uk.gov.hmcts.reform.pip.account.management.controllers;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,18 +26,19 @@ import uk.gov.hmcts.reform.pip.model.authentication.roles.IsAdmin;
 @RestController
 @Tag(name = "Account Management Testing Support API")
 @RequestMapping("/testing-support")
+@ApiResponse(responseCode = "401", description = "Invalid access credential")
+@ApiResponse(responseCode = "403", description = "User has not been authorized")
 @IsAdmin
+@SecurityRequirement(name = "Bearer authentication")
 @Validated
 @ConditionalOnProperty(prefix = "testingSupport", name = "enableApi", havingValue = "true")
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
 public class TestingSupportController {
     private static final String ISSUER_ID = "TESTING-SUPPORT";
-    private static final String NOT_AUTHORIZED_MESSAGE = "User has not been authorized";
 
     private static final String OK_CODE = "200";
     private static final String CREATED_CODE = "201";
     private static final String BAD_REQUEST_CODE = "400";
-    private static final String AUTH_ERROR_CODE = "403";
 
     private final AccountService accountService;
 
@@ -49,7 +51,6 @@ public class TestingSupportController {
     }
 
     @ApiResponse(responseCode = CREATED_CODE, description = "{PiUser}")
-    @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
     @ApiResponse(responseCode = BAD_REQUEST_CODE, description = "Failed to create user account")
     @Operation(summary = "Create an account with supplied email and password")
     @PostMapping("/account")
@@ -64,7 +65,6 @@ public class TestingSupportController {
     }
 
     @ApiResponse(responseCode = OK_CODE, description = "Account(s) deleted with email starting with {emailPrefix}")
-    @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
     @Operation(summary = "Delete all accounts with email prefix")
     @DeleteMapping("/account/{emailPrefix}")
     @Transactional
@@ -74,7 +74,6 @@ public class TestingSupportController {
 
     @ApiResponse(responseCode = OK_CODE,
         description = "Media application(s) deleted with email starting with {emailPrefix}")
-    @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
     @Operation(summary = "Delete all media applications with email prefix")
     @DeleteMapping("application/{emailPrefix}")
     @Transactional

@@ -1,6 +1,7 @@
 package uk.gov.hmcts.reform.pip.account.management.controllers;
 
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -18,15 +19,16 @@ import uk.gov.hmcts.reform.pip.model.authentication.roles.IsAdmin;
 @RestController
 @Tag(name = "Account Management - API for managing system admin accounts")
 @RequestMapping("/account")
+@ApiResponse(responseCode = "401", description = "Invalid access credential")
+@ApiResponse(responseCode = "403", description = "User has not been authorized")
 @Validated
 @IsAdmin
+@SecurityRequirement(name = "Bearer authentication")
 public class SystemAdminAccountController {
     private static final String ISSUER_ID = "x-issuer-id";
-    private static final String AUTH_ERROR_CODE = "403";
     private static final String OK_CODE = "200";
     private static final String BAD_REQUEST_CODE = "400";
     private static final String PI_USER = "{piUser}";
-    private static final String NOT_AUTHORIZED_MESSAGE = "User has not been authorized";
 
     private final SystemAdminAccountService systemAdminAccountService;
 
@@ -45,7 +47,6 @@ public class SystemAdminAccountController {
      */
     @ApiResponse(responseCode = OK_CODE, description = PI_USER)
     @ApiResponse(responseCode = BAD_REQUEST_CODE, description = "{ErroredSystemAdminAccount}")
-    @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
     @PostMapping("/add/system-admin")
     public ResponseEntity<? extends PiUser> createSystemAdminAccount(//NOSONAR
         @RequestHeader(ISSUER_ID) String issuerId, @RequestBody SystemAdminAccount account) {

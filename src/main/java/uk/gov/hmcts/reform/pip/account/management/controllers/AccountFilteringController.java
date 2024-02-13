@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -31,12 +32,12 @@ import java.util.List;
 @RestController
 @Tag(name = "Account Management - API for retrieving custom user accounts")
 @RequestMapping("/account")
+@ApiResponse(responseCode = "401", description = "Invalid access credential")
+@ApiResponse(responseCode = "403", description = "User has not been authorized")
 @Validated
 @IsAdmin
+@SecurityRequirement(name = "Bearer authentication")
 public class AccountFilteringController {
-    private static final String NOT_AUTHORIZED_MESSAGE = "User has not been authorized";
-
-    private static final String AUTH_ERROR_CODE = "403";
     private static final String OK_CODE = "200";
     private static final String NOT_FOUND_ERROR_CODE = "404";
 
@@ -49,7 +50,6 @@ public class AccountFilteringController {
         this.accountFilteringService = accountFilteringService;
     }
 
-    @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
     @ApiResponse(responseCode = OK_CODE, description = "A CSV like structure which contains the data. "
         + "See example for headers ", content = {
             @Content(examples = {@ExampleObject("user_id,provenance_user_id,user_provenance,roles,"
@@ -66,7 +66,6 @@ public class AccountFilteringController {
     }
 
     @ApiResponse(responseCode = OK_CODE, description = "List of third party accounts")
-    @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
     @Operation(summary = "Get all third party accounts")
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("/all/third-party")
@@ -91,7 +90,6 @@ public class AccountFilteringController {
     }
 
     @ApiResponse(responseCode = OK_CODE, description = PI_USER)
-    @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
     @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description = "No user found with the "
         + "email: {email} and provenance {provenance}")
     @Operation(summary = "Get an Admin user (excluding system admin) based on their email and provenance")
