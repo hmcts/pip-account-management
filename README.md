@@ -24,6 +24,7 @@
       - [Getting all environment variables with python](#get-environment-variables-with-python-scripts)
       - [Additional Test secrets](#additional-test-secrets)
       - [Application.yaml files](#applicationyaml-files)
+  - [Fortify](#fortify)
 - [API Documentation](#api-documentation)
 - [Examples](#examples)
   - [Requesting a bearer token](#requesting-a-bearer-token)
@@ -210,6 +211,10 @@ The service can also be adapted using the yaml files found in the following loca
 - [src/main/resources/application-dev.yaml](./src/main/resources/application-dev.yaml) for changes to the behaviour of the service when running locally.
 - [src/test/resources/application-test.yaml](./src/test/resources/application-test.yaml) for changes to other test types (e.g. unit tests).
 - [src/integrationTest/resources/application-functional.yaml](./src/functionalTest/resources/application-functional.yaml) for changes to the application when its running functional tests.
+
+### Fortify
+
+We use Fortify to scan for security vulnerabilities. This is run as part of our nightly pipelines.
 
 ## API Documentation
 Our full API specification can be found within our Swagger-UI page.
