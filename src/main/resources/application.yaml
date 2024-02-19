@@ -1,5 +1,6 @@
 server:
   port: 6969
+  shutdown: graceful
 
 management:
   endpoint:
