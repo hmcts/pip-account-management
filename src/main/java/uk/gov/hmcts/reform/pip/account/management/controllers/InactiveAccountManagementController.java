@@ -23,7 +23,7 @@ import uk.gov.hmcts.reform.pip.model.authentication.roles.IsAdmin;
 @ApiResponse(responseCode = "403", description = "User has not been authorized")
 @Validated
 @IsAdmin
-@SecurityRequirement(name = "Bearer authentication")
+@SecurityRequirement(name = "bearerAuth")
 public class InactiveAccountManagementController {
     private static final String NO_CONTENT_MESSAGE = "The request has been successfully fulfilled";
     private static final String NO_CONTENT_CODE = "204";

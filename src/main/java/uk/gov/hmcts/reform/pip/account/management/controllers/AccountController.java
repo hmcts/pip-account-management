@@ -39,7 +39,7 @@ import java.util.UUID;
 @ApiResponse(responseCode = "403", description = "User has not been authorized")
 @Validated
 @IsAdmin
-@SecurityRequirement(name = "Bearer authentication")
+@SecurityRequirement(name = "bearerAuth")
 public class AccountController {
 
     private static final String ISSUER_ID = "x-issuer-id";

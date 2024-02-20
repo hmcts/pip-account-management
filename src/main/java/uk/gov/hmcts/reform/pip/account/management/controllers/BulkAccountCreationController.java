@@ -27,7 +27,7 @@ import java.util.Map;
 @ApiResponse(responseCode = "403", description = "User has not been authorized")
 @Validated
 @IsAdmin
-@SecurityRequirement(name = "Bearer authentication")
+@SecurityRequirement(name = "bearerAuth")
 public class BulkAccountCreationController {
     private static final String ISSUER_ID = "x-issuer-id";
     private static final String OK_CODE = "200";

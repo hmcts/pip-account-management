@@ -36,7 +36,7 @@ import java.util.List;
 @ApiResponse(responseCode = "403", description = "User has not been authorized")
 @Validated
 @IsAdmin
-@SecurityRequirement(name = "Bearer authentication")
+@SecurityRequirement(name = "bearerAuth")
 public class AccountFilteringController {
     private static final String OK_CODE = "200";
     private static final String NOT_FOUND_ERROR_CODE = "404";
