@@ -2,6 +2,7 @@ package uk.gov.hmcts.reform.pip.account.management.controllers;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -22,8 +23,11 @@ import java.util.Map;
 @RestController
 @Tag(name = "Account Management - API for bulk create media accounts")
 @RequestMapping("/account")
+@ApiResponse(responseCode = "401", description = "Invalid access credential")
+@ApiResponse(responseCode = "403", description = "User has not been authorized")
 @Validated
 @IsAdmin
+@SecurityRequirement(name = "bearerAuth")
 public class BulkAccountCreationController {
     private static final String ISSUER_ID = "x-issuer-id";
     private static final String OK_CODE = "200";

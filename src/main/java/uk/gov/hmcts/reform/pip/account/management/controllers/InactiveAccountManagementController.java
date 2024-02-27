@@ -2,6 +2,7 @@ package uk.gov.hmcts.reform.pip.account.management.controllers;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -18,13 +19,13 @@ import uk.gov.hmcts.reform.pip.model.authentication.roles.IsAdmin;
 @RestController
 @Tag(name = "Account Management - API for managing inactive user accounts")
 @RequestMapping("/account")
+@ApiResponse(responseCode = "401", description = "Invalid access credential")
+@ApiResponse(responseCode = "403", description = "User has not been authorized")
 @Validated
 @IsAdmin
+@SecurityRequirement(name = "bearerAuth")
 public class InactiveAccountManagementController {
     private static final String NO_CONTENT_MESSAGE = "The request has been successfully fulfilled";
-    private static final String NOT_AUTHORIZED_MESSAGE = "User has not been authorized";
-
-    private static final String AUTH_ERROR_CODE = "403";
     private static final String NO_CONTENT_CODE = "204";
 
     private final InactiveAccountManagementService inactiveAccountManagementService;
@@ -35,7 +36,6 @@ public class InactiveAccountManagementController {
     }
 
     @ApiResponse(responseCode = NO_CONTENT_CODE, description = NO_CONTENT_MESSAGE)
-    @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NO_CONTENT_MESSAGE)
     @Operation(summary = "Notify inactive media users to verify their accounts")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PostMapping("/media/inactive/notify")
@@ -45,7 +45,6 @@ public class InactiveAccountManagementController {
     }
 
     @ApiResponse(responseCode = NO_CONTENT_CODE, description = NO_CONTENT_MESSAGE)
-    @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
     @Operation(summary = "Delete all expired inactive accounts")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/media/inactive")
@@ -55,7 +54,6 @@ public class InactiveAccountManagementController {
     }
 
     @ApiResponse(responseCode = NO_CONTENT_CODE, description = NO_CONTENT_MESSAGE)
-    @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NO_CONTENT_MESSAGE)
     @Operation(summary = "Notify inactive admin users to verify their accounts")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PostMapping("/admin/inactive/notify")
@@ -65,7 +63,6 @@ public class InactiveAccountManagementController {
     }
 
     @ApiResponse(responseCode = NO_CONTENT_CODE, description = NO_CONTENT_MESSAGE)
-    @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
     @Operation(summary = "Delete all expired inactive admin accounts")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/admin/inactive")
@@ -75,7 +72,6 @@ public class InactiveAccountManagementController {
     }
 
     @ApiResponse(responseCode = NO_CONTENT_CODE, description = NO_CONTENT_MESSAGE)
-    @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NO_CONTENT_MESSAGE)
     @Operation(summary = "Notify inactive idam users to verify their accounts")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PostMapping("/idam/inactive/notify")
@@ -85,7 +81,6 @@ public class InactiveAccountManagementController {
     }
 
     @ApiResponse(responseCode = NO_CONTENT_CODE, description = NO_CONTENT_MESSAGE)
-    @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
     @Operation(summary = "Delete all expired inactive idam accounts")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/idam/inactive")
