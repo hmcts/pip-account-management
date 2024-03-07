@@ -10,11 +10,11 @@
     <packageUrl regex="true">^pkg:maven/com.fasterxml.jackson.core/jackson-databind@2.15.4</packageUrl>
     <cve>CVE-2023-35116</cve>
   </suppress>
-<!--  <suppress>-->
-<!--    <notes><![CDATA[file name: azure-identity-1.10.0.jar]]></notes>-->
-<!--    <packageUrl regex="true">^pkg:maven/com\.azure/azure\-identity@.*$</packageUrl>-->
-<!--    <cve>CVE-2023-36415</cve>-->
-<!--  </suppress>-->
+  <suppress>
+    <notes><![CDATA[file name: azure-identity-1.11.3.jar]]></notes>
+    <packageUrl regex="true">^pkg:maven/com.azure/azure-identity@1.11.3</packageUrl>
+    <cve>CVE-2023-36415</cve>
+  </suppress>
   <suppress>
     <notes>This vulnerability exists in various com.azure dependencies pulled in by the latest spring-cloud-azure-starter-active-directory</notes>
     <packageUrl regex="true">^pkg:maven/com\.azure/azure.*$</packageUrl>
