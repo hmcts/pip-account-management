@@ -3,7 +3,7 @@ terraform {
 
   required_providers {
     azurerm = {
-      version = "3.94.0"
+      version = "3.96.0"
     }
     postgresql = {
       source  = "cyrilgdn/postgresql"
