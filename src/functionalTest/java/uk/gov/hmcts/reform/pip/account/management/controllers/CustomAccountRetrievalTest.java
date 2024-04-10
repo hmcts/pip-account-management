@@ -24,8 +24,8 @@ import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -98,7 +98,7 @@ class CustomAccountRetrievalTest {
 
         MvcResult responseCreateUser = mockMvc.perform(createRequest)
             .andExpect(status().isCreated()).andReturn();
-        ConcurrentHashMap<CreationEnum, List<Object>> mappedResponse =
+        Map<CreationEnum, List<Object>> mappedResponse =
             OBJECT_MAPPER.readValue(
                 responseCreateUser.getResponse().getContentAsString(),
                 new TypeReference<>() {
@@ -150,7 +150,7 @@ class CustomAccountRetrievalTest {
 
         MvcResult responseCreateUser = mockMvc.perform(createRequest)
             .andExpect(status().isCreated()).andReturn();
-        ConcurrentHashMap<CreationEnum, List<Object>> mappedResponse =
+        Map<CreationEnum, List<Object>> mappedResponse =
             OBJECT_MAPPER.readValue(
                 responseCreateUser.getResponse().getContentAsString(),
                 new TypeReference<>() {
@@ -202,7 +202,7 @@ class CustomAccountRetrievalTest {
         MvcResult responseCreateUser = mockMvc.perform(mockHttpServletRequestBuilder)
             .andExpect(status().isCreated()).andReturn();
 
-        ConcurrentHashMap<CreationEnum, List<Object>> mappedResponse =
+        Map<CreationEnum, List<Object>> mappedResponse =
             OBJECT_MAPPER.readValue(
                 responseCreateUser.getResponse().getContentAsString(),
                 new TypeReference<>() {
@@ -247,7 +247,7 @@ class CustomAccountRetrievalTest {
 
         MvcResult responseCreateUser = mockMvc.perform(createRequest)
             .andExpect(status().isCreated()).andReturn();
-        ConcurrentHashMap<CreationEnum, List<Object>> mappedResponse =
+        Map<CreationEnum, List<Object>> mappedResponse =
             OBJECT_MAPPER.readValue(
                 responseCreateUser.getResponse().getContentAsString(),
                 new TypeReference<>() {

@@ -28,7 +28,7 @@ import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -102,7 +102,7 @@ class BulkAccountCreationTest {
             MvcResult mvcResult = mockMvc.perform(multipart(BULK_UPLOAD).file(multipartFile)
                                                       .header(ISSUER_HEADER, ISSUER_ID))
                 .andExpect(status().isOk()).andReturn();
-            ConcurrentHashMap<CreationEnum, List<?>> users = OBJECT_MAPPER.readValue(
+            Map<CreationEnum, List<?>> users = OBJECT_MAPPER.readValue(
                 mvcResult.getResponse().getContentAsString(),
                 new TypeReference<>() {
                 }
@@ -144,7 +144,7 @@ class BulkAccountCreationTest {
             MvcResult mvcResult = mockMvc.perform(multipart(BULK_UPLOAD).file(multipartFile)
                                                       .header(ISSUER_HEADER, ISSUER_ID))
                 .andExpect(status().isOk()).andReturn();
-            ConcurrentHashMap<CreationEnum, List<?>> users = OBJECT_MAPPER.readValue(
+            Map<CreationEnum, List<?>> users = OBJECT_MAPPER.readValue(
                 mvcResult.getResponse().getContentAsString(),
                 new TypeReference<>() {
                 }
@@ -164,7 +164,7 @@ class BulkAccountCreationTest {
             MvcResult mvcResult = mockMvc.perform(multipart(BULK_UPLOAD).file(multipartFile)
                                                       .header(ISSUER_HEADER, ISSUER_ID))
                 .andExpect(status().isOk()).andReturn();
-            ConcurrentHashMap<CreationEnum, List<?>> users = OBJECT_MAPPER.readValue(
+            Map<CreationEnum, List<?>> users = OBJECT_MAPPER.readValue(
                 mvcResult.getResponse().getContentAsString(),
                 new TypeReference<>() {
                 }

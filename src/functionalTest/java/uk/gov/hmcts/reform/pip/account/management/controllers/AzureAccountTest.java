@@ -37,8 +37,8 @@ import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -179,7 +179,7 @@ class AzureAccountTest {
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isOk()).andReturn();
 
-        ConcurrentHashMap<CreationEnum, List<AzureAccount>> accounts =
+        Map<CreationEnum, List<AzureAccount>> accounts =
             OBJECT_MAPPER.readValue(
                 response.getResponse().getContentAsString(),
                 new TypeReference<>() {
@@ -221,7 +221,7 @@ class AzureAccountTest {
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder)
             .andExpect(status().isOk()).andReturn();
 
-        ConcurrentHashMap<CreationEnum, List<Object>> accounts =
+        Map<CreationEnum, List<Object>> accounts =
             OBJECT_MAPPER.readValue(
                 response.getResponse().getContentAsString(),
                 new TypeReference<>() {
@@ -253,7 +253,7 @@ class AzureAccountTest {
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder)
             .andExpect(status().isOk()).andReturn();
 
-        ConcurrentHashMap<CreationEnum, List<Object>> accounts =
+        Map<CreationEnum, List<Object>> accounts =
             OBJECT_MAPPER.readValue(
                 response.getResponse().getContentAsString(),
                 new TypeReference<>() {
@@ -299,7 +299,7 @@ class AzureAccountTest {
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder)
             .andExpect(status().isOk()).andReturn();
 
-        ConcurrentHashMap<CreationEnum, List<Object>> accounts =
+        Map<CreationEnum, List<Object>> accounts =
             OBJECT_MAPPER.readValue(
                 response.getResponse().getContentAsString(),
                 new TypeReference<>() {
@@ -359,7 +359,7 @@ class AzureAccountTest {
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder)
             .andExpect(status().isOk()).andReturn();
 
-        ConcurrentHashMap<CreationEnum, List<Object>> accounts =
+        Map<CreationEnum, List<Object>> accounts =
             OBJECT_MAPPER.readValue(
                 response.getResponse().getContentAsString(),
                 new TypeReference<>() {
@@ -390,7 +390,7 @@ class AzureAccountTest {
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder)
             .andExpect(status().isOk()).andReturn();
 
-        ConcurrentHashMap<CreationEnum, List<Object>> accounts =
+        Map<CreationEnum, List<Object>> accounts =
             OBJECT_MAPPER.readValue(
                 response.getResponse().getContentAsString(),
                 new TypeReference<>() {
@@ -447,7 +447,7 @@ class AzureAccountTest {
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isOk()).andReturn();
 
-        ConcurrentHashMap<CreationEnum, List<Object>> accounts =
+        Map<CreationEnum, List<Object>> accounts =
             OBJECT_MAPPER.readValue(
                 response.getResponse().getContentAsString(),
                 new TypeReference<>() {
@@ -526,7 +526,7 @@ class AzureAccountTest {
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isOk()).andReturn();
 
-        ConcurrentHashMap<CreationEnum, List<Object>> accounts =
+        Map<CreationEnum, List<Object>> accounts =
             OBJECT_MAPPER.readValue(
                 response.getResponse().getContentAsString(),
                 new TypeReference<>() {

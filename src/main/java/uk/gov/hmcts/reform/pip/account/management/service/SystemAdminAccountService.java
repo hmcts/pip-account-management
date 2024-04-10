@@ -81,7 +81,7 @@ public class SystemAdminAccountService {
             );
             return createdUser;
         } catch (AzureCustomException e) {
-            var erroredSystemAdminAccount = new ErroredSystemAdminAccount(account);
+            ErroredSystemAdminAccount erroredSystemAdminAccount = new ErroredSystemAdminAccount(account);
             erroredSystemAdminAccount.setErrorMessages(List.of(e.getLocalizedMessage()));
             handleNewSystemAdminAccountAction(account, issuerId, ActionResult.FAILED, displayName);
             throw new SystemAdminAccountException(erroredSystemAdminAccount);
@@ -102,7 +102,7 @@ public class SystemAdminAccountService {
         List<String> existingAdminEmails = userRepository.findByRoles(Roles.SYSTEM_ADMIN)
             .stream().map(PiUser::getEmail).toList();
 
-        var createSystemAdminAction = new CreateSystemAdminAction();
+        CreateSystemAdminAction createSystemAdminAction = new CreateSystemAdminAction();
         createSystemAdminAction.setAccountEmail(systemAdminAccount.getEmail());
         createSystemAdminAction.setEmailList(existingAdminEmails);
         createSystemAdminAction.setRequesterName(name);
@@ -121,7 +121,7 @@ public class SystemAdminAccountService {
         Set<ConstraintViolation<SystemAdminAccount>> constraintViolationSet = validator.validate(account);
 
         if (!constraintViolationSet.isEmpty()) {
-            var erroredSystemAdminAccount = new ErroredSystemAdminAccount(account);
+            ErroredSystemAdminAccount erroredSystemAdminAccount = new ErroredSystemAdminAccount(account);
             erroredSystemAdminAccount.setErrorMessages(constraintViolationSet
                                                            .stream().map(constraint -> constraint.getPropertyPath()
                     + ": " + constraint.getMessage()).toList());
@@ -131,7 +131,7 @@ public class SystemAdminAccountService {
         }
 
         if (userRepository.findByEmailAndUserProvenance(account.getEmail(), UserProvenances.PI_AAD).isPresent()) {
-            var erroredSystemAdminAccount = new ErroredSystemAdminAccount(account);
+            ErroredSystemAdminAccount erroredSystemAdminAccount = new ErroredSystemAdminAccount(account);
             erroredSystemAdminAccount.setDuplicate(true);
             handleNewSystemAdminAccountAction(account, issuerId, ActionResult.FAILED, name);
             throw new SystemAdminAccountException(erroredSystemAdminAccount);
@@ -139,7 +139,7 @@ public class SystemAdminAccountService {
 
         List<PiUser> systemAdminUsers = userRepository.findByRoles(Roles.SYSTEM_ADMIN);
         if (systemAdminUsers.size() >= maxSystemAdminValue) {
-            var erroredSystemAdminAccount = new ErroredSystemAdminAccount(account);
+            ErroredSystemAdminAccount erroredSystemAdminAccount = new ErroredSystemAdminAccount(account);
             erroredSystemAdminAccount.setAboveMaxSystemAdmin(true);
             handleNewSystemAdminAccountAction(account, issuerId, ActionResult.ATTEMPTED, name);
             throw new SystemAdminAccountException(erroredSystemAdminAccount);

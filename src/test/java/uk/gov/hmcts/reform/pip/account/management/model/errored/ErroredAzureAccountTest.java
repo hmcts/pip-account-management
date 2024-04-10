@@ -15,26 +15,29 @@ class ErroredAzureAccountTest {
 
     @Test
     void testEqualWithNullObject() {
-        Assertions.assertNotEquals(null, erroredAzureAccount);
+        Assertions.assertNotEquals(null, erroredAzureAccount, "Errored account is null");
     }
 
     @Test
     void testEqualWithObject() {
-        Assertions.assertNotEquals(erroredAzureAccount, new Object());
+        Assertions.assertNotEquals(erroredAzureAccount, new Object(),
+                                   "Errored account is equal to generic object");
     }
 
     @Test
     void testEqualWithDifferentClassObject() {
-        Assertions.assertNotEquals(erroredAzureAccount, new PiUser());
+        Assertions.assertNotEquals(erroredAzureAccount, new PiUser(), "Errored account is equal to PIUser");
     }
 
     @Test
     void testEqualWithSameClassObject() {
-        Assertions.assertEquals(erroredAzureAccount, new ErroredAzureAccount());
+        Assertions.assertEquals(erroredAzureAccount, new ErroredAzureAccount(),
+                                "Errored account is not equal to expected errored account");
     }
 
     @Test
     void testHashcode() {
-        Assertions.assertEquals(0, erroredAzureAccount.hashCode());
+        Assertions.assertEquals(0, erroredAzureAccount.hashCode(),
+                                "Errored account matches the correct hashcode");
     }
 }

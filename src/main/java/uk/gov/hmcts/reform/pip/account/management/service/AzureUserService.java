@@ -108,7 +108,7 @@ public class AzureUserService {
                 });
 
             User returnUser = null;
-            if (users.getValue() != null && users.getValue().size() > 0) {
+            if (users.getValue() != null && !users.getValue().isEmpty()) {
                 returnUser = users.getValue().get(0);
             }
             return returnUser;

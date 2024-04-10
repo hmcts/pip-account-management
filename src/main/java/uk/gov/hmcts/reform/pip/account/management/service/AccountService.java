@@ -46,7 +46,7 @@ import static uk.gov.hmcts.reform.pip.model.account.UserProvenances.PI_AAD;
  */
 @Slf4j
 @Service
-@SuppressWarnings("PMD.TooManyMethods")
+@SuppressWarnings({"PMD.TooManyMethods", "PMD.CouplingBetweenObjects"})
 public class AccountService {
 
     private static final int MAX_PAGE_SIZE = 25;

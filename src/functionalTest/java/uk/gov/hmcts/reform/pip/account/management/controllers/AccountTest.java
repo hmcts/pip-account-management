@@ -39,7 +39,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
@@ -175,7 +174,7 @@ class AccountTest {
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isCreated()).andReturn();
-        ConcurrentHashMap<CreationEnum, List<Object>> mappedResponse =
+        Map<CreationEnum, List<Object>> mappedResponse =
             OBJECT_MAPPER.readValue(
                 response.getResponse().getContentAsString(),
                 new TypeReference<>() {
@@ -215,7 +214,7 @@ class AccountTest {
                 .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isCreated()).andReturn();
-        ConcurrentHashMap<CreationEnum, List<Object>> mappedResponse =
+        Map<CreationEnum, List<Object>> mappedResponse =
             OBJECT_MAPPER.readValue(
                 response.getResponse().getContentAsString(),
                 new TypeReference<>() {
@@ -258,7 +257,7 @@ class AccountTest {
                 .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isCreated()).andReturn();
-        ConcurrentHashMap<CreationEnum, List<Object>> mappedResponse =
+        Map<CreationEnum, List<Object>> mappedResponse =
             OBJECT_MAPPER.readValue(
                 response.getResponse().getContentAsString(),
                 new TypeReference<>() {
@@ -281,7 +280,7 @@ class AccountTest {
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isCreated()).andReturn();
-        ConcurrentHashMap<CreationEnum, List<Object>> mappedResponse =
+        Map<CreationEnum, List<Object>> mappedResponse =
             OBJECT_MAPPER.readValue(
                 response.getResponse().getContentAsString(),
                 new TypeReference<>() {
@@ -305,7 +304,7 @@ class AccountTest {
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isCreated()).andReturn();
-        ConcurrentHashMap<CreationEnum, List<Object>> mappedResponse =
+        Map<CreationEnum, List<Object>> mappedResponse =
             OBJECT_MAPPER.readValue(
                 response.getResponse().getContentAsString(),
                 new TypeReference<>() {
@@ -328,7 +327,7 @@ class AccountTest {
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isCreated()).andReturn();
-        ConcurrentHashMap<CreationEnum, List<Object>> mappedResponse =
+        Map<CreationEnum, List<Object>> mappedResponse =
             OBJECT_MAPPER.readValue(
                 response.getResponse().getContentAsString(),
                 new TypeReference<>() {
@@ -493,7 +492,7 @@ class AccountTest {
 
         MvcResult responseCreateUser = mockMvc.perform(createRequest)
             .andExpect(status().isCreated()).andReturn();
-        ConcurrentHashMap<CreationEnum, List<Object>> mappedResponse =
+        Map<CreationEnum, List<Object>> mappedResponse =
             OBJECT_MAPPER.readValue(
                 responseCreateUser.getResponse().getContentAsString(),
                 new TypeReference<>() {
@@ -538,7 +537,7 @@ class AccountTest {
 
         MvcResult responseCreateUser = mockMvc.perform(createRequest)
             .andExpect(status().isCreated()).andReturn();
-        ConcurrentHashMap<CreationEnum, List<Object>> mappedResponse =
+        Map<CreationEnum, List<Object>> mappedResponse =
             OBJECT_MAPPER.readValue(
                 responseCreateUser.getResponse().getContentAsString(),
                 new TypeReference<>() {
@@ -581,7 +580,7 @@ class AccountTest {
 
         MvcResult responseCreateUser = mockMvc.perform(createRequest)
             .andExpect(status().isCreated()).andReturn();
-        ConcurrentHashMap<CreationEnum, List<Object>> mappedResponse =
+        Map<CreationEnum, List<Object>> mappedResponse =
             OBJECT_MAPPER.readValue(
                 responseCreateUser.getResponse().getContentAsString(),
                 new TypeReference<>() {
@@ -630,7 +629,7 @@ class AccountTest {
 
         MvcResult responseCreateUser = mockMvc.perform(createRequest)
             .andExpect(status().isCreated()).andReturn();
-        ConcurrentHashMap<CreationEnum, List<Object>> mappedResponse =
+        Map<CreationEnum, List<Object>> mappedResponse =
             OBJECT_MAPPER.readValue(
                 responseCreateUser.getResponse().getContentAsString(),
                 new TypeReference<>() {
@@ -693,7 +692,7 @@ class AccountTest {
         MvcResult responseCreateUser = mockMvc.perform(createRequest)
             .andExpect(status().isCreated()).andReturn();
 
-        ConcurrentHashMap<CreationEnum, List<Object>> mappedResponse =
+        Map<CreationEnum, List<Object>> mappedResponse =
             OBJECT_MAPPER.readValue(
                 responseCreateUser.getResponse().getContentAsString(),
                 new TypeReference<>() {
@@ -728,7 +727,7 @@ class AccountTest {
 
         MvcResult responseCreateUser = mockMvc.perform(createRequest)
             .andExpect(status().isCreated()).andReturn();
-        ConcurrentHashMap<CreationEnum, List<Object>> mappedResponse =
+        Map<CreationEnum, List<Object>> mappedResponse =
             OBJECT_MAPPER.readValue(
                 responseCreateUser.getResponse().getContentAsString(),
                 new TypeReference<>() {
@@ -756,7 +755,7 @@ class AccountTest {
 
         MvcResult responseCreateUser = mockMvc.perform(createRequest)
             .andExpect(status().isCreated()).andReturn();
-        ConcurrentHashMap<CreationEnum, List<Object>> mappedResponse =
+        Map<CreationEnum, List<Object>> mappedResponse =
             OBJECT_MAPPER.readValue(
                 responseCreateUser.getResponse().getContentAsString(),
                 new TypeReference<>() {
@@ -787,7 +786,7 @@ class AccountTest {
 
         MvcResult responseCreateUser = mockMvc.perform(createRequest)
             .andExpect(status().isCreated()).andReturn();
-        ConcurrentHashMap<CreationEnum, List<Object>> mappedResponse =
+        Map<CreationEnum, List<Object>> mappedResponse =
             OBJECT_MAPPER.readValue(
                 responseCreateUser.getResponse().getContentAsString(),
                 new TypeReference<>() {
@@ -926,6 +925,7 @@ class AccountTest {
         );
     }
 
+    @SuppressWarnings("PMD.SignatureDeclareThrowsException")
     private String getSuperAdminUserId(PiUser superAdminUser) throws Exception {
         MockHttpServletRequestBuilder createRequest =
             MockMvcRequestBuilders
@@ -937,7 +937,7 @@ class AccountTest {
         MvcResult responseCreateUser = mockMvc.perform(createRequest)
             .andExpect(status().isCreated()).andReturn();
 
-        ConcurrentHashMap<CreationEnum, List<Object>> mappedResponse =
+        Map<CreationEnum, List<Object>> mappedResponse =
             OBJECT_MAPPER.readValue(
                 responseCreateUser.getResponse().getContentAsString(),
                 new TypeReference<>() {
@@ -946,7 +946,8 @@ class AccountTest {
 
         return mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).get(0).toString();
     }
-
+    
+    @SuppressWarnings("PMD.SignatureDeclareThrowsException")
     private String getSystemAdminUserId(String email) throws Exception {
         SystemAdminAccount systemAdmin = new SystemAdminAccount();
         systemAdmin.setFirstName(FIRST_NAME);

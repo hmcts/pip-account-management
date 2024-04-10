@@ -39,8 +39,8 @@ import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -58,7 +58,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
 @WithMockUser(username = "admin", authorities = {"APPROLE_api.request.admin"})
 
-@SuppressWarnings({"PMD.TooManyMethods", "PMD.ExcessiveImports", "PMD.JUnitTestsShouldIncludeAssert"})
+@SuppressWarnings({"PMD.TooManyMethods", "PMD.ExcessiveImports",
+    "PMD.JUnitTestsShouldIncludeAssert", "PMD.CouplingBetweenObjects"})
 class TestingSupportApiTest {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
@@ -252,7 +253,7 @@ class TestingSupportApiTest {
             .andExpect(status().isCreated())
             .andReturn();
 
-        ConcurrentHashMap<CreationEnum, List<String>> mappedResponse = OBJECT_MAPPER.readValue(
+        Map<CreationEnum, List<String>> mappedResponse = OBJECT_MAPPER.readValue(
             postResponse.getResponse().getContentAsString(), new TypeReference<>() {
             }
         );
@@ -332,6 +333,8 @@ class TestingSupportApiTest {
         return newAccount;
     }
 
+
+    @SuppressWarnings("PMD.SignatureDeclareThrowsException")
     private MediaApplication createApplication() throws Exception {
         MediaApplicationDto applicationDto = new MediaApplicationDto();
         applicationDto.setFullName(FULL_NAME);
