@@ -4,15 +4,11 @@ import com.azure.storage.blob.BlobClient;
 import com.azure.storage.blob.BlobContainerClient;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.microsoft.graph.http.GraphServiceException;
 import com.microsoft.graph.models.User;
-import com.microsoft.graph.requests.GraphServiceClient;
-import com.microsoft.graph.requests.UserCollectionRequest;
-import com.microsoft.graph.requests.UserCollectionRequestBuilder;
-import com.microsoft.graph.requests.UserRequest;
-import com.microsoft.graph.requests.UserRequestBuilder;
+import com.microsoft.graph.serviceclient.GraphServiceClient;
+import com.microsoft.graph.users.UsersRequestBuilder;
+import com.microsoft.graph.users.item.UserItemRequestBuilder;
 import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
-import okhttp3.Request;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -76,22 +72,13 @@ class AccountTest {
     private MockMvc mockMvc;
 
     @Autowired
-    GraphServiceClient<Request> graphClient;
-
-    @Autowired
-    UserCollectionRequestBuilder userCollectionRequestBuilder;
-
-    @Autowired
-    UserCollectionRequest userCollectionRequest;
+    GraphServiceClient graphClient;
 
     @Mock
-    private UserRequestBuilder userRequestBuilder;
+    private UsersRequestBuilder usersRequestBuilder;
 
     @Mock
-    private UserRequest userRequest;
-
-    @Autowired
-    GraphServiceException graphServiceException;
+    private UserItemRequestBuilder userItemRequestBuilder;
 
     private static final String ROOT_URL = "/account";
     private static final String PI_URL = ROOT_URL + "/add/pi";
@@ -163,21 +150,20 @@ class AccountTest {
         superAdminUser = createUser(true, Roles.INTERNAL_SUPER_ADMIN_CTSC);
 
         User userToReturn = new User();
-        userToReturn.id = ID;
-        userToReturn.givenName = GIVEN_NAME;
+        userToReturn.setId(ID);
+        userToReturn.setGivenName(GIVEN_NAME);
 
         User additionalUser = new User();
-        additionalUser.id = ADDITIONAL_ID;
-        additionalUser.givenName = GIVEN_NAME;
+        additionalUser.setId(ADDITIONAL_ID);
+        additionalUser.setGivenName(GIVEN_NAME);
 
-        when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
-        when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
-        when(userCollectionRequest.post(any())).thenReturn(userToReturn, additionalUser);
+        when(graphClient.users()).thenReturn(usersRequestBuilder);
+        when(usersRequestBuilder.post(any())).thenReturn(userToReturn, additionalUser);
     }
 
     @AfterEach
     public void reset() {
-        Mockito.reset(graphClient, userCollectionRequest, userCollectionRequestBuilder);
+        Mockito.reset(graphClient, usersRequestBuilder, userItemRequestBuilder);
     }
 
     @Test
@@ -205,12 +191,12 @@ class AccountTest {
     void testCreateMultipleSuccessUsers() throws Exception {
 
         User userToReturn = new User();
-        userToReturn.id = ID;
-        userToReturn.givenName = GIVEN_NAME;
+        userToReturn.setId(ID);
+        userToReturn.setGivenName(GIVEN_NAME);
 
-        when(graphClient.users(any())).thenReturn(userRequestBuilder);
-        when(userRequestBuilder.buildRequest()).thenReturn(userRequest);
-        when(userRequest.get()).thenReturn(userToReturn);
+        when(graphClient.users()).thenReturn(usersRequestBuilder);
+        when(usersRequestBuilder.byUserId(any())).thenReturn(userItemRequestBuilder);
+        when(userItemRequestBuilder.get()).thenReturn(userToReturn);
 
         MockHttpServletRequestBuilder mockHttpServletRequestMediaUserBuilder = MockMvcRequestBuilders
             .get(CREATE_MEDIA_USER_URL)
@@ -244,12 +230,12 @@ class AccountTest {
     @Test
     void testCreateMultipleSuccessUsersWithDifferentEmails() throws Exception {
         User userToReturn = new User();
-        userToReturn.id = ID;
-        userToReturn.givenName = GIVEN_NAME;
+        userToReturn.setId(ID);
+        userToReturn.setGivenName(GIVEN_NAME);
 
-        when(graphClient.users(any())).thenReturn(userRequestBuilder);
-        when(userRequestBuilder.buildRequest()).thenReturn(userRequest);
-        when(userRequest.get()).thenReturn(userToReturn);
+        when(graphClient.users()).thenReturn(usersRequestBuilder);
+        when(usersRequestBuilder.byUserId(any())).thenReturn(userItemRequestBuilder);
+        when(userItemRequestBuilder.get()).thenReturn(userToReturn);
 
         MockHttpServletRequestBuilder mockHttpServletRequestMediaUserBuilder = MockMvcRequestBuilders
             .get(CREATE_MEDIA_USER_URL)

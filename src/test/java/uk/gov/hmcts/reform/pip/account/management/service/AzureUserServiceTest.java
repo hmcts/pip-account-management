@@ -1,16 +1,13 @@
 package uk.gov.hmcts.reform.pip.account.management.service;
 
-import com.microsoft.graph.http.GraphServiceException;
 import com.microsoft.graph.models.ObjectIdentity;
 import com.microsoft.graph.models.PasswordProfile;
 import com.microsoft.graph.models.User;
-import com.microsoft.graph.requests.GraphServiceClient;
-import com.microsoft.graph.requests.UserCollectionPage;
-import com.microsoft.graph.requests.UserCollectionRequest;
-import com.microsoft.graph.requests.UserCollectionRequestBuilder;
-import com.microsoft.graph.requests.UserRequest;
-import com.microsoft.graph.requests.UserRequestBuilder;
-import okhttp3.Request;
+import com.microsoft.graph.models.UserCollectionResponse;
+import com.microsoft.graph.serviceclient.GraphServiceClient;
+import com.microsoft.graph.users.UsersRequestBuilder;
+import com.microsoft.graph.users.item.UserItemRequestBuilder;
+import com.microsoft.kiota.ApiException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,6 +29,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -41,13 +40,13 @@ import static org.mockito.Mockito.when;
 class AzureUserServiceTest {
 
     @Mock
-    private UserCollectionRequestBuilder userCollectionRequestBuilder;
+    private UsersRequestBuilder usersRequestBuilder;
 
     @Mock
-    private UserCollectionRequest userCollectionRequest;
+    private UserItemRequestBuilder userItemRequestBuilder;
 
     @Mock
-    private GraphServiceException graphServiceException;
+    private ApiException apiException;
 
     @Mock
     private UserConfiguration userConfiguration;
@@ -56,13 +55,7 @@ class AzureUserServiceTest {
     private ClientConfiguration clientConfiguration;
 
     @Mock
-    private GraphServiceClient<Request> graphClient;
-
-    @Mock
-    private UserRequestBuilder userRequestBuilder;
-
-    @Mock
-    private UserRequest userRequest;
+    private GraphServiceClient graphClient;
 
     @InjectMocks
     private AzureUserService azureUserService;
@@ -73,7 +66,6 @@ class AzureUserServiceTest {
     private static final String SURNAME = "Surname";
     private static final String EXTENSION_ID = "1234-1234";
     private static final String DISPLAY_NAME = "Display Name";
-    private static final String B2C_URL = "URL";
     private static final String ERROR_MESSAGE = "Error message should be present when failing to communicate with the"
         + " AD service";
 
@@ -88,27 +80,25 @@ class AzureUserServiceTest {
     @Test
     void testValidRequestReturnsUser() throws AzureCustomException {
         User user = new User();
-        user.id = ID;
+        user.setId(ID);
 
-        when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
-        when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
+        when(graphClient.users()).thenReturn(usersRequestBuilder);
         when(clientConfiguration.getExtensionId()).thenReturn(EXTENSION_ID);
-        when(userCollectionRequest.post(any())).thenReturn(user);
+        when(usersRequestBuilder.post(any())).thenReturn(user);
 
         User returnedUser = azureUserService.createUser(azureAccount, false);
 
-        assertEquals(ID, returnedUser.id, "The ID is equal to the expected user ID");
+        assertEquals(ID, returnedUser.getId(), "The ID is equal to the expected user ID");
     }
 
     @Test
     void testInvalidUserRequest() {
         User user = new User();
-        user.id = ID;
+        user.setId(ID);
 
-        when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
-        when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
+        when(graphClient.users()).thenReturn(usersRequestBuilder);
         when(clientConfiguration.getExtensionId()).thenReturn(EXTENSION_ID);
-        when(userCollectionRequest.post(any())).thenThrow(graphServiceException);
+        when(usersRequestBuilder.post(any())).thenThrow(apiException);
 
         AzureCustomException azureCustomException = assertThrows(AzureCustomException.class, () -> {
             azureUserService.createUser(azureAccount, false);
@@ -123,12 +113,11 @@ class AzureUserServiceTest {
     @Test
     void testArgumentSetsBaseUserDetails() throws AzureCustomException {
         User userToReturn = new User();
-        userToReturn.id = ID;
+        userToReturn.setId(ID);
 
-        when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
-        when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
+        when(graphClient.users()).thenReturn(usersRequestBuilder);
         when(clientConfiguration.getExtensionId()).thenReturn(EXTENSION_ID);
-        when(userCollectionRequest.post(any())).thenReturn(userToReturn);
+        when(usersRequestBuilder.post(any())).thenReturn(userToReturn);
 
         azureAccount.setEmail(EMAIL);
         azureAccount.setFirstName(FIRST_NAME);
@@ -136,20 +125,18 @@ class AzureUserServiceTest {
         azureUserService.createUser(azureAccount, false);
 
         ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
-        verify(userCollectionRequest, times(1)).post(captor.capture());
+        verify(usersRequestBuilder, times(1)).post(captor.capture());
 
         User user = captor.getValue();
 
-        assertTrue(user.accountEnabled, "AzureAccount is marked as enabled");
-        assertEquals(FIRST_NAME + " " + SURNAME, user.displayName,
+        assertTrue(user.getAccountEnabled(), "AzureAccount is marked as enabled");
+        assertEquals(FIRST_NAME + " " + SURNAME, user.getDisplayName(),
                      "Display name is set as the first name + surname");
-        assertEquals(FIRST_NAME, user.givenName, "Given name is set as the firstname");
-        assertEquals(SURNAME, user.surname, "Lastname is set as the surname");
+        assertEquals(FIRST_NAME, user.getGivenName(), "Given name is set as the firstname");
+        assertEquals(SURNAME, user.getSurname(), "Lastname is set as the surname");
         assertEquals(
             Roles.INTERNAL_ADMIN_CTSC.name(),
-            user.additionalDataManager().get("extension_"
-                                                      + EXTENSION_ID.replace("-", "")
-                                                          + "_UserRole").getAsString(),
+            user.getAdditionalData().get("extension_" + EXTENSION_ID.replace("-", "") + "_UserRole").toString(),
             "User role has not been returned as expected"
         );
     }
@@ -157,12 +144,11 @@ class AzureUserServiceTest {
     @Test
     void testArgumentIdentityDetails() throws AzureCustomException {
         User userToReturn = new User();
-        userToReturn.id = ID;
+        userToReturn.setId(ID);
 
-        when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
-        when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
+        when(graphClient.users()).thenReturn(usersRequestBuilder);
         when(clientConfiguration.getExtensionId()).thenReturn(EXTENSION_ID);
-        when(userCollectionRequest.post(any())).thenReturn(userToReturn);
+        when(usersRequestBuilder.post(any())).thenReturn(userToReturn);
         when(userConfiguration.getSignInType()).thenReturn("SignInType");
         when(userConfiguration.getIdentityIssuer()).thenReturn("IdentityIssuer");
 
@@ -170,78 +156,73 @@ class AzureUserServiceTest {
         azureUserService.createUser(azureAccount, false);
 
         ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
-        verify(userCollectionRequest, times(1)).post(captor.capture());
+        verify(usersRequestBuilder, times(1)).post(captor.capture());
         User user = captor.getValue();
 
-        List<ObjectIdentity> objectIdentityList = user.identities;
+        List<ObjectIdentity> objectIdentityList = user.getIdentities();
         assertEquals(1, objectIdentityList.size(), "One identity has been returned");
 
         ObjectIdentity objectIdentity = objectIdentityList.get(0);
 
-        assertEquals("SignInType", objectIdentity.signInType, "The sign in type is set correctly");
-        assertEquals("IdentityIssuer", objectIdentity.issuer, "The identity issuer is set correctly");
-        assertEquals(EMAIL, objectIdentity.issuerAssignedId, "The issuer assigned id is "
+        assertEquals("SignInType", objectIdentity.getSignInType(), "The sign in type is set correctly");
+        assertEquals("IdentityIssuer", objectIdentity.getIssuer(), "The identity issuer is set correctly");
+        assertEquals(EMAIL, objectIdentity.getIssuerAssignedId(), "The issuer assigned id is "
             + "set to the email");
     }
 
     @Test
     void testArgumentPasswordDetails() throws AzureCustomException {
         User userToReturn = new User();
-        userToReturn.id = ID;
+        userToReturn.setId(ID);
 
-        when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
-        when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
+        when(graphClient.users()).thenReturn(usersRequestBuilder);
         when(clientConfiguration.getExtensionId()).thenReturn(EXTENSION_ID);
-        when(userCollectionRequest.post(any())).thenReturn(userToReturn);
+        when(usersRequestBuilder.post(any())).thenReturn(userToReturn);
 
         azureAccount.setEmail(EMAIL);
         azureUserService.createUser(azureAccount, false);
 
         ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
-        verify(userCollectionRequest, times(1)).post(captor.capture());
+        verify(usersRequestBuilder, times(1)).post(captor.capture());
         User user = captor.getValue();
 
-        PasswordProfile passwordProfile = user.passwordProfile;
+        PasswordProfile passwordProfile = user.getPasswordProfile();
 
         assertNotNull(passwordProfile, "The password profile is present");
-        assertNotNull(passwordProfile.password, "The password has been set");
-        String password = passwordProfile.password;
+        assertNotNull(passwordProfile.getPassword(), "The password has been set");
+        String password = passwordProfile.getPassword();
         assertEquals(20, password.length(), "The password has the right complexity");
-        assertTrue(passwordProfile.forceChangePasswordNextSignIn, "The force chain password is set to false");
+        assertTrue(passwordProfile.getForceChangePasswordNextSignIn(), "The force chain password is set to false");
     }
 
     @Test
     void testValidRequestReturnsUserByEmail() throws AzureCustomException {
         User user = new User();
-        user.id = ID;
-        user.displayName = DISPLAY_NAME;
+        user.setId(ID);
+        user.setDisplayName(DISPLAY_NAME);
         List<User> users = new ArrayList<>();
         users.add(user);
 
-        UserCollectionPage userCollectionPage = new UserCollectionPage(users, userCollectionRequestBuilder);
+        UserCollectionResponse userCollectionResponse = new UserCollectionResponse();
+        userCollectionResponse.setValue(users);
 
-        when(clientConfiguration.getB2cUrl()).thenReturn(B2C_URL);
-        when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
-        when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
-        when(userCollectionRequest.filter(any())).thenReturn(userCollectionRequest);
-        when(userCollectionRequest.get()).thenReturn(userCollectionPage);
+        when(graphClient.users()).thenReturn(usersRequestBuilder);
+        when(usersRequestBuilder.get(any())).thenReturn(userCollectionResponse);
 
         User returnedUser = azureUserService.getUser(EMAIL);
 
-        assertEquals(DISPLAY_NAME, returnedUser.displayName, "The ID is equal to the expected user ID");
+        assertEquals(DISPLAY_NAME, returnedUser.getDisplayName(), "The ID is equal to the expected user ID");
     }
 
     @Test
     void testValidRequestReturnsNoUserByEmail() throws AzureCustomException {
         List<User> users = new ArrayList<>();
 
-        UserCollectionPage userCollectionPage = new UserCollectionPage(users, userCollectionRequestBuilder);
+        UserCollectionResponse userCollectionResponse = new UserCollectionResponse();
+        userCollectionResponse.setValue(users);
 
-        when(clientConfiguration.getB2cUrl()).thenReturn(B2C_URL);
-        when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
-        when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
-        when(userCollectionRequest.filter(any())).thenReturn(userCollectionRequest);
-        when(userCollectionRequest.get()).thenReturn(userCollectionPage);
+        when(graphClient.users()).thenReturn(usersRequestBuilder);
+        when(usersRequestBuilder.get(any())).thenReturn(userCollectionResponse);
 
         User returnedUser = azureUserService.getUser(EMAIL);
 
@@ -250,12 +231,8 @@ class AzureUserServiceTest {
 
     @Test
     void testInvalidUserByEmailRequest() {
-
-        when(clientConfiguration.getB2cUrl()).thenReturn(B2C_URL);
-        when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
-        when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
-        when(userCollectionRequest.filter(any())).thenReturn(userCollectionRequest);
-        when(userCollectionRequest.get()).thenThrow(graphServiceException);
+        when(graphClient.users()).thenReturn(usersRequestBuilder);
+        when(usersRequestBuilder.get(any())).thenThrow(apiException);
 
         AzureCustomException azureCustomException = assertThrows(AzureCustomException.class, () -> {
             azureUserService.getUser(EMAIL);
@@ -269,60 +246,60 @@ class AzureUserServiceTest {
     @Test
     void testDeleteUser() throws AzureCustomException {
         User userToReturn = new User();
-        userToReturn.id = ID;
+        userToReturn.setId(ID);
 
-        when(graphClient.users(userToReturn.id)).thenReturn(userRequestBuilder);
-        when(userRequestBuilder.buildRequest()).thenReturn(userRequest);
-        when(userRequest.delete()).thenReturn(userToReturn);
+        when(graphClient.users()).thenReturn(usersRequestBuilder);
+        when(usersRequestBuilder.byUserId(userToReturn.getId())).thenReturn(userItemRequestBuilder);
+        doNothing().when(userItemRequestBuilder).delete();
 
-        assertEquals(userToReturn, azureUserService.deleteUser(userToReturn.id),
-                     "Returned user does not match expected");
+        azureUserService.deleteUser(userToReturn.getId());
+
+        verify(userItemRequestBuilder, times(1)).delete();
     }
 
     @Test
     void testDeleteUserErrors() {
         User userToReturn = new User();
-        userToReturn.id = ID;
+        userToReturn.setId(ID);
 
-        when(graphClient.users(userToReturn.id)).thenReturn(userRequestBuilder);
-        when(userRequestBuilder.buildRequest()).thenReturn(userRequest);
-        when(userRequest.delete()).thenThrow(graphServiceException);
+        when(graphClient.users()).thenReturn(usersRequestBuilder);
+        when(usersRequestBuilder.byUserId(userToReturn.getId())).thenReturn(userItemRequestBuilder);
+        doThrow(apiException).when(userItemRequestBuilder).delete();
 
         AzureCustomException azureCustomException = assertThrows(AzureCustomException.class, () -> {
-            azureUserService.deleteUser(userToReturn.id);
+            azureUserService.deleteUser(userToReturn.getId());
         });
 
         assertEquals("Error when deleting account in Azure.",
-                     azureCustomException.getMessage(),
-                     ERROR_MESSAGE);
+                     azureCustomException.getMessage(), ERROR_MESSAGE);
     }
 
     @Test
     void testUpdateUser() throws AzureCustomException {
         User userToReturn = new User();
-        userToReturn.id = ID;
+        userToReturn.setId(ID);
 
         when(clientConfiguration.getExtensionId()).thenReturn(EXTENSION_ID);
-        when(graphClient.users(userToReturn.id)).thenReturn(userRequestBuilder);
-        when(userRequestBuilder.buildRequest()).thenReturn(userRequest);
-        when(userRequest.patch(any())).thenReturn(userToReturn);
+        when(graphClient.users()).thenReturn(usersRequestBuilder);
+        when(usersRequestBuilder.byUserId(userToReturn.getId())).thenReturn(userItemRequestBuilder);
+        when(userItemRequestBuilder.patch(any())).thenReturn(userToReturn);
 
-        assertEquals(userToReturn, azureUserService.updateUserRole(userToReturn.id, Roles.SYSTEM_ADMIN.toString()),
+        assertEquals(userToReturn, azureUserService.updateUserRole(userToReturn.getId(), Roles.SYSTEM_ADMIN.toString()),
                      "Returned user does not match expected");
     }
 
     @Test
     void testUpdateUserError() {
         User userToReturn = new User();
-        userToReturn.id = ID;
+        userToReturn.setId(ID);
 
         when(clientConfiguration.getExtensionId()).thenReturn(EXTENSION_ID);
-        when(graphClient.users(userToReturn.id)).thenReturn(userRequestBuilder);
-        when(userRequestBuilder.buildRequest()).thenReturn(userRequest);
-        when(userRequest.patch(any())).thenThrow(graphServiceException);
+        when(graphClient.users()).thenReturn(usersRequestBuilder);
+        when(usersRequestBuilder.byUserId(userToReturn.getId())).thenReturn(userItemRequestBuilder);
+        doThrow(apiException).when(userItemRequestBuilder).patch(any());
 
         AzureCustomException azureCustomException = assertThrows(AzureCustomException.class, () -> {
-            azureUserService.updateUserRole(userToReturn.id, Roles.SYSTEM_ADMIN.toString());
+            azureUserService.updateUserRole(userToReturn.getId(), Roles.SYSTEM_ADMIN.toString());
         });
 
         assertEquals("Error when updating account in Azure.",

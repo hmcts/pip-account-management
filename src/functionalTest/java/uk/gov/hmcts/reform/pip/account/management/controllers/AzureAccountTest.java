@@ -2,14 +2,12 @@ package uk.gov.hmcts.reform.pip.account.management.controllers;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.microsoft.graph.http.GraphServiceException;
 import com.microsoft.graph.models.User;
-import com.microsoft.graph.requests.GraphServiceClient;
-import com.microsoft.graph.requests.UserCollectionPage;
-import com.microsoft.graph.requests.UserCollectionRequest;
-import com.microsoft.graph.requests.UserCollectionRequestBuilder;
+import com.microsoft.graph.models.UserCollectionResponse;
+import com.microsoft.graph.serviceclient.GraphServiceClient;
+import com.microsoft.graph.users.UsersRequestBuilder;
+import com.microsoft.kiota.ApiException;
 import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
-import okhttp3.Request;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -99,19 +97,13 @@ class AzureAccountTest {
     private MockMvc mockMvc;
 
     @Autowired
-    GraphServiceClient<Request> graphClient;
+    GraphServiceClient graphClient;
 
     @Autowired
-    UserCollectionRequestBuilder userCollectionRequestBuilder;
+    UsersRequestBuilder usersRequestBuilder;
 
     @Autowired
-    UserCollectionRequest userCollectionRequest;
-
-    @Autowired
-    GraphServiceException graphServiceException;
-
-    @Mock
-    private UserCollectionPage userCollectionPage;
+    ApiException apiException;
 
     @Mock
     private ClientConfiguration clientConfiguration;
@@ -130,18 +122,18 @@ class AzureAccountTest {
 
     private void mockPiUser() {
         User user = new User();
-        user.id = ID;
-        user.givenName = GIVEN_NAME;
+        user.setId(ID);
+        user.setGivenName(GIVEN_NAME);
 
         List<User> azUsers = new ArrayList<>();
         azUsers.add(user);
 
-        userCollectionPage = new UserCollectionPage(azUsers, userCollectionRequestBuilder);
+        UserCollectionResponse userCollectionResponse = new UserCollectionResponse();
+        userCollectionResponse.setValue(azUsers);
+
         when(clientConfiguration.getB2cUrl()).thenReturn(B2C_URL);
-        when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
-        when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
-        when(userCollectionRequest.filter(any())).thenReturn(userCollectionRequest);
-        when(userCollectionRequest.get()).thenReturn(userCollectionPage);
+        when(graphClient.users()).thenReturn(usersRequestBuilder);
+        when(usersRequestBuilder.get(any())).thenReturn(userCollectionResponse);
     }
 
     @BeforeAll
@@ -152,17 +144,16 @@ class AzureAccountTest {
     @BeforeEach
     void setup() {
         User userToReturn = new User();
-        userToReturn.id = ID;
-        userToReturn.givenName = GIVEN_NAME;
+        userToReturn.setId(ID);
+        userToReturn.setGivenName(GIVEN_NAME);
 
-        when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
-        when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
-        when(userCollectionRequest.post(any())).thenReturn(userToReturn);
+        when(graphClient.users()).thenReturn(usersRequestBuilder);
+        when(usersRequestBuilder.post(any())).thenReturn(userToReturn);
     }
 
     @AfterEach
     public void reset() {
-        Mockito.reset(graphClient, userCollectionRequest, userCollectionRequestBuilder);
+        Mockito.reset(graphClient, usersRequestBuilder);
     }
 
     @Test
@@ -173,13 +164,12 @@ class AzureAccountTest {
         azureAccount.setFirstName(FIRST_NAME);
         azureAccount.setRole(Roles.INTERNAL_ADMIN_CTSC);
 
-        userCollectionPage = new UserCollectionPage(new ArrayList<>(), userCollectionRequestBuilder);
+        UserCollectionResponse userCollectionResponse = new UserCollectionResponse();
+        userCollectionResponse.setValue(new ArrayList<>());
 
         when(clientConfiguration.getB2cUrl()).thenReturn(B2C_URL);
-        when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
-        when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
-        when(userCollectionRequest.filter(any())).thenReturn(userCollectionRequest);
-        when(userCollectionRequest.get()).thenReturn(userCollectionPage);
+        when(graphClient.users()).thenReturn(usersRequestBuilder);
+        when(usersRequestBuilder.get(any())).thenReturn(userCollectionResponse);
 
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(AZURE_URL)
@@ -342,25 +332,23 @@ class AzureAccountTest {
     @Test
     void testNoFailureOfNoSurnameAccount() throws Exception {
         User userToReturn = new User();
-        userToReturn.id = ID;
-        userToReturn.givenName = GIVEN_NAME;
+        userToReturn.setId(ID);
+        userToReturn.setGivenName(GIVEN_NAME);
 
         AzureAccount azureAccount = new AzureAccount();
         azureAccount.setEmail(EMAIL);
         azureAccount.setFirstName(FIRST_NAME);
         azureAccount.setRole(Roles.VERIFIED);
 
-        when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
-        when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
-        when(userCollectionRequest.post(any())).thenReturn(userToReturn);
+        when(graphClient.users()).thenReturn(usersRequestBuilder);
+        when(usersRequestBuilder.post(any())).thenReturn(userToReturn);
 
-        userCollectionPage = new UserCollectionPage(new ArrayList<>(), userCollectionRequestBuilder);
+        UserCollectionResponse userCollectionResponse = new UserCollectionResponse();
+        userCollectionResponse.setValue(new ArrayList<>());
 
         when(clientConfiguration.getB2cUrl()).thenReturn(B2C_URL);
-        when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
-        when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
-        when(userCollectionRequest.filter(any())).thenReturn(userCollectionRequest);
-        when(userCollectionRequest.get()).thenReturn(userCollectionPage);
+        when(graphClient.users()).thenReturn(usersRequestBuilder);
+        when(usersRequestBuilder.get(any())).thenReturn(userCollectionResponse);
 
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(AZURE_URL)
@@ -435,17 +423,15 @@ class AzureAccountTest {
     @Test
     void testCreationOfDuplicateAccount() throws Exception {
 
-        when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
-        when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
-        when(userCollectionRequest.post(any())).thenThrow(graphServiceException);
+        when(graphClient.users()).thenReturn(usersRequestBuilder);
+        when(usersRequestBuilder.post(any())).thenThrow(apiException);
 
-        userCollectionPage = new UserCollectionPage(new ArrayList<>(), userCollectionRequestBuilder);
+        UserCollectionResponse userCollectionResponse = new UserCollectionResponse();
+        userCollectionResponse.setValue(new ArrayList<>());
 
         when(clientConfiguration.getB2cUrl()).thenReturn(B2C_URL);
-        when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
-        when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
-        when(userCollectionRequest.filter(any())).thenReturn(userCollectionRequest);
-        when(userCollectionRequest.get()).thenReturn(userCollectionPage);
+        when(graphClient.users()).thenReturn(usersRequestBuilder);
+        when(usersRequestBuilder.get(any())).thenReturn(userCollectionResponse);
 
         AzureAccount azureAccount = new AzureAccount();
         azureAccount.setEmail(EMAIL);
@@ -508,19 +494,17 @@ class AzureAccountTest {
     void testCreationOfTwoAccountsOneFailOneOK() throws Exception {
 
         User userToReturn = new User();
-        userToReturn.id = ID;
+        userToReturn.setId(ID);
 
-        when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
-        when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
-        when(userCollectionRequest.post(any())).thenReturn(userToReturn);
+        when(graphClient.users()).thenReturn(usersRequestBuilder);
+        when(usersRequestBuilder.post(any())).thenReturn(userToReturn);
 
-        userCollectionPage = new UserCollectionPage(new ArrayList<>(), userCollectionRequestBuilder);
+        UserCollectionResponse userCollectionResponse = new UserCollectionResponse();
+        userCollectionResponse.setValue(new ArrayList<>());
 
         when(clientConfiguration.getB2cUrl()).thenReturn(B2C_URL);
-        when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
-        when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
-        when(userCollectionRequest.filter(any())).thenReturn(userCollectionRequest);
-        when(userCollectionRequest.get()).thenReturn(userCollectionPage);
+        when(graphClient.users()).thenReturn(usersRequestBuilder);
+        when(usersRequestBuilder.get(any())).thenReturn(userCollectionResponse);
 
         AzureAccount validAzureAccount = new AzureAccount();
         validAzureAccount.setEmail(EMAIL);

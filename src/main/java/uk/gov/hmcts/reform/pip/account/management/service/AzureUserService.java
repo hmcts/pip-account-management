@@ -1,14 +1,12 @@
 package uk.gov.hmcts.reform.pip.account.management.service;
 
-import com.google.gson.JsonPrimitive;
 import com.microsoft.applicationinsights.web.dependencies.apachecommons.lang3.RandomStringUtils;
-import com.microsoft.graph.http.GraphServiceException;
 import com.microsoft.graph.models.ObjectIdentity;
 import com.microsoft.graph.models.PasswordProfile;
 import com.microsoft.graph.models.User;
-import com.microsoft.graph.requests.GraphServiceClient;
-import com.microsoft.graph.requests.UserCollectionPage;
-import okhttp3.Request;
+import com.microsoft.graph.models.UserCollectionResponse;
+import com.microsoft.graph.serviceclient.GraphServiceClient;
+import com.microsoft.kiota.ApiException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.gov.hmcts.reform.pip.account.management.config.ClientConfiguration;
@@ -18,6 +16,7 @@ import uk.gov.hmcts.reform.pip.account.management.model.AzureAccount;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * A class that wraps any interacts with Azure active directory.
@@ -25,7 +24,7 @@ import java.util.List;
 @Service
 public class AzureUserService {
 
-    private final GraphServiceClient<Request> graphClient;
+    private final GraphServiceClient graphClient;
 
     private final UserConfiguration userConfiguration;
 
@@ -33,7 +32,7 @@ public class AzureUserService {
 
     @Autowired
     public AzureUserService(
-        GraphServiceClient<Request> graphClient,
+        GraphServiceClient graphClient,
         UserConfiguration userConfiguration,
         ClientConfiguration clientConfiguration
     ) {
@@ -53,9 +52,8 @@ public class AzureUserService {
         try {
             User user = createUserObject(azureAccount, useSuppliedPassword);
             return graphClient.users()
-                .buildRequest()
                 .post(user);
-        } catch (GraphServiceException e) {
+        } catch (ApiException e) {
             throw new AzureCustomException("Error when persisting account into Azure. "
                                                + "Check that the user doesn't already exist in the directory");
         }
@@ -63,18 +61,18 @@ public class AzureUserService {
 
     private User createUserObject(AzureAccount azureAccount, boolean useSuppliedPassword) {
         User user = new User();
-        user.accountEnabled = true;
-        user.displayName = azureAccount.getFirstName() + " " + azureAccount.getSurname();
-        user.givenName = azureAccount.getFirstName();
-        user.surname = azureAccount.getSurname();
-        user.additionalDataManager().put(
+        user.setAccountEnabled(true);
+        user.setDisplayName(azureAccount.getFirstName() + " " + azureAccount.getSurname());
+        user.setGivenName(azureAccount.getFirstName());
+        user.setSurname(azureAccount.getSurname());
+        user.setAdditionalData(Map.of(
             "extension_" + clientConfiguration.getExtensionId().replace("-", "") + "_UserRole",
-            new JsonPrimitive(azureAccount.getRole().toString()));
+            azureAccount.getRole().toString()));
 
         ObjectIdentity identity = new ObjectIdentity();
-        identity.signInType = userConfiguration.getSignInType();
-        identity.issuer = userConfiguration.getIdentityIssuer();
-        identity.issuerAssignedId = azureAccount.getEmail();
+        identity.setSignInType(userConfiguration.getSignInType());
+        identity.setIssuer(userConfiguration.getIdentityIssuer());
+        identity.setIssuerAssignedId(azureAccount.getEmail());
 
         List<ObjectIdentity> identitiesList = new ArrayList<>();
         identitiesList.add(identity);
@@ -82,14 +80,14 @@ public class AzureUserService {
         PasswordProfile passwordProfile = new PasswordProfile();
 
         if (useSuppliedPassword) {
-            passwordProfile.password = azureAccount.getPassword();
-            passwordProfile.forceChangePasswordNextSignIn = false;
+            passwordProfile.setPassword(azureAccount.getPassword());
+            passwordProfile.setForceChangePasswordNextSignIn(false);
         } else {
-            passwordProfile.password = RandomStringUtils.randomAscii(20);
-            passwordProfile.forceChangePasswordNextSignIn = true;
+            passwordProfile.setPassword(RandomStringUtils.randomAscii(20));
+            passwordProfile.setForceChangePasswordNextSignIn(true);
         }
-        user.passwordProfile = passwordProfile;
-        user.identities = identitiesList;
+        user.setPasswordProfile(passwordProfile);
+        user.setIdentities(identitiesList);
 
         return user;
     }
@@ -98,23 +96,24 @@ public class AzureUserService {
      * Get a azureAccount information from the Azure active directory.
      * @param email The azureAccount email address.
      * @return The created user if it was successful.
-     * @throws AzureCustomException thrown if theres an error with communicating with Azure.
+     * @throws AzureCustomException thrown if there's an error with communicating with Azure.
      */
     public User getUser(String email) throws AzureCustomException {
         try {
-            UserCollectionPage users = graphClient.users()
-                .buildRequest()
-                .filter(String.format("identities/any(c:c/issuerAssignedId eq '%s' and c/issuer eq '%s')", email,
-                                      clientConfiguration.getB2cUrl()))
-                .get();
+            UserCollectionResponse users = graphClient.users()
+                .get((configuration) -> {
+                    configuration.queryParameters.filter = String.format(
+                        "identities/any(c:c/issuerAssignedId eq '%s' and c/issuer eq '%s')",
+                        email, clientConfiguration.getB2cUrl());
+                });
 
             User returnUser = null;
-            if (users.getCurrentPage().stream().count() != 0) {
-                returnUser = users.getCurrentPage().get(0);
+            if (users.getValue() != null && users.getValue().size() > 0) {
+                returnUser = users.getValue().get(0);
             }
             return returnUser;
 
-        } catch (GraphServiceException e) {
+        } catch (ApiException e) {
             throw new AzureCustomException("Error when checking account into Azure.");
         }
     }
@@ -122,13 +121,12 @@ public class AzureUserService {
     /**
      * Delete an account from the Azure active directory.
      * @param userId The userId of the account to delete.
-     * @return The deleted user if it was successful.
      * @throws AzureCustomException thrown if there is an error with communicating with Azure.
      */
-    public User deleteUser(String userId) throws AzureCustomException {
+    public void deleteUser(String userId) throws AzureCustomException {
         try {
-            return graphClient.users(userId).buildRequest().delete();
-        } catch (GraphServiceException e) {
+            graphClient.users().byUserId(userId).delete();
+        } catch (ApiException e) {
             throw new AzureCustomException("Error when deleting account in Azure.");
         }
     }
@@ -143,15 +141,14 @@ public class AzureUserService {
     public User updateUserRole(String provenanceUserId, String role) throws AzureCustomException {
         try {
             User user = new User();
-            user.additionalDataManager().put(
+            user.setAdditionalData(Map.of(
                 "extension_" + clientConfiguration.getExtensionId().replace("-", "") + "_UserRole",
-                new JsonPrimitive(role)
-            );
+                role
+            ));
 
-            return graphClient.users(provenanceUserId)
-                .buildRequest()
+            return graphClient.users().byUserId(provenanceUserId)
                 .patch(user);
-        } catch (GraphServiceException e) {
+        } catch (ApiException e) {
             throw new AzureCustomException("Error when updating account in Azure.");
         }
     }

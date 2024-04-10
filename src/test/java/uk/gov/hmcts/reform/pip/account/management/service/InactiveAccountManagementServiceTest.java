@@ -74,8 +74,8 @@ class InactiveAccountManagementServiceTest {
 
     @BeforeAll
     static void setup() {
-        azureMediaUser.givenName = AZURE_MEDIA_USER_NAME;
-        azureAdminUser.givenName = AZURE_ADMIN_USER_NAME;
+        azureMediaUser.setGivenName(AZURE_MEDIA_USER_NAME);
+        azureAdminUser.setGivenName(AZURE_ADMIN_USER_NAME);
     }
 
     @Test
