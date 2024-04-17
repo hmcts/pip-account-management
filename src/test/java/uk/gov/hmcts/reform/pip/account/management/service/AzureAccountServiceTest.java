@@ -104,8 +104,8 @@ class AzureAccountServiceTest {
         azureAccount.setEmail(EMAIL);
         azureAccount.setRole(Roles.INTERNAL_ADMIN_CTSC);
 
-        expectedUser.givenName = TEST;
-        expectedUser.id = ID;
+        expectedUser.setGivenName(TEST);
+        expectedUser.setId(ID);
 
         when(userRepository.findByUserId(VALID_USER_ID)).thenReturn(Optional.of(piUser));
         when(constraintViolation.getMessage()).thenReturn(VALIDATION_MESSAGE);
@@ -208,8 +208,8 @@ class AzureAccountServiceTest {
             .thenReturn(Set.of());
 
         User azUser = new User();
-        azUser.id = ID;
-        azUser.givenName = FULL_NAME;
+        azUser.setId(ID);
+        azUser.setGivenName(FULL_NAME);
 
         azureAccount.setRole(Roles.VERIFIED);
 
@@ -228,8 +228,8 @@ class AzureAccountServiceTest {
             .thenReturn(Set.of());
 
         User azUser = new User();
-        azUser.id = ID;
-        azUser.givenName = FULL_NAME;
+        azUser.setId(ID);
+        azUser.setGivenName(FULL_NAME);
 
         azureAccount.setRole(Roles.VERIFIED);
 
@@ -250,8 +250,8 @@ class AzureAccountServiceTest {
             .thenReturn(Set.of());
 
         User azUser = new User();
-        azUser.id = ID;
-        azUser.givenName = "";
+        azUser.setId(ID);
+        azUser.setGivenName("");
 
         azureAccount.setRole(Roles.VERIFIED);
 
@@ -274,8 +274,8 @@ class AzureAccountServiceTest {
             .thenReturn(Set.of());
 
         User azUser = new User();
-        azUser.id = ID;
-        azUser.givenName = FULL_NAME;
+        azUser.setId(ID);
+        azUser.setGivenName(FULL_NAME);
 
         azureAccount.setRole(Roles.INTERNAL_ADMIN_CTSC);
 
@@ -466,17 +466,17 @@ class AzureAccountServiceTest {
         user.setEmail(EMAIL);
 
         User azUser = new User();
-        azUser.id = ID;
-        azUser.givenName = FULL_NAME;
-        azUser.displayName = FULL_NAME;
-        azUser.surname = SURNAME;
+        azUser.setId(ID);
+        azUser.setGivenName(FULL_NAME);
+        azUser.setDisplayName(FULL_NAME);
+        azUser.setSurname(SURNAME);
 
         when(azureUserService.getUser(EMAIL)).thenReturn(azUser);
         when(userRepository.findByProvenanceUserIdAndUserProvenance(userId.toString(), UserProvenances.PI_AAD))
             .thenReturn(Optional.of(user));
 
         AzureAccount returnedUser = azureAccountService.retrieveAzureAccount(userId.toString());
-        assertEquals(azUser.displayName, returnedUser.getDisplayName(), RETURN_USER_ERROR);
+        assertEquals(azUser.getDisplayName(), returnedUser.getDisplayName(), RETURN_USER_ERROR);
     }
 
     @Test

@@ -85,11 +85,11 @@ public class AzureAccountService {
                 if (!checkUserAlreadyExists(azureAccount, erroredAccounts)) {
                     User user = azureUserService.createUser(azureAccount, useSuppliedPassword);
 
-                    azureAccount.setAzureAccountId(user.id);
+                    azureAccount.setAzureAccountId(user.getId());
                     createdAzureAccounts.add(azureAccount);
 
                     log.info(writeLog(issuerId, UserActions.CREATE_ACCOUNT, azureAccount.getAzureAccountId()));
-                    boolean emailSent = handleAccountCreationEmail(azureAccount, user.givenName, isExisting);
+                    boolean emailSent = handleAccountCreationEmail(azureAccount, user.getGivenName(), isExisting);
                     checkAndAddToErrorAccount(emailSent, azureAccount, List.of(EMAIL_NOT_SENT_MESSAGE),
                                               erroredAccounts);
                 }
@@ -113,10 +113,10 @@ public class AzureAccountService {
             if (user.isPresent()) {
                 AzureAccount azureAccount = new AzureAccount();
                 User aadUser = azureUserService.getUser(user.get().getEmail());
-                azureAccount.setAzureAccountId(aadUser.id);
-                azureAccount.setFirstName(aadUser.givenName);
-                azureAccount.setSurname(aadUser.surname);
-                azureAccount.setDisplayName(aadUser.displayName);
+                azureAccount.setAzureAccountId(aadUser.getId());
+                azureAccount.setFirstName(aadUser.getGivenName());
+                azureAccount.setSurname(aadUser.getSurname());
+                azureAccount.setDisplayName(aadUser.getDisplayName());
                 azureAccount.setEmail(user.get().getEmail());
                 return azureAccount;
             } else {
@@ -135,10 +135,10 @@ public class AzureAccountService {
         throws AzureCustomException {
         User userAzure = azureUserService.getUser(azureAccount.getEmail());
 
-        if (userAzure != null && !userAzure.givenName.isEmpty()
+        if (userAzure != null && !userAzure.getGivenName().isEmpty()
             && azureAccount.getRole().equals(VERIFIED)) {
             boolean emailSent = publicationService.sendNotificationEmailForDuplicateMediaAccount(
-                azureAccount.getEmail(), userAzure.givenName);
+                azureAccount.getEmail(), userAzure.getGivenName());
 
             checkAndAddToErrorAccount(emailSent, azureAccount,
                                       List.of("Unable to send duplicate media account email"),

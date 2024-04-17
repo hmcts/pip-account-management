@@ -3,16 +3,13 @@ package uk.gov.hmcts.reform.pip.account.management.controllers;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.graph.models.User;
-import com.microsoft.graph.requests.GraphServiceClient;
-import com.microsoft.graph.requests.UserCollectionPage;
-import com.microsoft.graph.requests.UserCollectionRequest;
-import com.microsoft.graph.requests.UserCollectionRequestBuilder;
+import com.microsoft.graph.models.UserCollectionResponse;
+import com.microsoft.graph.serviceclient.GraphServiceClient;
+import com.microsoft.graph.users.UsersRequestBuilder;
 import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
-import okhttp3.Request;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -31,7 +28,7 @@ import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -65,43 +62,38 @@ class BulkAccountCreationTest {
     private MockMvc mockMvc;
 
     @Autowired
-    private GraphServiceClient<Request> graphClient;
+    private GraphServiceClient graphClient;
 
     @Autowired
-    private UserCollectionRequestBuilder userCollectionRequestBuilder;
-
-    @Autowired
-    private UserCollectionRequest userCollectionRequest;
-
-    @Mock
-    private UserCollectionPage userCollectionPage;
+    private UsersRequestBuilder usersRequestBuilder;
 
     @BeforeEach
     void setup() {
         User user = new User();
-        user.id = ID;
-        user.givenName = GIVEN_NAME;
+        user.setId(ID);
+        user.setGivenName(GIVEN_NAME);
 
         User additionalUser = new User();
-        additionalUser.id = ADDITIONAL_ID;
-        additionalUser.givenName = GIVEN_NAME;
+        additionalUser.setId(ADDITIONAL_ID);
+        additionalUser.setGivenName(GIVEN_NAME);
 
-        when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
-        when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
-        when(userCollectionRequest.post(any())).thenReturn(user, additionalUser);
+        when(graphClient.users()).thenReturn(usersRequestBuilder);
+        when(usersRequestBuilder.post(any())).thenReturn(user, additionalUser);
     }
 
     @AfterEach
     public void reset() {
-        Mockito.reset(graphClient, userCollectionRequest, userCollectionRequestBuilder);
+        Mockito.reset(graphClient, usersRequestBuilder);
     }
 
     @Test
     @DirtiesContext(methodMode = DirtiesContext.MethodMode.BEFORE_METHOD)
     void testUploadBulkMedia() throws Exception {
-        userCollectionPage = new UserCollectionPage(new ArrayList<>(), userCollectionRequestBuilder);
-        when(userCollectionRequest.filter(any())).thenReturn(userCollectionRequest);
-        when(userCollectionRequest.get()).thenReturn(userCollectionPage);
+
+        UserCollectionResponse userCollectionResponse = new UserCollectionResponse();
+        userCollectionResponse.setValue(new ArrayList<>());
+
+        when(usersRequestBuilder.get(any())).thenReturn(userCollectionResponse);
 
         try (InputStream inputStream = Thread.currentThread().getContextClassLoader()
             .getResourceAsStream("csv/valid.csv")) {
@@ -110,7 +102,7 @@ class BulkAccountCreationTest {
             MvcResult mvcResult = mockMvc.perform(multipart(BULK_UPLOAD).file(multipartFile)
                                                       .header(ISSUER_HEADER, ISSUER_ID))
                 .andExpect(status().isOk()).andReturn();
-            ConcurrentHashMap<CreationEnum, List<?>> users = OBJECT_MAPPER.readValue(
+            Map<CreationEnum, List<?>> users = OBJECT_MAPPER.readValue(
                 mvcResult.getResponse().getContentAsString(),
                 new TypeReference<>() {
                 }
@@ -140,9 +132,10 @@ class BulkAccountCreationTest {
     @Test
     @DirtiesContext(methodMode = DirtiesContext.MethodMode.BEFORE_METHOD)
     void testUploadBulkMediaEmailOnly() throws Exception {
-        userCollectionPage = new UserCollectionPage(new ArrayList<>(), userCollectionRequestBuilder);
-        when(userCollectionRequest.filter(any())).thenReturn(userCollectionRequest);
-        when(userCollectionRequest.get()).thenReturn(userCollectionPage);
+        UserCollectionResponse userCollectionResponse = new UserCollectionResponse();
+        userCollectionResponse.setValue(new ArrayList<>());
+
+        when(usersRequestBuilder.get(any())).thenReturn(userCollectionResponse);
 
         try (InputStream inputStream = Thread.currentThread().getContextClassLoader()
             .getResourceAsStream("csv/mediaEmailOnly.csv")) {
@@ -151,7 +144,7 @@ class BulkAccountCreationTest {
             MvcResult mvcResult = mockMvc.perform(multipart(BULK_UPLOAD).file(multipartFile)
                                                       .header(ISSUER_HEADER, ISSUER_ID))
                 .andExpect(status().isOk()).andReturn();
-            ConcurrentHashMap<CreationEnum, List<?>> users = OBJECT_MAPPER.readValue(
+            Map<CreationEnum, List<?>> users = OBJECT_MAPPER.readValue(
                 mvcResult.getResponse().getContentAsString(),
                 new TypeReference<>() {
                 }
@@ -171,7 +164,7 @@ class BulkAccountCreationTest {
             MvcResult mvcResult = mockMvc.perform(multipart(BULK_UPLOAD).file(multipartFile)
                                                       .header(ISSUER_HEADER, ISSUER_ID))
                 .andExpect(status().isOk()).andReturn();
-            ConcurrentHashMap<CreationEnum, List<?>> users = OBJECT_MAPPER.readValue(
+            Map<CreationEnum, List<?>> users = OBJECT_MAPPER.readValue(
                 mvcResult.getResponse().getContentAsString(),
                 new TypeReference<>() {
                 }

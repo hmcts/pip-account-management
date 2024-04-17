@@ -4,16 +4,12 @@ import com.azure.storage.blob.BlobClient;
 import com.azure.storage.blob.BlobContainerClient;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.microsoft.graph.http.GraphServiceException;
 import com.microsoft.graph.models.User;
-import com.microsoft.graph.requests.GraphServiceClient;
-import com.microsoft.graph.requests.UserCollectionPage;
-import com.microsoft.graph.requests.UserCollectionRequest;
-import com.microsoft.graph.requests.UserCollectionRequestBuilder;
-import com.microsoft.graph.requests.UserRequest;
-import com.microsoft.graph.requests.UserRequestBuilder;
+import com.microsoft.graph.models.UserCollectionResponse;
+import com.microsoft.graph.serviceclient.GraphServiceClient;
+import com.microsoft.graph.users.UsersRequestBuilder;
+import com.microsoft.graph.users.item.UserItemRequestBuilder;
 import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
-import okhttp3.Request;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -43,8 +39,8 @@ import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -62,7 +58,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
 @WithMockUser(username = "admin", authorities = {"APPROLE_api.request.admin"})
 
-@SuppressWarnings({"PMD.TooManyMethods", "PMD.ExcessiveImports", "PMD.JUnitTestsShouldIncludeAssert"})
+@SuppressWarnings({"PMD.TooManyMethods", "PMD.ExcessiveImports",
+    "PMD.JUnitTestsShouldIncludeAssert", "PMD.CouplingBetweenObjects"})
 class TestingSupportApiTest {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
@@ -108,25 +105,13 @@ class TestingSupportApiTest {
     BlobClient blobClient;
 
     @Autowired
-    GraphServiceClient<Request> graphClient;
+    GraphServiceClient graphClient;
 
     @Mock
-    private UserRequestBuilder userRequestBuilder;
+    private UsersRequestBuilder usersRequestBuilder;
 
     @Mock
-    private UserRequest userRequest;
-
-    @Autowired
-    UserCollectionRequestBuilder userCollectionRequestBuilder;
-
-    @Autowired
-    UserCollectionRequest userCollectionRequest;
-
-    @Autowired
-    GraphServiceException graphServiceException;
-
-    @Mock
-    private UserCollectionPage userCollectionPage;
+    private UserItemRequestBuilder userItemRequestBuilder;
 
     @Mock
     private ClientConfiguration clientConfiguration;
@@ -141,20 +126,17 @@ class TestingSupportApiTest {
 
         //Azure mock setup
         User userToReturn = new User();
-        userToReturn.id = ID;
-        userToReturn.givenName = GIVEN_NAME;
+        userToReturn.setId(ID);
+        userToReturn.setGivenName(GIVEN_NAME);
 
-        when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
-        when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
-        when(userCollectionRequest.post(any())).thenReturn(userToReturn);
+        when(graphClient.users()).thenReturn(usersRequestBuilder);
+        when(usersRequestBuilder.post(any())).thenReturn(userToReturn);
 
-        userCollectionPage = new UserCollectionPage(new ArrayList<>(), userCollectionRequestBuilder);
+        UserCollectionResponse userCollectionResponse = new UserCollectionResponse();
+        userCollectionResponse.setValue(new ArrayList<>());
 
         when(clientConfiguration.getB2cUrl()).thenReturn(B2C_URL);
-        when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
-        when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
-        when(userCollectionRequest.filter(any())).thenReturn(userCollectionRequest);
-        when(userCollectionRequest.get()).thenReturn(userCollectionPage);
+        when(usersRequestBuilder.get(any())).thenReturn(userCollectionResponse);
 
         //Create new test user account
         AzureAccount newAccount = createAccount(PASSWORD);
@@ -176,12 +158,12 @@ class TestingSupportApiTest {
         );
 
         //Reset azure mock setup
-        Mockito.reset(graphClient, userCollectionRequest, userCollectionRequestBuilder);
+        Mockito.reset(graphClient, usersRequestBuilder);
 
         //User mock setup
-        when(graphClient.users(any())).thenReturn(userRequestBuilder);
-        when(userRequestBuilder.buildRequest()).thenReturn(userRequest);
-        when(userRequest.get()).thenReturn(new User());
+        when(graphClient.users()).thenReturn(usersRequestBuilder);
+        when(usersRequestBuilder.byUserId(any())).thenReturn(userItemRequestBuilder);
+        when(userItemRequestBuilder.get()).thenReturn(new User());
 
         //Check whether account is created in Pi user table
         MockHttpServletRequestBuilder getPiUserRequest = get(ACCOUNT_URL + createdAccount.getUserId());
@@ -212,20 +194,17 @@ class TestingSupportApiTest {
     void testBadRequestTestingSupportCreateAccount() throws Exception {
 
         User userToReturn = new User();
-        userToReturn.id = ID;
-        userToReturn.givenName = GIVEN_NAME;
+        userToReturn.setId(ID);
+        userToReturn.setGivenName(GIVEN_NAME);
 
-        when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
-        when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
-        when(userCollectionRequest.post(any())).thenReturn(userToReturn);
+        when(graphClient.users()).thenReturn(usersRequestBuilder);
+        when(usersRequestBuilder.post(any())).thenReturn(userToReturn);
 
-        userCollectionPage = new UserCollectionPage(new ArrayList<>(), userCollectionRequestBuilder);
+        UserCollectionResponse userCollectionResponse = new UserCollectionResponse();
+        userCollectionResponse.setValue(new ArrayList<>());
 
         when(clientConfiguration.getB2cUrl()).thenReturn(B2C_URL);
-        when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
-        when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
-        when(userCollectionRequest.filter(any())).thenReturn(userCollectionRequest);
-        when(userCollectionRequest.get()).thenReturn(userCollectionPage);
+        when(usersRequestBuilder.get(any())).thenReturn(userCollectionResponse);
 
         AzureAccount newAccount = createAccount("");
 
@@ -258,9 +237,9 @@ class TestingSupportApiTest {
 
     @Test
     void testTestingSupportDeleteAccountsWithEmailPrefix() throws Exception {
-        when(graphClient.users(any())).thenReturn(userRequestBuilder);
-        when(userRequestBuilder.buildRequest()).thenReturn(userRequest);
-        when(userRequest.get()).thenReturn(new User());
+        when(graphClient.users()).thenReturn(usersRequestBuilder);
+        when(usersRequestBuilder.byUserId(any())).thenReturn(userItemRequestBuilder);
+        when(userItemRequestBuilder.get()).thenReturn(new User());
 
         PiUser user = createUser();
 
@@ -274,7 +253,7 @@ class TestingSupportApiTest {
             .andExpect(status().isCreated())
             .andReturn();
 
-        ConcurrentHashMap<CreationEnum, List<String>> mappedResponse = OBJECT_MAPPER.readValue(
+        Map<CreationEnum, List<String>> mappedResponse = OBJECT_MAPPER.readValue(
             postResponse.getResponse().getContentAsString(), new TypeReference<>() {
             }
         );
@@ -354,6 +333,8 @@ class TestingSupportApiTest {
         return newAccount;
     }
 
+
+    @SuppressWarnings("PMD.SignatureDeclareThrowsException")
     private MediaApplication createApplication() throws Exception {
         MediaApplicationDto applicationDto = new MediaApplicationDto();
         applicationDto.setFullName(FULL_NAME);

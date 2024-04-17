@@ -75,9 +75,9 @@ class SystemAdminAccountServiceTest {
     @BeforeEach
     void setup() {
         expectedUser = new User();
-        expectedUser.givenName = FORENAME;
-        expectedUser.id = ID;
-        expectedUser.displayName = SURNAME;
+        expectedUser.setGivenName(FORENAME);
+        expectedUser.setId(ID);
+        expectedUser.setSurname(SURNAME);
 
         expectedPiUser = new PiUser();
         expectedPiUser.setUserId(UUID.randomUUID());
