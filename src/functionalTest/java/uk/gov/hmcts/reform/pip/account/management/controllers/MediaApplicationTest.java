@@ -22,7 +22,6 @@ import org.springframework.test.web.servlet.MvcResult;
 import uk.gov.hmcts.reform.pip.account.management.Application;
 import uk.gov.hmcts.reform.pip.account.management.config.AzureConfigurationClientTestConfiguration;
 import uk.gov.hmcts.reform.pip.account.management.model.MediaApplication;
-import uk.gov.hmcts.reform.pip.account.management.model.MediaApplicationDto;
 import uk.gov.hmcts.reform.pip.account.management.model.MediaApplicationStatus;
 
 import java.io.InputStream;
@@ -84,7 +83,7 @@ class MediaApplicationTest {
     private static final MediaApplicationStatus STATUS = MediaApplicationStatus.PENDING;
     private static final MediaApplicationStatus UPDATED_STATUS = MediaApplicationStatus.APPROVED;
     private static final UUID TEST_ID = UUID.randomUUID();
-    private static final String PENDING_STATUS = "PENDING";
+    private static final MediaApplicationStatus PENDING_STATUS = MediaApplicationStatus.PENDING;
 
     private static final String NOT_FOUND_ERROR = "Returned ID does not match the expected ID";
     private static final String EMAIL_NOT_MATCH = "Emails do not match";
@@ -107,11 +106,11 @@ class MediaApplicationTest {
 
     @SuppressWarnings("PMD.SignatureDeclareThrowsException")
     private MediaApplication createApplication() throws Exception {
-        MediaApplicationDto applicationDto = new MediaApplicationDto();
-        applicationDto.setFullName(FULL_NAME);
-        applicationDto.setEmail(EMAIL);
-        applicationDto.setEmployer(EMPLOYER);
-        applicationDto.setStatus(PENDING_STATUS);
+        MediaApplication mediaApplication = new MediaApplication();
+        mediaApplication.setFullName(FULL_NAME);
+        mediaApplication.setEmail(EMAIL);
+        mediaApplication.setEmployer(EMPLOYER);
+        mediaApplication.setStatus(PENDING_STATUS);
 
         try (InputStream imageInputStream = Thread.currentThread().getContextClassLoader()
             .getResourceAsStream("files/test-image.png")) {
@@ -126,7 +125,7 @@ class MediaApplicationTest {
 
             MvcResult mvcResult = mockMvc.perform(multipart(ROOT_URL)
                                                       .file(imageFile)
-                                                      .flashAttr("application", applicationDto)
+                                                      .flashAttr("application", mediaApplication)
                                                       .contentType(MediaType.MULTIPART_FORM_DATA_VALUE))
                 .andExpect(status().isOk()).andReturn();
 
@@ -136,12 +135,12 @@ class MediaApplicationTest {
 
     @SuppressWarnings("PMD.SignatureDeclareThrowsException")
     private MvcResult createApplicationRequest(String fullname, String email,
-                                               String employer, String status) throws Exception {
-        MediaApplicationDto applicationDto = new MediaApplicationDto();
-        applicationDto.setFullName(fullname);
-        applicationDto.setEmail(email);
-        applicationDto.setEmployer(employer);
-        applicationDto.setStatus(status);
+                                               String employer, MediaApplicationStatus status) throws Exception {
+        MediaApplication application = new MediaApplication();
+        application.setFullName(fullname);
+        application.setEmail(email);
+        application.setEmployer(employer);
+        application.setStatus(status);
 
         try (InputStream imageInputStream = Thread.currentThread().getContextClassLoader()
             .getResourceAsStream("files/test-image.png")) {
@@ -156,7 +155,7 @@ class MediaApplicationTest {
 
             return mockMvc.perform(multipart(ROOT_URL)
                                        .file(imageFile)
-                                       .flashAttr("application", applicationDto)
+                                       .flashAttr("application", application)
                                        .contentType(MediaType.MULTIPART_FORM_DATA_VALUE))
                 .andReturn();
         }
@@ -213,7 +212,7 @@ class MediaApplicationTest {
 
     @Test
     void testCreateApplicationEmptyStatus() throws Exception {
-        MvcResult mvcResult = createApplicationRequest(FULL_NAME, EMAIL, EMPLOYER, "");
+        MvcResult mvcResult = createApplicationRequest(FULL_NAME, EMAIL, EMPLOYER, null);
         assertEquals(HttpStatus.BAD_REQUEST.value(), mvcResult.getResponse().getStatus(), STATUSES_NOT_MATCH);
         assertEquals(
             "{\"status\":\"status should be one of PENDING, REJECTED or APPROVED\"}",
@@ -236,11 +235,11 @@ class MediaApplicationTest {
     @Test
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testCreateApplicationUnauthorised() throws Exception {
-        MediaApplicationDto applicationDto = new MediaApplicationDto();
-        applicationDto.setFullName(FULL_NAME);
-        applicationDto.setEmail(EMAIL);
-        applicationDto.setEmployer(EMPLOYER);
-        applicationDto.setStatus(PENDING_STATUS);
+        MediaApplication application = new MediaApplication();
+        application.setFullName(FULL_NAME);
+        application.setEmail(EMAIL);
+        application.setEmployer(EMPLOYER);
+        application.setStatus(PENDING_STATUS);
 
         try (InputStream imageInputStream = Thread.currentThread().getContextClassLoader()
             .getResourceAsStream("files/test-image.png")) {
@@ -250,7 +249,7 @@ class MediaApplicationTest {
             );
             mockMvc.perform(multipart(ROOT_URL)
                                 .file(imageFile)
-                                .flashAttr("application", applicationDto)
+                                .flashAttr("application", application)
                                 .contentType(MediaType.MULTIPART_FORM_DATA_VALUE))
                 .andExpect(status().isForbidden());
         }

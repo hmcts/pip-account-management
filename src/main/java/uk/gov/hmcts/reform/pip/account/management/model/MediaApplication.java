@@ -7,6 +7,9 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -29,10 +32,14 @@ public class MediaApplication {
     @Column(columnDefinition = "uuid", insertable = false, updatable = false, nullable = false)
     private UUID id;
 
+    @NotBlank(message = "fullName shouldn't be blank or null")
     private String fullName;
 
+    @Email
+    @NotBlank(message = "email shouldn't be blank or null")
     private String email;
 
+    @NotBlank(message = "employer shouldn't be blank or null")
     private String employer;
 
     private String image;
@@ -42,6 +49,7 @@ public class MediaApplication {
     private LocalDateTime requestDate;
 
     @Enumerated(EnumType.STRING)
+    @NotNull(message = "status shouldn't be null")
     private MediaApplicationStatus status;
 
     private LocalDateTime statusDate;

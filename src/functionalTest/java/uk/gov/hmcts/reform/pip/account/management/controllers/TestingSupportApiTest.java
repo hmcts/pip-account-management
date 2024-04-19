@@ -31,7 +31,7 @@ import uk.gov.hmcts.reform.pip.account.management.config.ClientConfiguration;
 import uk.gov.hmcts.reform.pip.account.management.model.AzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.MediaApplication;
-import uk.gov.hmcts.reform.pip.account.management.model.MediaApplicationDto;
+import uk.gov.hmcts.reform.pip.account.management.model.MediaApplicationStatus;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
@@ -90,7 +90,7 @@ class TestingSupportApiTest {
 
     private static final String FULL_NAME = "Test user";
     private static final String EMPLOYER = "Test employer";
-    private static final String PENDING_STATUS = "PENDING";
+    private static final MediaApplicationStatus PENDING_STATUS = MediaApplicationStatus.PENDING;
 
     private static final String UNAUTHORIZED_ROLE = "APPROLE_unknown.authorized";
     private static final String UNAUTHORIZED_USERNAME = "unauthorized_isAuthorized";
@@ -336,11 +336,11 @@ class TestingSupportApiTest {
 
     @SuppressWarnings("PMD.SignatureDeclareThrowsException")
     private MediaApplication createApplication() throws Exception {
-        MediaApplicationDto applicationDto = new MediaApplicationDto();
-        applicationDto.setFullName(FULL_NAME);
-        applicationDto.setEmail(EMAIL);
-        applicationDto.setEmployer(EMPLOYER);
-        applicationDto.setStatus(PENDING_STATUS);
+        MediaApplication application = new MediaApplication();
+        application.setFullName(FULL_NAME);
+        application.setEmail(EMAIL);
+        application.setEmployer(EMPLOYER);
+        application.setStatus(PENDING_STATUS);
 
         try (InputStream imageInputStream = Thread.currentThread().getContextClassLoader()
             .getResourceAsStream("files/test-image.png")) {
@@ -354,7 +354,7 @@ class TestingSupportApiTest {
 
             MockHttpServletRequestBuilder postRequest = multipart(APPLICATION_URL)
                 .file(imageFile)
-                .flashAttr("application", applicationDto)
+                .flashAttr("application", application)
                 .contentType(MediaType.MULTIPART_FORM_DATA_VALUE);
 
             MvcResult mvcResult = mockMvc.perform(postRequest)
