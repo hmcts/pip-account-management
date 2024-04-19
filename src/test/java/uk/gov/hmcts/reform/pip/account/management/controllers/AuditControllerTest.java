@@ -48,14 +48,9 @@ class AuditControllerTest {
 
     @Test
     void testCreateAuditLog() {
-        AuditLog auditLog = new AuditLog();
-
-        auditLog.setUserId("1234");
-        auditLog.setUserEmail("test@justice.gov.uk");
-        auditLog.setRoles(Roles.SYSTEM_ADMIN);
-        auditLog.setUserProvenance(UserProvenances.PI_AAD);
-        auditLog.setAction(AuditAction.DELETE_USER);
-        auditLog.setDetails("Manage user test");
+        AuditLog auditLog = new AuditLog("1234", "test@justice.gov.uk",
+                                            Roles.SYSTEM_ADMIN, UserProvenances.PI_AAD,
+                                            AuditAction.MANAGE_USER, "Manage user test");
 
         when(auditService.createAuditLog(auditLog)).thenReturn(auditLog);
 
