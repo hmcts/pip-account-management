@@ -215,7 +215,7 @@ class MediaApplicationTest {
         MvcResult mvcResult = createApplicationRequest(FULL_NAME, EMAIL, EMPLOYER, null);
         assertEquals(HttpStatus.BAD_REQUEST.value(), mvcResult.getResponse().getStatus(), STATUSES_NOT_MATCH);
         assertEquals(
-            "{\"status\":\"status should be one of PENDING, REJECTED or APPROVED\"}",
+            "{\"status\":\"status shouldn't be null\"}",
             mvcResult.getResponse().getContentAsString(),
             ERROR_MESSAGE_MISMATCH
         );
