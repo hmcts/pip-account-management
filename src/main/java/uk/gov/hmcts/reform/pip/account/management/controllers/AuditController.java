@@ -19,7 +19,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import uk.gov.hmcts.reform.pip.account.management.model.AuditLog;
-import uk.gov.hmcts.reform.pip.account.management.model.AuditLogDto;
 import uk.gov.hmcts.reform.pip.account.management.service.AuditService;
 import uk.gov.hmcts.reform.pip.model.authentication.roles.IsAdmin;
 
@@ -66,8 +65,8 @@ public class AuditController {
 
     @ApiResponse(responseCode = OK_ERROR_CODE, description = "Newly created audit log returned.")
     @PostMapping
-    public ResponseEntity<AuditLog> createAuditLog(@RequestBody @Valid AuditLogDto auditLogDto) {
-        return ResponseEntity.ok(auditService.createAuditLog(auditLogDto.toEntity()));
+    public ResponseEntity<AuditLog> createAuditLog(@RequestBody @Valid AuditLog auditLog) {
+        return ResponseEntity.ok(auditService.createAuditLog(auditLog));
     }
 
     @ApiResponse(responseCode = OK_ERROR_CODE, description = "All audit logs that have reached max retention deleted.")

@@ -9,8 +9,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import uk.gov.hmcts.reform.pip.account.management.model.AuditLog;
-import uk.gov.hmcts.reform.pip.account.management.model.AuditLogDto;
 import uk.gov.hmcts.reform.pip.account.management.service.AuditService;
+import uk.gov.hmcts.reform.pip.model.account.Roles;
+import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
+import uk.gov.hmcts.reform.pip.model.enums.AuditAction;
 
 import java.util.UUID;
 
@@ -46,13 +48,18 @@ class AuditControllerTest {
 
     @Test
     void testCreateAuditLog() {
-        AuditLogDto auditLogDto = new AuditLogDto("1234", "test@justice.gov.uk", "SYSTEM_ADMIN", "PI_AAD",
-                                                  "MANAGE_USER", "Manage user test");
-        AuditLog auditLog = auditLogDto.toEntity();
+        AuditLog auditLog = new AuditLog();
+
+        auditLog.setUserId("1234");
+        auditLog.setUserEmail("test@justice.gov.uk");
+        auditLog.setRoles(Roles.SYSTEM_ADMIN);
+        auditLog.setUserProvenance(UserProvenances.PI_AAD);
+        auditLog.setAction(AuditAction.DELETE_USER);
+        auditLog.setDetails("Manage user test");
 
         when(auditService.createAuditLog(auditLog)).thenReturn(auditLog);
 
-        ResponseEntity<AuditLog> response = auditController.createAuditLog(auditLogDto);
+        ResponseEntity<AuditLog> response = auditController.createAuditLog(auditLog);
 
         assertEquals(HttpStatus.OK, response.getStatusCode(), STATUS_CODE_MATCH);
         assertEquals(auditLog, response.getBody(), "Returned audit log model does not match expected");

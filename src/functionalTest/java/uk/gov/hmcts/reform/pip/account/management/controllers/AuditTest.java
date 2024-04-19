@@ -18,7 +18,6 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import uk.gov.hmcts.reform.pip.account.management.Application;
 import uk.gov.hmcts.reform.pip.account.management.config.AzureConfigurationClientTestConfiguration;
 import uk.gov.hmcts.reform.pip.account.management.model.AuditLog;
-import uk.gov.hmcts.reform.pip.account.management.model.AuditLogDto;
 import uk.gov.hmcts.reform.pip.account.management.model.CustomPageImpl;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
@@ -42,8 +41,8 @@ class AuditTest {
 
     private static final String ROOT_URL = "/audit";
     private static final String EMAIL = "test_account_admin@hmcts.net";
-    private static final String ROLES = Roles.SYSTEM_ADMIN.toString();
-    private static final String USER_PROVENANCE = UserProvenances.PI_AAD.toString();
+    private static final Roles ROLES = Roles.SYSTEM_ADMIN;
+    private static final UserProvenances USER_PROVENANCE = UserProvenances.PI_AAD;
     private static final String AUDIT_DETAILS = "User requested to view all third party users";
     private static final String USER_ID = "1234";
     private static final String ADDITIONAL_USER_ID = "3456";
@@ -51,7 +50,7 @@ class AuditTest {
     private static final String UNAUTHORIZED_USERNAME = "unauthorized_isAuthorized";
     private static final String FORBIDDEN_STATUS_CODE = "Status code does not match forbidden";
     private static final String GET_AUDIT_LOG_FAILED = "Failed to retrieve audit log";
-    private static final String AUDIT_ACTION = AuditAction.MANAGE_THIRD_PARTY_USER_VIEW.toString();
+    private static final AuditAction AUDIT_ACTION = AuditAction.MANAGE_THIRD_PARTY_USER_VIEW;
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
@@ -60,8 +59,8 @@ class AuditTest {
         OBJECT_MAPPER.findAndRegisterModules();
     }
 
-    private AuditLogDto createAuditLogDto() {
-        return new AuditLogDto(
+    private AuditLog createAuditLog() {
+        return new AuditLog(
             USER_ID,
             EMAIL,
             ROLES,
@@ -75,14 +74,14 @@ class AuditTest {
     void testGetAllAuditLogs() throws Exception {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder1 = MockMvcRequestBuilders
             .post(ROOT_URL)
-            .content(OBJECT_MAPPER.writeValueAsString(createAuditLogDto()))
+            .content(OBJECT_MAPPER.writeValueAsString(createAuditLog()))
             .contentType(MediaType.APPLICATION_JSON);
 
         mockMvc.perform(mockHttpServletRequestBuilder1).andExpect(status().isOk());
 
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder2 = MockMvcRequestBuilders
             .post(ROOT_URL)
-            .content(OBJECT_MAPPER.writeValueAsString(new AuditLogDto(
+            .content(OBJECT_MAPPER.writeValueAsString(new AuditLog(
                 ADDITIONAL_USER_ID,
                 EMAIL,
                 ROLES,
@@ -131,7 +130,7 @@ class AuditTest {
     void testCreateAuditLog() throws Exception {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(ROOT_URL)
-            .content(OBJECT_MAPPER.writeValueAsString(createAuditLogDto()))
+            .content(OBJECT_MAPPER.writeValueAsString(createAuditLog()))
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult mvcResult = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isOk()).andReturn();
@@ -151,7 +150,7 @@ class AuditTest {
     void testUnauthorizedCreateAuditLog() throws Exception {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(ROOT_URL)
-            .content(OBJECT_MAPPER.writeValueAsString(createAuditLogDto()))
+            .content(OBJECT_MAPPER.writeValueAsString(createAuditLog()))
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult mvcResult = mockMvc.perform(mockHttpServletRequestBuilder)
@@ -166,7 +165,7 @@ class AuditTest {
     void testDeleteAuditLogs() throws Exception {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(ROOT_URL)
-            .content(OBJECT_MAPPER.writeValueAsString(createAuditLogDto()))
+            .content(OBJECT_MAPPER.writeValueAsString(createAuditLog()))
             .contentType(MediaType.APPLICATION_JSON);
 
         mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isOk());
