@@ -105,6 +105,7 @@ class MediaApplicationTest {
         objectMapper.findAndRegisterModules();
     }
 
+    @SuppressWarnings("PMD.SignatureDeclareThrowsException")
     private MediaApplication createApplication() throws Exception {
         MediaApplicationDto applicationDto = new MediaApplicationDto();
         applicationDto.setFullName(FULL_NAME);
@@ -133,6 +134,7 @@ class MediaApplicationTest {
         }
     }
 
+    @SuppressWarnings("PMD.SignatureDeclareThrowsException")
     private MvcResult createApplicationRequest(String fullname, String email,
                                                String employer, String status) throws Exception {
         MediaApplicationDto applicationDto = new MediaApplicationDto();

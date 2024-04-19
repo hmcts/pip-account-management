@@ -25,8 +25,8 @@ import uk.gov.hmcts.reform.pip.model.publication.ListType;
 import uk.gov.hmcts.reform.pip.model.publication.Sensitivity;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -57,6 +57,7 @@ class SensitivityTest {
     private final ObjectMapper objectMapper = new ObjectMapper();
     private PiUser user;
 
+    @SuppressWarnings("PMD.SignatureDeclareThrowsException")
     private String createUserAndGetId(PiUser validUser) throws Exception {
         MockHttpServletRequestBuilder setupRequest = MockMvcRequestBuilders
             .post(PI_URL)
@@ -65,7 +66,7 @@ class SensitivityTest {
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult userResponse = mockMvc.perform(setupRequest).andExpect(status().isCreated()).andReturn();
-        ConcurrentHashMap<CreationEnum, List<Object>> mappedResponse =
+        Map<CreationEnum, List<Object>> mappedResponse =
             objectMapper.readValue(userResponse.getResponse().getContentAsString(),
                                    new TypeReference<>() {});
         return mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).get(0).toString();
@@ -177,6 +178,7 @@ class SensitivityTest {
         assertFalse(Boolean.parseBoolean(response.getResponse().getContentAsString()), FALSE_MESSAGE);
     }
 
+    @SuppressWarnings("PMD.SignatureDeclareThrowsException")
     private MvcResult callIsAuthorised(PiUser user, Sensitivity sensitivity) throws Exception {
         String createdUserId = createUserAndGetId(user);
 

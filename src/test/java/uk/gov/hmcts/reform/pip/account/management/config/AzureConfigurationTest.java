@@ -1,7 +1,6 @@
 package uk.gov.hmcts.reform.pip.account.management.config;
 
-import com.microsoft.graph.requests.GraphServiceClient;
-import okhttp3.Request;
+import com.microsoft.graph.serviceclient.GraphServiceClient;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -27,7 +26,7 @@ class AzureConfigurationTest {
         when(clientConfiguration.getTenantGuid()).thenReturn("12345");
         when(clientConfiguration.getTokenProvider()).thenReturn("12345");
 
-        GraphServiceClient<Request> graphServiceClient = azureConfigurationClient.graphClient(clientConfiguration);
+        GraphServiceClient graphServiceClient = azureConfigurationClient.graphClient(clientConfiguration);
 
         assertNotNull(graphServiceClient, "Azure Graph Service client has been created");
     }

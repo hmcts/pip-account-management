@@ -1,14 +1,12 @@
 package uk.gov.hmcts.reform.pip.account.management.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.microsoft.graph.http.GraphServiceException;
 import com.microsoft.graph.models.User;
-import com.microsoft.graph.requests.GraphServiceClient;
-import com.microsoft.graph.requests.UserCollectionPage;
-import com.microsoft.graph.requests.UserCollectionRequest;
-import com.microsoft.graph.requests.UserCollectionRequestBuilder;
+import com.microsoft.graph.models.UserCollectionResponse;
+import com.microsoft.graph.serviceclient.GraphServiceClient;
+import com.microsoft.graph.users.UsersRequestBuilder;
+import com.microsoft.kiota.ApiException;
 import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
-import okhttp3.Request;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -70,16 +68,14 @@ class SystemAdminAccountTest {
     private MockMvc mockMvc;
 
     @Autowired
-    GraphServiceClient<Request> graphClient;
+    GraphServiceClient graphClient;
 
     @Autowired
-    UserCollectionRequestBuilder userCollectionRequestBuilder;
+    UsersRequestBuilder usersRequestBuilder;
+
 
     @Autowired
-    UserCollectionRequest userCollectionRequest;
-
-    @Autowired
-    GraphServiceException graphServiceException;
+    ApiException apiException;
 
     @BeforeAll
     static void startup() {
@@ -89,23 +85,24 @@ class SystemAdminAccountTest {
     @BeforeEach
     void setup() {
         User user = new User();
-        user.id = ID;
-        user.givenName = GIVEN_NAME;
+        user.setId(ID);
+        user.setGivenName(GIVEN_NAME);
 
         List<User> azUsers = new ArrayList<>();
         azUsers.add(user);
-        UserCollectionPage userCollectionPage = new UserCollectionPage(azUsers, userCollectionRequestBuilder);
 
-        when(graphClient.users()).thenReturn(userCollectionRequestBuilder);
-        when(userCollectionRequestBuilder.buildRequest()).thenReturn(userCollectionRequest);
-        when(userCollectionRequest.post(any())).thenReturn(user);
-        when(userCollectionRequest.filter(any())).thenReturn(userCollectionRequest);
-        when(userCollectionRequest.get()).thenReturn(userCollectionPage);
+        when(graphClient.users()).thenReturn(usersRequestBuilder);
+        when(usersRequestBuilder.post(any())).thenReturn(user);
+
+        UserCollectionResponse userCollectionResponse = new UserCollectionResponse();
+        userCollectionResponse.setValue(azUsers);
+
+        when(usersRequestBuilder.get(any())).thenReturn(userCollectionResponse);
     }
 
     @AfterEach
     public void reset() {
-        Mockito.reset(graphClient, userCollectionRequest, userCollectionRequestBuilder);
+        Mockito.reset(graphClient, usersRequestBuilder);
     }
 
     @Test

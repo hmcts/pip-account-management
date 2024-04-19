@@ -1,10 +1,8 @@
 package uk.gov.hmcts.reform.pip.account.management.config;
 
-import com.microsoft.graph.http.GraphServiceException;
-import com.microsoft.graph.requests.GraphServiceClient;
-import com.microsoft.graph.requests.UserCollectionRequest;
-import com.microsoft.graph.requests.UserCollectionRequestBuilder;
-import okhttp3.Request;
+import com.microsoft.graph.serviceclient.GraphServiceClient;
+import com.microsoft.graph.users.UsersRequestBuilder;
+import com.microsoft.kiota.ApiException;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.context.annotation.Bean;
@@ -16,16 +14,13 @@ import org.springframework.context.annotation.Profile;
 public class AzureConfigurationClientTestConfiguration {
 
     @Mock
-    GraphServiceClient<Request> graphClientMock;
+    GraphServiceClient graphClientMock;
 
     @Mock
-    UserCollectionRequestBuilder userCollectionRequestBuilderMock;
+    UsersRequestBuilder usersRequestBuilderMock;
 
     @Mock
-    UserCollectionRequest userCollectionRequestMock;
-
-    @Mock
-    GraphServiceException graphServiceExceptionMock;
+    ApiException apiExceptionMock;
 
 
     public AzureConfigurationClientTestConfiguration() {
@@ -37,23 +32,18 @@ public class AzureConfigurationClientTestConfiguration {
      * @return The azure graph client.
      */
     @Bean
-    public GraphServiceClient<Request> graphClient() {
+    public GraphServiceClient graphClient() {
         return graphClientMock;
     }
 
     @Bean
-    public UserCollectionRequestBuilder userCollectionRequestBuilder() {
-        return userCollectionRequestBuilderMock;
+    public UsersRequestBuilder usersRequestBuilder() {
+        return usersRequestBuilderMock;
     }
 
     @Bean
-    public UserCollectionRequest userCollectionRequest() {
-        return userCollectionRequestMock;
-    }
-
-    @Bean
-    public GraphServiceException graphServiceException() {
-        return graphServiceExceptionMock;
+    public ApiException apiException() {
+        return apiExceptionMock;
     }
 
 }

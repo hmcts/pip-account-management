@@ -46,6 +46,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -54,7 +55,7 @@ import static org.mockito.Mockito.when;
 import static uk.gov.hmcts.reform.pip.model.account.Roles.SYSTEM_ADMIN;
 
 @ExtendWith(MockitoExtension.class)
-@SuppressWarnings({"PMD.TooManyMethods", "PMD.ExcessiveImports"})
+@SuppressWarnings({"PMD.TooManyMethods", "PMD.ExcessiveImports", "PMD.CouplingBetweenObjects"})
 class AccountServiceTest {
     @Mock
     private AzureUserService azureUserService;
@@ -124,8 +125,8 @@ class AccountServiceTest {
         AZURE_ACCOUNT.setEmail(EMAIL);
         AZURE_ACCOUNT.setRole(Roles.INTERNAL_ADMIN_CTSC);
 
-        EXPECTED_USER.givenName = TEST;
-        EXPECTED_USER.id = ID;
+        EXPECTED_USER.setGivenName(TEST);
+        EXPECTED_USER.setId(ID);
     }
 
     @Test
@@ -276,8 +277,7 @@ class AccountServiceTest {
         when(userRepository.findByUserId(USER_UUID)).thenReturn(Optional.of(PI_USER));
 
         doNothing().when(userRepository).delete(PI_USER);
-        when(azureUserService.deleteUser(PI_USER.getProvenanceUserId()))
-            .thenReturn(EXPECTED_USER);
+        doNothing().when(azureUserService).deleteUser(PI_USER.getProvenanceUserId());
         when(subscriptionService.sendSubscriptionDeletionRequest(VALID_USER_ID.toString()))
             .thenReturn(SUBSCRIPTIONS_DELETED);
 
@@ -322,8 +322,7 @@ class AccountServiceTest {
         when(userRepository.findByUserId(VALID_USER_ID)).thenReturn(Optional.of(PI_USER));
 
         doNothing().when(userRepository).delete(PI_USER);
-        when(azureUserService.deleteUser(PI_USER.getProvenanceUserId()))
-            .thenThrow(new AzureCustomException(TEST));
+        doThrow(new AzureCustomException(TEST)).when(azureUserService).deleteUser(PI_USER.getProvenanceUserId());
         when(subscriptionService.sendSubscriptionDeletionRequest(VALID_USER_ID.toString()))
             .thenReturn(SUBSCRIPTIONS_DELETED);
 
@@ -479,8 +478,8 @@ class AccountServiceTest {
         user.setProvenanceUserId(ID);
 
         User azUser = new User();
-        azUser.id = ID;
-        azUser.givenName = FULL_NAME;
+        azUser.setId(ID);
+        azUser.setGivenName(FULL_NAME);
 
         when(userRepository.findByUserId(userId)).thenReturn(Optional.of(user));
         when(azureUserService.updateUserRole(ID, SYSTEM_ADMIN.toString())).thenReturn(azUser);

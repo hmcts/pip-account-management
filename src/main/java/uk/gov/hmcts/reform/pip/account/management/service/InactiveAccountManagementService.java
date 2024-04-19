@@ -55,7 +55,7 @@ public class InactiveAccountManagementService {
             try {
                 publicationService.sendAccountVerificationEmail(
                     user.getEmail(),
-                    azureUserService.getUser(user.getEmail()).givenName
+                    azureUserService.getUser(user.getEmail()).getGivenName()
                 );
             } catch (AzureCustomException ex) {
                 log.error(writeLog("Error when getting user from azure: " + ex.getMessage()));
@@ -73,7 +73,7 @@ public class InactiveAccountManagementService {
                 try {
                     publicationService.sendInactiveAccountSignInNotificationEmail(
                         user.getEmail(),
-                        azureUserService.getUser(user.getEmail()).givenName,
+                        azureUserService.getUser(user.getEmail()).getGivenName(),
                         user.getUserProvenance(),
                         DateTimeHelper.localDateTimeToDateString(user.getLastSignedInDate())
                     );

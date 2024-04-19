@@ -21,6 +21,7 @@ import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
 
 @Slf4j
 @Service
+@SuppressWarnings("PMD.LooseCoupling")
 /**
  * Service to communicate with publication-services microservice and send appropriate emails via govnotify on the
  * creation of a new administrator account.
