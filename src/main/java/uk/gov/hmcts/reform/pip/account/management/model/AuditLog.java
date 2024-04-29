@@ -8,6 +8,9 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -32,21 +35,39 @@ public class AuditLog {
     @Column(columnDefinition = "uuid", insertable = false, updatable = false, nullable = false)
     private UUID id;
 
+    @NotBlank(message = "userId shouldn't be blank or null")
     private String userId;
 
+    @Email
+    @NotBlank(message = "email shouldn't be blank or null")
     private String userEmail;
 
     @Enumerated(EnumType.STRING)
+    @NotNull(message = "roles shouldn't be null")
     private Roles roles;
 
     @Enumerated(EnumType.STRING)
+    @NotNull(message = "user provenance shouldn't be null")
     private UserProvenances userProvenance;
 
     @Enumerated(EnumType.STRING)
+    @NotNull(message = "action shouldn't be null")
     private AuditAction action;
 
+    @NotBlank(message = "details shouldn't be blank or null")
     private String details;
 
     @CreatedDate
     private LocalDateTime timestamp;
+
+    public AuditLog(String userId, String userEmail, Roles roles, UserProvenances userProvenance,
+                    AuditAction action, String details) {
+        this.userId = userId;
+        this.userEmail = userEmail;
+        this.roles = roles;
+        this.userProvenance = userProvenance;
+        this.action = action;
+        this.details = details;
+    }
+
 }

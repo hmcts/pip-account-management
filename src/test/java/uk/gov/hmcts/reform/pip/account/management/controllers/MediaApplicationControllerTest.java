@@ -8,7 +8,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import uk.gov.hmcts.reform.pip.account.management.model.MediaApplication;
-import uk.gov.hmcts.reform.pip.account.management.model.MediaApplicationDto;
 import uk.gov.hmcts.reform.pip.account.management.model.MediaApplicationStatus;
 import uk.gov.hmcts.reform.pip.account.management.service.MediaApplicationService;
 
@@ -81,19 +80,19 @@ class MediaApplicationControllerTest {
 
     @Test
     void testCreateApplication() {
-        MediaApplicationDto applicationDto = new MediaApplicationDto();
-        applicationDto.setFullName("Test user");
-        applicationDto.setEmail("test@email.com");
-        applicationDto.setEmployer("Test employer");
-        applicationDto.setStatus("PENDING");
+        MediaApplication applicationInbound = new MediaApplication();
+        applicationInbound.setFullName("Test user");
+        applicationInbound.setEmail("test@email.com");
+        applicationInbound.setEmployer("Test employer");
+        applicationInbound.setStatus(MediaApplicationStatus.PENDING);
 
         MediaApplication application = createApplication(MediaApplicationStatus.PENDING);
 
-        when(mediaApplicationService.createApplication(applicationDto.toEntity(), FILE))
+        when(mediaApplicationService.createApplication(applicationInbound, FILE))
             .thenReturn(application);
 
         ResponseEntity<MediaApplication> response =
-            mediaApplicationController.createApplication(applicationDto, FILE);
+            mediaApplicationController.createApplication(applicationInbound, FILE);
 
         assertEquals(HttpStatus.OK, response.getStatusCode(), STATUS_CODE_MATCH);
 

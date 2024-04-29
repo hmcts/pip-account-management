@@ -24,7 +24,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import uk.gov.hmcts.reform.pip.account.management.model.MediaApplication;
-import uk.gov.hmcts.reform.pip.account.management.model.MediaApplicationDto;
 import uk.gov.hmcts.reform.pip.account.management.model.MediaApplicationStatus;
 import uk.gov.hmcts.reform.pip.account.management.service.MediaApplicationService;
 import uk.gov.hmcts.reform.pip.model.authentication.roles.IsAdmin;
@@ -95,9 +94,9 @@ public class MediaApplicationController {
     @Operation(summary = "Create a new application")
     @PostMapping(produces = APPLICATION_JSON_VALUE, consumes = MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<MediaApplication> createApplication(
-        @ModelAttribute("application") @Valid MediaApplicationDto application,
+        @ModelAttribute("application") @Valid MediaApplication application,
         @RequestPart("file") MultipartFile file) {
-        return ResponseEntity.ok(mediaApplicationService.createApplication(application.toEntity(), file));
+        return ResponseEntity.ok(mediaApplicationService.createApplication(application, file));
     }
 
     @ApiResponse(responseCode = OK_ERROR_CODE, description = MEDIA_APPLICATION)
