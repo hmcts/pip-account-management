@@ -74,6 +74,24 @@ public class AccountController {
         return ResponseEntity.status(HttpStatus.CREATED).body(accountService.addUsers(users, issuerId));
     }
 
+    /**
+     * POST endpoint to create a new user in the P&I postgres database.
+     *
+     * @param issuerId The id of the user creating the account.
+     * @param users    The list of users to add to the database.
+     * @return the uuid of the created and added users with any errored accounts
+     */
+    @ApiResponse(responseCode = "201",
+        description = "CREATED_ACCOUNTS: [{Created User UUID's}]")
+    @Operation(summary = "Add a user to the P&I postgres database")
+    @PostMapping("/v2/pi")
+    @PreAuthorize("@authorisationService.userCanCreateAccount(#issuerId, #users)")
+    public ResponseEntity<Map<CreationEnum, List<?>>> createUsersV2(//NOSONAR
+        @RequestHeader(ISSUER_ID) String issuerId,
+        @RequestBody List<PiUser> users) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(accountService.addUsers(users, issuerId));
+    }
+
     @ApiResponse(responseCode = OK_CODE, description = PI_USER)
     @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description = "No user found with the "
             + "user Id: {userId}")

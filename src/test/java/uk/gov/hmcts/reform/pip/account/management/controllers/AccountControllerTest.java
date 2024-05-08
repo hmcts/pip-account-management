@@ -31,6 +31,7 @@ import static org.mockito.Mockito.when;
 class AccountControllerTest {
 
     private static final String EMAIL = "a@b.com";
+    private static final String ISSUER_ID = "123";
     private static final String STATUS_CODE_MATCH = "Status code responses should match";
 
     private static final String TEST_ID_STRING_1 = "0b8968b4-5c79-4e4e-8f66-f6a552d9fa67";
@@ -55,9 +56,29 @@ class AccountControllerTest {
 
         List<PiUser> users = List.of(user);
 
-        when(accountService.addUsers(users, "test")).thenReturn(usersMap);
+        when(accountService.addUsers(users, ISSUER_ID)).thenReturn(usersMap);
 
-        ResponseEntity<Map<CreationEnum, List<?>>> response = accountController.createUsers("test", users);
+        ResponseEntity<Map<CreationEnum, List<?>>> response = accountController.createUsers(ISSUER_ID, users);
+
+        assertEquals(HttpStatus.CREATED, response.getStatusCode(),
+                     STATUS_CODE_MATCH);
+
+        assertEquals(usersMap, response.getBody(), "Should return the expected user map");
+    }
+
+    @Test
+    void testCreateUserV2() {
+        Map<CreationEnum, List<?>> usersMap = new ConcurrentHashMap<>();
+        usersMap.put(CreationEnum.CREATED_ACCOUNTS, List.of(new PiUser()));
+
+        PiUser user = new PiUser();
+        user.setEmail(EMAIL);
+
+        List<PiUser> users = List.of(user);
+
+        when(accountService.addUsers(users, ISSUER_ID)).thenReturn(usersMap);
+
+        ResponseEntity<Map<CreationEnum, List<?>>> response = accountController.createUsersV2(ISSUER_ID, users);
 
         assertEquals(HttpStatus.CREATED, response.getStatusCode(),
                      STATUS_CODE_MATCH);
