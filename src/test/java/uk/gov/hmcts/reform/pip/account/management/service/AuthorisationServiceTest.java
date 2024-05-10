@@ -285,7 +285,7 @@ class AuthorisationServiceTest {
     }
 
     @Test
-    void testSystemAdminUserCannotUpdateAndDeleteThirdPartyAccount() {
+    void testSystemAdminUserCanUpdateAndDeleteThirdPartyAccount() {
         user.setRoles(Roles.VERIFIED_THIRD_PARTY_ALL);
         adminUser.setRoles(Roles.SYSTEM_ADMIN);
 
@@ -296,24 +296,16 @@ class AuthorisationServiceTest {
             SoftAssertions softly = new SoftAssertions();
 
             softly.assertThat(authorisationService.userCanDeleteAccount(USER_ID, ADMIN_USER_ID))
-                .as(CANNOT_DELETE_ACCOUNT_MESSAGE)
-                .isFalse();
+                .as(CAN_DELETE_ACCOUNT_MESSAGE)
+                .isTrue();
 
             softly.assertThat(authorisationService.userCanUpdateAccount(USER_ID, ADMIN_USER_ID))
-                .as(CANNOT_UPDATE_ACCOUNT_MESSAGE)
-                .isFalse();
+                .as(CAN_UPDATE_ACCOUNT_MESSAGE)
+                .isTrue();
 
             softly.assertThat(logCaptor.getErrorLogs())
-                .as(LOG_NOT_EMPTY_MESSAGE)
-                .hasSize(2);
-
-            softly.assertThat(logCaptor.getErrorLogs().get(0))
-                .as(LOG_MATCHED_MESSAGE)
-                .contains(String.format(DELETE_ERROR_LOG, ADMIN_USER_ID, USER_ID));
-
-            softly.assertThat(logCaptor.getErrorLogs().get(1))
-                .as(LOG_MATCHED_MESSAGE)
-                .contains(String.format(UPDATE_ERROR_LOG, ADMIN_USER_ID, USER_ID));
+                .as(LOG_EMPTY_MESSAGE)
+                .isEmpty();
 
             softly.assertAll();
         }
