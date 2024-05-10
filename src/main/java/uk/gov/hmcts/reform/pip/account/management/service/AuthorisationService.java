@@ -13,7 +13,6 @@ import java.util.UUID;
 
 import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
 import static uk.gov.hmcts.reform.pip.model.account.Roles.ALL_NON_RESTRICTED_ADMIN_ROLES;
-import static uk.gov.hmcts.reform.pip.model.account.Roles.ALL_NON_THIRD_PARTY_ROLES;
 
 @Service("authorisationService")
 @Slf4j
