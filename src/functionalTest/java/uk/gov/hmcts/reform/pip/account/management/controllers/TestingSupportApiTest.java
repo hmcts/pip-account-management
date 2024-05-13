@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
@@ -75,7 +76,6 @@ class TestingSupportApiTest {
     private static final String B2C_URL = "URL";
 
     private static final String ISSUER_HEADER = "x-issuer-id";
-    private static final String ISSUER_ID = "1234-1234-1234-1234";
 
     private static final String EMAIL_PREFIX = "TEST_789_";
     private static final String EMAIL = EMAIL_PREFIX + "user123@test.com";
@@ -94,6 +94,9 @@ class TestingSupportApiTest {
 
     private static final String UNAUTHORIZED_ROLE = "APPROLE_unknown.authorized";
     private static final String UNAUTHORIZED_USERNAME = "unauthorized_isAuthorized";
+
+    @Value("${system-admin-user-id}")
+    private String issuerId;
 
     @Autowired
     private MockMvc mockMvc;
@@ -144,7 +147,7 @@ class TestingSupportApiTest {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(TESTING_SUPPORT_CREATE_ACCOUNT_URL)
             .content(OBJECT_MAPPER.writeValueAsString(newAccount))
-            .header(ISSUER_HEADER, ISSUER_ID)
+            .header(ISSUER_HEADER, issuerId)
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult postResponse = mockMvc.perform(mockHttpServletRequestBuilder)
@@ -211,7 +214,7 @@ class TestingSupportApiTest {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(TESTING_SUPPORT_CREATE_ACCOUNT_URL)
             .content(OBJECT_MAPPER.writeValueAsString(newAccount))
-            .header(ISSUER_HEADER, ISSUER_ID)
+            .header(ISSUER_HEADER, issuerId)
             .contentType(MediaType.APPLICATION_JSON);
 
         mockMvc.perform(mockHttpServletRequestBuilder)
@@ -227,7 +230,7 @@ class TestingSupportApiTest {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(TESTING_SUPPORT_CREATE_ACCOUNT_URL)
             .content(OBJECT_MAPPER.writeValueAsString(newAccount))
-            .header(ISSUER_HEADER, ISSUER_ID)
+            .header(ISSUER_HEADER, issuerId)
             .contentType(MediaType.APPLICATION_JSON);
 
         mockMvc.perform(mockHttpServletRequestBuilder)
@@ -246,7 +249,7 @@ class TestingSupportApiTest {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(ACCOUNT_ADD_USER_URL)
             .content(OBJECT_MAPPER.writeValueAsString(List.of(user)))
-            .header(ISSUER_HEADER, ISSUER_ID)
+            .header(ISSUER_HEADER, issuerId)
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult postResponse = mockMvc.perform(mockHttpServletRequestBuilder)

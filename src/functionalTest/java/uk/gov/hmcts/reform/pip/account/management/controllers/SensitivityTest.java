@@ -6,6 +6,7 @@ import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
@@ -46,7 +47,6 @@ class SensitivityTest {
 
     private static final String ROOT_URL = "/account";
     private static final String PI_URL = ROOT_URL + "/add/pi";
-    private static final String ISSUER_ID = "abcde";
     private static final String ISSUER_HEADER = "x-issuer-id";
     private static final String EMAIL = "a@b.com";
     private static final String URL_FORMAT = "%s/isAuthorised/%s/%s/%s";
@@ -57,12 +57,15 @@ class SensitivityTest {
     private final ObjectMapper objectMapper = new ObjectMapper();
     private PiUser user;
 
+    @Value("${system-admin-user-id}")
+    private String issuerId;
+
     @SuppressWarnings("PMD.SignatureDeclareThrowsException")
     private String createUserAndGetId(PiUser validUser) throws Exception {
         MockHttpServletRequestBuilder setupRequest = MockMvcRequestBuilders
             .post(PI_URL)
             .content(objectMapper.writeValueAsString(List.of(validUser)))
-            .header(ISSUER_HEADER, ISSUER_ID)
+            .header(ISSUER_HEADER, issuerId)
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult userResponse = mockMvc.perform(setupRequest).andExpect(status().isCreated()).andReturn();

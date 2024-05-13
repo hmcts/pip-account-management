@@ -6,6 +6,7 @@ import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
@@ -52,7 +53,6 @@ class CustomAccountRetrievalTest {
     private static final String INVALID_EMAIL = "ab";
     private static final String SURNAME = "Surname";
     private static final String FORENAME = "Forename";
-    private static final String ISSUER_ID = "1234-1234-1234-1234";
     private static final String ISSUER_HEADER = "x-issuer-id";
 
     private static final String NOT_FOUND_STATUS_CODE_MESSAGE = "Status code does not match not found";
@@ -66,6 +66,9 @@ class CustomAccountRetrievalTest {
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final PiUser VALID_USER = createUser(true, UUID.randomUUID().toString());
+
+    @Value("${system-admin-user-id}")
+    private String issuerId;
 
     @Autowired
     private MockMvc mockMvc;
@@ -93,7 +96,7 @@ class CustomAccountRetrievalTest {
             MockMvcRequestBuilders
                 .post(PI_URL)
                 .content(OBJECT_MAPPER.writeValueAsString(List.of(VALID_USER)))
-                .header(ISSUER_HEADER, ISSUER_ID)
+                .header(ISSUER_HEADER, issuerId)
                 .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult responseCreateUser = mockMvc.perform(createRequest)
@@ -145,7 +148,7 @@ class CustomAccountRetrievalTest {
             MockMvcRequestBuilders
                 .post(PI_URL)
                 .content(OBJECT_MAPPER.writeValueAsString(List.of(VALID_USER)))
-                .header(ISSUER_HEADER, ISSUER_ID)
+                .header(ISSUER_HEADER, issuerId)
                 .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult responseCreateUser = mockMvc.perform(createRequest)
@@ -197,7 +200,7 @@ class CustomAccountRetrievalTest {
             MockMvcRequestBuilders
                 .post(PI_URL)
                 .content(OBJECT_MAPPER.writeValueAsString(List.of(validUser1, validUser2)))
-                .header(ISSUER_HEADER, ISSUER_ID)
+                .header(ISSUER_HEADER, issuerId)
                 .contentType(MediaType.APPLICATION_JSON);
         MvcResult responseCreateUser = mockMvc.perform(mockHttpServletRequestBuilder)
             .andExpect(status().isCreated()).andReturn();
@@ -242,7 +245,7 @@ class CustomAccountRetrievalTest {
             MockMvcRequestBuilders
                 .post(PI_URL)
                 .content(OBJECT_MAPPER.writeValueAsString(List.of(VALID_USER)))
-                .header(ISSUER_HEADER, ISSUER_ID)
+                .header(ISSUER_HEADER, issuerId)
                 .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult responseCreateUser = mockMvc.perform(createRequest)
