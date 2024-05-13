@@ -8,4 +8,3 @@ spring:
 
 admin:
   max-system-admin: ${MAX_SYSTEM_ADMIN_ACCOUNTS:2}
-system-admin-user-id: ${SYSTEM_ADMIN_USER_ID}

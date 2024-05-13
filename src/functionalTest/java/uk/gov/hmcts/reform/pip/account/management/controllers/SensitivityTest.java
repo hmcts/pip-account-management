@@ -57,6 +57,8 @@ class SensitivityTest {
     private static final String TRUE_MESSAGE = "Should return true";
     private static final String FALSE_MESSAGE = "Should return false";
 
+    private static final String SQL_SCRIPT = "classpath:add-system-admin.sql";
+
     private final ObjectMapper objectMapper = new ObjectMapper();
     private PiUser user;
 
@@ -101,7 +103,7 @@ class SensitivityTest {
     }
 
     @Test
-    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = "classpath:add-system-admin.sql")
+    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = SQL_SCRIPT)
     void testIsUserAuthenticatedReturnsTrueWhenPublicListAndThirdParty() throws Exception {
         user.setUserProvenance(UserProvenances.THIRD_PARTY);
         user.setRoles(Roles.VERIFIED_THIRD_PARTY_ALL);
@@ -129,7 +131,7 @@ class SensitivityTest {
     }
 
     @Test
-    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = "classpath:add-system-admin.sql")
+    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = SQL_SCRIPT)
     void testIsUserAuthenticatedReturnsTrueWhenPrivateListAndThirdParty() throws Exception {
         user.setUserProvenance(UserProvenances.THIRD_PARTY);
         user.setRoles(Roles.GENERAL_THIRD_PARTY);
@@ -166,7 +168,7 @@ class SensitivityTest {
     }
 
     @Test
-    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = "classpath:add-system-admin.sql")
+    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = SQL_SCRIPT)
     void testIsUserAuthenticatedReturnsTrueWhenClassifiedListAndThirdPartyPressRole() throws Exception {
         user.setUserProvenance(UserProvenances.THIRD_PARTY);
         user.setRoles(Roles.VERIFIED_THIRD_PARTY_PRESS);
@@ -176,7 +178,7 @@ class SensitivityTest {
     }
 
     @Test
-    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = "classpath:add-system-admin.sql")
+    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = SQL_SCRIPT)
     void testIsUserAuthenticatedReturnsFalseWhenClassifiedListAndThirdPartyNonPressRole() throws Exception {
         user.setUserProvenance(UserProvenances.THIRD_PARTY);
         user.setRoles(Roles.VERIFIED_THIRD_PARTY_CRIME_CFT);
