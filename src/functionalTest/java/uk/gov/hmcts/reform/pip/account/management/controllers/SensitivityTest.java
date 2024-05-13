@@ -6,12 +6,13 @@ import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
@@ -38,6 +39,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles(profiles = "functional")
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @WithMockUser(username = "admin", authorities = { "APPROLE_api.request.admin" })
 @SuppressWarnings("PMD.TooManyMethods")
 class SensitivityTest {
@@ -47,6 +49,7 @@ class SensitivityTest {
 
     private static final String ROOT_URL = "/account";
     private static final String PI_URL = ROOT_URL + "/add/pi";
+    private static final String ISSUER_ID = "87f907d2-eb28-42cc-b6e1-ae2b03f7bba2";
     private static final String ISSUER_HEADER = "x-issuer-id";
     private static final String EMAIL = "a@b.com";
     private static final String URL_FORMAT = "%s/isAuthorised/%s/%s/%s";
@@ -57,15 +60,12 @@ class SensitivityTest {
     private final ObjectMapper objectMapper = new ObjectMapper();
     private PiUser user;
 
-    @Value("${system-admin-user-id}")
-    private String issuerId;
-
     @SuppressWarnings("PMD.SignatureDeclareThrowsException")
     private String createUserAndGetId(PiUser validUser) throws Exception {
         MockHttpServletRequestBuilder setupRequest = MockMvcRequestBuilders
             .post(PI_URL)
             .content(objectMapper.writeValueAsString(List.of(validUser)))
-            .header(ISSUER_HEADER, issuerId)
+            .header(ISSUER_HEADER, ISSUER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult userResponse = mockMvc.perform(setupRequest).andExpect(status().isCreated()).andReturn();
@@ -101,6 +101,7 @@ class SensitivityTest {
     }
 
     @Test
+    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = "classpath:add-system-admin.sql")
     void testIsUserAuthenticatedReturnsTrueWhenPublicListAndThirdParty() throws Exception {
         user.setUserProvenance(UserProvenances.THIRD_PARTY);
         user.setRoles(Roles.VERIFIED_THIRD_PARTY_ALL);
@@ -128,6 +129,7 @@ class SensitivityTest {
     }
 
     @Test
+    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = "classpath:add-system-admin.sql")
     void testIsUserAuthenticatedReturnsTrueWhenPrivateListAndThirdParty() throws Exception {
         user.setUserProvenance(UserProvenances.THIRD_PARTY);
         user.setRoles(Roles.GENERAL_THIRD_PARTY);
@@ -164,6 +166,7 @@ class SensitivityTest {
     }
 
     @Test
+    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = "classpath:add-system-admin.sql")
     void testIsUserAuthenticatedReturnsTrueWhenClassifiedListAndThirdPartyPressRole() throws Exception {
         user.setUserProvenance(UserProvenances.THIRD_PARTY);
         user.setRoles(Roles.VERIFIED_THIRD_PARTY_PRESS);
@@ -173,6 +176,7 @@ class SensitivityTest {
     }
 
     @Test
+    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = "classpath:add-system-admin.sql")
     void testIsUserAuthenticatedReturnsFalseWhenClassifiedListAndThirdPartyNonPressRole() throws Exception {
         user.setUserProvenance(UserProvenances.THIRD_PARTY);
         user.setRoles(Roles.VERIFIED_THIRD_PARTY_CRIME_CFT);

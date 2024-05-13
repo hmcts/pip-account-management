@@ -18,8 +18,6 @@ def setupTestSecrets() {
       secret('app-pip-publication-services-scope', 'PUBLICATION_SERVICES_AZ_API'),
       secret('app-pip-subscription-management-scope', 'SUBSCRIPTION_MANAGEMENT_AZ_API'),
       secret('app-tenant', 'TENANT_ID'),
-      secret('test-system-admin-id', 'SYSTEM_ADMIN_USER_ID'),
-
     ]) {
     env.APP_URI = "${APP_URI}"
     env.CLIENT_ID = "${CLIENT_ID}"
@@ -27,7 +25,6 @@ def setupTestSecrets() {
     env.PUBLICATION_SERVICES_AZ_API = "${PUBLICATION_SERVICES_AZ_API}"
     env.SUBSCRIPTION_MANAGEMENT_AZ_API = "${SUBSCRIPTION_MANAGEMENT_AZ_API}"
     env.TENANT_ID = "${TENANT_ID}"
-    env.SYSTEM_ADMIN_USER_ID = "${SYSTEM_ADMIN_USER_ID}"
   }
 }
 

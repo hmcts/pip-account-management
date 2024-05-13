@@ -6,13 +6,13 @@ import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
@@ -53,6 +53,7 @@ class CustomAccountRetrievalTest {
     private static final String INVALID_EMAIL = "ab";
     private static final String SURNAME = "Surname";
     private static final String FORENAME = "Forename";
+    private static final String ISSUER_ID = "87f907d2-eb28-42cc-b6e1-ae2b03f7bba2";
     private static final String ISSUER_HEADER = "x-issuer-id";
 
     private static final String NOT_FOUND_STATUS_CODE_MESSAGE = "Status code does not match not found";
@@ -66,9 +67,6 @@ class CustomAccountRetrievalTest {
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final PiUser VALID_USER = createUser(true, UUID.randomUUID().toString());
-
-    @Value("${system-admin-user-id}")
-    private String issuerId;
 
     @Autowired
     private MockMvc mockMvc;
@@ -96,7 +94,7 @@ class CustomAccountRetrievalTest {
             MockMvcRequestBuilders
                 .post(PI_URL)
                 .content(OBJECT_MAPPER.writeValueAsString(List.of(VALID_USER)))
-                .header(ISSUER_HEADER, issuerId)
+                .header(ISSUER_HEADER, ISSUER_ID)
                 .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult responseCreateUser = mockMvc.perform(createRequest)
@@ -139,6 +137,7 @@ class CustomAccountRetrievalTest {
     }
 
     @Test
+    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = "classpath:add-system-admin.sql")
     void testGetAllThirdPartyAccounts() throws Exception {
         VALID_USER.setProvenanceUserId("THIRD_PARTY");
         VALID_USER.setUserProvenance(UserProvenances.THIRD_PARTY);
@@ -148,7 +147,7 @@ class CustomAccountRetrievalTest {
             MockMvcRequestBuilders
                 .post(PI_URL)
                 .content(OBJECT_MAPPER.writeValueAsString(List.of(VALID_USER)))
-                .header(ISSUER_HEADER, issuerId)
+                .header(ISSUER_HEADER, ISSUER_ID)
                 .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult responseCreateUser = mockMvc.perform(createRequest)
@@ -200,7 +199,7 @@ class CustomAccountRetrievalTest {
             MockMvcRequestBuilders
                 .post(PI_URL)
                 .content(OBJECT_MAPPER.writeValueAsString(List.of(validUser1, validUser2)))
-                .header(ISSUER_HEADER, issuerId)
+                .header(ISSUER_HEADER, ISSUER_ID)
                 .contentType(MediaType.APPLICATION_JSON);
         MvcResult responseCreateUser = mockMvc.perform(mockHttpServletRequestBuilder)
             .andExpect(status().isCreated()).andReturn();
@@ -245,7 +244,7 @@ class CustomAccountRetrievalTest {
             MockMvcRequestBuilders
                 .post(PI_URL)
                 .content(OBJECT_MAPPER.writeValueAsString(List.of(VALID_USER)))
-                .header(ISSUER_HEADER, issuerId)
+                .header(ISSUER_HEADER, ISSUER_ID)
                 .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult responseCreateUser = mockMvc.perform(createRequest)
