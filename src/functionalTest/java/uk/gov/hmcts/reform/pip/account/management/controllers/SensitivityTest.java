@@ -57,7 +57,7 @@ class SensitivityTest {
     private static final String TRUE_MESSAGE = "Should return true";
     private static final String FALSE_MESSAGE = "Should return false";
 
-    private static final String SQL_SCRIPT = "classpath:add-system-admin.sql";
+    private static final String SQL_SCRIPT = "classpath:add-admin-users.sql";
 
     private final ObjectMapper objectMapper = new ObjectMapper();
     private PiUser user;

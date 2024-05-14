@@ -137,7 +137,7 @@ class CustomAccountRetrievalTest {
     }
 
     @Test
-    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = "classpath:add-system-admin.sql")
+    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = "classpath:add-admin-users.sql")
     void testGetAllThirdPartyAccounts() throws Exception {
         VALID_USER.setProvenanceUserId("THIRD_PARTY");
         VALID_USER.setUserProvenance(UserProvenances.THIRD_PARTY);
