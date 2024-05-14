@@ -75,7 +75,7 @@ class TestingSupportApiTest {
     private static final String B2C_URL = "URL";
 
     private static final String ISSUER_HEADER = "x-issuer-id";
-    private static final String ISSUER_ID = "1234-1234-1234-1234";
+    private static final String ISSUER_ID = "87f907d2-eb28-42cc-b6e1-ae2b03f7bba2";
 
     private static final String EMAIL_PREFIX = "TEST_789_";
     private static final String EMAIL = EMAIL_PREFIX + "user123@test.com";
