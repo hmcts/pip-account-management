@@ -182,6 +182,7 @@ dependencyCheck {
 }
 
 ext {
+  log4JVersion = "2.23.1"
   reformLoggingVersion = "6.1.4"
 }
 
@@ -216,6 +217,10 @@ dependencies {
 
   implementation group: 'com.github.hmcts.java-logging', name: 'logging', version: reformLoggingVersion
   implementation group: 'com.github.hmcts.java-logging', name: 'logging-appinsights', version: reformLoggingVersion
+
+  implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: log4JVersion
+  implementation group: 'org.apache.logging.log4j', name: 'log4j-to-slf4j', version: log4JVersion
+
   implementation group: 'net.logstash.logback', name: 'logstash-logback-encoder', version: '7.4'
 
   // Include Azure storage blob for storing application images
