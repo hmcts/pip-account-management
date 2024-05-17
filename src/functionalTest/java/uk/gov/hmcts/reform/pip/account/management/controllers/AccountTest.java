@@ -99,7 +99,6 @@ class AccountTest {
     private static final String FIRST_NAME = "firstname";
     private static final UserProvenances PROVENANCE = UserProvenances.PI_AAD;
     private static final Roles ROLE = Roles.INTERNAL_ADMIN_CTSC;
-    private static final String ISSUER_ID = "87f907d2-eb28-42cc-b6e1-ae2b03f7bba2";
     private static final String SUPER_ADMIN_ISSUER_ID = "87f907d2-eb28-42cc-b6e1-ae2b03f7bba3";
     private static final String ISSUER_HEADER = "x-issuer-id";
     private static final String ADMIN_HEADER = "x-admin-id";
@@ -142,6 +141,18 @@ class AccountTest {
         return user;
     }
 
+    private PiUser createThirdPartyUser() {
+        PiUser user = new PiUser();
+        user.setForenames(GIVEN_NAME);
+        user.setSurname(SURNAME);
+        user.setUserProvenance(UserProvenances.THIRD_PARTY);
+        user.setProvenanceUserId(UUID.randomUUID().toString());
+        user.setEmail("");
+        user.setRoles(Roles.GENERAL_THIRD_PARTY);
+
+        return user;
+    }
+
     @BeforeAll
     static void startup() {
         OBJECT_MAPPER.findAndRegisterModules();
@@ -174,7 +185,7 @@ class AccountTest {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(PI_URL)
             .content(OBJECT_MAPPER.writeValueAsString(List.of(validUser)))
-            .header(ISSUER_HEADER, ISSUER_ID)
+            .header(ISSUER_HEADER, SYSTEM_ADMIN_ISSUER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isCreated()).andReturn();
@@ -192,7 +203,6 @@ class AccountTest {
 
     @Test
     void testCreateMultipleSuccessUsers() throws Exception {
-
         User userToReturn = new User();
         userToReturn.setId(ID);
         userToReturn.setGivenName(GIVEN_NAME);
@@ -214,7 +224,7 @@ class AccountTest {
             MockMvcRequestBuilders
                 .post(PI_URL)
                 .content(OBJECT_MAPPER.writeValueAsString(List.of(validUser1, validUser2)))
-                .header(ISSUER_HEADER, ISSUER_ID)
+                .header(ISSUER_HEADER, SYSTEM_ADMIN_ISSUER_ID)
                 .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isCreated()).andReturn();
@@ -257,7 +267,7 @@ class AccountTest {
             MockMvcRequestBuilders
                 .post(PI_URL)
                 .content(OBJECT_MAPPER.writeValueAsString(List.of(validUser1, validUser2)))
-                .header(ISSUER_HEADER, ISSUER_ID)
+                .header(ISSUER_HEADER, SYSTEM_ADMIN_ISSUER_ID)
                 .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isCreated()).andReturn();
@@ -280,7 +290,7 @@ class AccountTest {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(PI_URL)
             .content(OBJECT_MAPPER.writeValueAsString(List.of(invalidUser)))
-            .header(ISSUER_HEADER, ISSUER_ID)
+            .header(ISSUER_HEADER, SYSTEM_ADMIN_ISSUER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isCreated()).andReturn();
@@ -304,7 +314,7 @@ class AccountTest {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(PI_URL)
             .content(OBJECT_MAPPER.writeValueAsString(List.of(invalidUser1, invalidUser2)))
-            .header(ISSUER_HEADER, ISSUER_ID)
+            .header(ISSUER_HEADER, SYSTEM_ADMIN_ISSUER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isCreated()).andReturn();
@@ -327,7 +337,7 @@ class AccountTest {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(PI_URL)
             .content(OBJECT_MAPPER.writeValueAsString(List.of(validUser, invalidUser)))
-            .header(ISSUER_HEADER, ISSUER_ID)
+            .header(ISSUER_HEADER, SYSTEM_ADMIN_ISSUER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isCreated()).andReturn();
@@ -351,7 +361,7 @@ class AccountTest {
         MockHttpServletRequestBuilder setupRequest = MockMvcRequestBuilders
             .post(PI_URL)
             .content(OBJECT_MAPPER.writeValueAsString(List.of(validUser)))
-            .header(ISSUER_HEADER, ISSUER_ID)
+            .header(ISSUER_HEADER, SYSTEM_ADMIN_ISSUER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
         mockMvc.perform(setupRequest).andExpect(status().isCreated());
@@ -408,7 +418,7 @@ class AccountTest {
         MockHttpServletRequestBuilder setupRequest = MockMvcRequestBuilders
             .post(PI_URL)
             .content(OBJECT_MAPPER.writeValueAsString(List.of(validUser)))
-            .header(ISSUER_HEADER, ISSUER_ID)
+            .header(ISSUER_HEADER, SYSTEM_ADMIN_ISSUER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
         mockMvc.perform(setupRequest).andExpect(status().isCreated());
@@ -431,7 +441,7 @@ class AccountTest {
         MockHttpServletRequestBuilder setupRequest = MockMvcRequestBuilders
             .post(PI_URL)
             .content(OBJECT_MAPPER.writeValueAsString(List.of(validUser)))
-            .header(ISSUER_HEADER, ISSUER_ID)
+            .header(ISSUER_HEADER, SYSTEM_ADMIN_ISSUER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
         mockMvc.perform(setupRequest).andExpect(status().isCreated());
@@ -468,7 +478,7 @@ class AccountTest {
         MockHttpServletRequestBuilder setupRequest = MockMvcRequestBuilders
             .post(PI_URL)
             .content(OBJECT_MAPPER.writeValueAsString(List.of(validUser)))
-            .header(ISSUER_HEADER, ISSUER_ID)
+            .header(ISSUER_HEADER, SYSTEM_ADMIN_ISSUER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
         mockMvc.perform(setupRequest).andExpect(status().isCreated());
@@ -491,7 +501,7 @@ class AccountTest {
             MockMvcRequestBuilders
                 .post(PI_URL)
                 .content(OBJECT_MAPPER.writeValueAsString(List.of(validUser)))
-                .header(ISSUER_HEADER, ISSUER_ID)
+                .header(ISSUER_HEADER, SYSTEM_ADMIN_ISSUER_ID)
                 .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult responseCreateUser = mockMvc.perform(createRequest)
@@ -536,7 +546,7 @@ class AccountTest {
             MockMvcRequestBuilders
                 .post(PI_URL)
                 .content(OBJECT_MAPPER.writeValueAsString(List.of(validUser)))
-                .header(ISSUER_HEADER, ISSUER_ID)
+                .header(ISSUER_HEADER, SYSTEM_ADMIN_ISSUER_ID)
                 .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult responseCreateUser = mockMvc.perform(createRequest)
@@ -579,7 +589,7 @@ class AccountTest {
             MockMvcRequestBuilders
                 .post(PI_URL)
                 .content(OBJECT_MAPPER.writeValueAsString(List.of(validUser)))
-                .header(ISSUER_HEADER, ISSUER_ID)
+                .header(ISSUER_HEADER, SYSTEM_ADMIN_ISSUER_ID)
                 .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult responseCreateUser = mockMvc.perform(createRequest)
@@ -628,7 +638,7 @@ class AccountTest {
             MockMvcRequestBuilders
                 .post(PI_URL)
                 .content(OBJECT_MAPPER.writeValueAsString(List.of(validUser)))
-                .header(ISSUER_HEADER, ISSUER_ID)
+                .header(ISSUER_HEADER, SYSTEM_ADMIN_ISSUER_ID)
                 .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult responseCreateUser = mockMvc.perform(createRequest)
@@ -690,7 +700,7 @@ class AccountTest {
             MockMvcRequestBuilders
                 .post(PI_URL)
                 .content(OBJECT_MAPPER.writeValueAsString(List.of(validUser)))
-                .header(ISSUER_HEADER, ISSUER_ID)
+                .header(ISSUER_HEADER, SYSTEM_ADMIN_ISSUER_ID)
                 .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult responseCreateUser = mockMvc.perform(createRequest)
@@ -726,7 +736,7 @@ class AccountTest {
             MockMvcRequestBuilders
                 .post(PI_URL)
                 .content(OBJECT_MAPPER.writeValueAsString(List.of(validUser)))
-                .header(ISSUER_HEADER, ISSUER_ID)
+                .header(ISSUER_HEADER, SYSTEM_ADMIN_ISSUER_ID)
                 .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult responseCreateUser = mockMvc.perform(createRequest)
@@ -754,7 +764,7 @@ class AccountTest {
             MockMvcRequestBuilders
                 .post(PI_URL)
                 .content(OBJECT_MAPPER.writeValueAsString(List.of(validUser)))
-                .header(ISSUER_HEADER, ISSUER_ID)
+                .header(ISSUER_HEADER, SYSTEM_ADMIN_ISSUER_ID)
                 .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult responseCreateUser = mockMvc.perform(createRequest)
@@ -785,7 +795,7 @@ class AccountTest {
             MockMvcRequestBuilders
                 .post(PI_URL)
                 .content(OBJECT_MAPPER.writeValueAsString(List.of(validUser)))
-                .header(ISSUER_HEADER, ISSUER_ID)
+                .header(ISSUER_HEADER, SYSTEM_ADMIN_ISSUER_ID)
                 .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult responseCreateUser = mockMvc.perform(createRequest)
@@ -821,6 +831,29 @@ class AccountTest {
 
         assertEquals(NOT_FOUND.value(), mvcResult.getResponse().getStatus(),
                      NOT_FOUND_STATUS_CODE_MESSAGE
+        );
+    }
+
+    @Test
+    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = "classpath:add-admin-users.sql")
+    void testCreateThirdPartyUser() throws Exception {
+        PiUser thirdPartyUser = createThirdPartyUser();
+        MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
+            .post(PI_URL)
+            .content(OBJECT_MAPPER.writeValueAsString(List.of(thirdPartyUser)))
+            .header(ISSUER_HEADER, SYSTEM_ADMIN_ISSUER_ID)
+            .contentType(MediaType.APPLICATION_JSON);
+
+        MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isCreated()).andReturn();
+        Map<CreationEnum, List<Object>> mappedResponse =
+            OBJECT_MAPPER.readValue(
+                response.getResponse().getContentAsString(),
+                new TypeReference<>() {
+                }
+            );
+
+        assertEquals(1, mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).size(),
+                     "1 User should be created"
         );
     }
 
@@ -936,7 +969,7 @@ class AccountTest {
             MockMvcRequestBuilders
                 .post(PI_URL)
                 .content(OBJECT_MAPPER.writeValueAsString(List.of(superAdminUser)))
-                .header(ISSUER_HEADER, ISSUER_ID)
+                .header(ISSUER_HEADER, SYSTEM_ADMIN_ISSUER_ID)
                 .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult responseCreateUser = mockMvc.perform(createRequest)
