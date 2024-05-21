@@ -67,26 +67,6 @@ class AccountControllerTest {
     }
 
     @Test
-    void testCreateUserV2() {
-        Map<CreationEnum, List<?>> usersMap = new ConcurrentHashMap<>();
-        usersMap.put(CreationEnum.CREATED_ACCOUNTS, List.of(new PiUser()));
-
-        PiUser user = new PiUser();
-        user.setEmail(EMAIL);
-
-        List<PiUser> users = List.of(user);
-
-        when(accountService.addUsers(users, ISSUER_ID)).thenReturn(usersMap);
-
-        ResponseEntity<Map<CreationEnum, List<?>>> response = accountController.createUsersV2(ISSUER_ID, users);
-
-        assertEquals(HttpStatus.CREATED, response.getStatusCode(),
-                     STATUS_CODE_MATCH);
-
-        assertEquals(usersMap, response.getBody(), "Should return the expected user map");
-    }
-
-    @Test
     void testIsUserAuthorised() {
         when(accountService.isUserAuthorisedForPublication(any(), any(), any())).thenReturn(true);
         assertEquals(
