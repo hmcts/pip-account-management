@@ -5,6 +5,8 @@ import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -13,10 +15,12 @@ import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.NotFo
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -38,6 +42,9 @@ class AuthorisationServiceTest {
     private static final String CAN_UPDATE_ACCOUNT_MESSAGE = "User should be able to update account";
     private static final String CANNOT_UPDATE_ACCOUNT_MESSAGE = "User should not be able to update account";
 
+    private static final String CAN_CREATE_ACCOUNT_MESSAGE = "User should be able to create account";
+    private static final String CANNOT_CREATE_ACCOUNT_MESSAGE = "User should not be able to create account";
+
     private static final String LOG_EMPTY_MESSAGE = "Error log should be empty";
     private static final String LOG_NOT_EMPTY_MESSAGE = "Error log should not be empty";
     private static final String LOG_MATCHED_MESSAGE = "Error log message does not match";
@@ -56,6 +63,117 @@ class AuthorisationServiceTest {
     static void setup() {
         user.setUserId(USER_ID);
         adminUser.setUserId(ADMIN_USER_ID);
+    }
+
+    @ParameterizedTest
+    @EnumSource(Roles.class)
+    void testSystemAdminCanCreateAnyRole(Roles role) {
+        user.setRoles(role);
+        adminUser.setRoles(Roles.SYSTEM_ADMIN);
+
+        lenient().when(userRepository.findByUserId(ADMIN_USER_ID)).thenReturn(Optional.of(adminUser));
+
+        try (LogCaptor logCaptor = LogCaptor.forClass(AuthorisationService.class)) {
+            SoftAssertions softly = new SoftAssertions();
+
+            softly.assertThat(authorisationService.userCanCreateAccount(ADMIN_USER_ID, List.of(user)))
+                .as(CAN_CREATE_ACCOUNT_MESSAGE)
+                .isTrue();
+
+            softly.assertThat(logCaptor.getErrorLogs())
+                .as(LOG_MATCHED_MESSAGE)
+                .isEmpty();
+
+            softly.assertAll();
+        }
+    }
+
+    @Test
+    void testSuperAdminCannotCreateThirdPartyRole() {
+        user.setRoles(Roles.GENERAL_THIRD_PARTY);
+        adminUser.setRoles(Roles.INTERNAL_SUPER_ADMIN_CTSC);
+
+        when(userRepository.findByUserId(ADMIN_USER_ID)).thenReturn(Optional.of(adminUser));
+
+        try (LogCaptor logCaptor = LogCaptor.forClass(AuthorisationService.class)) {
+            SoftAssertions softly = new SoftAssertions();
+
+            softly.assertThat(authorisationService.userCanCreateAccount(ADMIN_USER_ID, List.of(user)))
+                .as(CANNOT_CREATE_ACCOUNT_MESSAGE)
+                .isFalse();
+
+            softly.assertThat(logCaptor.getErrorLogs())
+                .as(LOG_NOT_EMPTY_MESSAGE)
+                .hasSize(1);
+
+            softly.assertAll();
+        }
+    }
+
+    @Test
+    void testAdminCannotCreateThirdPartyRole() {
+        user.setRoles(Roles.VERIFIED_THIRD_PARTY_ALL);
+        adminUser.setRoles(Roles.INTERNAL_ADMIN_CTSC);
+
+        when(userRepository.findByUserId(ADMIN_USER_ID)).thenReturn(Optional.of(adminUser));
+
+        try (LogCaptor logCaptor = LogCaptor.forClass(AuthorisationService.class)) {
+            SoftAssertions softly = new SoftAssertions();
+
+            softly.assertThat(authorisationService.userCanCreateAccount(ADMIN_USER_ID, List.of(user)))
+                .as(CANNOT_CREATE_ACCOUNT_MESSAGE)
+                .isFalse();
+
+            softly.assertThat(logCaptor.getErrorLogs())
+                .as(LOG_NOT_EMPTY_MESSAGE)
+                .hasSize(1);
+
+            softly.assertAll();
+        }
+    }
+
+    @Test
+    void testVerifiedUserCannotCreateThirdPartyRole() {
+        user.setRoles(Roles.VERIFIED_THIRD_PARTY_CFT);
+        adminUser.setRoles(Roles.VERIFIED);
+
+        when(userRepository.findByUserId(ADMIN_USER_ID)).thenReturn(Optional.of(adminUser));
+
+        try (LogCaptor logCaptor = LogCaptor.forClass(AuthorisationService.class)) {
+            SoftAssertions softly = new SoftAssertions();
+
+            softly.assertThat(authorisationService.userCanCreateAccount(ADMIN_USER_ID, List.of(user)))
+                .as(CANNOT_CREATE_ACCOUNT_MESSAGE)
+                .isFalse();
+
+            softly.assertThat(logCaptor.getErrorLogs())
+                .as(LOG_NOT_EMPTY_MESSAGE)
+                .hasSize(1);
+
+            softly.assertAll();
+        }
+    }
+
+    @Test
+    void testThirdPartyUserCannotCreateThirdPartyRole() {
+        user.setRoles(Roles.VERIFIED_THIRD_PARTY_PRESS);
+        adminUser.setRoles(Roles.VERIFIED_THIRD_PARTY_PRESS);
+
+        when(userRepository.findByUserId(ADMIN_USER_ID)).thenReturn(Optional.of(adminUser));
+
+        try (LogCaptor logCaptor = LogCaptor.forClass(AuthorisationService.class)) {
+            SoftAssertions softly = new SoftAssertions();
+
+            softly.assertThat(authorisationService.userCanCreateAccount(ADMIN_USER_ID, List.of(user)))
+                .as(CANNOT_CREATE_ACCOUNT_MESSAGE)
+                .isFalse();
+
+            softly.assertThat(logCaptor.getErrorLogs())
+                .as(LOG_NOT_EMPTY_MESSAGE)
+                .hasSize(1);
+
+            softly.assertAll();
+        }
     }
 
     @Test
