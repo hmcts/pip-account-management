@@ -68,6 +68,7 @@ public class AccountController {
             description = "CREATED_ACCOUNTS: [{Created User UUID's}]")
     @Operation(summary = "Add a user to the P&I postgres database")
     @PostMapping("/add/pi")
+    @PreAuthorize("@authorisationService.userCanCreateAccount(#issuerId, #users)")
     public ResponseEntity<Map<CreationEnum, List<?>>> createUsers(//NOSONAR
         @RequestHeader(ISSUER_ID) String issuerId,
         @RequestBody List<PiUser> users) {

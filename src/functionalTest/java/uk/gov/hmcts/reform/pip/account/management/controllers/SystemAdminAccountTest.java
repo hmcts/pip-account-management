@@ -106,7 +106,7 @@ class SystemAdminAccountTest {
     }
 
     @Test
-    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = "classpath:add-system-admin.sql")
+    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = "classpath:add-admin-users.sql")
     void testCreateSystemAdminAccount() throws Exception {
         SystemAdminAccount systemAdmin = new SystemAdminAccount();
         systemAdmin.setFirstName(TEST_SYS_ADMIN_FIRSTNAME);
@@ -135,7 +135,7 @@ class SystemAdminAccountTest {
     }
 
     @Test
-    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = "classpath:add-system-admin.sql")
+    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = "classpath:add-admin-users.sql")
     void testCreateSystemAdminAccountRequestExceeded() throws Exception {
         SystemAdminAccount systemAdmin1 = new SystemAdminAccount();
         systemAdmin1.setFirstName("testSysAdminFirstname1");
@@ -173,7 +173,7 @@ class SystemAdminAccountTest {
     }
 
     @Test
-    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = "classpath:add-system-admin.sql")
+    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = "classpath:add-admin-users.sql")
     void testGetAzureUserInfo() throws Exception {
         SystemAdminAccount systemAdmin = new SystemAdminAccount();
         systemAdmin.setFirstName(TEST_SYS_ADMIN_FIRSTNAME);
