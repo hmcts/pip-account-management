@@ -8,11 +8,11 @@ import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.NotFo
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 
+import java.util.List;
 import java.util.UUID;
 
 import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
 import static uk.gov.hmcts.reform.pip.model.account.Roles.ALL_NON_RESTRICTED_ADMIN_ROLES;
-import static uk.gov.hmcts.reform.pip.model.account.Roles.ALL_NON_THIRD_PARTY_ROLES;
 
 @Service("authorisationService")
 @Slf4j
@@ -22,6 +22,22 @@ public class AuthorisationService {
     @Autowired
     public AuthorisationService(UserRepository userRepository) {
         this.userRepository = userRepository;
+    }
+
+    public boolean userCanCreateAccount(UUID adminUserId, List<PiUser> users) {
+        for (PiUser user : users) {
+            // Restrict third party user creation to SYSTEM_ADMIN only
+            if (Roles.getAllThirdPartyRoles().contains(user.getRoles())) {
+                Roles adminUserRole = getUserRole(adminUserId);
+                if (!Roles.SYSTEM_ADMIN.equals(adminUserRole)) {
+                    log.error(writeLog(
+                        String.format("User with ID %s is forbidden to create third party user", adminUserId)
+                    ));
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     public boolean userCanDeleteAccount(UUID userId, UUID adminUserId) {
@@ -62,7 +78,7 @@ public class AuthorisationService {
         Roles adminUserRole = getUserRole(adminUserId);
 
         if (adminUserRole == Roles.SYSTEM_ADMIN) {
-            return ALL_NON_THIRD_PARTY_ROLES.contains(userRole);
+            return true;
         } else if (adminUserRole == Roles.INTERNAL_SUPER_ADMIN_LOCAL
             || adminUserRole == Roles.INTERNAL_SUPER_ADMIN_CTSC) {
             return ALL_NON_RESTRICTED_ADMIN_ROLES.contains(userRole);

@@ -105,7 +105,7 @@ class AccountFilteringServiceTest {
         List<Roles> emptyRoleList = new ArrayList<>();
         Page<PiUser> page = new PageImpl<>(List.of(PI_USER), pageable, List.of(PI_USER).size());
         when(userRepository.findAllByEmailLikeIgnoreCaseAndUserProvenanceInAndRolesInAndProvenanceUserIdLike(
-            argThat(arg -> "%%".equals(arg)),
+            argThat("%%"::equals),
             any(),
             any(),
             any(),

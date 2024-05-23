@@ -12,6 +12,7 @@ import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
@@ -52,7 +53,7 @@ class CustomAccountRetrievalTest {
     private static final String INVALID_EMAIL = "ab";
     private static final String SURNAME = "Surname";
     private static final String FORENAME = "Forename";
-    private static final String ISSUER_ID = "1234-1234-1234-1234";
+    private static final String ISSUER_ID = "87f907d2-eb28-42cc-b6e1-ae2b03f7bba2";
     private static final String ISSUER_HEADER = "x-issuer-id";
 
     private static final String NOT_FOUND_STATUS_CODE_MESSAGE = "Status code does not match not found";
@@ -136,6 +137,7 @@ class CustomAccountRetrievalTest {
     }
 
     @Test
+    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = "classpath:add-admin-users.sql")
     void testGetAllThirdPartyAccounts() throws Exception {
         VALID_USER.setProvenanceUserId("THIRD_PARTY");
         VALID_USER.setUserProvenance(UserProvenances.THIRD_PARTY);
