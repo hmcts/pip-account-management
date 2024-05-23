@@ -615,6 +615,38 @@ class AccountTest {
     }
 
     @Test
+    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = "classpath:add-admin-users.sql")
+    void testV2SystemAdminDeletesThirdPartyUser() throws Exception {
+
+        PiUser thirdPartyUser = createThirdPartyUser();
+        MockHttpServletRequestBuilder createRequest = MockMvcRequestBuilders
+            .post(PI_URL)
+            .content(OBJECT_MAPPER.writeValueAsString(List.of(thirdPartyUser)))
+            .header(ISSUER_HEADER, SYSTEM_ADMIN_ISSUER_ID)
+            .contentType(MediaType.APPLICATION_JSON);
+
+        MvcResult responseCreateUser = mockMvc.perform(createRequest)
+            .andExpect(status().isCreated()).andReturn();
+        Map<CreationEnum, List<Object>> mappedResponse =
+            OBJECT_MAPPER.readValue(
+                responseCreateUser.getResponse().getContentAsString(),
+                new TypeReference<>() {
+                }
+            );
+
+        String thirdPartyUserIdUserId = mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).get(0).toString();
+
+        MockHttpServletRequestBuilder deleteRequest = MockMvcRequestBuilders
+            .delete(ROOT_URL + DELETE_PATH_V2 + thirdPartyUserIdUserId)
+            .header(ADMIN_HEADER, SYSTEM_ADMIN_ISSUER_ID);
+
+        MvcResult mvcResult = mockMvc.perform(deleteRequest).andExpect(status().isOk()).andReturn();
+        assertEquals(DELETE_USER_SUCCESS, mvcResult.getResponse().getContentAsString(),
+                     DELETE_USER_FAILURE
+        );
+    }
+
+    @Test
     void testV2SystemAdminDeletesSuperAdminUser() throws Exception {
         superAdminUser.setUserProvenance(UserProvenances.CFT_IDAM);
         String superAdminUserId = getSuperAdminUserId(superAdminUser);

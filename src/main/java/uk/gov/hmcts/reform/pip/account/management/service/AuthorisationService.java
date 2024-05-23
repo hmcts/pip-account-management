@@ -13,7 +13,6 @@ import java.util.UUID;
 
 import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
 import static uk.gov.hmcts.reform.pip.model.account.Roles.ALL_NON_RESTRICTED_ADMIN_ROLES;
-import static uk.gov.hmcts.reform.pip.model.account.Roles.ALL_NON_THIRD_PARTY_ROLES;
 
 @Service("authorisationService")
 @Slf4j
@@ -79,7 +78,7 @@ public class AuthorisationService {
         Roles adminUserRole = getUserRole(adminUserId);
 
         if (adminUserRole == Roles.SYSTEM_ADMIN) {
-            return ALL_NON_THIRD_PARTY_ROLES.contains(userRole);
+            return true;
         } else if (adminUserRole == Roles.INTERNAL_SUPER_ADMIN_LOCAL
             || adminUserRole == Roles.INTERNAL_SUPER_ADMIN_CTSC) {
             return ALL_NON_RESTRICTED_ADMIN_ROLES.contains(userRole);
