@@ -308,8 +308,7 @@ class AccountServiceTest {
     void testDeleteAccountNotFound() {
         try {
             Object result = accountService.deleteAccount(UUID.randomUUID());
-            assertThrows(NotFoundException.class, () ->
-                result.toString(), "Expected NotFoundException to be thrown");
+            assertThrows(NotFoundException.class, result::toString, "Expected NotFoundException to be thrown");
         } catch (NotFoundException e) {
             assertTrue(e.getMessage()
                            .contains("User with supplied ID could not be found"),
