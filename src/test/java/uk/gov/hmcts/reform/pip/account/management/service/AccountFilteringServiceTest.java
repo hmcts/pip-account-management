@@ -32,6 +32,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.hmcts.reform.pip.model.account.Roles.ALL_NON_RESTRICTED_ADMIN_ROLES;
 import static uk.gov.hmcts.reform.pip.model.account.UserProvenances.PI_AAD;
+import static uk.gov.hmcts.reform.pip.model.account.UserProvenances.SSO;
 
 @ExtendWith(MockitoExtension.class)
 class AccountFilteringServiceTest {
@@ -204,6 +205,45 @@ class AccountFilteringServiceTest {
                    "Exception message thrown does not contain email");
 
         assertTrue(notFoundException.getMessage().contains(PI_AAD.toString()),
+                   "Exception message thrown does not contain provenance");
+    }
+
+    @Test
+    void testGetAdminUserByEmailAndProvenanceSSO() {
+        PiUser user = new PiUser();
+        user.setEmail(EMAIL);
+        user.setUserProvenance(SSO);
+
+        when(userRepository.findByEmailIgnoreCaseAndUserProvenanceAndRolesIn(EMAIL, SSO,
+                                                                             ALL_NON_RESTRICTED_ADMIN_ROLES))
+            .thenReturn(Optional.of(user));
+
+        PiUser returnedUser = accountFilteringService.getAdminUserByEmailAndProvenance(
+            EMAIL, SSO
+        );
+        assertEquals(user, returnedUser, RETURN_USER_ERROR);
+    }
+
+    @Test
+    void testGetAdminUserByEmailAndProvenanceNotFoundSSO() {
+        PiUser user = new PiUser();
+        user.setEmail(EMAIL);
+        user.setUserProvenance(SSO);
+
+        when(userRepository.findByEmailIgnoreCaseAndUserProvenanceAndRolesIn(EMAIL, SSO,
+                                                                             ALL_NON_RESTRICTED_ADMIN_ROLES))
+            .thenReturn(Optional.empty());
+
+        NotFoundException notFoundException = assertThrows(
+            NotFoundException.class,
+            () -> accountFilteringService.getAdminUserByEmailAndProvenance(EMAIL, SSO),
+            USER_NOT_FOUND_EXCEPTION_MESSAGE
+        );
+
+        assertTrue(notFoundException.getMessage().contains("t***@hmcts.net"),
+                   "Exception message thrown does not contain email");
+
+        assertTrue(notFoundException.getMessage().contains(SSO.toString()),
                    "Exception message thrown does not contain provenance");
     }
 }

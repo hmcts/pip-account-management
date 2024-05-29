@@ -122,6 +122,17 @@ class SensitivityServiceTest {
             "Returned true for classified sensitivity when verified with incorrect provenance");
     }
 
+    @Test
+    void checkClassifiedReturnsFalseWhenVerifiedButProvenanceIsSSO() {
+        PiUser piUser = new PiUser();
+        piUser.setRoles(Roles.VERIFIED);
+        piUser.setUserProvenance(UserProvenances.SSO);
+
+        assertFalse(
+            sensitivityService.checkAuthorisation(piUser, ListType.CIVIL_DAILY_CAUSE_LIST, Sensitivity.CLASSIFIED),
+            "Returned true for classified sensitivity when verified but with SSO provenance");
+    }
+
     @ParameterizedTest
     @MethodSource("parameters")
     void checkClassifiedReturnsTrueForAllowedThirdPartyRolesOnly(ListType listType, Roles roles,
