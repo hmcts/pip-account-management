@@ -46,6 +46,28 @@ class SensitivityServiceTest {
             "Returned false for public sensitivity");
     }
 
+    @Test
+    void checkPublicReturnsTrueWhenVerifiedSSO() {
+        PiUser piUser = new PiUser();
+        piUser.setRoles(Roles.VERIFIED);
+        piUser.setUserProvenance(UserProvenances.SSO);
+
+        assertTrue(
+            sensitivityService.checkAuthorisation(piUser, ListType.CIVIL_DAILY_CAUSE_LIST, Sensitivity.PUBLIC),
+            "Returned false for public sensitivity");
+    }
+
+    @Test
+    void checkPublicReturnsTrueWhenNotVerifiedSSO() {
+        PiUser piUser = new PiUser();
+        piUser.setRoles(Roles.INTERNAL_ADMIN_CTSC);
+        piUser.setUserProvenance(UserProvenances.SSO);
+
+        assertTrue(
+            sensitivityService.checkAuthorisation(piUser, ListType.CIVIL_DAILY_CAUSE_LIST, Sensitivity.PUBLIC),
+            "Returned false for public sensitivity");
+    }
+
     @ParameterizedTest
     @EnumSource(value = Roles.class, names = {
         "GENERAL_THIRD_PARTY", "VERIFIED_THIRD_PARTY_CRIME", "VERIFIED_THIRD_PARTY_CFT",
@@ -67,6 +89,17 @@ class SensitivityServiceTest {
         PiUser piUser = new PiUser();
         piUser.setRoles(Roles.INTERNAL_ADMIN_CTSC);
         piUser.setUserProvenance(UserProvenances.PI_AAD);
+
+        assertFalse(
+            sensitivityService.checkAuthorisation(piUser, ListType.CIVIL_DAILY_CAUSE_LIST, Sensitivity.PRIVATE),
+            "Returned true for private sensitivity when not verified");
+    }
+
+    @Test
+    void checkPrivateReturnsFalseWhenNotVerifiedSSO() {
+        PiUser piUser = new PiUser();
+        piUser.setRoles(Roles.INTERNAL_ADMIN_CTSC);
+        piUser.setUserProvenance(UserProvenances.SSO);
 
         assertFalse(
             sensitivityService.checkAuthorisation(piUser, ListType.CIVIL_DAILY_CAUSE_LIST, Sensitivity.PRIVATE),
@@ -131,6 +164,17 @@ class SensitivityServiceTest {
         assertFalse(
             sensitivityService.checkAuthorisation(piUser, ListType.CIVIL_DAILY_CAUSE_LIST, Sensitivity.CLASSIFIED),
             "Returned true for classified sensitivity when verified but with SSO provenance");
+    }
+
+    @Test
+    void checkClassifiedReturnsFalseWhenAdminButProvenanceIsSSO() {
+        PiUser piUser = new PiUser();
+        piUser.setRoles(Roles.INTERNAL_ADMIN_CTSC);
+        piUser.setUserProvenance(UserProvenances.SSO);
+
+        assertFalse(
+            sensitivityService.checkAuthorisation(piUser, ListType.CIVIL_DAILY_CAUSE_LIST, Sensitivity.CLASSIFIED),
+            "Returned true for classified sensitivity when admin user has SSO provenance");
     }
 
     @ParameterizedTest
