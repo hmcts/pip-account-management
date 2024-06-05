@@ -209,7 +209,7 @@ class AccountFilteringServiceTest {
     }
 
     @Test
-    void testGetAdminUserByEmailAndProvenanceSSO() {
+    void testGetAdminUserByEmailAndProvenanceSso() {
         PiUser user = new PiUser();
         user.setEmail(EMAIL);
         user.setUserProvenance(SSO);
@@ -225,7 +225,7 @@ class AccountFilteringServiceTest {
     }
 
     @Test
-    void testGetAdminUserByEmailAndProvenanceNotFoundSSO() {
+    void testGetAdminUserByEmailAndProvenanceNotFoundSso() {
         PiUser user = new PiUser();
         user.setEmail(EMAIL);
         user.setUserProvenance(SSO);
