@@ -9,7 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
 import uk.gov.hmcts.reform.pip.account.management.model.SystemAdminAccount;
-import uk.gov.hmcts.reform.pip.account.management.service.SystemAdminAccountService;
+import uk.gov.hmcts.reform.pip.account.management.service.SystemAdminB2CAccountService;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
 
@@ -17,36 +17,34 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class SystemAdminAccountControllerTest {
+class SystemAdminB2CAccountControllerTest {
     private static final String TEST_EMAIL = "test@user.com";
-    private static final String TEST_PROVENANCE_ID = "1234";
     private static final String STATUS_CODE_MATCH = "Status code responses should match";
-    private static final String RESPONSE_BODY_MATCH = "Expected user does not match";
 
     @Mock
-    private SystemAdminAccountService systemAdminAccountService;
+    private SystemAdminB2CAccountService systemAdminAccountService;
 
     @InjectMocks
-    private SystemAdminAccountController systemAdminAccountController;
+    private SystemAdminB2CAccountController systemAdminAccountController;
 
     @Test
     void testCreateSystemAdminAccount() {
-        PiUser expectedUser = new PiUser();
-        expectedUser.setEmail(TEST_EMAIL);
-        expectedUser.setRoles(Roles.SYSTEM_ADMIN);
-        expectedUser.setUserProvenance(UserProvenances.SSO);
-        expectedUser.setProvenanceUserId(TEST_PROVENANCE_ID);
+        PiUser testUser = new PiUser();
+        testUser.setEmail(TEST_EMAIL);
+        testUser.setRoles(Roles.SYSTEM_ADMIN);
+        testUser.setUserProvenance(UserProvenances.PI_AAD);
 
-        SystemAdminAccount testAccount = new SystemAdminAccount(TEST_EMAIL, "Test", "User", TEST_PROVENANCE_ID);
+        SystemAdminAccount testAccount = new SystemAdminAccount(TEST_EMAIL,
+                                                                "Test", "User");
 
         String testIssuerId = "1234";
-        when(systemAdminAccountService.addSystemAdminAccount(testAccount)).thenReturn(expectedUser);
+        when(systemAdminAccountService.addSystemAdminAccount(testAccount, testIssuerId)).thenReturn(testUser);
 
         ResponseEntity<? extends PiUser> response = systemAdminAccountController.createSystemAdminAccount(
             testIssuerId, testAccount
         );
 
         assertEquals(HttpStatus.OK, response.getStatusCode(), STATUS_CODE_MATCH);
-        assertEquals(expectedUser, response.getBody(), RESPONSE_BODY_MATCH);
+        assertEquals(testUser, response.getBody(), "Should return the created piUser");
     }
 }
