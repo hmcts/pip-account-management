@@ -20,8 +20,6 @@ import uk.gov.hmcts.reform.pip.model.authentication.roles.IsAdmin;
 @RestController
 @Tag(name = "Account Management - API for managing system admin accounts")
 @RequestMapping("/account")
-@ApiResponse(responseCode = "401", description = "Invalid access credential")
-@ApiResponse(responseCode = "403", description = "User has not been authorized")
 @Validated
 @IsAdmin
 @SecurityRequirement(name = "bearerAuth")
@@ -39,14 +37,16 @@ public class SystemAdminAccountController {
     }
 
     /**
-     * Create a system admin account on the user table.
+     * Create a system admin account for SSO user on the user table.
      *
-     * @param issuerId The id of the user creating the accounts.
+     * @param issuerId The ID of the user creating the accounts.
      * @param account The account to add.
      * @return The PiUser that's been added, or an ErroredPiUser if it failed to add.
      */
     @ApiResponse(responseCode = OK_CODE, description = PI_USER)
     @ApiResponse(responseCode = BAD_REQUEST_CODE, description = "{ErroredSystemAdminAccount}")
+    @ApiResponse(responseCode = "401", description = "Invalid access credential")
+    @ApiResponse(responseCode = "403", description = "User has not been authorized")
     @PostMapping("/system-admin")
     @PreAuthorize("@authorisationService.userCanCreateSystemAdmin(#issuerId)")
     public ResponseEntity<? extends PiUser> createSystemAdminAccount(@RequestHeader(ISSUER_ID) String issuerId,

@@ -51,14 +51,15 @@ public class SystemAdminAccountService {
      * @param account The system admin account to validate.
      */
     private void validateSystemAdminAccount(SystemAdminAccount account) {
-        Set<ConstraintViolation<SystemAdminAccount>> constraintViolationSet = validator.validate(account);
+        Set<ConstraintViolation<SystemAdminAccount>> constraintViolations = validator.validate(account);
 
-        if (!constraintViolationSet.isEmpty()) {
+        if (!constraintViolations.isEmpty()) {
             ErroredSystemAdminAccount erroredSystemAdminAccount = new ErroredSystemAdminAccount(account);
-            erroredSystemAdminAccount.setErrorMessages(constraintViolationSet
-                                                           .stream().map(constraint -> constraint.getPropertyPath()
-                    + ": " + constraint.getMessage()).toList());
-
+            erroredSystemAdminAccount.setErrorMessages(
+                constraintViolations.stream()
+                    .map(constraint -> constraint.getPropertyPath() + ": " + constraint.getMessage())
+                    .toList()
+            );
             throw new SystemAdminAccountException(erroredSystemAdminAccount);
         }
 
