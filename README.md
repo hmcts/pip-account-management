@@ -89,7 +89,7 @@ If a publication is PRIVATE or CLASSIFIED, account management is used to validat
 
 For PRIVATE, as long as the user exists in our database, then they are able to see the publication.
 
-For CLASSIFIED, rules are applied based on the List Type and Provenance of the user. For reference, the provenance is which IDAM the user came from (PI_AAD, CFT_IDAM or CRIME_IDAM). The mappings of which provenance can see which list type is defined in the [enum file](./src/main/java/uk/gov/hmcts/reform/pip/account/management/model/ListType.java)
+For CLASSIFIED, rules are applied based on the List Type and Provenance of the user. For reference, the provenance is which IDAM the user came from (PI_AAD, CFT_IDAM, CRIME_IDAM or SSO). The mappings of which provenance can see which list type is defined in the [enum file](./src/main/java/uk/gov/hmcts/reform/pip/account/management/model/ListType.java)
 
 ### Third Party Users
 

@@ -20,9 +20,12 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @ExtendWith(MockitoExtension.class)
+@SuppressWarnings("PMD.TooManyMethods")
 class SensitivityServiceTest {
 
     SensitivityService sensitivityService = new SensitivityService();
+
+    private static final String SENSITIVITY_MESSAGE = "Returned false for public sensitivity";
 
     @Test
     void checkPublicReturnsTrueWhenVerified() {
@@ -32,7 +35,7 @@ class SensitivityServiceTest {
 
         assertTrue(
             sensitivityService.checkAuthorisation(piUser, ListType.CIVIL_DAILY_CAUSE_LIST, Sensitivity.PUBLIC),
-            "Returned false for public sensitivity");
+            SENSITIVITY_MESSAGE);
     }
 
     @Test
@@ -43,7 +46,29 @@ class SensitivityServiceTest {
 
         assertTrue(
             sensitivityService.checkAuthorisation(piUser, ListType.CIVIL_DAILY_CAUSE_LIST, Sensitivity.PUBLIC),
-            "Returned false for public sensitivity");
+            SENSITIVITY_MESSAGE);
+    }
+
+    @Test
+    void checkPublicReturnsTrueWhenVerifiedSso() {
+        PiUser piUser = new PiUser();
+        piUser.setRoles(Roles.VERIFIED);
+        piUser.setUserProvenance(UserProvenances.SSO);
+
+        assertTrue(
+            sensitivityService.checkAuthorisation(piUser, ListType.CIVIL_DAILY_CAUSE_LIST, Sensitivity.PUBLIC),
+            SENSITIVITY_MESSAGE);
+    }
+
+    @Test
+    void checkPublicReturnsTrueWhenNotVerifiedSso() {
+        PiUser piUser = new PiUser();
+        piUser.setRoles(Roles.INTERNAL_ADMIN_CTSC);
+        piUser.setUserProvenance(UserProvenances.SSO);
+
+        assertTrue(
+            sensitivityService.checkAuthorisation(piUser, ListType.CIVIL_DAILY_CAUSE_LIST, Sensitivity.PUBLIC),
+            SENSITIVITY_MESSAGE);
     }
 
     @ParameterizedTest
@@ -67,6 +92,17 @@ class SensitivityServiceTest {
         PiUser piUser = new PiUser();
         piUser.setRoles(Roles.INTERNAL_ADMIN_CTSC);
         piUser.setUserProvenance(UserProvenances.PI_AAD);
+
+        assertFalse(
+            sensitivityService.checkAuthorisation(piUser, ListType.CIVIL_DAILY_CAUSE_LIST, Sensitivity.PRIVATE),
+            "Returned true for private sensitivity when not verified");
+    }
+
+    @Test
+    void checkPrivateReturnsFalseWhenNotVerifiedSso() {
+        PiUser piUser = new PiUser();
+        piUser.setRoles(Roles.INTERNAL_ADMIN_CTSC);
+        piUser.setUserProvenance(UserProvenances.SSO);
 
         assertFalse(
             sensitivityService.checkAuthorisation(piUser, ListType.CIVIL_DAILY_CAUSE_LIST, Sensitivity.PRIVATE),
@@ -120,6 +156,28 @@ class SensitivityServiceTest {
         assertFalse(
             sensitivityService.checkAuthorisation(piUser, ListType.CIVIL_DAILY_CAUSE_LIST, Sensitivity.CLASSIFIED),
             "Returned true for classified sensitivity when verified with incorrect provenance");
+    }
+
+    @Test
+    void checkClassifiedReturnsFalseWhenVerifiedButProvenanceIsSso() {
+        PiUser piUser = new PiUser();
+        piUser.setRoles(Roles.VERIFIED);
+        piUser.setUserProvenance(UserProvenances.SSO);
+
+        assertFalse(
+            sensitivityService.checkAuthorisation(piUser, ListType.CIVIL_DAILY_CAUSE_LIST, Sensitivity.CLASSIFIED),
+            "Returned true for classified sensitivity when verified but with SSO provenance");
+    }
+
+    @Test
+    void checkClassifiedReturnsFalseWhenAdminButProvenanceIsSso() {
+        PiUser piUser = new PiUser();
+        piUser.setRoles(Roles.INTERNAL_ADMIN_CTSC);
+        piUser.setUserProvenance(UserProvenances.SSO);
+
+        assertFalse(
+            sensitivityService.checkAuthorisation(piUser, ListType.CIVIL_DAILY_CAUSE_LIST, Sensitivity.CLASSIFIED),
+            "Returned true for classified sensitivity when admin user has SSO provenance");
     }
 
     @ParameterizedTest

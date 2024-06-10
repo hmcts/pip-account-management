@@ -45,7 +45,7 @@ public class PiUser {
     private UUID userId;
 
     /**
-     * The Sign in entry system the user was added with. (CFT IDAM, Crime IDAM, P&I AAD).
+     * The Sign in entry system the user was added with. (CFT IDAM, Crime IDAM, P&I AAD, SSO).
      */
     @Enumerated(EnumType.STRING)
     private UserProvenances userProvenance;
