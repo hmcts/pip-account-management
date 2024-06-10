@@ -202,6 +202,34 @@ class AccountTest {
     }
 
     @Test
+    void testCreateSsoUser() throws Exception {
+
+        PiUser validUser = new PiUser();
+        validUser.setEmail("sso@justice.gov.uk");
+        validUser.setProvenanceUserId(UUID.randomUUID().toString());
+        validUser.setUserProvenance(UserProvenances.SSO);
+        validUser.setRoles(Roles.INTERNAL_ADMIN_CTSC);
+
+        MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
+            .post(PI_URL)
+            .content(OBJECT_MAPPER.writeValueAsString(List.of(validUser)))
+            .header(ISSUER_HEADER, SYSTEM_ADMIN_ISSUER_ID)
+            .contentType(MediaType.APPLICATION_JSON);
+
+        MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isCreated()).andReturn();
+        Map<CreationEnum, List<Object>> mappedResponse =
+            OBJECT_MAPPER.readValue(
+                response.getResponse().getContentAsString(),
+                new TypeReference<>() {
+                }
+            );
+
+        assertEquals(1, mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).size(),
+                     "SSO User should be created"
+        );
+    }
+
+    @Test
     void testCreateMultipleSuccessUsers() throws Exception {
         User userToReturn = new User();
         userToReturn.setId(ID);
