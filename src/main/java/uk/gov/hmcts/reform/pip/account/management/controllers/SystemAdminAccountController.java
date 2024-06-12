@@ -39,7 +39,6 @@ public class SystemAdminAccountController {
     /**
      * Create a system admin account for SSO user on the user table.
      *
-     * @param issuerId The ID of the user creating the accounts.
      * @param account The account to add.
      * @return The PiUser that's been added, or an ErroredPiUser if it failed to add.
      */
@@ -48,9 +47,7 @@ public class SystemAdminAccountController {
     @ApiResponse(responseCode = "401", description = "Invalid access credential")
     @ApiResponse(responseCode = "403", description = "User has not been authorized")
     @PostMapping("/system-admin")
-    @PreAuthorize("@authorisationService.userCanCreateSystemAdmin(#issuerId)")
-    public ResponseEntity<? extends PiUser> createSystemAdminAccount(@RequestHeader(ISSUER_ID) String issuerId,
-                                                                     @RequestBody SystemAdminAccount account) {
+    public ResponseEntity<? extends PiUser> createSystemAdminAccount(@RequestBody SystemAdminAccount account) {
         return ResponseEntity.ok(systemAdminAccountService.addSystemAdminAccount(account));
     }
 }
