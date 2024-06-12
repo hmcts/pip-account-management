@@ -69,6 +69,8 @@ class SystemAdminB2CAccountServiceTest {
     private static final SystemAdminAccount SYSTEM_ADMIN_ACCOUNT = new SystemAdminAccount(EMAIL, FORENAME, SURNAME);
     private static final SystemAdminAccount ERRORED_SYSTEM_ADMIN_ACCOUNT = new SystemAdminAccount("abcd", FORENAME,
                                                                                                SURNAME);
+    private static final String USER_MESSAGE = "returned user did not match expected";
+
     private final User expectedUser = new User();
     private final PiUser expectedPiUser = new PiUser();
     private final PiUser ssoUser = new PiUser();
@@ -114,7 +116,7 @@ class SystemAdminB2CAccountServiceTest {
 
         PiUser returnedUser = systemAdminAccountService.addSystemAdminAccount(SYSTEM_ADMIN_ACCOUNT, ID);
 
-        assertEquals(expectedPiUser, returnedUser, "returned user did not match expected");
+        assertEquals(expectedPiUser, returnedUser, USER_MESSAGE);
     }
 
     @Test
@@ -176,7 +178,7 @@ class SystemAdminB2CAccountServiceTest {
 
         PiUser returnedUser = systemAdminAccountService.addSystemAdminAccount(SYSTEM_ADMIN_ACCOUNT, ID);
 
-        assertEquals(expectedPiUser, returnedUser, "returned user did not match expected");
+        assertEquals(expectedPiUser, returnedUser, USER_MESSAGE);
     }
 
     @Test
@@ -195,7 +197,7 @@ class SystemAdminB2CAccountServiceTest {
 
         PiUser returnedUser = systemAdminAccountService.addSystemAdminAccount(SYSTEM_ADMIN_ACCOUNT, ID);
 
-        assertEquals(expectedPiUser, returnedUser, "returned user did not match expected");
+        assertEquals(expectedPiUser, returnedUser, USER_MESSAGE);
     }
 
     @Test
@@ -256,7 +258,7 @@ class SystemAdminB2CAccountServiceTest {
 
         PiUser returnedUser = systemAdminAccountService.addSystemAdminAccount(SYSTEM_ADMIN_ACCOUNT, ID);
 
-        assertEquals(expectedPiUser, returnedUser, "returned user did not match expected");
+        assertEquals(expectedPiUser, returnedUser, USER_MESSAGE);
     }
 
     @Test

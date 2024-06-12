@@ -39,7 +39,6 @@ class SystemAdminAccountControllerTest {
 
         SystemAdminAccount testAccount = new SystemAdminAccount(TEST_EMAIL, "Test", "User", TEST_PROVENANCE_ID);
 
-        String testIssuerId = "1234";
         when(systemAdminAccountService.addSystemAdminAccount(testAccount)).thenReturn(expectedUser);
 
         ResponseEntity<? extends PiUser> response = systemAdminAccountController.createSystemAdminAccount(testAccount);

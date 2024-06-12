@@ -20,7 +20,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.params.provider.EnumSource.Mode.INCLUDE;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -36,8 +35,6 @@ class AuthorisationServiceTest {
     private static final String UPDATE_ERROR_LOG = "User with ID %s is forbidden to update user with ID %s";
     private static final String UPDATE_OWN_ACCOUNT_ERROR_LOG =
         "User with ID %s is forbidden to update their own account";
-    private static final String CREATE_SYSTEM_ADMIN_ERROR_LOG =
-        "User with ID %s is forbidden to create system admin user";
 
     private static final String CAN_DELETE_ACCOUNT_MESSAGE = "User should be able to delete account";
     private static final String CANNOT_DELETE_ACCOUNT_MESSAGE = "User should not be able to delete account";
