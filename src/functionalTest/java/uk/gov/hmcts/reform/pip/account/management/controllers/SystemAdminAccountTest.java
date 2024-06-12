@@ -40,11 +40,8 @@ class SystemAdminAccountTest {
     private static final String ROOT_URL = "/account";
     private static final String CREATE_SYSTEM_ADMIN_URL = ROOT_URL + "/system-admin";
 
-    private static final String ISSUER_ID = "1234-1234-1234-1234";
     private static final String SYSTEM_ADMIN_ISSUER_ID = "87f907d2-eb28-42cc-b6e1-ae2b03f7bba2";
     private static final String ISSUER_HEADER = "x-issuer-id";
-    private static final String GIVEN_NAME = "Given Name";
-    private static final String ID = "1234";
     private static final String TEST_SYS_ADMIN_SURNAME = "testSysAdminSurname";
     private static final String TEST_SYS_ADMIN_FIRSTNAME = "testSysAdminFirstname";
     private static final String TEST_SYS_ADMIN_EMAIL = "testSysAdminEmail@justice.gov.uk";
