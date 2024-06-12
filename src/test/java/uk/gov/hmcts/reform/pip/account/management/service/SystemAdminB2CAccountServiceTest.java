@@ -201,7 +201,7 @@ class SystemAdminB2CAccountServiceTest {
     }
 
     @Test
-    void testUserAlreadyExists() throws AzureCustomException {
+    void testUserAlreadyExists() {
         AzureAccount azUser = new AzureAccount();
         azUser.setDisplayName(FORENAME);
         when(userRepository.findByEmailAndUserProvenance(EMAIL, UserProvenances.PI_AAD))
@@ -220,7 +220,7 @@ class SystemAdminB2CAccountServiceTest {
     }
 
     @Test
-    void testAboveMaxAllowsUsersWithAllAadUsers() throws AzureCustomException {
+    void testAboveMaxAllowsUsersWithAllAadUsers() {
         AzureAccount azUser = new AzureAccount();
         azUser.setDisplayName(FORENAME);
         when(userRepository.findByEmailAndUserProvenance(EMAIL, UserProvenances.PI_AAD))
