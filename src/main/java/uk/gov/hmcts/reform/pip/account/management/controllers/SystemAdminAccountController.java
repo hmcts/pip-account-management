@@ -22,9 +22,6 @@ import uk.gov.hmcts.reform.pip.model.authentication.roles.IsAdmin;
 @IsAdmin
 @SecurityRequirement(name = "bearerAuth")
 public class SystemAdminAccountController {
-    private static final String ISSUER_ID = "x-issuer-id";
-    private static final String OK_CODE = "200";
-    private static final String BAD_REQUEST_CODE = "400";
     private static final String PI_USER = "{piUser}";
 
     private final SystemAdminAccountService systemAdminAccountService;
@@ -40,8 +37,8 @@ public class SystemAdminAccountController {
      * @param account The account to add.
      * @return The PiUser that's been added, or an ErroredPiUser if it failed to add.
      */
-    @ApiResponse(responseCode = OK_CODE, description = PI_USER)
-    @ApiResponse(responseCode = BAD_REQUEST_CODE, description = "{ErroredSystemAdminAccount}")
+    @ApiResponse(responseCode = "200", description = PI_USER)
+    @ApiResponse(responseCode = "400", description = "{ErroredSystemAdminAccount}")
     @ApiResponse(responseCode = "401", description = "Invalid access credential")
     @ApiResponse(responseCode = "403", description = "User has not been authorized")
     @PostMapping("/system-admin")
