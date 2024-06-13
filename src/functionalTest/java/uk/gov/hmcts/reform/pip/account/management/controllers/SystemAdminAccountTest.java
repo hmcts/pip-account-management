@@ -44,7 +44,6 @@ class SystemAdminAccountTest {
     private static final String TEST_SYS_ADMIN_FIRSTNAME = "testSysAdminFirstname";
     private static final String TEST_SYS_ADMIN_EMAIL = "testSysAdminEmail@justice.gov.uk";
     private static final String FORBIDDEN_STATUS_CODE = "Status code does not match forbidden";
-    private static final String SQL_ADD_ADMIN = "classpath:add-admin-users.sql";
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
@@ -85,6 +84,7 @@ class SystemAdminAccountTest {
     }
 
     @Test
+    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = "classpath:add-admin-users.sql")
     void testCreateSystemAdminAccountRequestExceeded() throws Exception {
         SystemAdminAccount systemAdmin1 = new SystemAdminAccount();
         systemAdmin1.setFirstName("testSysAdminFirstname1");
