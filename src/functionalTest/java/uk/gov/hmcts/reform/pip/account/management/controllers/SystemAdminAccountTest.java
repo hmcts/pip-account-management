@@ -130,7 +130,7 @@ class SystemAdminAccountTest {
 
     @Test
     @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = SQL_ADD_ADMIN)
-    void testUserCanCreateSystemAdminAccountBadRequest() throws Exception {
+    void testCreateSystemAdminReturnsBadRequest() throws Exception {
         SystemAdminAccount systemAdmin = new SystemAdminAccount();
         systemAdmin.setFirstName(TEST_SYS_ADMIN_FIRSTNAME);
         systemAdmin.setSurname(TEST_SYS_ADMIN_SURNAME);
@@ -152,7 +152,7 @@ class SystemAdminAccountTest {
 
     @Test
     @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = SQL_ADD_ADMIN)
-    void testUnauthorizedUserCanCreateSystemAdminAccount() throws Exception {
+    void testNonSystemAdminIsForbiddenToCreateSystemAdminAccount() throws Exception {
         SystemAdminAccount systemAdmin = new SystemAdminAccount();
         systemAdmin.setFirstName(TEST_SYS_ADMIN_FIRSTNAME);
         systemAdmin.setSurname(TEST_SYS_ADMIN_SURNAME);
