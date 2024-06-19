@@ -1,9 +1,17 @@
 package uk.gov.hmcts.reform.pip.account.management.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.microsoft.graph.models.User;
+import com.microsoft.graph.models.UserCollectionResponse;
+import com.microsoft.graph.serviceclient.GraphServiceClient;
+import com.microsoft.graph.users.UsersRequestBuilder;
+import com.microsoft.kiota.ApiException;
 import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -18,12 +26,16 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import uk.gov.hmcts.reform.pip.account.management.Application;
 import uk.gov.hmcts.reform.pip.account.management.config.AzureConfigurationClientTestConfiguration;
+import uk.gov.hmcts.reform.pip.account.management.model.AzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
 import uk.gov.hmcts.reform.pip.account.management.model.SystemAdminAccount;
 
-import java.util.UUID;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.FORBIDDEN;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -35,37 +47,71 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @WithMockUser(username = "admin", authorities = {"APPROLE_api.request.admin"})
-class SystemAdminAccountTest {
-
+class SystemAdminB2CAccountTest {
     private static final String ROOT_URL = "/account";
-    private static final String CREATE_SYSTEM_ADMIN_URL = ROOT_URL + "/system-admin";
+    private static final String CREATE_SYSTEM_ADMIN_URL = ROOT_URL + "/add/system-admin";
+    private static final String AZURE_PATH = "/azure/";
 
+    private static final String ISSUER_ID = "1234-1234-1234-1234";
     private static final String SYSTEM_ADMIN_ISSUER_ID = "87f907d2-eb28-42cc-b6e1-ae2b03f7bba2";
     private static final String ISSUER_HEADER = "x-issuer-id";
+    private static final String GIVEN_NAME = "Given Name";
+    private static final String ID = "1234";
     private static final String TEST_SYS_ADMIN_SURNAME = "testSysAdminSurname";
     private static final String TEST_SYS_ADMIN_FIRSTNAME = "testSysAdminFirstname";
     private static final String TEST_SYS_ADMIN_EMAIL = "testSysAdminEmail@justice.gov.uk";
     private static final String FORBIDDEN_STATUS_CODE = "Status code does not match forbidden";
-    private static final String SQL_ADD_ADMIN = "classpath:add-admin-users.sql";
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     @Autowired
     private MockMvc mockMvc;
 
+    @Autowired
+    GraphServiceClient graphClient;
+
+    @Autowired
+    UsersRequestBuilder usersRequestBuilder;
+
+
+    @Autowired
+    ApiException apiException;
+
     @BeforeAll
     static void startup() {
         OBJECT_MAPPER.findAndRegisterModules();
     }
 
+    @BeforeEach
+    void setup() {
+        User user = new User();
+        user.setId(ID);
+        user.setGivenName(GIVEN_NAME);
+
+        List<User> azUsers = new ArrayList<>();
+        azUsers.add(user);
+
+        when(graphClient.users()).thenReturn(usersRequestBuilder);
+        when(usersRequestBuilder.post(any())).thenReturn(user);
+
+        UserCollectionResponse userCollectionResponse = new UserCollectionResponse();
+        userCollectionResponse.setValue(azUsers);
+
+        when(usersRequestBuilder.get(any())).thenReturn(userCollectionResponse);
+    }
+
+    @AfterEach
+    public void reset() {
+        Mockito.reset(graphClient, usersRequestBuilder);
+    }
+
     @Test
-    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = SQL_ADD_ADMIN)
-    void testUserCanCreateSystemAdminAccount() throws Exception {
+    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = "classpath:add-admin-users.sql")
+    void testCreateSystemAdminAccount() throws Exception {
         SystemAdminAccount systemAdmin = new SystemAdminAccount();
         systemAdmin.setFirstName(TEST_SYS_ADMIN_FIRSTNAME);
         systemAdmin.setSurname(TEST_SYS_ADMIN_SURNAME);
         systemAdmin.setEmail(TEST_SYS_ADMIN_EMAIL);
-        systemAdmin.setProvenanceUserId(UUID.randomUUID().toString());
 
         MockHttpServletRequestBuilder createRequest =
             MockMvcRequestBuilders
@@ -89,13 +135,12 @@ class SystemAdminAccountTest {
     }
 
     @Test
-    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = SQL_ADD_ADMIN)
+    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = "classpath:add-admin-users.sql")
     void testCreateSystemAdminAccountRequestExceeded() throws Exception {
         SystemAdminAccount systemAdmin1 = new SystemAdminAccount();
         systemAdmin1.setFirstName("testSysAdminFirstname1");
         systemAdmin1.setSurname("testSysAdminSurname1");
         systemAdmin1.setEmail("testSysAdminEmai1l@justice.gov.uk");
-        systemAdmin1.setProvenanceUserId(UUID.randomUUID().toString());
 
         MockHttpServletRequestBuilder createRequest1 =
             MockMvcRequestBuilders
@@ -111,7 +156,6 @@ class SystemAdminAccountTest {
         systemAdmin2.setFirstName("testSysAdminFirstname2");
         systemAdmin2.setSurname("testSysAdminSurname2");
         systemAdmin2.setEmail("testSysAdminEmai12@justice.gov.uk");
-        systemAdmin2.setProvenanceUserId(UUID.randomUUID().toString());
 
         MockHttpServletRequestBuilder createRequest2 =
             MockMvcRequestBuilders
@@ -129,11 +173,12 @@ class SystemAdminAccountTest {
     }
 
     @Test
-    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = SQL_ADD_ADMIN)
-    void testCreateSystemAdminReturnsBadRequest() throws Exception {
+    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = "classpath:add-admin-users.sql")
+    void testGetAzureUserInfo() throws Exception {
         SystemAdminAccount systemAdmin = new SystemAdminAccount();
         systemAdmin.setFirstName(TEST_SYS_ADMIN_FIRSTNAME);
         systemAdmin.setSurname(TEST_SYS_ADMIN_SURNAME);
+        systemAdmin.setEmail(TEST_SYS_ADMIN_EMAIL);
 
         MockHttpServletRequestBuilder createRequest =
             MockMvcRequestBuilders
@@ -143,27 +188,41 @@ class SystemAdminAccountTest {
                 .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult responseCreateSystemAdminUser = mockMvc.perform(createRequest)
-            .andExpect(status().isBadRequest()).andReturn();
+            .andExpect(status().isOk()).andReturn();
 
-        assertEquals(BAD_REQUEST.value(), responseCreateSystemAdminUser.getResponse().getStatus(),
-                     "Should return bad request"
+        PiUser returnedUser = OBJECT_MAPPER.readValue(
+            responseCreateSystemAdminUser.getResponse().getContentAsString(),
+            PiUser.class
+        );
+
+        MockHttpServletRequestBuilder getRequest = MockMvcRequestBuilders
+            .get(ROOT_URL + AZURE_PATH + returnedUser.getProvenanceUserId());
+
+        MvcResult responseGetUser =
+            mockMvc.perform(getRequest).andExpect(status().isOk()).andReturn();
+
+        AzureAccount returnedAzureAccount = OBJECT_MAPPER.readValue(
+            responseGetUser.getResponse().getContentAsString(),
+            AzureAccount.class
+        );
+        assertEquals(returnedUser.getEmail(), returnedAzureAccount.getEmail(),
+                     "Should return the correct user"
         );
     }
 
     @Test
-    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = SQL_ADD_ADMIN)
-    void testNonSystemAdminIsForbiddenToCreateSystemAdminAccount() throws Exception {
+    @WithMockUser(username = "unauthroized_user", authorities = {"APPROLE_unknown.user"})
+    void testUnauthorizedCreateSystemAdminAccount() throws Exception {
         SystemAdminAccount systemAdmin = new SystemAdminAccount();
         systemAdmin.setFirstName(TEST_SYS_ADMIN_FIRSTNAME);
         systemAdmin.setSurname(TEST_SYS_ADMIN_SURNAME);
         systemAdmin.setEmail(TEST_SYS_ADMIN_EMAIL);
-        systemAdmin.setProvenanceUserId(UUID.randomUUID().toString());
 
         MockHttpServletRequestBuilder createRequest =
             MockMvcRequestBuilders
                 .post(CREATE_SYSTEM_ADMIN_URL)
                 .content(OBJECT_MAPPER.writeValueAsString(systemAdmin))
-                .header(ISSUER_HEADER, "87f907d2-eb28-42cc-b6e1-ae2b03f7bba3")
+                .header(ISSUER_HEADER, ISSUER_ID)
                 .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult responseCreateSystemAdminUser = mockMvc.perform(createRequest)

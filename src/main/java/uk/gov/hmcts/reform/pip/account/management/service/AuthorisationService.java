@@ -69,6 +69,15 @@ public class AuthorisationService {
         return isAuthorised;
     }
 
+    public boolean userCanCreateSystemAdmin(UUID issuerId) {
+        Roles adminUserRole = getUserRole(issuerId);
+        if (Roles.SYSTEM_ADMIN.equals(adminUserRole)) {
+            return true;
+        }
+        log.error(writeLog(String.format("User with ID %s is forbidden to create system admin user", issuerId)));
+        return false;
+    }
+
     private boolean isAuthorisedRole(UUID userId, UUID adminUserId) {
         if (adminUserId == null) {
             return false;
