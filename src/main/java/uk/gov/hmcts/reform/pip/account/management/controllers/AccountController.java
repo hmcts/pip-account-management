@@ -141,7 +141,8 @@ public class AccountController {
     @DeleteMapping("/v2/{userId}")
     @PreAuthorize("@authorisationService.userCanDeleteAccount(#userId, #adminUserId)")
     public ResponseEntity<String> deleteAccountV2(@PathVariable UUID userId,
-                                                @RequestHeader("x-admin-id") UUID adminUserId) {
+                                                  @RequestHeader(value = "x-admin-id", required = false)
+                                                    UUID adminUserId) {
         accountService.deleteAccount(userId);
         return ResponseEntity.ok("User deleted");
     }
@@ -155,7 +156,8 @@ public class AccountController {
     @PreAuthorize("@authorisationService.userCanUpdateAccount(#userId, #adminUserId)")
     public ResponseEntity<String> updateAccountRoleById(@PathVariable UUID userId,
                                                         @PathVariable Roles role,
-                                                        @RequestHeader("x-admin-id") UUID adminUserId) {
+                                                        @RequestHeader(value = "x-admin-id", required = false)
+                                                            UUID adminUserId) {
         return ResponseEntity.ok(accountService.updateAccountRole(userId, role));
     }
 }

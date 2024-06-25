@@ -14,6 +14,7 @@ import uk.gov.hmcts.reform.pip.account.management.database.UserRepository;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.NotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
+import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
 
 import java.util.List;
 import java.util.Optional;
@@ -179,6 +180,7 @@ class AuthorisationServiceTest {
     @Test
     void testSystemAdminUserCanUpdateAndDeleteSystemAdmin() {
         user.setRoles(Roles.SYSTEM_ADMIN);
+        user.setUserProvenance(UserProvenances.PI_AAD);
         adminUser.setRoles(Roles.SYSTEM_ADMIN);
 
         when(userRepository.findByUserId(USER_ID)).thenReturn(Optional.of(user));
@@ -206,6 +208,7 @@ class AuthorisationServiceTest {
     @Test
     void testSystemAdminUserCanUpdateAndDeleteSuperAdmin() {
         user.setRoles(Roles.INTERNAL_SUPER_ADMIN_LOCAL);
+        user.setUserProvenance(UserProvenances.PI_AAD);
         adminUser.setRoles(Roles.SYSTEM_ADMIN);
 
         when(userRepository.findByUserId(USER_ID)).thenReturn(Optional.of(user));
@@ -233,6 +236,7 @@ class AuthorisationServiceTest {
     @Test
     void testSystemAdminUserCanUpdateAndDeleteAdmin() {
         user.setRoles(Roles.INTERNAL_ADMIN_CTSC);
+        user.setUserProvenance(UserProvenances.PI_AAD);
         adminUser.setRoles(Roles.SYSTEM_ADMIN);
 
         when(userRepository.findByUserId(USER_ID)).thenReturn(Optional.of(user));
@@ -260,6 +264,7 @@ class AuthorisationServiceTest {
     @Test
     void testSystemAdminUserCanUpdateAndDeleteVerifiedAccount() {
         user.setRoles(Roles.VERIFIED);
+        user.setUserProvenance(UserProvenances.PI_AAD);
         adminUser.setRoles(Roles.SYSTEM_ADMIN);
 
         when(userRepository.findByUserId(USER_ID)).thenReturn(Optional.of(user));
@@ -287,6 +292,7 @@ class AuthorisationServiceTest {
     @Test
     void testSystemAdminUserCanUpdateAndDeleteThirdPartyAccount() {
         user.setRoles(Roles.VERIFIED_THIRD_PARTY_ALL);
+        user.setUserProvenance(UserProvenances.PI_AAD);
         adminUser.setRoles(Roles.SYSTEM_ADMIN);
 
         when(userRepository.findByUserId(USER_ID)).thenReturn(Optional.of(user));
@@ -314,6 +320,7 @@ class AuthorisationServiceTest {
     @Test
     void testSuperAdminUserCanUpdateAndDeleteSuperAdmin() {
         user.setRoles(Roles.INTERNAL_SUPER_ADMIN_CTSC);
+        user.setUserProvenance(UserProvenances.PI_AAD);
         adminUser.setRoles(Roles.INTERNAL_SUPER_ADMIN_LOCAL);
 
         when(userRepository.findByUserId(USER_ID)).thenReturn(Optional.of(user));
@@ -341,6 +348,7 @@ class AuthorisationServiceTest {
     @Test
     void testSuperAdminUserCanUpdateAndDeleteAdmin() {
         user.setRoles(Roles.INTERNAL_ADMIN_LOCAL);
+        user.setUserProvenance(UserProvenances.PI_AAD);
         adminUser.setRoles(Roles.INTERNAL_SUPER_ADMIN_LOCAL);
 
         when(userRepository.findByUserId(USER_ID)).thenReturn(Optional.of(user));
@@ -368,6 +376,7 @@ class AuthorisationServiceTest {
     @Test
     void testSuperAdminUserCannotUpdateAndDeleteSystemAdmin() {
         user.setRoles(Roles.SYSTEM_ADMIN);
+        user.setUserProvenance(UserProvenances.PI_AAD);
         adminUser.setRoles(Roles.INTERNAL_SUPER_ADMIN_LOCAL);
 
         when(userRepository.findByUserId(USER_ID)).thenReturn(Optional.of(user));
@@ -403,6 +412,7 @@ class AuthorisationServiceTest {
     @Test
     void testSuperAdminUserCannotUpdateAndDeleteVerifiedAccount() {
         user.setRoles(Roles.VERIFIED);
+        user.setUserProvenance(UserProvenances.PI_AAD);
         adminUser.setRoles(Roles.INTERNAL_SUPER_ADMIN_LOCAL);
 
         when(userRepository.findByUserId(USER_ID)).thenReturn(Optional.of(user));
@@ -438,6 +448,7 @@ class AuthorisationServiceTest {
     @Test
     void testSuperAdminUserCannotUpdateAndDeleteThirdPartyAccount() {
         user.setRoles(Roles.GENERAL_THIRD_PARTY);
+        user.setUserProvenance(UserProvenances.PI_AAD);
         adminUser.setRoles(Roles.INTERNAL_SUPER_ADMIN_LOCAL);
 
         when(userRepository.findByUserId(USER_ID)).thenReturn(Optional.of(user));
@@ -473,6 +484,7 @@ class AuthorisationServiceTest {
     @Test
     void testAdminUserCannotUpdateAndDeleteAccount() {
         user.setRoles(Roles.INTERNAL_ADMIN_LOCAL);
+        user.setUserProvenance(UserProvenances.PI_AAD);
         adminUser.setRoles(Roles.INTERNAL_ADMIN_LOCAL);
 
         when(userRepository.findByUserId(USER_ID)).thenReturn(Optional.of(user));
@@ -508,6 +520,7 @@ class AuthorisationServiceTest {
     @Test
     void testVerifiedUserCannotUpdateAndDeleteAccount() {
         user.setRoles(Roles.INTERNAL_ADMIN_LOCAL);
+        user.setUserProvenance(UserProvenances.PI_AAD);
         adminUser.setRoles(Roles.VERIFIED);
 
         when(userRepository.findByUserId(USER_ID)).thenReturn(Optional.of(user));
@@ -543,6 +556,7 @@ class AuthorisationServiceTest {
     @Test
     void testThirdPartyUserCannotUpdateAndDeleteAccount() {
         user.setRoles(Roles.INTERNAL_ADMIN_LOCAL);
+        user.setUserProvenance(UserProvenances.PI_AAD);
         adminUser.setRoles(Roles.GENERAL_THIRD_PARTY);
 
         when(userRepository.findByUserId(USER_ID)).thenReturn(Optional.of(user));
@@ -576,8 +590,35 @@ class AuthorisationServiceTest {
     }
 
     @Test
+    void testSsoUserCanBeUpdatedAndDeleted() {
+        user.setRoles(Roles.INTERNAL_ADMIN_LOCAL);
+        user.setUserProvenance(UserProvenances.SSO);
+
+        when(userRepository.findByUserId(USER_ID)).thenReturn(Optional.of(user));
+
+        try (LogCaptor logCaptor = LogCaptor.forClass(AuthorisationService.class)) {
+            SoftAssertions softly = new SoftAssertions();
+
+            softly.assertThat(authorisationService.userCanDeleteAccount(USER_ID, null))
+                .as(CAN_DELETE_ACCOUNT_MESSAGE)
+                .isTrue();
+
+            softly.assertThat(authorisationService.userCanUpdateAccount(USER_ID, null))
+                .as(CAN_UPDATE_ACCOUNT_MESSAGE)
+                .isTrue();
+
+            softly.assertThat(logCaptor.getErrorLogs())
+                .as(LOG_EMPTY_MESSAGE)
+                .isEmpty();
+
+            softly.assertAll();
+        }
+    }
+
+    @Test
     void testUserCannotUpdateTheirOwnAccount() {
         user.setRoles(Roles.INTERNAL_SUPER_ADMIN_LOCAL);
+        user.setUserProvenance(UserProvenances.PI_AAD);
 
         PiUser adminUser = new PiUser();
         adminUser.setUserId(USER_ID);
