@@ -73,7 +73,7 @@ public class AuthorisationService {
     private boolean isAuthorisedRole(UUID userId, UUID adminUserId) {
         PiUser user = getUser(userId);
         if (UserProvenances.SSO.equals(user.getUserProvenance())) {
-           return true;
+            return true;
         }
 
         if (adminUserId == null) {
