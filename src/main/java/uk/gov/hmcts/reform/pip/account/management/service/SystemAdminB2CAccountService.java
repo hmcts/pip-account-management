@@ -137,7 +137,10 @@ public class SystemAdminB2CAccountService {
             throw new SystemAdminAccountException(erroredSystemAdminAccount);
         }
 
-        List<PiUser> systemAdminUsers = userRepository.findByRoles(Roles.SYSTEM_ADMIN);
+        List<PiUser> systemAdminUsers = userRepository.findByRoles(Roles.SYSTEM_ADMIN)
+            .stream()
+            .filter(u -> UserProvenances.PI_AAD.equals(u.getUserProvenance()))
+            .toList();
         if (systemAdminUsers.size() >= maxSystemAdminValue) {
             ErroredSystemAdminAccount erroredSystemAdminAccount = new ErroredSystemAdminAccount(account);
             erroredSystemAdminAccount.setAboveMaxSystemAdmin(true);

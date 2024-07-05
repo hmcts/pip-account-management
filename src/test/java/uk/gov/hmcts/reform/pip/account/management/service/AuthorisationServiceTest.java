@@ -14,13 +14,13 @@ import uk.gov.hmcts.reform.pip.account.management.database.UserRepository;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.NotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
+import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.params.provider.EnumSource.Mode.INCLUDE;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -36,8 +36,6 @@ class AuthorisationServiceTest {
     private static final String UPDATE_ERROR_LOG = "User with ID %s is forbidden to update user with ID %s";
     private static final String UPDATE_OWN_ACCOUNT_ERROR_LOG =
         "User with ID %s is forbidden to update their own account";
-    private static final String CREATE_SYSTEM_ADMIN_ERROR_LOG =
-        "User with ID %s is forbidden to create system admin user";
 
     private static final String CAN_DELETE_ACCOUNT_MESSAGE = "User should be able to delete account";
     private static final String CANNOT_DELETE_ACCOUNT_MESSAGE = "User should not be able to delete account";
@@ -182,6 +180,7 @@ class AuthorisationServiceTest {
     @Test
     void testSystemAdminUserCanUpdateAndDeleteSystemAdmin() {
         user.setRoles(Roles.SYSTEM_ADMIN);
+        user.setUserProvenance(UserProvenances.PI_AAD);
         adminUser.setRoles(Roles.SYSTEM_ADMIN);
 
         when(userRepository.findByUserId(USER_ID)).thenReturn(Optional.of(user));
@@ -209,6 +208,7 @@ class AuthorisationServiceTest {
     @Test
     void testSystemAdminUserCanUpdateAndDeleteSuperAdmin() {
         user.setRoles(Roles.INTERNAL_SUPER_ADMIN_LOCAL);
+        user.setUserProvenance(UserProvenances.PI_AAD);
         adminUser.setRoles(Roles.SYSTEM_ADMIN);
 
         when(userRepository.findByUserId(USER_ID)).thenReturn(Optional.of(user));
@@ -236,6 +236,7 @@ class AuthorisationServiceTest {
     @Test
     void testSystemAdminUserCanUpdateAndDeleteAdmin() {
         user.setRoles(Roles.INTERNAL_ADMIN_CTSC);
+        user.setUserProvenance(UserProvenances.PI_AAD);
         adminUser.setRoles(Roles.SYSTEM_ADMIN);
 
         when(userRepository.findByUserId(USER_ID)).thenReturn(Optional.of(user));
@@ -263,6 +264,7 @@ class AuthorisationServiceTest {
     @Test
     void testSystemAdminUserCanUpdateAndDeleteVerifiedAccount() {
         user.setRoles(Roles.VERIFIED);
+        user.setUserProvenance(UserProvenances.PI_AAD);
         adminUser.setRoles(Roles.SYSTEM_ADMIN);
 
         when(userRepository.findByUserId(USER_ID)).thenReturn(Optional.of(user));
@@ -290,6 +292,7 @@ class AuthorisationServiceTest {
     @Test
     void testSystemAdminUserCanUpdateAndDeleteThirdPartyAccount() {
         user.setRoles(Roles.VERIFIED_THIRD_PARTY_ALL);
+        user.setUserProvenance(UserProvenances.PI_AAD);
         adminUser.setRoles(Roles.SYSTEM_ADMIN);
 
         when(userRepository.findByUserId(USER_ID)).thenReturn(Optional.of(user));
@@ -317,6 +320,7 @@ class AuthorisationServiceTest {
     @Test
     void testSuperAdminUserCanUpdateAndDeleteSuperAdmin() {
         user.setRoles(Roles.INTERNAL_SUPER_ADMIN_CTSC);
+        user.setUserProvenance(UserProvenances.PI_AAD);
         adminUser.setRoles(Roles.INTERNAL_SUPER_ADMIN_LOCAL);
 
         when(userRepository.findByUserId(USER_ID)).thenReturn(Optional.of(user));
@@ -344,6 +348,7 @@ class AuthorisationServiceTest {
     @Test
     void testSuperAdminUserCanUpdateAndDeleteAdmin() {
         user.setRoles(Roles.INTERNAL_ADMIN_LOCAL);
+        user.setUserProvenance(UserProvenances.PI_AAD);
         adminUser.setRoles(Roles.INTERNAL_SUPER_ADMIN_LOCAL);
 
         when(userRepository.findByUserId(USER_ID)).thenReturn(Optional.of(user));
@@ -371,6 +376,7 @@ class AuthorisationServiceTest {
     @Test
     void testSuperAdminUserCannotUpdateAndDeleteSystemAdmin() {
         user.setRoles(Roles.SYSTEM_ADMIN);
+        user.setUserProvenance(UserProvenances.PI_AAD);
         adminUser.setRoles(Roles.INTERNAL_SUPER_ADMIN_LOCAL);
 
         when(userRepository.findByUserId(USER_ID)).thenReturn(Optional.of(user));
@@ -406,6 +412,7 @@ class AuthorisationServiceTest {
     @Test
     void testSuperAdminUserCannotUpdateAndDeleteVerifiedAccount() {
         user.setRoles(Roles.VERIFIED);
+        user.setUserProvenance(UserProvenances.PI_AAD);
         adminUser.setRoles(Roles.INTERNAL_SUPER_ADMIN_LOCAL);
 
         when(userRepository.findByUserId(USER_ID)).thenReturn(Optional.of(user));
@@ -441,6 +448,7 @@ class AuthorisationServiceTest {
     @Test
     void testSuperAdminUserCannotUpdateAndDeleteThirdPartyAccount() {
         user.setRoles(Roles.GENERAL_THIRD_PARTY);
+        user.setUserProvenance(UserProvenances.PI_AAD);
         adminUser.setRoles(Roles.INTERNAL_SUPER_ADMIN_LOCAL);
 
         when(userRepository.findByUserId(USER_ID)).thenReturn(Optional.of(user));
@@ -476,6 +484,7 @@ class AuthorisationServiceTest {
     @Test
     void testAdminUserCannotUpdateAndDeleteAccount() {
         user.setRoles(Roles.INTERNAL_ADMIN_LOCAL);
+        user.setUserProvenance(UserProvenances.PI_AAD);
         adminUser.setRoles(Roles.INTERNAL_ADMIN_LOCAL);
 
         when(userRepository.findByUserId(USER_ID)).thenReturn(Optional.of(user));
@@ -511,6 +520,7 @@ class AuthorisationServiceTest {
     @Test
     void testVerifiedUserCannotUpdateAndDeleteAccount() {
         user.setRoles(Roles.INTERNAL_ADMIN_LOCAL);
+        user.setUserProvenance(UserProvenances.PI_AAD);
         adminUser.setRoles(Roles.VERIFIED);
 
         when(userRepository.findByUserId(USER_ID)).thenReturn(Optional.of(user));
@@ -546,6 +556,7 @@ class AuthorisationServiceTest {
     @Test
     void testThirdPartyUserCannotUpdateAndDeleteAccount() {
         user.setRoles(Roles.INTERNAL_ADMIN_LOCAL);
+        user.setUserProvenance(UserProvenances.PI_AAD);
         adminUser.setRoles(Roles.GENERAL_THIRD_PARTY);
 
         when(userRepository.findByUserId(USER_ID)).thenReturn(Optional.of(user));
@@ -579,8 +590,35 @@ class AuthorisationServiceTest {
     }
 
     @Test
+    void testSsoUserCanBeUpdatedAndDeleted() {
+        user.setRoles(Roles.INTERNAL_ADMIN_LOCAL);
+        user.setUserProvenance(UserProvenances.SSO);
+
+        when(userRepository.findByUserId(USER_ID)).thenReturn(Optional.of(user));
+
+        try (LogCaptor logCaptor = LogCaptor.forClass(AuthorisationService.class)) {
+            SoftAssertions softly = new SoftAssertions();
+
+            softly.assertThat(authorisationService.userCanDeleteAccount(USER_ID, null))
+                .as(CAN_DELETE_ACCOUNT_MESSAGE)
+                .isTrue();
+
+            softly.assertThat(authorisationService.userCanUpdateAccount(USER_ID, null))
+                .as(CAN_UPDATE_ACCOUNT_MESSAGE)
+                .isTrue();
+
+            softly.assertThat(logCaptor.getErrorLogs())
+                .as(LOG_EMPTY_MESSAGE)
+                .isEmpty();
+
+            softly.assertAll();
+        }
+    }
+
+    @Test
     void testUserCannotUpdateTheirOwnAccount() {
         user.setRoles(Roles.INTERNAL_SUPER_ADMIN_LOCAL);
+        user.setUserProvenance(UserProvenances.PI_AAD);
 
         PiUser adminUser = new PiUser();
         adminUser.setUserId(USER_ID);
@@ -628,52 +666,5 @@ class AuthorisationServiceTest {
             .as(EXCEPTION_MATCHED_MESSAGE)
             .isInstanceOf(NotFoundException.class)
             .hasMessage(String.format("User with supplied user id: %s could not be found", ADMIN_USER_ID));
-    }
-
-    @Test
-    void testSystemAdminCanCreateSystemAdmin() {
-        adminUser.setRoles(Roles.SYSTEM_ADMIN);
-        when(userRepository.findByUserId(ADMIN_USER_ID)).thenReturn(Optional.of(adminUser));
-
-        try (LogCaptor logCaptor = LogCaptor.forClass(AuthorisationService.class)) {
-            SoftAssertions softly = new SoftAssertions();
-
-            softly.assertThat(authorisationService.userCanCreateSystemAdmin(ADMIN_USER_ID))
-                .as(CAN_CREATE_ACCOUNT_MESSAGE)
-                .isTrue();
-
-            softly.assertThat(logCaptor.getErrorLogs())
-                .as(LOG_MATCHED_MESSAGE)
-                .isEmpty();
-
-            softly.assertAll();
-        }
-    }
-
-    @ParameterizedTest
-    @EnumSource(value = Roles.class, mode = INCLUDE, names = {
-        "INTERNAL_SUPER_ADMIN_CTSC", "INTERNAL_SUPER_ADMIN_LOCAL", "INTERNAL_ADMIN_CTSC", "INTERNAL_ADMIN_LOCAL"
-    })
-    void testNonSystemAdminCannotCreateSystemAdmin(Roles role) {
-        adminUser.setRoles(role);
-        when(userRepository.findByUserId(ADMIN_USER_ID)).thenReturn(Optional.of(adminUser));
-
-        try (LogCaptor logCaptor = LogCaptor.forClass(AuthorisationService.class)) {
-            SoftAssertions softly = new SoftAssertions();
-
-            softly.assertThat(authorisationService.userCanCreateSystemAdmin(ADMIN_USER_ID))
-                .as(CANNOT_CREATE_ACCOUNT_MESSAGE)
-                .isFalse();
-
-            softly.assertThat(logCaptor.getErrorLogs())
-                .as(LOG_NOT_EMPTY_MESSAGE)
-                .hasSize(1);
-
-            softly.assertThat(logCaptor.getErrorLogs().get(0))
-                .as(LOG_MATCHED_MESSAGE)
-                .contains(String.format(CREATE_SYSTEM_ADMIN_ERROR_LOG, ADMIN_USER_ID));
-
-            softly.assertAll();
-        }
     }
 }

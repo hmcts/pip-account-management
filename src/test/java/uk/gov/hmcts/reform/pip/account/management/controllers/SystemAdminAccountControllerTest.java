@@ -39,12 +39,9 @@ class SystemAdminAccountControllerTest {
 
         SystemAdminAccount testAccount = new SystemAdminAccount(TEST_EMAIL, "Test", "User", TEST_PROVENANCE_ID);
 
-        String testIssuerId = "1234";
         when(systemAdminAccountService.addSystemAdminAccount(testAccount)).thenReturn(expectedUser);
 
-        ResponseEntity<? extends PiUser> response = systemAdminAccountController.createSystemAdminAccount(
-            testIssuerId, testAccount
-        );
+        ResponseEntity<? extends PiUser> response = systemAdminAccountController.createSystemAdminAccount(testAccount);
 
         assertEquals(HttpStatus.OK, response.getStatusCode(), STATUS_CODE_MATCH);
         assertEquals(expectedUser, response.getBody(), RESPONSE_BODY_MATCH);

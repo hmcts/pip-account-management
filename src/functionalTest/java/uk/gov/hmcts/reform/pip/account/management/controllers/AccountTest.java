@@ -790,7 +790,7 @@ class AccountTest {
     }
 
     @Test
-    void testUpdateAccountRoleByIdWithoutAdminId() throws Exception {
+    void testUpdateAccountRoleByIdWithoutAdminIdReturnsForbidden() throws Exception {
         validUser.setUserProvenance(UserProvenances.CFT_IDAM);
         MockHttpServletRequestBuilder createRequest =
             MockMvcRequestBuilders
@@ -814,7 +814,7 @@ class AccountTest {
             .put(ROOT_URL + UPDATE_PATH + createdUserId + "/" + Roles.INTERNAL_ADMIN_LOCAL);
 
         mockMvc.perform(updateRequest)
-            .andExpect(status().isBadRequest());
+            .andExpect(status().isForbidden());
     }
 
     @Test
