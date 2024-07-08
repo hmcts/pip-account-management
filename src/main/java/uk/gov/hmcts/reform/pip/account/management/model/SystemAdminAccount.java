@@ -25,12 +25,8 @@ public class SystemAdminAccount {
     @NotNull
     private String email;
 
-    @NotEmpty
-    @NotNull
     private String firstName;
 
-    @NotEmpty
-    @NotNull
     private String surname;
 
     private String provenanceUserId;

@@ -40,13 +40,10 @@ class SystemAdminAccountTest {
     private static final String ROOT_URL = "/account";
     private static final String CREATE_SYSTEM_ADMIN_URL = ROOT_URL + "/system-admin";
 
-    private static final String SYSTEM_ADMIN_ISSUER_ID = "87f907d2-eb28-42cc-b6e1-ae2b03f7bba2";
-    private static final String ISSUER_HEADER = "x-issuer-id";
     private static final String TEST_SYS_ADMIN_SURNAME = "testSysAdminSurname";
     private static final String TEST_SYS_ADMIN_FIRSTNAME = "testSysAdminFirstname";
     private static final String TEST_SYS_ADMIN_EMAIL = "testSysAdminEmail@justice.gov.uk";
     private static final String FORBIDDEN_STATUS_CODE = "Status code does not match forbidden";
-    private static final String SQL_ADD_ADMIN = "classpath:add-admin-users.sql";
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
@@ -59,7 +56,6 @@ class SystemAdminAccountTest {
     }
 
     @Test
-    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = SQL_ADD_ADMIN)
     void testUserCanCreateSystemAdminAccount() throws Exception {
         SystemAdminAccount systemAdmin = new SystemAdminAccount();
         systemAdmin.setFirstName(TEST_SYS_ADMIN_FIRSTNAME);
@@ -71,7 +67,6 @@ class SystemAdminAccountTest {
             MockMvcRequestBuilders
                 .post(CREATE_SYSTEM_ADMIN_URL)
                 .content(OBJECT_MAPPER.writeValueAsString(systemAdmin))
-                .header(ISSUER_HEADER, SYSTEM_ADMIN_ISSUER_ID)
                 .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult responseCreateSystemAdminUser = mockMvc.perform(createRequest)
@@ -89,7 +84,7 @@ class SystemAdminAccountTest {
     }
 
     @Test
-    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = SQL_ADD_ADMIN)
+    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = "classpath:add-admin-users.sql")
     void testCreateSystemAdminAccountRequestExceeded() throws Exception {
         SystemAdminAccount systemAdmin1 = new SystemAdminAccount();
         systemAdmin1.setFirstName("testSysAdminFirstname1");
@@ -101,7 +96,6 @@ class SystemAdminAccountTest {
             MockMvcRequestBuilders
                 .post(CREATE_SYSTEM_ADMIN_URL)
                 .content(OBJECT_MAPPER.writeValueAsString(systemAdmin1))
-                .header(ISSUER_HEADER, SYSTEM_ADMIN_ISSUER_ID)
                 .contentType(MediaType.APPLICATION_JSON);
 
         mockMvc.perform(createRequest1)
@@ -117,7 +111,6 @@ class SystemAdminAccountTest {
             MockMvcRequestBuilders
                 .post(CREATE_SYSTEM_ADMIN_URL)
                 .content(OBJECT_MAPPER.writeValueAsString(systemAdmin2))
-                .header(ISSUER_HEADER, SYSTEM_ADMIN_ISSUER_ID)
                 .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult responseCreateSystemAdminUser = mockMvc.perform(createRequest2)
@@ -129,7 +122,6 @@ class SystemAdminAccountTest {
     }
 
     @Test
-    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = SQL_ADD_ADMIN)
     void testCreateSystemAdminReturnsBadRequest() throws Exception {
         SystemAdminAccount systemAdmin = new SystemAdminAccount();
         systemAdmin.setFirstName(TEST_SYS_ADMIN_FIRSTNAME);
@@ -139,7 +131,6 @@ class SystemAdminAccountTest {
             MockMvcRequestBuilders
                 .post(CREATE_SYSTEM_ADMIN_URL)
                 .content(OBJECT_MAPPER.writeValueAsString(systemAdmin))
-                .header(ISSUER_HEADER, SYSTEM_ADMIN_ISSUER_ID)
                 .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult responseCreateSystemAdminUser = mockMvc.perform(createRequest)
@@ -151,8 +142,8 @@ class SystemAdminAccountTest {
     }
 
     @Test
-    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = SQL_ADD_ADMIN)
-    void testNonSystemAdminIsForbiddenToCreateSystemAdminAccount() throws Exception {
+    @WithMockUser(username = "unauthroized_user", authorities = {"APPROLE_unknown.user"})
+    void testUnauthorizedCreateSystemAdminAccount() throws Exception {
         SystemAdminAccount systemAdmin = new SystemAdminAccount();
         systemAdmin.setFirstName(TEST_SYS_ADMIN_FIRSTNAME);
         systemAdmin.setSurname(TEST_SYS_ADMIN_SURNAME);
@@ -163,7 +154,6 @@ class SystemAdminAccountTest {
             MockMvcRequestBuilders
                 .post(CREATE_SYSTEM_ADMIN_URL)
                 .content(OBJECT_MAPPER.writeValueAsString(systemAdmin))
-                .header(ISSUER_HEADER, "87f907d2-eb28-42cc-b6e1-ae2b03f7bba3")
                 .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult responseCreateSystemAdminUser = mockMvc.perform(createRequest)

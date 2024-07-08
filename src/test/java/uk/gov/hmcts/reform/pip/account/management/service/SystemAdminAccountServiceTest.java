@@ -53,16 +53,22 @@ class SystemAdminAccountServiceTest {
     private static final SystemAdminAccount SYSTEM_ADMIN_ACCOUNT = new SystemAdminAccount(EMAIL, FORENAME, SURNAME);
     private static final SystemAdminAccount ERRORED_SYSTEM_ADMIN_ACCOUNT = new SystemAdminAccount("abcd", FORENAME,
                                                                                                   SURNAME);
-    private PiUser expectedPiUser;
+    private final PiUser expectedPiUser = new PiUser();
+    private final PiUser aadUser = new PiUser();
 
     @BeforeEach
     void setup() {
-        expectedPiUser = new PiUser();
         expectedPiUser.setUserId(UUID.randomUUID());
         expectedPiUser.setEmail(EMAIL);
         expectedPiUser.setProvenanceUserId(ID);
         expectedPiUser.setRoles(Roles.SYSTEM_ADMIN);
         expectedPiUser.setUserProvenance(UserProvenances.SSO);
+
+        aadUser.setUserId(UUID.randomUUID());
+        aadUser.setEmail(EMAIL);
+        aadUser.setProvenanceUserId(ID);
+        aadUser.setRoles(Roles.SYSTEM_ADMIN);
+        aadUser.setUserProvenance(UserProvenances.PI_AAD);
 
         systemAdminAccountService = new SystemAdminAccountService(validator, userRepository, 4);
 
@@ -114,7 +120,7 @@ class SystemAdminAccountServiceTest {
     }
 
     @Test
-    void testAddSystemAdminAccountAboveMaxAllowsUsers() {
+    void testAddSystemAdminAccountAboveMaxAllowsUsersWithAllSsoUsers() {
         when(validator.validate(SYSTEM_ADMIN_ACCOUNT)).thenReturn(Collections.emptySet());
         when(userRepository.findByEmailAndUserProvenance(EMAIL, UserProvenances.SSO))
             .thenReturn(Optional.empty());
@@ -129,5 +135,19 @@ class SystemAdminAccountServiceTest {
                    "Max system admin flag not set");
 
         verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void testAddSystemAdminAccountAboveMaxAllowsUsersNotIncludingAadUsers() {
+        when(validator.validate(SYSTEM_ADMIN_ACCOUNT)).thenReturn(Collections.emptySet());
+        when(userRepository.findByEmailAndUserProvenance(EMAIL, UserProvenances.SSO))
+            .thenReturn(Optional.empty());
+        when(userRepository.findByRoles(Roles.SYSTEM_ADMIN)).thenReturn(List.of(expectedPiUser, expectedPiUser,
+                                                                                expectedPiUser, aadUser));
+        when(userRepository.save(any())).thenReturn(expectedPiUser);
+
+        PiUser returnedUser = systemAdminAccountService.addSystemAdminAccount(SYSTEM_ADMIN_ACCOUNT);
+
+        assertEquals(expectedPiUser, returnedUser, "returned user did not match expected");
     }
 }

@@ -69,22 +69,29 @@ class SystemAdminB2CAccountServiceTest {
     private static final SystemAdminAccount SYSTEM_ADMIN_ACCOUNT = new SystemAdminAccount(EMAIL, FORENAME, SURNAME);
     private static final SystemAdminAccount ERRORED_SYSTEM_ADMIN_ACCOUNT = new SystemAdminAccount("abcd", FORENAME,
                                                                                                SURNAME);
-    private User expectedUser;
-    private PiUser expectedPiUser;
+    private static final String USER_MESSAGE = "returned user did not match expected";
+
+    private final User expectedUser = new User();
+    private final PiUser expectedPiUser = new PiUser();
+    private final PiUser ssoUser = new PiUser();
 
     @BeforeEach
     void setup() {
-        expectedUser = new User();
         expectedUser.setGivenName(FORENAME);
         expectedUser.setId(ID);
         expectedUser.setSurname(SURNAME);
 
-        expectedPiUser = new PiUser();
         expectedPiUser.setUserId(UUID.randomUUID());
         expectedPiUser.setEmail(EMAIL);
         expectedPiUser.setProvenanceUserId(ID);
         expectedPiUser.setRoles(Roles.SYSTEM_ADMIN);
         expectedPiUser.setUserProvenance(UserProvenances.PI_AAD);
+
+        ssoUser.setUserId(UUID.randomUUID());
+        ssoUser.setEmail(EMAIL);
+        ssoUser.setProvenanceUserId(UUID.randomUUID().toString());
+        ssoUser.setRoles(Roles.SYSTEM_ADMIN);
+        ssoUser.setUserProvenance(UserProvenances.SSO);
 
         systemAdminAccountService = new SystemAdminB2CAccountService(validator, azureUserService, userRepository,
                                                                      publicationService, 4,
@@ -109,7 +116,7 @@ class SystemAdminB2CAccountServiceTest {
 
         PiUser returnedUser = systemAdminAccountService.addSystemAdminAccount(SYSTEM_ADMIN_ACCOUNT, ID);
 
-        assertEquals(expectedPiUser, returnedUser, "returned user did not match expected");
+        assertEquals(expectedPiUser, returnedUser, USER_MESSAGE);
     }
 
     @Test
@@ -171,7 +178,7 @@ class SystemAdminB2CAccountServiceTest {
 
         PiUser returnedUser = systemAdminAccountService.addSystemAdminAccount(SYSTEM_ADMIN_ACCOUNT, ID);
 
-        assertEquals(expectedPiUser, returnedUser, "returned user did not match expected");
+        assertEquals(expectedPiUser, returnedUser, USER_MESSAGE);
     }
 
     @Test
@@ -190,11 +197,11 @@ class SystemAdminB2CAccountServiceTest {
 
         PiUser returnedUser = systemAdminAccountService.addSystemAdminAccount(SYSTEM_ADMIN_ACCOUNT, ID);
 
-        assertEquals(expectedPiUser, returnedUser, "returned user did not match expected");
+        assertEquals(expectedPiUser, returnedUser, USER_MESSAGE);
     }
 
     @Test
-    void testUserAlreadyExists() throws AzureCustomException {
+    void testUserAlreadyExists() {
         AzureAccount azUser = new AzureAccount();
         azUser.setDisplayName(FORENAME);
         when(userRepository.findByEmailAndUserProvenance(EMAIL, UserProvenances.PI_AAD))
@@ -213,7 +220,7 @@ class SystemAdminB2CAccountServiceTest {
     }
 
     @Test
-    void testAboveMaxAllowsUsers() throws AzureCustomException {
+    void testAboveMaxAllowsUsersWithAllAadUsers() {
         AzureAccount azUser = new AzureAccount();
         azUser.setDisplayName(FORENAME);
         when(userRepository.findByEmailAndUserProvenance(EMAIL, UserProvenances.PI_AAD))
@@ -231,6 +238,27 @@ class SystemAdminB2CAccountServiceTest {
 
         assertTrue(systemAdminAccountException.getErroredSystemAdminAccount().isAboveMaxSystemAdmin(), "Max system "
             + "admin flag not set");
+    }
+
+    @Test
+    void testAboveMaxAllowsUsersNotIncludingSsoUser() throws AzureCustomException {
+        AzureAccount azUser = new AzureAccount();
+        azUser.setDisplayName(FORENAME);
+        when(userRepository.findByEmailAndUserProvenance(EMAIL, UserProvenances.PI_AAD))
+            .thenReturn(Optional.empty());
+        when(userRepository.findByUserId(any()))
+            .thenReturn(Optional.ofNullable(expectedPiUser));
+        when(azureAccountService.retrieveAzureAccount(any()))
+            .thenReturn(azUser);
+        when(userRepository.findByRoles(Roles.SYSTEM_ADMIN)).thenReturn(List.of(expectedPiUser, expectedPiUser,
+                                                                                expectedPiUser, ssoUser));
+        when(azureUserService.createUser(argThat(user -> EMAIL.equals(user.getEmail())), anyBoolean()))
+            .thenReturn(expectedUser);
+        when(userRepository.save(any())).thenReturn(expectedPiUser);
+
+        PiUser returnedUser = systemAdminAccountService.addSystemAdminAccount(SYSTEM_ADMIN_ACCOUNT, ID);
+
+        assertEquals(expectedPiUser, returnedUser, USER_MESSAGE);
     }
 
     @Test
