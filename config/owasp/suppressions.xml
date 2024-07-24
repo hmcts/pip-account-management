@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
   <suppress>
-    <notes><![CDATA[file name: spring-cloud-azure-starter-active-directory-5.12.0.jar]]></notes>
-    <packageUrl regex="true">^pkg:maven/com.azure.spring/spring-cloud-azure-starter-active-directory@5.12.0</packageUrl>
+    <notes><![CDATA[file name: spring-cloud-azure-starter-active-directory-5.13.0.jar]]></notes>
+    <packageUrl regex="true">^pkg:maven/com\.azure\.spring/spring\-cloud\-azure\-starter\-active\-directory@.*$</packageUrl>
     <cve>CVE-2021-42306</cve>
   </suppress>
   <suppress>
@@ -17,7 +17,6 @@
   </suppress>
   <suppress>
     <notes>Vulnerability pulled in by azure-identity</notes>
-    <packageUrl regex="true">^pkg:maven/com\.microsoft\.azure/msal4j.*$</packageUrl>
     <cve>CVE-2024-35255</cve>
   </suppress>
   <suppress>
