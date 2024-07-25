@@ -329,7 +329,7 @@ public class AccountService {
 
         if (!processedAzureAccounts.get(CreationEnum.CREATED_ACCOUNTS).isEmpty()) {
             List<AzureAccount> createdAzureAccounts = processedAzureAccounts.get(CreationEnum.CREATED_ACCOUNTS).stream()
-                .map(a -> (AzureAccount) a)
+                .map(AzureAccount.class::cast)
                 .toList();
 
             PiUser user = createdAccountToPiUser(createdAzureAccounts.get(0));
