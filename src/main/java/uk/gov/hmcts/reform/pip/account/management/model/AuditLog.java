@@ -11,6 +11,7 @@ import jakarta.persistence.Id;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -54,7 +55,8 @@ public class AuditLog {
     @NotNull(message = "action shouldn't be null")
     private AuditAction action;
 
-    @NotBlank(message = "details shouldn't be blank or null")
+    @NotNull(message = "details must be provided")
+    @Size(min = 1, max = 255, message = "details should be between 1 and 255 characters")
     private String details;
 
     @CreatedDate
