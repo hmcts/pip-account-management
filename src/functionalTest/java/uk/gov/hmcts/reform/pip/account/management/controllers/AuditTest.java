@@ -165,7 +165,8 @@ class AuditTest {
 
         MvcResult mvcResult = mockMvc.perform(mockHttpServletRequestBuilder)
             .andExpect(status().isBadRequest()).andReturn();
-        assertTrue(mvcResult.getResponse().getContentAsString().contains("details should be between 1 and 255 characters"),
+        assertTrue(mvcResult.getResponse().getContentAsString().contains(
+            "details should be between 1 and 255 characters"),
                    "Audit log details should be between 1 and 255 characters");
     }
 
@@ -209,7 +210,8 @@ class AuditTest {
 
         MvcResult mvcResult = mockMvc.perform(mockHttpServletRequestBuilder)
             .andExpect(status().isBadRequest()).andReturn();
-        assertTrue(mvcResult.getResponse().getContentAsString().contains("details should be between 1 and 255 characters"),
+        assertTrue(mvcResult.getResponse().getContentAsString().contains(
+            "details should be between 1 and 255 characters"),
                    "Audit log details should be between 1 and 255 characters");
     }
 
