@@ -3,6 +3,7 @@ package uk.gov.hmcts.reform.pip.account.management.controllers;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +25,7 @@ import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
 import uk.gov.hmcts.reform.pip.model.enums.AuditAction;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.http.HttpStatus.FORBIDDEN;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -143,6 +145,74 @@ class AuditTest {
         assertEquals(EMAIL, auditLog.getUserEmail(), "Failed to create audit log");
         assertEquals(USER_ID, auditLog.getUserId(), "Failed to create audit log");
         assertEquals(AUDIT_DETAILS, auditLog.getDetails(), "Failed to create audit log");
+    }
+
+    @Test
+    void testCreateAuditLogWhenAuditDetailLengthIsBelowMinimum() throws Exception {
+        AuditLog belowMinimumAuditLog = new AuditLog(
+            USER_ID,
+            EMAIL,
+            ROLES,
+            USER_PROVENANCE,
+            AUDIT_ACTION,
+            ""
+        );
+
+        MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
+            .post(ROOT_URL)
+            .content(OBJECT_MAPPER.writeValueAsString(belowMinimumAuditLog))
+            .contentType(MediaType.APPLICATION_JSON);
+
+        MvcResult mvcResult = mockMvc.perform(mockHttpServletRequestBuilder)
+            .andExpect(status().isBadRequest()).andReturn();
+        assertTrue(mvcResult.getResponse().getContentAsString().contains(
+            "details should be between 1 and 255 characters"),
+                   "Audit log details should be between 1 and 255 characters");
+    }
+
+    @Test
+    void testCreateAuditLogWhenAuditDetailLengthIsNull() throws Exception {
+        AuditLog belowMinimumAuditLog = new AuditLog(
+            USER_ID,
+            EMAIL,
+            ROLES,
+            USER_PROVENANCE,
+            AUDIT_ACTION,
+            null
+        );
+
+        MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
+            .post(ROOT_URL)
+            .content(OBJECT_MAPPER.writeValueAsString(belowMinimumAuditLog))
+            .contentType(MediaType.APPLICATION_JSON);
+
+        MvcResult mvcResult = mockMvc.perform(mockHttpServletRequestBuilder)
+            .andExpect(status().isBadRequest()).andReturn();
+        assertTrue(mvcResult.getResponse().getContentAsString().contains("details must be provided"),
+                   "The audit details field must be provided");
+    }
+
+    @Test
+    void testCreateAuditLogWhenAuditDetailLengthIsAboveMaximum() throws Exception {
+        AuditLog aboveMaximumAuditLog = new AuditLog(
+            USER_ID,
+            EMAIL,
+            ROLES,
+            USER_PROVENANCE,
+            AUDIT_ACTION,
+            RandomStringUtils.random(256, true, false)
+        );
+
+        MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
+            .post(ROOT_URL)
+            .content(OBJECT_MAPPER.writeValueAsString(aboveMaximumAuditLog))
+            .contentType(MediaType.APPLICATION_JSON);
+
+        MvcResult mvcResult = mockMvc.perform(mockHttpServletRequestBuilder)
+            .andExpect(status().isBadRequest()).andReturn();
+        assertTrue(mvcResult.getResponse().getContentAsString().contains(
+            "details should be between 1 and 255 characters"),
+                   "Audit log details should be between 1 and 255 characters");
     }
 
     @Test
