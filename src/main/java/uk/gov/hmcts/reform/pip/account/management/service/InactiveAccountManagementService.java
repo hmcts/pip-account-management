@@ -31,11 +31,17 @@ public class InactiveAccountManagementService {
     @Value("${verification.aad-admin-account-deletion-days}")
     private int aadAdminAccountDeletionDays;
 
-    @Value("${verification.idam-account-sign-in-notification-days}")
-    private int idamAccountSignInNotificationDays;
+    @Value("${verification.cft-idam-account-sign-in-notification-days}")
+    private int cftIdamAccountSignInNotificationDays;
 
-    @Value("${verification.idam-account-deletion-days}")
-    private int idamAccountDeletionDays;
+    @Value("${verification.cft-idam-account-deletion-days}")
+    private int cftIdamAccountDeletionDays;
+
+    @Value("${verification.crime-idam-account-sign-in-notification-days}")
+    private int crimeIdamAccountSignInNotificationDays;
+
+    @Value("${verification.crime-idam-account-deletion-days}")
+    private int crimeIdamAccountDeletionDays;
 
     @Autowired
     public InactiveAccountManagementService(UserRepository userRepository, AzureUserService azureUserService,
@@ -84,11 +90,13 @@ public class InactiveAccountManagementService {
     }
 
     /**
-     * Method that gets all idam users who last signed in at least 118 days ago.
+     * Method that gets all idam users who last signed in at least 118 days ago for cft
+     * and 180 days for crime.
      * Then send their details on to publication services to send them a notification email.
      */
     public void notifyIdamUsersToSignIn() {
-        userRepository.findIdamUsersByLastSignedInDate(idamAccountSignInNotificationDays)
+        userRepository.findIdamUsersByLastSignedInDate(cftIdamAccountSignInNotificationDays,
+                                                       crimeIdamAccountSignInNotificationDays)
             .forEach(user -> publicationService.sendInactiveAccountSignInNotificationEmail(
                 user.getEmail(),
                 user.getForenames() + " " + user.getSurname(),
@@ -116,11 +124,12 @@ public class InactiveAccountManagementService {
     }
 
     /**
-     * Method that gets all idam users who have not signed in their account (default to 132 days).
+     * Method that gets all idam users who have not signed in their account (cft to 132
+     * and crime to 208 days)
      * Account service handles the deletion of their P&I user and subscriptions.
      */
     public void findIdamAccountsForDeletion() {
-        userRepository.findIdamUsersByLastSignedInDate(idamAccountDeletionDays)
+        userRepository.findIdamUsersByLastSignedInDate(cftIdamAccountDeletionDays, crimeIdamAccountDeletionDays)
             .forEach(user -> accountService.deleteAccount(user.getUserId()));
     }
 }
