@@ -42,7 +42,7 @@ public interface UserRepository extends JpaRepository<PiUser, Long> {
         + " * :cftDaysAgo AND user_provenance = 'CFT_IDAM') "
         + " OR (CAST(last_signed_in_date AS DATE) = CURRENT_DATE - (interval '1' day)"
         + " * :crimeDaysAgo AND user_provenance = 'CRIME_IDAM') ", nativeQuery = true)
-    List<PiUser> findIdamUsersByLastSignedInDate(@Param("cftDaysAgo") int daysSinceLastSignedIn,
+    List<PiUser> findIdamUsersByLastSignedInDate(@Param("cftDaysAgo") int cftDaysSinceLastSignedIn,
                                                  @Param("crimeDaysAgo") int crimeDaysSinceLastSignedIn);
 
     Optional<PiUser> findByEmailIgnoreCaseAndUserProvenanceAndRolesIn(String email, UserProvenances userProvenances,
