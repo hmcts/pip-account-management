@@ -31,11 +31,17 @@ public class InactiveAccountManagementService {
     @Value("${verification.aad-admin-account-deletion-days}")
     private int aadAdminAccountDeletionDays;
 
-    @Value("${verification.idam-account-sign-in-notification-days}")
-    private int idamAccountSignInNotificationDays;
+    @Value("${verification.cft-idam-account-sign-in-notification-days}")
+    private int cftIdamAccountSignInNotificationDays;
 
-    @Value("${verification.idam-account-deletion-days}")
-    private int idamAccountDeletionDays;
+    @Value("${verification.cft-idam-account-deletion-days}")
+    private int cftIdamAccountDeletionDays;
+
+    @Value("${verification.crime-idam-account-sign-in-notification-days}")
+    private int crimeIdamAccountSignInNotificationDays;
+
+    @Value("${verification.crime-idam-account-deletion-days}")
+    private int crimeIdamAccountDeletionDays;
 
     @Autowired
     public InactiveAccountManagementService(UserRepository userRepository, AzureUserService azureUserService,
@@ -88,7 +94,8 @@ public class InactiveAccountManagementService {
      * Then send their details on to publication services to send them a notification email.
      */
     public void notifyIdamUsersToSignIn() {
-        userRepository.findIdamUsersByLastSignedInDate(idamAccountSignInNotificationDays)
+        userRepository.findIdamUsersByLastSignedInDate(cftIdamAccountSignInNotificationDays,
+                                                       crimeIdamAccountSignInNotificationDays)
             .forEach(user -> publicationService.sendInactiveAccountSignInNotificationEmail(
                 user.getEmail(),
                 user.getForenames() + " " + user.getSurname(),
@@ -120,7 +127,7 @@ public class InactiveAccountManagementService {
      * Account service handles the deletion of their P&I user and subscriptions.
      */
     public void findIdamAccountsForDeletion() {
-        userRepository.findIdamUsersByLastSignedInDate(idamAccountDeletionDays)
+        userRepository.findIdamUsersByLastSignedInDate(cftIdamAccountDeletionDays, crimeIdamAccountDeletionDays)
             .forEach(user -> accountService.deleteAccount(user.getUserId()));
     }
 }

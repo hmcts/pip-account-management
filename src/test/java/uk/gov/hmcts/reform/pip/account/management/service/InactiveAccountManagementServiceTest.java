@@ -122,7 +122,7 @@ class InactiveAccountManagementServiceTest {
 
     @Test
     void testNotifyIdamUsersToSignIn() {
-        when(userRepository.findIdamUsersByLastSignedInDate(anyInt()))
+        when(userRepository.findIdamUsersByLastSignedInDate(anyInt(), anyInt()))
             .thenReturn(List.of(CFT_IDAM_USER, CRIME_IDAM_USER));
 
         inactiveAccountManagementService.notifyIdamUsersToSignIn();
@@ -136,7 +136,7 @@ class InactiveAccountManagementServiceTest {
 
     @Test
     void testNoNotificationOfIdamUsersToSignIn() {
-        when(userRepository.findIdamUsersByLastSignedInDate(anyInt()))
+        when(userRepository.findIdamUsersByLastSignedInDate(anyInt(), anyInt()))
             .thenReturn(Collections.emptyList());
 
         inactiveAccountManagementService.notifyIdamUsersToSignIn();
@@ -181,7 +181,7 @@ class InactiveAccountManagementServiceTest {
 
     @Test
     void testIdamAccountDeletion() {
-        when(userRepository.findIdamUsersByLastSignedInDate(anyInt()))
+        when(userRepository.findIdamUsersByLastSignedInDate(anyInt(), anyInt()))
             .thenReturn(List.of(CFT_IDAM_USER, CRIME_IDAM_USER));
 
         inactiveAccountManagementService.findIdamAccountsForDeletion();
@@ -191,7 +191,7 @@ class InactiveAccountManagementServiceTest {
 
     @Test
     void testNoIdamAccountDeletion() {
-        when(userRepository.findIdamUsersByLastSignedInDate(anyInt()))
+        when(userRepository.findIdamUsersByLastSignedInDate(anyInt(), anyInt()))
             .thenReturn(Collections.emptyList());
 
         inactiveAccountManagementService.findIdamAccountsForDeletion();
