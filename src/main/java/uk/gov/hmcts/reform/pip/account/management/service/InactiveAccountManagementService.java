@@ -91,6 +91,8 @@ public class InactiveAccountManagementService {
 
     /**
      * Method that gets all idam users who last signed in at least 118 days ago.
+     * Method that gets all idam users who last signed in at least 118 days ago for cft
+     * and 180 days for crime.
      * Then send their details on to publication services to send them a notification email.
      */
     public void notifyIdamUsersToSignIn() {
