@@ -90,7 +90,6 @@ public class InactiveAccountManagementService {
     }
 
     /**
-     * Method that gets all idam users who last signed in at least 118 days ago.
      * Method that gets all idam users who last signed in at least 118 days ago for cft
      * and 180 days for crime.
      * Then send their details on to publication services to send them a notification email.
@@ -125,7 +124,8 @@ public class InactiveAccountManagementService {
     }
 
     /**
-     * Method that gets all idam users who have not signed in their account (default to 132 days).
+     * Method that gets all idam users who have not signed in their account (cft to 132
+     * and crime to 208 days)
      * Account service handles the deletion of their P&I user and subscriptions.
      */
     public void findIdamAccountsForDeletion() {
