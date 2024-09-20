@@ -223,7 +223,7 @@ dependencies {
   implementation group: 'net.logstash.logback', name: 'logstash-logback-encoder', version: '8.0'
 
   // Include Azure storage blob for storing application images
-  implementation group: 'com.azure', name: 'azure-storage-blob', version: '12.27.0'
+  implementation group: 'com.azure', name: 'azure-storage-blob', version: '12.28.0'
 
   // Include Flyway for database migrations
   implementation group: 'org.flywaydb', name: 'flyway-core', version: '10.17.0'
