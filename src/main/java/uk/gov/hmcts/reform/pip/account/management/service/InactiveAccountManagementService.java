@@ -13,9 +13,6 @@ import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
 @Slf4j
 @Service
 public class InactiveAccountManagementService {
-
-    private static final int SSO_ADMIN_ACCOUNT_SIGN_IN_NOTIFICATION_DAYS = 0;
-
     private final UserRepository userRepository;
     private final AzureUserService azureUserService;
     private final PublicationService publicationService;
@@ -79,9 +76,7 @@ public class InactiveAccountManagementService {
      * Then send their details on to publication services to send them a notification email.
      */
     public void notifyAdminUsersToSignIn() {
-        userRepository.findAdminUsersByLastSignedInDate(aadAdminAccountSignInNotificationDays,
-                                                        SSO_ADMIN_ACCOUNT_SIGN_IN_NOTIFICATION_DAYS
-            )
+        userRepository.findAdminUsersFortNotificationByLastSignedInDate(aadAdminAccountSignInNotificationDays)
             .forEach(user -> {
                 try {
                     publicationService.sendInactiveAccountSignInNotificationEmail(
@@ -126,7 +121,8 @@ public class InactiveAccountManagementService {
      * Account service handles the deletion of their AAD, P&I user and subscriptions.
      */
     public void findAdminAccountsForDeletion() {
-        userRepository.findAdminUsersByLastSignedInDate(aadAdminAccountDeletionDays, ssoAdminAccountDeletionDays)
+        userRepository.findAdminUsersForDeletionByLastSignedInDate(aadAdminAccountDeletionDays,
+                                                                   ssoAdminAccountDeletionDays)
             .forEach(user -> accountService.deleteAccount(user.getUserId()));
     }
 

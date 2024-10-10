@@ -106,7 +106,7 @@ class InactiveAccountManagementServiceTest {
 
     @Test
     void testNotifyAdminUsersToSignIn() throws AzureCustomException {
-        when(userRepository.findAdminUsersByLastSignedInDate(anyInt(), eq(0)))
+        when(userRepository.findAdminUsersFortNotificationByLastSignedInDate(anyInt()))
             .thenReturn(Collections.singletonList(AAD_ADMIN_USER));
         when(azureUserService.getUser(AAD_ADMIN_USER_EMAIL)).thenReturn(azureAdminUser);
 
@@ -118,7 +118,7 @@ class InactiveAccountManagementServiceTest {
 
     @Test
     void testNoNotificationOfAdminUsersToSignIn() {
-        when(userRepository.findAdminUsersByLastSignedInDate(anyInt(), anyInt()))
+        when(userRepository.findAdminUsersFortNotificationByLastSignedInDate(anyInt()))
             .thenReturn(Collections.emptyList());
 
         inactiveAccountManagementService.notifyAdminUsersToSignIn();
@@ -169,7 +169,7 @@ class InactiveAccountManagementServiceTest {
 
     @Test
     void testAdminAccountDeletion() {
-        when(userRepository.findAdminUsersByLastSignedInDate(anyInt(), anyInt()))
+        when(userRepository.findAdminUsersForDeletionByLastSignedInDate(anyInt(), anyInt()))
             .thenReturn(List.of(AAD_ADMIN_USER, SSO_ADMIN_USER));
 
         inactiveAccountManagementService.findAdminAccountsForDeletion();
@@ -179,7 +179,7 @@ class InactiveAccountManagementServiceTest {
 
     @Test
     void testNoAdminAccountDeletion() {
-        when(userRepository.findAdminUsersByLastSignedInDate(anyInt(), anyInt()))
+        when(userRepository.findAdminUsersForDeletionByLastSignedInDate(anyInt(), anyInt()))
             .thenReturn(Collections.emptyList());
 
         inactiveAccountManagementService.findAdminAccountsForDeletion();
