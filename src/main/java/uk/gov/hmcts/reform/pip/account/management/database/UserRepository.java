@@ -29,14 +29,20 @@ public interface UserRepository extends JpaRepository<PiUser, Long> {
         nativeQuery = true)
     List<String> getAccManDataForMI();
 
-
     @Query(value = "SELECT * FROM pi_user WHERE CAST(last_verified_date AS DATE) = CURRENT_DATE - (interval '1' day)"
         + " * :daysAgo AND user_provenance = 'PI_AAD' AND roles = 'VERIFIED'", nativeQuery = true)
     List<PiUser> findVerifiedUsersByLastVerifiedDate(@Param("daysAgo") int daysSinceLastVerified);
 
-    @Query(value = "SELECT * FROM pi_user WHERE CAST(last_signed_in_date AS DATE) = CURRENT_DATE - (interval '1' day)"
-        + " * :daysAgo AND roles <> 'VERIFIED' AND user_provenance = 'PI_AAD'", nativeQuery = true)
-    List<PiUser> findAadAdminUsersByLastSignedInDate(@Param("daysAgo") int daysSinceLastSignedIn);
+    @Query(value = "SELECT * FROM pi_user WHERE user_provenance = 'PI_AAD' AND roles <> 'VERIFIED' AND "
+        + "CAST(last_signed_in_date AS DATE) = CURRENT_DATE - (interval '1' day) * :aadDays", nativeQuery = true)
+    List<PiUser> findAdminUsersFortNotificationByLastSignedInDate(@Param("aadDays") int aadNumberOfDays);
+
+    @Query(value = "SELECT * FROM pi_user WHERE (user_provenance = 'PI_AAD' AND roles <> 'VERIFIED' AND "
+        + "CAST(last_signed_in_date AS DATE) <= CURRENT_DATE - (interval '1' day) * :aadDays) OR "
+        + "(user_provenance = 'SSO' AND "
+        + "CAST(last_signed_in_date AS DATE) <= CURRENT_DATE - (interval '1' day) * :ssoDays)", nativeQuery = true)
+    List<PiUser> findAdminUsersForDeletionByLastSignedInDate(@Param("aadDays") int aadNumberOfDays,
+                                                             @Param("ssoDays") int ssoNumberOfDays);
 
     @Query(value = "SELECT * FROM pi_user WHERE (CAST(last_signed_in_date AS DATE) = CURRENT_DATE - (interval '1' day)"
         + " * :cftDaysAgo AND user_provenance = 'CFT_IDAM') "

@@ -102,9 +102,11 @@ class AccountServiceTest {
     private static final String USER_NOT_FOUND_EXCEPTION_MESSAGE =
         "The exception when a user has not been found has been thrown";
     private static final UUID VALID_USER_ID = UUID.randomUUID();
+    private static final UUID VALID_USER_ID_SSO = UUID.randomUUID();
     private static final UUID VALID_USER_ID_IDAM = UUID.randomUUID();
 
     private static final PiUser PI_USER = new PiUser();
+    private static final PiUser PI_USER_SSO = new PiUser();
     private static final PiUser PI_USER_IDAM = new PiUser();
     private static final AzureAccount AZURE_ACCOUNT = new AzureAccount();
     private static final User EXPECTED_USER = new User();
@@ -117,6 +119,10 @@ class AccountServiceTest {
         PI_USER.setUserProvenance(UserProvenances.PI_AAD);
         PI_USER.setProvenanceUserId(ID);
         PI_USER.setEmail(EMAIL);
+
+        PI_USER_SSO.setUserId(VALID_USER_ID_SSO);
+        PI_USER_SSO.setUserProvenance(UserProvenances.SSO);
+        PI_USER_SSO.setProvenanceUserId(ID);
 
         PI_USER_IDAM.setUserId(VALID_USER_ID_IDAM);
         PI_USER_IDAM.setUserProvenance(UserProvenances.CFT_IDAM);
@@ -287,6 +293,21 @@ class AccountServiceTest {
         verify(subscriptionService, times(1))
             .sendSubscriptionDeletionRequest(VALID_USER_ID.toString());
         verify(userRepository, times(1)).delete(PI_USER);
+    }
+
+    @Test
+    void testDeleteSsoAccount() {
+        when(userRepository.findByUserId(VALID_USER_ID_SSO)).thenReturn(Optional.of(PI_USER_SSO));
+
+        doNothing().when(userRepository).delete(PI_USER_SSO);
+        when(subscriptionService.sendSubscriptionDeletionRequest(VALID_USER_ID_SSO.toString()))
+            .thenReturn(SUBSCRIPTIONS_DELETED);
+
+        accountService.deleteAccount(VALID_USER_ID_SSO);
+
+        verifyNoInteractions(azureUserService);
+        verify(subscriptionService).sendSubscriptionDeletionRequest(VALID_USER_ID_SSO.toString());
+        verify(userRepository).delete(PI_USER_SSO);
     }
 
     @Test
