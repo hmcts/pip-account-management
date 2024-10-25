@@ -30,6 +30,8 @@ class InactiveAccountManagementServiceTest {
     private static final String MEDIA_USER_EMAIL = "media@test.com";
     private static final UUID AAD_ADMIN_UUID = UUID.randomUUID();
     private static final String AAD_ADMIN_USER_EMAIL = "aad_admin@test.com";
+    private static final UUID SSO_ADMIN_UUID = UUID.randomUUID();
+    private static final String SSO_ADMIN_USER_EMAIL = "sso_admin@test.com";
     private static final UUID CFT_IDAM_UUID = UUID.randomUUID();
     private static final String CFT_IDAM_USER_EMAIL = "cft_idam@test.com";
     private static final UUID CRIME_IDAM_UUID = UUID.randomUUID();
@@ -47,11 +49,14 @@ class InactiveAccountManagementServiceTest {
     private static final PiUser AAD_ADMIN_USER = new PiUser(AAD_ADMIN_UUID, UserProvenances.PI_AAD,
                                                             "2", AAD_ADMIN_USER_EMAIL, Roles.INTERNAL_SUPER_ADMIN_CTSC,
                                                             FORENAME, SURNAME, null, null, LAST_SIGNED_IN_DATE);
+    private static final PiUser SSO_ADMIN_USER = new PiUser(SSO_ADMIN_UUID, UserProvenances.SSO,
+                                                            "3", SSO_ADMIN_USER_EMAIL, Roles.INTERNAL_SUPER_ADMIN_CTSC,
+                                                            FORENAME, SURNAME, null, null, LAST_SIGNED_IN_DATE);
     private static final PiUser CFT_IDAM_USER = new PiUser(CFT_IDAM_UUID, UserProvenances.CFT_IDAM,
-                                                           "3", CFT_IDAM_USER_EMAIL, Roles.INTERNAL_ADMIN_CTSC,
+                                                           "4", CFT_IDAM_USER_EMAIL, Roles.INTERNAL_ADMIN_CTSC,
                                                            FORENAME, SURNAME, null, null, LAST_SIGNED_IN_DATE);
     private static final PiUser CRIME_IDAM_USER = new PiUser(CRIME_IDAM_UUID, UserProvenances.CRIME_IDAM,
-                                                             "4", CRIME_IDAM_USER_EMAIL, Roles.INTERNAL_ADMIN_CTSC,
+                                                             "5", CRIME_IDAM_USER_EMAIL, Roles.INTERNAL_ADMIN_CTSC,
                                                              FORENAME, SURNAME, null, null, LAST_SIGNED_IN_DATE);
 
     private static User azureMediaUser = new User();
@@ -100,7 +105,7 @@ class InactiveAccountManagementServiceTest {
 
     @Test
     void testNotifyAdminUsersToSignIn() throws AzureCustomException {
-        when(userRepository.findAadAdminUsersByLastSignedInDate(anyInt()))
+        when(userRepository.findAdminUsersFortNotificationByLastSignedInDate(anyInt()))
             .thenReturn(Collections.singletonList(AAD_ADMIN_USER));
         when(azureUserService.getUser(AAD_ADMIN_USER_EMAIL)).thenReturn(azureAdminUser);
 
@@ -112,7 +117,7 @@ class InactiveAccountManagementServiceTest {
 
     @Test
     void testNoNotificationOfAdminUsersToSignIn() {
-        when(userRepository.findAadAdminUsersByLastSignedInDate(anyInt()))
+        when(userRepository.findAdminUsersFortNotificationByLastSignedInDate(anyInt()))
             .thenReturn(Collections.emptyList());
 
         inactiveAccountManagementService.notifyAdminUsersToSignIn();
@@ -163,16 +168,17 @@ class InactiveAccountManagementServiceTest {
 
     @Test
     void testAdminAccountDeletion() {
-        when(userRepository.findAadAdminUsersByLastSignedInDate(anyInt()))
-            .thenReturn(Collections.singletonList(AAD_ADMIN_USER));
+        when(userRepository.findAdminUsersForDeletionByLastSignedInDate(anyInt(), anyInt()))
+            .thenReturn(List.of(AAD_ADMIN_USER, SSO_ADMIN_USER));
 
         inactiveAccountManagementService.findAdminAccountsForDeletion();
         verify(accountService).deleteAccount(AAD_ADMIN_UUID);
+        verify(accountService).deleteAccount(SSO_ADMIN_UUID);
     }
 
     @Test
     void testNoAdminAccountDeletion() {
-        when(userRepository.findAadAdminUsersByLastSignedInDate(anyInt()))
+        when(userRepository.findAdminUsersForDeletionByLastSignedInDate(anyInt(), anyInt()))
             .thenReturn(Collections.emptyList());
 
         inactiveAccountManagementService.findAdminAccountsForDeletion();
