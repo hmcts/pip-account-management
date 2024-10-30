@@ -8,5 +8,3 @@ spring:
 
 admin:
   max-system-admin: ${MAX_SYSTEM_ADMIN_ACCOUNTS:2}
-
-test-url: ${TEST_URL:http://localhost:6969}

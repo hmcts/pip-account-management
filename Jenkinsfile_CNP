@@ -7,6 +7,8 @@ def product = "pip"
 def component = "account-management"
 def kv = product + '-ss-kv'
 
+GradleBuilder builder = new GradleBuilder(this, product)
+
 def setupTestSecrets() {
   def bootstap_env = env.ENV == "prod" || env.ENV == "demo" || env.ENV == "sbox" ? env.ENV : "stg"
   azureKeyVault(
@@ -18,7 +20,8 @@ def setupTestSecrets() {
       secret('app-pip-publication-services-scope', 'PUBLICATION_SERVICES_AZ_API'),
       secret('app-pip-subscription-management-scope', 'SUBSCRIPTION_MANAGEMENT_AZ_API'),
       secret('app-tenant', 'TENANT_ID'),
-
+      secret('app-pip-subscription-management-id', 'CLIENT_ID_FT'),
+      secret('app-pip-subscription-management-pwd', 'CLIENT_SECRET_FT'),
     ]) {
     env.APP_URI = "${APP_URI}"
     env.CLIENT_ID = "${CLIENT_ID}"
@@ -26,6 +29,8 @@ def setupTestSecrets() {
     env.PUBLICATION_SERVICES_AZ_API = "${PUBLICATION_SERVICES_AZ_API}"
     env.SUBSCRIPTION_MANAGEMENT_AZ_API = "${SUBSCRIPTION_MANAGEMENT_AZ_API}"
     env.TENANT_ID = "${TENANT_ID}"
+    env.CLIENT_ID_FT = "${CLIENT_ID_FT}"
+    env.CLIENT_SECRET_FT = "${CLIENT_SECRET_FT}"
   }
 }
 
@@ -62,4 +67,7 @@ withPipeline(type, product, component) {
   disableLegacyDeployment()
   enableApiGatewayTest()
 
+  afterAlways('test') {
+    builder.gradle('integration')
+  }
 }

@@ -9,12 +9,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 
-/**
- * These are required in the functional test folder to allow the spring context to load, which is
- * needed to get access to some of the autowired properties.
- * Note - The test itself does not use this mock, and is calling a real implementation.
- */
-@Profile("functional")
+@Profile("integration")
 @Configuration
 public class AzureConfigurationClientTestConfiguration {
 
