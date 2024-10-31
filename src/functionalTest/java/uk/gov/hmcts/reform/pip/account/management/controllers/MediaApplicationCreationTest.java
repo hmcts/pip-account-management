@@ -1,18 +1,13 @@
 package uk.gov.hmcts.reform.pip.account.management.controllers;
 
 import io.restassured.response.Response;
-import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import uk.gov.hmcts.reform.pip.account.management.Application;
-import uk.gov.hmcts.reform.pip.account.management.config.AzureBlobConfigurationTestConfiguration;
-import uk.gov.hmcts.reform.pip.account.management.config.AzureConfigurationClientTestConfiguration;
 import uk.gov.hmcts.reform.pip.account.management.utils.FunctionalTestBase;
 import uk.gov.hmcts.reform.pip.account.management.utils.OAuthClient;
 
@@ -25,11 +20,7 @@ import static org.springframework.http.HttpStatus.OK;
 
 @ExtendWith(SpringExtension.class)
 @ActiveProfiles(profiles = "functional")
-@AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@SpringBootTest(classes = {Application.class, OAuthClient.class,
-    AzureBlobConfigurationTestConfiguration.class, AzureConfigurationClientTestConfiguration.class},
-    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(classes = {OAuthClient.class})
 class MediaApplicationCreationTest extends FunctionalTestBase {
 
     private static final String TEST_NAME = "E2E Account Management Test Name";
