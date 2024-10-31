@@ -90,7 +90,7 @@ class SensitivityTest {
         user.setRoles(Roles.VERIFIED);
 
         MvcResult response = callIsAuthorised(user, Sensitivity.PUBLIC);
-        assertFalse(Boolean.parseBoolean(response.getResponse().getContentAsString()), TRUE_MESSAGE);
+        assertTrue(Boolean.parseBoolean(response.getResponse().getContentAsString()), TRUE_MESSAGE);
     }
 
     @Test
