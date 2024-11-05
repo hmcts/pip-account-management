@@ -8,7 +8,7 @@
 
   <rule ref="category/java/bestpractices.xml">
     <exclude name="GuardLogStatement"/>
-    <exclude name="JUnitTestContainsTooManyAsserts"/>
+    <exclude name="UnitTestContainsTooManyAsserts"/>
     <exclude name="PreserveStackTrace"/>
   </rule>
   <rule ref="category/java/codestyle.xml">

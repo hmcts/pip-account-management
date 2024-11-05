@@ -51,7 +51,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
 @WithMockUser(username = "admin", authorities = {"APPROLE_api.request.admin"})
 
-@SuppressWarnings({"PMD.TooManyMethods", "PMD.LawOfDemeter", "PMD.JUnitTestsShouldIncludeAssert"})
+@SuppressWarnings({"PMD.TooManyMethods", "PMD.LawOfDemeter", "PMD.UnitTestShouldIncludeAssert"})
 class MediaApplicationTest {
 
     @Autowired
