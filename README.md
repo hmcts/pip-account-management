@@ -196,20 +196,23 @@ Below is a table of currently used environment variables for starting the servic
 
 Secrets required for getting tests to run correctly can be found in the below table:
 
-| Variable                       | Description                                                                                                                                                                                                                                     |
-|:-------------------------------|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| APP_URI                        | Uniform Resource Identifier - the location where the application expects to receive bearer tokens after a successful authentication process. The application then validates received bearer tokens using the AUD parameter in the token.        |
-| CLIENT_ID                      | Unique ID for the application within Azure AD. Used to identify the application during authentication.                                                                                                                                          |
-| CLIENT_SECRET                  | Secret key for authentication requests to the service.                                                                                                                                                                                          |
-| PUBLICATION_SERVICES_AZ_API    | Used as part of the `scope` parameter when requesting a token from Azure. Used for service-to-service communication with the pip-publication-services service.                                                                                  |
-| SUBSCRIPTION_MANAGEMENT_AZ_API | Used as part of the `scope` parameter when requesting a token from Azure. Used for service-to-service communication with the pip-subscription-management service.                                                                               |
-| TENANT_ID                      | Directory unique ID assigned to our Azure AD tenant. Represents the organisation that owns and manages the Azure AD instance.                                                                                                                   |
+| Variable                       | Description                                                                                                                                                                                                                              |
+|:-------------------------------|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| APP_URI                        | Uniform Resource Identifier - the location where the application expects to receive bearer tokens after a successful authentication process. The application then validates received bearer tokens using the AUD parameter in the token. |
+| CLIENT_ID                      | Unique ID for the application within Azure AD. Used to identify the application during authentication.                                                                                                                                   |
+| CLIENT_SECRET                  | Secret key for authentication requests to the service.                                                                                                                                                                                   |
+| PUBLICATION_SERVICES_AZ_API    | Used as part of the `scope` parameter when requesting a token from Azure. Used for service-to-service communication with the pip-publication-services service.                                                                           |
+| SUBSCRIPTION_MANAGEMENT_AZ_API | Used as part of the `scope` parameter when requesting a token from Azure. Used for service-to-service communication with the pip-subscription-management service.                                                                        |
+| TENANT_ID                      | Directory unique ID assigned to our Azure AD tenant. Represents the organisation that owns and manages the Azure AD instance.                                                                                                            |
+| CLIENT_ID_FT                   | Client ID of external service used for authentication with account-management application in the functional tests.                                                                                                                       |
+| CLIENT_SECRET_FT               | Client secret of external service.used for authentication with account-management application in the functional tests.                                                                                                                   |
 
 #### Application.yaml files
 The service can also be adapted using the yaml files found in the following locations:
 - [src/main/resources/application.yaml](./src/main/resources/application.yaml) for changes to the behaviour of the service itself.
 - [src/main/resources/application-dev.yaml](./src/main/resources/application-dev.yaml) for changes to the behaviour of the service when running locally.
 - [src/test/resources/application-test.yaml](./src/test/resources/application-test.yaml) for changes to other test types (e.g. unit tests).
+- [src/integrationTest/resources/application-integration.yaml](./src/integrationTest/resources/application-integration.yaml) for changes to the application when it's running integration tests.
 - [src/integrationTest/resources/application-functional.yaml](./src/functionalTest/resources/application-functional.yaml) for changes to the application when its running functional tests.
 
 ### Fortify
@@ -315,19 +318,27 @@ We use a few automated tools to ensure quality and security within the service. 
 
 ## Test Suite
 
-This microservice is comprehensively tested using both unit and functional tests.
+This microservice is comprehensively tested using unit, integration and functional tests.
 
 ### Unit tests
 
 Unit tests can be run on demand using `./gradlew test`.
 
+### Integration tests
+
+Integration tests can be run on demand using `./gradlew integration`.
+
+For our integration tests, we are using Square's [MockWebServer](https://github.com/square/okhttp/tree/master/mockwebserver) library. This allows us to test the full HTTP stack for our service-to-service interactions.
+
+The mock server interacts with external CaTH services on staging.
+
 ### Functional tests
 
 Functional tests can be run using `./gradlew functional`
 
-For our functional tests, we are using Square's [MockWebServer](https://github.com/square/okhttp/tree/master/mockwebserver) library. This allows us to test the full HTTP stack for our service-to-service interactions.
+Functional testing is performed on the stood-up account-management instance on the dev pod (during pull request) or on staging (when running on the master branch).
 
-The functional tests also call out to Data Management in staging to retrieve publications.
+This account-management instance interacts with external CaTH services on staging.
 
 ## Contributing
 We are happy to accept third-party contributions. See [.github/CONTRIBUTING.md](./.github/CONTRIBUTING.md) for more details.

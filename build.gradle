@@ -48,6 +48,15 @@ sourceSets {
     resources.srcDir file('src/functionalTest/resources')
   }
 
+  integrationTest {
+    java {
+      compileClasspath += main.output
+      runtimeClasspath += main.output
+      srcDir file('src/integrationTest/java')
+    }
+    resources.srcDir file('src/integrationTest/resources')
+  }
+
   smokeTest {
     java {
       compileClasspath += main.output
@@ -76,6 +85,9 @@ task migratePostgresDatabase(type: org.flywaydb.gradle.task.FlywayMigrateTask) {
 configurations {
   functionalTestImplementation.extendsFrom testImplementation
   functionalTestRuntimeOnly.extendsFrom runtimeOnly
+
+  integrationTestImplementation.extendsFrom testImplementation
+  integrationTestRuntimeOnly.extendsFrom runtimeOnly
 
   smokeTestImplementation.extendsFrom testImplementation
   smokeTestRuntimeOnly.extendsFrom runtimeOnly
@@ -113,6 +125,13 @@ task functional(type: Test) {
   classpath = sourceSets.functionalTest.runtimeClasspath
 }
 
+task integration(type: Test) {
+  description = "Runs integration tests"
+  group = "Verification"
+  testClassesDirs = sourceSets.integrationTest.output.classesDirs
+  classpath = sourceSets.integrationTest.runtimeClasspath
+}
+
 task smoke(type: Test) {
   description = "Runs Smoke Tests"
   testClassesDirs = sourceSets.smokeTest.output.classesDirs
@@ -127,7 +146,7 @@ checkstyle {
 
 pmd {
   toolVersion = "7.7.0"
-  sourceSets = [sourceSets.main, sourceSets.test, sourceSets.functionalTest, sourceSets.smokeTest]
+  sourceSets = [sourceSets.main, sourceSets.test, sourceSets.functionalTest, sourceSets.integrationTest, sourceSets.smokeTest]
   reportsDir = file("${layout.buildDirectory.get()}/reports/pmd")
   ruleSetFiles = files("config/pmd/ruleset.xml")
 }
@@ -137,7 +156,7 @@ jacoco {
 }
 
 jacocoTestReport {
-  executionData(test)
+  executionData(test, integration)
   reports {
     xml.required = true
     csv.required = false
@@ -246,6 +265,8 @@ dependencies {
   testImplementation group: 'org.apiguardian', name: 'apiguardian-api', version: '1.1.2'
   testImplementation group: 'org.mockito', name: 'mockito-inline', version: '5.2.0'
   testImplementation group: 'com.github.hmcts', name: 'fortify-client', version: '1.4.5', classifier: 'all'
+
+  functionalTestImplementation group: 'io.rest-assured', name: 'rest-assured'
 }
 
 task fortifyScan(type: JavaExec)  {
@@ -269,6 +290,10 @@ rootProject.tasks.named("processSmokeTestResources") {
 
 // Gradle 7.x issue, workaround from: https://github.com/gradle/gradle/issues/17236#issuecomment-894768083
 rootProject.tasks.named("processFunctionalTestResources") {
+  duplicatesStrategy = 'include'
+}
+
+rootProject.tasks.named("processIntegrationTestResources") {
   duplicatesStrategy = 'include'
 }
 
