@@ -59,7 +59,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WithMockUser(username = "admin", authorities = {"APPROLE_api.request.admin"})
 
 @SuppressWarnings({"PMD.TooManyMethods", "PMD.ExcessiveImports",
-    "PMD.JUnitTestsShouldIncludeAssert", "PMD.CouplingBetweenObjects"})
+    "PMD.UnitTestShouldIncludeAssert", "PMD.CouplingBetweenObjects"})
 class TestingSupportApiTest {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
