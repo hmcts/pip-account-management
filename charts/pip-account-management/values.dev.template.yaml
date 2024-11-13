@@ -27,6 +27,7 @@ java:
       secretRef: storage-secret-{{ .Release.Name }}-blobstorage
       key: accessKey
 blobstorage:
+  enabled: true
   resourceGroup: pip-aso-dev-rg
   setup:
     containers:
