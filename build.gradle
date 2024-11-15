@@ -1,7 +1,7 @@
 //This is required as flyway now has a stand alone library for each database rather than being bundled together
 buildscript {
   dependencies {
-    classpath("org.flywaydb:flyway-database-postgresql:10.19.0")
+    classpath("org.flywaydb:flyway-database-postgresql:10.20.1")
   }
 }
 
@@ -11,13 +11,13 @@ plugins {
   id 'com.github.ben-manes.versions' version '0.51.0'
   id 'io.spring.dependency-management' version '1.1.6'
   id 'jacoco'
-  id 'org.springframework.boot' version '3.3.3'
+  id 'org.springframework.boot' version '3.3.4'
   id 'org.owasp.dependencycheck' version '10.0.3'
   id 'org.sonarqube' version '5.1.0.4882'
   id 'pmd'
-  id 'org.jetbrains.kotlin.jvm' version '2.0.20'
+  id 'org.jetbrains.kotlin.jvm' version '2.0.21'
   id 'io.freefair.lombok' version '8.10.2'
-  id 'org.flywaydb.flyway' version '10.19.0'
+  id 'org.flywaydb.flyway' version '10.20.1'
 }
 
 application {
@@ -48,6 +48,15 @@ sourceSets {
     resources.srcDir file('src/functionalTest/resources')
   }
 
+  integrationTest {
+    java {
+      compileClasspath += main.output
+      runtimeClasspath += main.output
+      srcDir file('src/integrationTest/java')
+    }
+    resources.srcDir file('src/integrationTest/resources')
+  }
+
   smokeTest {
     java {
       compileClasspath += main.output
@@ -76,6 +85,9 @@ task migratePostgresDatabase(type: org.flywaydb.gradle.task.FlywayMigrateTask) {
 configurations {
   functionalTestImplementation.extendsFrom testImplementation
   functionalTestRuntimeOnly.extendsFrom runtimeOnly
+
+  integrationTestImplementation.extendsFrom testImplementation
+  integrationTestRuntimeOnly.extendsFrom runtimeOnly
 
   smokeTestImplementation.extendsFrom testImplementation
   smokeTestRuntimeOnly.extendsFrom runtimeOnly
@@ -113,6 +125,13 @@ task functional(type: Test) {
   classpath = sourceSets.functionalTest.runtimeClasspath
 }
 
+task integration(type: Test) {
+  description = "Runs integration tests"
+  group = "Verification"
+  testClassesDirs = sourceSets.integrationTest.output.classesDirs
+  classpath = sourceSets.integrationTest.runtimeClasspath
+}
+
 task smoke(type: Test) {
   description = "Runs Smoke Tests"
   testClassesDirs = sourceSets.smokeTest.output.classesDirs
@@ -121,14 +140,14 @@ task smoke(type: Test) {
 
 checkstyle {
   maxWarnings = 0
-  toolVersion = '10.18.2'
+  toolVersion = '10.20.0'
   getConfigDirectory().set(new File(rootDir, 'config/checkstyle'))
 }
 
 pmd {
-  toolVersion = "7.6.0"
-  sourceSets = [sourceSets.main, sourceSets.test, sourceSets.functionalTest, sourceSets.smokeTest]
-  reportsDir = file("$project.buildDir/reports/pmd")
+  toolVersion = "7.7.0"
+  sourceSets = [sourceSets.main, sourceSets.test, sourceSets.functionalTest, sourceSets.integrationTest, sourceSets.smokeTest]
+  reportsDir = file("${layout.buildDirectory.get()}/reports/pmd")
   ruleSetFiles = files("config/pmd/ruleset.xml")
 }
 
@@ -137,11 +156,11 @@ jacoco {
 }
 
 jacocoTestReport {
-  executionData(test)
+  executionData(test, integration)
   reports {
     xml.required = true
     csv.required = false
-    xml.outputLocation.set(file("${buildDir}/reports/jacoco/test/jacocoTestReport.xml"))
+    xml.outputLocation.set(layout.buildDirectory.file("reports/jacoco/test/jacocoTestReport.xml"))
   }
 }
 
@@ -182,7 +201,7 @@ dependencyCheck {
 
 ext {
   log4JVersion = "2.24.1"
-  reformLoggingVersion = "6.1.6"
+  reformLoggingVersion = "6.1.7"
 }
 
 dependencies {
@@ -197,18 +216,18 @@ dependencies {
   implementation group: 'org.springframework.boot', name: 'spring-boot-starter-data-jpa'
   implementation group: 'org.springframework.boot', name: 'spring-boot-starter-oauth2-client'
   implementation group: 'org.postgresql', name: 'postgresql', version: '42.7.4'
-  implementation group: 'com.azure.spring', name: 'spring-cloud-azure-starter-active-directory', version: '5.16.0'
+  implementation group: 'com.azure.spring', name: 'spring-cloud-azure-starter-active-directory', version: '5.17.1'
   implementation group: 'com.squareup.okhttp3', name: 'okhttp', version: '4.12.0'
   implementation group: 'com.opencsv', name: 'opencsv', version: '5.9'
   implementation group: 'commons-validator', name: 'commons-validator', version: '1.9.0'
 
-  implementation group: 'com.github.hmcts', name: 'pip-data-models', version: '2.1.31', {
+  implementation group: 'com.github.hmcts', name: 'pip-data-models', version: '2.1.32', {
     exclude group: 'org.springframework.boot', module: 'spring-boot-starter-data-jpa'
   }
   implementation group: 'io.hypersistence', name: 'hypersistence-utils-hibernate-63', version: '3.8.3'
 
   // Include the sdk as a dependency
-  implementation group: 'com.microsoft.graph', name: 'microsoft-graph', version: '6.17.0'
+  implementation group: 'com.microsoft.graph', name: 'microsoft-graph', version: '6.19.0'
   // Include Azure identity for authentication
   implementation group: 'com.azure', name: 'azure-identity', version: '1.14.0'
 
@@ -223,11 +242,11 @@ dependencies {
   implementation group: 'net.logstash.logback', name: 'logstash-logback-encoder', version: '8.0'
 
   // Include Azure storage blob for storing application images
-  implementation group: 'com.azure', name: 'azure-storage-blob', version: '12.28.0'
+  implementation group: 'com.azure', name: 'azure-storage-blob', version: '12.28.1'
 
   // Include Flyway for database migrations
-  implementation group: 'org.flywaydb', name: 'flyway-core', version: '10.19.0'
-  implementation group: 'org.flywaydb', name: 'flyway-database-postgresql', version: '10.19.0'
+  implementation group: 'org.flywaydb', name: 'flyway-core', version: '10.20.1'
+  implementation group: 'org.flywaydb', name: 'flyway-database-postgresql', version: '10.20.1'
 
   // Force upgrade snakeyaml version for CVE-2022-38752
   implementation( group: 'org.yaml', name: 'snakeyaml').version {
@@ -236,7 +255,7 @@ dependencies {
 
   runtimeOnly("org.springframework.boot:spring-boot-properties-migrator")
 
-  testImplementation(platform('org.junit:junit-bom:5.11.2'))
+  testImplementation(platform('org.junit:junit-bom:5.11.3'))
   testImplementation group: 'org.springframework.boot', name: 'spring-boot-starter-test'
   testImplementation group: 'org.springframework.security', name: 'spring-security-test'
   testImplementation group: 'com.squareup.okhttp3', name: 'mockwebserver', version: '4.12.0'
@@ -245,7 +264,9 @@ dependencies {
   testImplementation group: 'org.awaitility', name: 'awaitility', version: '4.2.2'
   testImplementation group: 'org.apiguardian', name: 'apiguardian-api', version: '1.1.2'
   testImplementation group: 'org.mockito', name: 'mockito-inline', version: '5.2.0'
-  testImplementation group: 'com.github.hmcts', name: 'fortify-client', version: '1.4.4', classifier: 'all'
+  testImplementation group: 'com.github.hmcts', name: 'fortify-client', version: '1.4.5', classifier: 'all'
+
+  functionalTestImplementation group: 'io.rest-assured', name: 'rest-assured'
 }
 
 task fortifyScan(type: JavaExec)  {
@@ -269,6 +290,10 @@ rootProject.tasks.named("processSmokeTestResources") {
 
 // Gradle 7.x issue, workaround from: https://github.com/gradle/gradle/issues/17236#issuecomment-894768083
 rootProject.tasks.named("processFunctionalTestResources") {
+  duplicatesStrategy = 'include'
+}
+
+rootProject.tasks.named("processIntegrationTestResources") {
   duplicatesStrategy = 'include'
 }
 
