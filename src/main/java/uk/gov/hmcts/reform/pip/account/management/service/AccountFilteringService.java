@@ -5,6 +5,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import uk.gov.hmcts.reform.pip.account.management.database.UserRepository;
+import uk.gov.hmcts.reform.pip.account.management.dto.MiReportData;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.NotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.helpers.EmailHelper;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
@@ -26,13 +27,13 @@ public class AccountFilteringService {
         this.userRepository = userRepository;
     }
 
-    public String getAccManDataForMiReporting() {
-        StringBuilder builder = new StringBuilder(85);
-        builder.append("user_id,provenance_user_id,user_provenance,roles,created_date,last_signed_in_date")
-            .append(System.lineSeparator());
-        userRepository.getAccManDataForMI()
-            .forEach(line -> builder.append(line).append(System.lineSeparator()));
-        return builder.toString();
+    /**
+     * Method which will retrieve MI reporting data for all accounts.
+     *
+     * @return A list of MI Data objects for all accounts.
+     */
+    public List<MiReportData> getAccManDataForMiReporting() {
+        return userRepository.getAccManDataForMI();
     }
 
     /**
