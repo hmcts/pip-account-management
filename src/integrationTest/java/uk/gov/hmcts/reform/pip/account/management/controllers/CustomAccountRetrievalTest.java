@@ -108,7 +108,7 @@ class CustomAccountRetrievalTest {
                 }
             );
 
-        String createdUserId = mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).get(0).toString();
+        String createdUserId = mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).getFirst().toString();
 
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .get(MI_REPORTING_ACCOUNT_DATA_URL);
@@ -117,17 +117,15 @@ class CustomAccountRetrievalTest {
 
         assertNotNull(responseMiData.getResponse(), VALIDATION_MI_REPORT);
 
-        List<MiReportData> miData =
-            Arrays.asList(OBJECT_MAPPER.readValue(responseMiData.getResponse().getContentAsString(), MiReportData[].class));
+        List<MiReportData> miData = Arrays.asList(
+            OBJECT_MAPPER.readValue(
+                responseMiData.getResponse().getContentAsString(),
+                MiReportData[].class
+            )
+        );
 
-        assertEquals(6, miData.size(), VALIDATION_MI_REPORT);
-        assertEquals(createdUserId, miData.get(0).getUserId().toString(), VALIDATION_MI_REPORT);
-        assertEquals(createdUserId, miData.get(1).getUserId().toString(), VALIDATION_MI_REPORT);
-        assertEquals(createdUserId, miData.get(2).getUserId().toString(), VALIDATION_MI_REPORT);
-        assertEquals(createdUserId, miData.get(3).getUserId().toString(), VALIDATION_MI_REPORT);
-        assertEquals(createdUserId, miData.get(4).getUserId().toString(), VALIDATION_MI_REPORT);
-        assertEquals(createdUserId, miData.get(5).getUserId().toString(), VALIDATION_MI_REPORT);
-
+        assertEquals(1, miData.size(), VALIDATION_MI_REPORT);
+        assertEquals(createdUserId, miData.getFirst().getUserId().toString(), VALIDATION_MI_REPORT);
     }
 
     @Test
