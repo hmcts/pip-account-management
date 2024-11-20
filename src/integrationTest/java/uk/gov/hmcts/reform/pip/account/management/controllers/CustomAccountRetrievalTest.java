@@ -125,7 +125,7 @@ class CustomAccountRetrievalTest {
         );
 
         assertEquals(6, miData.size(), VALIDATION_MI_REPORT);
-        assertEquals(createdUserId, miData.getFirst().getUserId().toString(), VALIDATION_MI_REPORT);
+        assertEquals(createdUserId, miData.getLast().getUserId().toString(), VALIDATION_MI_REPORT);
     }
 
     @Test
