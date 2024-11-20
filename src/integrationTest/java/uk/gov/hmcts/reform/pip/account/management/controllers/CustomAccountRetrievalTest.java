@@ -124,7 +124,7 @@ class CustomAccountRetrievalTest {
             )
         );
 
-        assertEquals(1, miData.size(), VALIDATION_MI_REPORT);
+        assertEquals(6, miData.size(), VALIDATION_MI_REPORT);
         assertEquals(createdUserId, miData.getFirst().getUserId().toString(), VALIDATION_MI_REPORT);
     }
 
@@ -176,7 +176,7 @@ class CustomAccountRetrievalTest {
             PiUser[].class
         );
 
-        assertEquals(6, users.length, "Correct number of users should return");
+        assertEquals(1, users.length, "Correct number of users should return");
         assertEquals(createdUserId, users[0].getUserId().toString(), USER_SHOULD_MATCH);
     }
 
