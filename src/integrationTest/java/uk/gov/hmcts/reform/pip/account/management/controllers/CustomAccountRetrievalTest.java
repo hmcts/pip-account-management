@@ -176,7 +176,7 @@ class CustomAccountRetrievalTest {
             PiUser[].class
         );
 
-        assertEquals(1, users.length, "Correct number of users should return");
+        assertEquals(6, users.length, "Correct number of users should return");
         assertEquals(createdUserId, users[0].getUserId().toString(), USER_SHOULD_MATCH);
     }
 
