@@ -11,11 +11,11 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import uk.gov.hmcts.reform.pip.account.management.database.UserRepository;
-import uk.gov.hmcts.reform.pip.account.management.dto.MiReportData;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.NotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
+import uk.gov.hmcts.reform.pip.model.report.AccountMiData;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -64,12 +64,12 @@ class AccountFilteringServiceTest {
 
     @Test
     void testMiService() {
-        MiReportData miRecord = new MiReportData(USER_ID, ID, PI_AAD, INTERNAL_ADMIN_CTSC,
+        AccountMiData miRecord = new AccountMiData(USER_ID, ID, PI_AAD, INTERNAL_ADMIN_CTSC,
                                                                        CREATED_DATE, LAST_SIGNED_IN);
-        List<MiReportData> miData = List.of(miRecord, miRecord);
+        List<AccountMiData> miData = List.of(miRecord, miRecord);
 
         when(userRepository.getAccManDataForMI()).thenReturn(miData);
-        List<MiReportData> miReportData = accountFilteringService.getAccManDataForMiReporting();
+        List<AccountMiData> miReportData = accountFilteringService.getAccManDataForMiReporting();
 
         assertEquals(miData, miReportData, "Returned data does not match expected data");
     }

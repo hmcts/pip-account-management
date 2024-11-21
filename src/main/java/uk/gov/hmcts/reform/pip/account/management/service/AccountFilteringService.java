@@ -5,12 +5,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import uk.gov.hmcts.reform.pip.account.management.database.UserRepository;
-import uk.gov.hmcts.reform.pip.account.management.dto.MiReportData;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.NotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.helpers.EmailHelper;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
+import uk.gov.hmcts.reform.pip.model.report.AccountMiData;
 
 import java.util.List;
 
@@ -32,7 +32,7 @@ public class AccountFilteringService {
      *
      * @return A list of MI Data objects for all accounts.
      */
-    public List<MiReportData> getAccManDataForMiReporting() {
+    public List<AccountMiData> getAccManDataForMiReporting() {
         return userRepository.getAccManDataForMI();
     }
 

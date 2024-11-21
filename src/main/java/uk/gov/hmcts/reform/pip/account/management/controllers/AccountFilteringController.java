@@ -17,12 +17,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import uk.gov.hmcts.reform.pip.account.management.dto.MiReportData;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
 import uk.gov.hmcts.reform.pip.account.management.service.AccountFilteringService;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
 import uk.gov.hmcts.reform.pip.model.authentication.roles.IsAdmin;
+import uk.gov.hmcts.reform.pip.model.report.AccountMiData;
 
 import java.util.List;
 
@@ -50,7 +50,7 @@ public class AccountFilteringController {
     @ApiResponse(responseCode = OK_CODE, description = "A JSON model which contains the data. ")
     @Operation(summary = "Returns (anonymized) account data for MI reporting")
     @GetMapping("/mi-data")
-    public ResponseEntity<List<MiReportData>> getMiData() {
+    public ResponseEntity<List<AccountMiData>> getMiData() {
         return ResponseEntity.status(HttpStatus.OK).body(accountFilteringService.getAccManDataForMiReporting());
     }
 
