@@ -25,7 +25,7 @@ public interface UserRepository extends JpaRepository<PiUser, Long> {
 
     Optional<PiUser> findByUserId(UUID userId);
 
-    @Query("SELECT new uk.gov.hmcts.reform.pip.account.management.dto.MiReportData("
+    @Query("SELECT new uk.gov.hmcts.reform.pip.model.report.AccountMiData("
         + "u.userId, u.provenanceUserId, u.userProvenance, u.roles, u.createdDate, u.lastSignedInDate) "
         + "FROM PiUser u")
     List<AccountMiData> getAccManDataForMI();
