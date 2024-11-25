@@ -16,6 +16,7 @@ import uk.gov.hmcts.reform.pip.account.management.model.AuditLog;
 import uk.gov.hmcts.reform.pip.model.enums.AuditAction;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -38,6 +39,11 @@ class AuditServiceTest {
     @InjectMocks
     private AuditService auditService;
 
+    private static final String EMAIL = "a@b.com";
+    private static final String USER_ID = "123";
+    private static final List<AuditAction> AUDIT_ACTIONS = new ArrayList<>();
+    private static final LocalDateTime FILTER_START_DATE = LocalDateTime.now();
+    private static final LocalDateTime FILTER_END_DATE = LocalDateTime.now();
     private final AuditLog auditLogExample = new AuditLog();
 
     @BeforeEach
@@ -48,15 +54,20 @@ class AuditServiceTest {
         auditLogExample.setAction(AuditAction.MANAGE_USER);
         auditLogExample.setDetails("Test details for manage user");
         auditLogExample.setTimestamp(LocalDateTime.now());
+
+        AUDIT_ACTIONS.add(AuditAction.ADMIN_CREATION);
     }
 
     @Test
     void testGetAllAuditLogs() {
         Pageable pageable = PageRequest.of(0, 25);
         Page<AuditLog> page = new PageImpl<>(List.of(auditLogExample), pageable, List.of(auditLogExample).size());
-        when(auditRepository.findAllByOrderByTimestampDesc(pageable)).thenReturn(page);
+        when(auditRepository
+            .findAllByUserEmailLikeIgnoreCaseAndUserIdLikeAndActionInAndTimestampBetweenOrderByTimestampDesc(
+                EMAIL, USER_ID, AUDIT_ACTIONS, FILTER_START_DATE, FILTER_END_DATE, pageable)).thenReturn(page);
 
-        Page<AuditLog> returnedAuditLogs = auditService.getAllAuditLogs(pageable);
+        Page<AuditLog> returnedAuditLogs = auditService.getAllAuditLogs(pageable, EMAIL, USER_ID, AUDIT_ACTIONS,
+                                                                        FILTER_START_DATE, FILTER_END_DATE);
 
         assertEquals(auditLogExample, returnedAuditLogs.getContent().get(0),
                      "Returned audit log does not match the expected");

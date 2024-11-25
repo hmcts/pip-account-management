@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,7 +22,10 @@ import org.springframework.web.bind.annotation.RestController;
 import uk.gov.hmcts.reform.pip.account.management.model.AuditLog;
 import uk.gov.hmcts.reform.pip.account.management.service.AuditService;
 import uk.gov.hmcts.reform.pip.model.authentication.roles.IsAdmin;
+import uk.gov.hmcts.reform.pip.model.enums.AuditAction;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
@@ -45,14 +49,22 @@ public class AuditController {
         this.auditService = auditService;
     }
 
-    @ApiResponse(responseCode = OK_ERROR_CODE, description = "All audit logs returned as a page.")
+    @ApiResponse(responseCode = OK_ERROR_CODE, description = "All audit logs returned as a page with filtering.")
     @Operation(summary = "Get all audit logs returned as a page")
     @GetMapping
     public ResponseEntity<Page<AuditLog>> getAllAuditLogs(
         @RequestParam(name = "pageNumber", defaultValue = "0") int pageNumber,
-        @RequestParam(name = "pageSize", defaultValue = "25") int pageSize) {
+        @RequestParam(name = "pageSize", defaultValue = "25") int pageSize,
+        @RequestParam(name = "email", defaultValue = "", required = false) String email,
+        @RequestParam(name = "userId", defaultValue = "", required = false) String userId,
+        @RequestParam(name = "actions", defaultValue = "", required = false) List<AuditAction> auditActions,
+        @RequestParam(name = "filterStartDate", defaultValue = "")
+        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime filterStartDate,
+        @RequestParam(name = "filterEndDate", defaultValue = "")
+        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime filterEndDate) {
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
-        return ResponseEntity.ok(auditService.getAllAuditLogs(pageable));
+        return ResponseEntity.ok(auditService.getAllAuditLogs(pageable, email, userId,
+            auditActions, filterStartDate, filterEndDate));
     }
 
     @ApiResponse(responseCode = OK_ERROR_CODE, description = "Audit log with id {id} returned.")

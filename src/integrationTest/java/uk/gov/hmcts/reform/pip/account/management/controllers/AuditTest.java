@@ -52,6 +52,8 @@ class AuditTest {
     private static final String UNAUTHORIZED_USERNAME = "unauthorized_isAuthorized";
     private static final String FORBIDDEN_STATUS_CODE = "Status code does not match forbidden";
     private static final String GET_AUDIT_LOG_FAILED = "Failed to retrieve audit log";
+    private static final String GET_ALL_AUDIT_PARAMS =
+        "?filterStartDate=2020-01-01T00:00:00.000Z&filterEndDate=2100-01-01T00:00:00.000Z";
     private static final AuditAction AUDIT_ACTION = AuditAction.MANAGE_THIRD_PARTY_USER_VIEW;
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
@@ -94,7 +96,7 @@ class AuditTest {
             .contentType(MediaType.APPLICATION_JSON);
         mockMvc.perform(mockHttpServletRequestBuilder2).andExpect(status().isOk());
 
-        MvcResult mvcResult = mockMvc.perform(get(ROOT_URL))
+        MvcResult mvcResult = mockMvc.perform(get(ROOT_URL + GET_ALL_AUDIT_PARAMS))
             .andExpect(status().isOk())
             .andReturn();
 

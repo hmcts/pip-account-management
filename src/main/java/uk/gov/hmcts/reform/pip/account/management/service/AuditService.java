@@ -8,8 +8,12 @@ import org.springframework.stereotype.Service;
 import uk.gov.hmcts.reform.pip.account.management.database.AuditRepository;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.NotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.model.AuditLog;
+import uk.gov.hmcts.reform.pip.model.enums.AuditAction;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -33,8 +37,35 @@ public class AuditService {
      * @param pageable The pageable object to query by.
      * @return Returns the audit logs in a page.
      */
-    public Page<AuditLog> getAllAuditLogs(Pageable pageable) {
-        return auditRepository.findAllByOrderByTimestampDesc(pageable);
+    public Page<AuditLog> getAllAuditLogs(Pageable pageable, String email, String userId,
+        List<AuditAction> auditActions, LocalDateTime filterStartDate, LocalDateTime filterEndDate) {
+
+        // If email address is supplied then find by an exact match
+        String userEmailAddressToQuery = "%%";
+        if (!email.isBlank()) {
+            userEmailAddressToQuery = email;
+        }
+
+        // If user provenance id is supplied then find by an exact match
+        String userIdToQuery = "%%";
+        if (!userId.isBlank()) {
+            userIdToQuery = userId;
+        }
+
+        // If user audit action is supplied then find by an exact match
+        List<AuditAction> auditActionsToQuery = new ArrayList<>(EnumSet.allOf(AuditAction.class));
+        if (!auditActions.isEmpty()) {
+            auditActionsToQuery = auditActions;
+        }
+
+        return auditRepository
+            .findAllByUserEmailLikeIgnoreCaseAndUserIdLikeAndActionInAndTimestampBetweenOrderByTimestampDesc(
+            userEmailAddressToQuery,
+            userIdToQuery,
+            auditActionsToQuery,
+            filterStartDate,
+            filterEndDate,
+            pageable);
     }
 
     public AuditLog getAuditLogById(UUID id) {
