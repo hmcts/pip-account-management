@@ -19,11 +19,11 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import uk.gov.hmcts.reform.pip.account.management.Application;
 import uk.gov.hmcts.reform.pip.account.management.config.AzureConfigurationClientTestConfiguration;
-import uk.gov.hmcts.reform.pip.account.management.dto.MiReportData;
 import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
+import uk.gov.hmcts.reform.pip.model.report.AccountMiData;
 
 import java.util.Arrays;
 import java.util.List;
@@ -117,10 +117,10 @@ class CustomAccountRetrievalTest {
 
         assertNotNull(responseMiData.getResponse(), VALIDATION_MI_REPORT);
 
-        List<MiReportData> miData = Arrays.asList(
+        List<AccountMiData> miData = Arrays.asList(
             OBJECT_MAPPER.readValue(
                 responseMiData.getResponse().getContentAsString(),
-                MiReportData[].class
+                AccountMiData[].class
             )
         );
 
