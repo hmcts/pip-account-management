@@ -32,8 +32,8 @@ public class AccountFilteringService {
      *
      * @return A list of MI Data objects for all accounts.
      */
-    public List<AccountMiData> getAccManDataForMiReporting() {
-        return userRepository.getAccManDataForMI();
+    public List<AccountMiData> getAccountDataForMi() {
+        return userRepository.getAccountDataForMi();
     }
 
     /**

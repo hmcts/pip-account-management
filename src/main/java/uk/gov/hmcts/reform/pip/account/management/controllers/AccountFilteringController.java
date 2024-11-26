@@ -51,7 +51,7 @@ public class AccountFilteringController {
     @Operation(summary = "Returns (anonymized) account data for MI reporting")
     @GetMapping("/mi-data")
     public ResponseEntity<List<AccountMiData>> getMiData() {
-        return ResponseEntity.status(HttpStatus.OK).body(accountFilteringService.getAccManDataForMiReporting());
+        return ResponseEntity.status(HttpStatus.OK).body(accountFilteringService.getAccountDataForMi());
     }
 
     @ApiResponse(responseCode = OK_CODE, description = "List of third party accounts")

@@ -68,8 +68,8 @@ class AccountFilteringServiceTest {
                                                                        CREATED_DATE, LAST_SIGNED_IN);
         List<AccountMiData> miData = List.of(miRecord, miRecord);
 
-        when(userRepository.getAccManDataForMI()).thenReturn(miData);
-        List<AccountMiData> miReportData = accountFilteringService.getAccManDataForMiReporting();
+        when(userRepository.getAccountDataForMi()).thenReturn(miData);
+        List<AccountMiData> miReportData = accountFilteringService.getAccountDataForMi();
 
         assertEquals(miData, miReportData, "Returned data does not match expected data");
     }

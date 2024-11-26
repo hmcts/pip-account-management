@@ -28,7 +28,7 @@ public interface UserRepository extends JpaRepository<PiUser, Long> {
     @Query("SELECT new uk.gov.hmcts.reform.pip.model.report.AccountMiData("
         + "u.userId, u.provenanceUserId, u.userProvenance, u.roles, u.createdDate, u.lastSignedInDate) "
         + "FROM PiUser u")
-    List<AccountMiData> getAccManDataForMI();
+    List<AccountMiData> getAccountDataForMi();
 
     @Query(value = "SELECT * FROM pi_user WHERE CAST(last_verified_date AS DATE) = CURRENT_DATE - (interval '1' day)"
         + " * :daysAgo AND user_provenance = 'PI_AAD' AND roles = 'VERIFIED'", nativeQuery = true)
