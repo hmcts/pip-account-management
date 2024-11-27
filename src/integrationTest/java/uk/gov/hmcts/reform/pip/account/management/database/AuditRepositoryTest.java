@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import uk.gov.hmcts.reform.pip.account.management.model.AuditLog;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
@@ -21,7 +20,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 @ActiveProfiles("integration-jpa")
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 class AuditRepositoryTest {
     private static final String USER_ID1 = "123";
     private static final String USER_ID2 = "124";
@@ -78,7 +76,7 @@ class AuditRepositoryTest {
 
     @Test
     void shouldDeleteAllByTimestampBefore() {
-        auditRepository.deleteAllByTimestampBefore(TIMESTAMP_NOW.plusHours(1));
+        auditRepository.deleteAllByTimestampBefore(TIMESTAMP_NOW.plusMinutes(30));
 
         assertThat(auditRepository.findAll())
             .as(AUDIT_LOG_MATCHED_MESSAGE)
