@@ -1,12 +1,12 @@
 package uk.gov.hmcts.reform.pip.account.management.database;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.test.context.ActiveProfiles;
 import uk.gov.hmcts.reform.pip.account.management.model.AuditLog;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
@@ -21,7 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @ActiveProfiles("integration-jpa")
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@EnableJpaAuditing
 class AuditRepositoryTest {
     private static final String USER_ID1 = "123";
     private static final String USER_ID2 = "124";
@@ -33,13 +33,13 @@ class AuditRepositoryTest {
     private static final String DETAILS2 = "Details 2";
     private static final String DETAILS3 = "Details 3";
 
-    private static final LocalDateTime TIMESTAMP_NOW = LocalDateTime.now();
     private static final String AUDIT_LOG_MATCHED_MESSAGE = "Audit log does not match";
+    private static final String AUDIT_LOG_EMPTY_MESSAGE = "Audit log is not empty";
 
     @Autowired
     AuditRepository auditRepository;
 
-    @BeforeAll
+    @BeforeEach
     void setup() {
         AuditLog auditLog1 = new AuditLog();
         auditLog1.setUserId(USER_ID1);
@@ -48,7 +48,6 @@ class AuditRepositoryTest {
         auditLog1.setUserProvenance(UserProvenances.SSO);
         auditLog1.setAction(AuditAction.MANAGE_USER);
         auditLog1.setDetails(DETAILS1);
-        auditLog1.setTimestamp(TIMESTAMP_NOW);
 
         AuditLog auditLog2 = new AuditLog();
         auditLog2.setUserId(USER_ID2);
@@ -57,7 +56,6 @@ class AuditRepositoryTest {
         auditLog2.setUserProvenance(UserProvenances.SSO);
         auditLog2.setAction(AuditAction.REFERENCE_DATA_UPLOAD);
         auditLog2.setDetails(DETAILS2);
-        auditLog2.setTimestamp(TIMESTAMP_NOW.minusHours(1));
 
         AuditLog auditLog3 = new AuditLog();
         auditLog3.setUserId(USER_ID3);
@@ -66,24 +64,28 @@ class AuditRepositoryTest {
         auditLog3.setUserProvenance(UserProvenances.SSO);
         auditLog3.setAction(AuditAction.DELETE_PUBLICATION);
         auditLog3.setDetails(DETAILS3);
-        auditLog3.setTimestamp(TIMESTAMP_NOW.plusHours(1));
 
         auditRepository.saveAll(List.of(auditLog1, auditLog2, auditLog3));
     }
 
-    @AfterAll
+    @AfterEach
     void shutdown() {
         auditRepository.deleteAll();
     }
 
     @Test
     void shouldDeleteAllByTimestampBefore() {
-        auditRepository.deleteAllByTimestampBefore(TIMESTAMP_NOW.plusMinutes(30));
+        auditRepository.deleteAllByTimestampBefore(LocalDateTime.now().plusMinutes(10));
+        assertThat(auditRepository.findAll())
+            .as(AUDIT_LOG_EMPTY_MESSAGE)
+            .isEmpty();
+    }
 
+    @Test
+    void shouldNotDeleteAllByTimestamp() {
+        auditRepository.deleteAllByTimestampBefore(LocalDateTime.now().minusMinutes(10));
         assertThat(auditRepository.findAll())
             .as(AUDIT_LOG_MATCHED_MESSAGE)
-            .hasSize(1)
-            .extracting(AuditLog::getUserId)
-            .containsExactly(USER_ID3);
+            .hasSize(3);
     }
 }
