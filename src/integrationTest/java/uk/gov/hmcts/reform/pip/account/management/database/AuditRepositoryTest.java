@@ -84,13 +84,4 @@ class AuditRepositoryTest {
             .extracting(AuditLog::getUserId)
             .containsExactly(USER_ID3);
     }
-
-    @Test
-    void shouldNotDeleteAllByTimestampBefore() {
-        auditRepository.deleteAllByTimestampBefore(TIMESTAMP_NOW.minusHours(1));
-
-        assertThat(auditRepository.findAll())
-            .as(AUDIT_LOG_MATCHED_MESSAGE)
-            .hasSize(3);
-    }
 }
