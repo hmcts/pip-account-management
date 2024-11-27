@@ -40,12 +40,6 @@ public class AuditService {
     public Page<AuditLog> getAllAuditLogs(Pageable pageable, String email, String userId,
         List<AuditAction> auditActions, LocalDateTime filterStartDate, LocalDateTime filterEndDate) {
 
-        // If email address is supplied then find by an exact match
-        String userEmailAddressToQuery = "%%";
-        if (!email.isBlank()) {
-            userEmailAddressToQuery = email;
-        }
-
         // If user provenance id is supplied then find by an exact match
         String userIdToQuery = "%%";
         if (!userId.isBlank()) {
@@ -60,7 +54,7 @@ public class AuditService {
 
         return auditRepository
             .findAllByUserEmailLikeIgnoreCaseAndUserIdLikeAndActionInAndTimestampBetweenOrderByTimestampDesc(
-            userEmailAddressToQuery,
+            "%" + email + "%",
             userIdToQuery,
             auditActionsToQuery,
             filterStartDate,
