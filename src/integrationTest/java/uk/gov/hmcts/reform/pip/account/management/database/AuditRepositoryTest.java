@@ -1,8 +1,9 @@
 package uk.gov.hmcts.reform.pip.account.management.database;
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -20,6 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @ActiveProfiles("integration-jpa")
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class AuditRepositoryTest {
     private static final String USER_ID1 = "123";
     private static final String USER_ID2 = "124";
@@ -37,7 +39,7 @@ class AuditRepositoryTest {
     @Autowired
     AuditRepository auditRepository;
 
-    @BeforeEach
+    @BeforeAll
     void setup() {
         AuditLog auditLog1 = new AuditLog();
         auditLog1.setUserId(USER_ID1);
@@ -69,7 +71,7 @@ class AuditRepositoryTest {
         auditRepository.saveAll(List.of(auditLog1, auditLog2, auditLog3));
     }
 
-    @AfterEach
+    @AfterAll
     void shutdown() {
         auditRepository.deleteAll();
     }
