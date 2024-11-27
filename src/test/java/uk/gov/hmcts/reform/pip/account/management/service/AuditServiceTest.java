@@ -64,7 +64,8 @@ class AuditServiceTest {
         Page<AuditLog> page = new PageImpl<>(List.of(auditLogExample), pageable, List.of(auditLogExample).size());
         when(auditRepository
             .findAllByUserEmailLikeIgnoreCaseAndUserIdLikeAndActionInAndTimestampBetweenOrderByTimestampDesc(
-                EMAIL, USER_ID, AUDIT_ACTIONS, FILTER_START_DATE, FILTER_END_DATE, pageable)).thenReturn(page);
+                "%" + EMAIL + "%", USER_ID, AUDIT_ACTIONS, FILTER_START_DATE, FILTER_END_DATE, pageable))
+            .thenReturn(page);
 
         Page<AuditLog> returnedAuditLogs = auditService.getAllAuditLogs(pageable, EMAIL, USER_ID, AUDIT_ACTIONS,
                                                                         FILTER_START_DATE, FILTER_END_DATE);
