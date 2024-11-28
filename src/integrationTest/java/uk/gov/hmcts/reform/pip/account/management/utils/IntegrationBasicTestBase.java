@@ -5,7 +5,7 @@ import uk.gov.hmcts.reform.pip.account.management.database.AuditRepository;
 import uk.gov.hmcts.reform.pip.account.management.database.MediaApplicationRepository;
 import uk.gov.hmcts.reform.pip.account.management.database.UserRepository;
 
-public class IntegrationBasicTestBase extends IntegrationCommonTestBase {
+public class IntegrationBasicTestBase extends IntegrationTestBase {
     @MockBean
     protected UserRepository userRepository;
 
