@@ -43,7 +43,7 @@ public class AuditService {
     public Page<AuditLog> getAllAuditLogs(Pageable pageable, String email, String userId,
                                           List<AuditAction> auditActions, String filterDate) {
 
-        // If user provenance id is supplied then find by an exact match
+        // If user id is supplied then find by an exact match
         String userIdToQuery = "%%";
         if (!userId.isBlank()) {
             userIdToQuery = userId;
