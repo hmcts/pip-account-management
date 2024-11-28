@@ -15,7 +15,10 @@ import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.NotFo
 import uk.gov.hmcts.reform.pip.account.management.model.AuditLog;
 import uk.gov.hmcts.reform.pip.model.enums.AuditAction;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -42,8 +45,7 @@ class AuditServiceTest {
     private static final String EMAIL = "a@b.com";
     private static final String USER_ID = "123";
     private static final List<AuditAction> AUDIT_ACTIONS = new ArrayList<>();
-    private static final LocalDateTime FILTER_START_DATE = LocalDateTime.now();
-    private static final LocalDateTime FILTER_END_DATE = LocalDateTime.now();
+    private static final String FILTER_DATE = "2024-11-01";
     private final AuditLog auditLogExample = new AuditLog();
 
     @BeforeEach
@@ -63,12 +65,32 @@ class AuditServiceTest {
         Pageable pageable = PageRequest.of(0, 25);
         Page<AuditLog> page = new PageImpl<>(List.of(auditLogExample), pageable, List.of(auditLogExample).size());
         when(auditRepository
-            .findAllByUserEmailLikeIgnoreCaseAndUserIdLikeAndActionInAndTimestampBetweenOrderByTimestampDesc(
-                "%" + EMAIL + "%", USER_ID, AUDIT_ACTIONS, FILTER_START_DATE, FILTER_END_DATE, pageable))
+            .findAllByUserEmailLikeIgnoreCaseAndUserIdLikeAndActionInOrderByTimestampDesc(
+                "%" + EMAIL + "%", USER_ID, AUDIT_ACTIONS, pageable))
             .thenReturn(page);
 
         Page<AuditLog> returnedAuditLogs = auditService.getAllAuditLogs(pageable, EMAIL, USER_ID, AUDIT_ACTIONS,
-                                                                        FILTER_START_DATE, FILTER_END_DATE);
+                                                                        "");
+
+        assertEquals(auditLogExample, returnedAuditLogs.getContent().get(0),
+                     "Returned audit log does not match the expected");
+    }
+
+    @Test
+    void testGetAllAuditLogsWithFilterDate() {
+        Pageable pageable = PageRequest.of(0, 25);
+        Page<AuditLog> page = new PageImpl<>(List.of(auditLogExample), pageable, List.of(auditLogExample).size());
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        LocalDateTime filterStartDate = LocalDate.parse(FILTER_DATE, formatter).atTime(LocalTime.MIN);
+        LocalDateTime filterEndDate = LocalDate.parse(FILTER_DATE, formatter).atTime(LocalTime.MAX);
+
+        when(auditRepository
+                 .findAllByUserEmailLikeIgnoreCaseAndUserIdLikeAndActionInAndTimestampBetweenOrderByTimestampDesc(
+                     "%" + EMAIL + "%", USER_ID, AUDIT_ACTIONS, filterStartDate, filterEndDate, pageable))
+            .thenReturn(page);
+
+        Page<AuditLog> returnedAuditLogs = auditService.getAllAuditLogs(pageable, EMAIL, USER_ID, AUDIT_ACTIONS,
+                                                                        FILTER_DATE);
 
         assertEquals(auditLogExample, returnedAuditLogs.getContent().get(0),
                      "Returned audit log does not match the expected");

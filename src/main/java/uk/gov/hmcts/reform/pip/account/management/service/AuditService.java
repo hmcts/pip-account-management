@@ -10,7 +10,10 @@ import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.NotFo
 import uk.gov.hmcts.reform.pip.account.management.model.AuditLog;
 import uk.gov.hmcts.reform.pip.model.enums.AuditAction;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
@@ -38,7 +41,7 @@ public class AuditService {
      * @return Returns the audit logs in a page.
      */
     public Page<AuditLog> getAllAuditLogs(Pageable pageable, String email, String userId,
-        List<AuditAction> auditActions, LocalDateTime filterStartDate, LocalDateTime filterEndDate) {
+                                          List<AuditAction> auditActions, String filterDate) {
 
         // If user provenance id is supplied then find by an exact match
         String userIdToQuery = "%%";
@@ -52,14 +55,27 @@ public class AuditService {
             auditActionsToQuery = auditActions;
         }
 
+        if (filterDate.isBlank()) {
+            return auditRepository
+                .findAllByUserEmailLikeIgnoreCaseAndUserIdLikeAndActionInOrderByTimestampDesc(
+                    "%" + email + "%",
+                    userIdToQuery,
+                    auditActionsToQuery,
+                    pageable);
+        }
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        LocalDateTime filterStartDate = LocalDate.parse(filterDate, formatter).atTime(LocalTime.MIN);
+        LocalDateTime filterEndDate = LocalDate.parse(filterDate, formatter).atTime(LocalTime.MAX);
+
         return auditRepository
             .findAllByUserEmailLikeIgnoreCaseAndUserIdLikeAndActionInAndTimestampBetweenOrderByTimestampDesc(
-            "%" + email + "%",
-            userIdToQuery,
-            auditActionsToQuery,
-            filterStartDate,
-            filterEndDate,
-            pageable);
+                "%" + email + "%",
+                userIdToQuery,
+                auditActionsToQuery,
+                filterStartDate,
+                filterEndDate,
+                pageable);
     }
 
     public AuditLog getAuditLogById(UUID id) {
