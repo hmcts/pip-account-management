@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Profile;
 /**
  * Configuration class used to initialise beans to talk to Azure graph.
  */
-@Profile("!test & !integration & !functional")
+@Profile("!test & !integration & !integration-basic & !functional")
 @Configuration
 public class AzureConfigurationClient {
 

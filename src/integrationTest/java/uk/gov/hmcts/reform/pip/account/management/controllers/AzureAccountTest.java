@@ -32,6 +32,7 @@ import uk.gov.hmcts.reform.pip.account.management.model.AzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
 import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredAzureAccount;
+import uk.gov.hmcts.reform.pip.account.management.utils.IntegrationTestBase;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
 
@@ -44,19 +45,20 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.springframework.http.HttpStatus.FORBIDDEN;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest(classes = {AzureConfigurationClientTestConfiguration.class, Application.class},
-    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(classes = {Application.class}, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
-@ActiveProfiles(profiles = "integration")
+@ActiveProfiles("integration")
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
 @WithMockUser(username = "admin", authorities = {"APPROLE_api.request.admin"})
 @SuppressWarnings({"PMD.TooManyMethods", "PMD.ExcessiveImports"})
-class AzureAccountTest {
+class AzureAccountTest extends IntegrationTestBase {
     private static final String ROOT_URL = "/account";
     private static final String AZURE_URL = ROOT_URL + "/add/azure";
     private static final String B2C_URL = "URL";
@@ -158,6 +160,8 @@ class AzureAccountTest {
 
     @Test
     void creationOfValidAccount() throws Exception {
+        when(publicationService.sendNotificationEmail(anyString(), anyString(), anyString())).thenReturn(true);
+
         AzureAccount azureAccount = new AzureAccount();
         azureAccount.setEmail(EMAIL);
         azureAccount.setSurname(SURNAME);
@@ -204,6 +208,9 @@ class AzureAccountTest {
 
     @Test
     void creationOfDuplicateAccount() throws Exception {
+        when(publicationService.sendNotificationEmailForDuplicateMediaAccount(anyString(), anyString()))
+            .thenReturn(true);
+
         AzureAccount azureAccount = new AzureAccount();
         azureAccount.setEmail(EMAIL);
         azureAccount.setSurname(SURNAME);
@@ -331,6 +338,8 @@ class AzureAccountTest {
 
     @Test
     void testNoFailureOfNoSurnameAccount() throws Exception {
+        when(publicationService.sendMediaNotificationEmail(anyString(), anyString(), anyBoolean())).thenReturn(true);
+
         User userToReturn = new User();
         userToReturn.setId(ID);
         userToReturn.setGivenName(GIVEN_NAME);
@@ -492,6 +501,7 @@ class AzureAccountTest {
 
     @Test
     void testCreationOfTwoAccountsOneFailOneOK() throws Exception {
+        when(publicationService.sendNotificationEmail(anyString(), anyString(), anyString())).thenReturn(true);
 
         User userToReturn = new User();
         userToReturn.setId(ID);

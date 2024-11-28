@@ -1,8 +1,6 @@
 package uk.gov.hmcts.reform.pip.account.management.controllers;
 
 import com.azure.core.util.BinaryData;
-import com.azure.storage.blob.BlobClient;
-import com.azure.storage.blob.BlobContainerClient;
 import com.azure.storage.blob.models.BlobStorageException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
@@ -20,9 +18,9 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import uk.gov.hmcts.reform.pip.account.management.Application;
-import uk.gov.hmcts.reform.pip.account.management.config.AzureConfigurationClientTestConfiguration;
 import uk.gov.hmcts.reform.pip.account.management.model.MediaApplication;
 import uk.gov.hmcts.reform.pip.account.management.model.MediaApplicationStatus;
+import uk.gov.hmcts.reform.pip.account.management.utils.IntegrationTestBase;
 
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -32,10 +30,10 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -44,22 +42,13 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest(classes = {AzureConfigurationClientTestConfiguration.class, Application.class},
-    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(classes = {Application.class}, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
-@ActiveProfiles(profiles = "integration")
+@ActiveProfiles("integration")
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
 @WithMockUser(username = "admin", authorities = {"APPROLE_api.request.admin"})
-
-@SuppressWarnings({"PMD.TooManyMethods", "PMD.LawOfDemeter", "PMD.UnitTestShouldIncludeAssert"})
-class MediaApplicationTest {
-
-    @Autowired
-    BlobContainerClient blobContainerClient;
-
-    @Autowired
-    BlobClient blobClient;
-
+@SuppressWarnings({"PMD.TooManyMethods", "PMD.UnitTestShouldIncludeAssert"})
+class MediaApplicationTest extends IntegrationTestBase {
     @Autowired
     private MockMvc mockMvc;
 
@@ -79,7 +68,6 @@ class MediaApplicationTest {
     private static final String FORMATTED_FULL_NAME = "Test user";
     private static final String EMAIL = "test@justice.gov.uk";
     private static final String EMPLOYER = "Test employer";
-    private static final String BLOB_IMAGE_URL = "https://localhost";
     private static final MediaApplicationStatus STATUS = MediaApplicationStatus.PENDING;
     private static final MediaApplicationStatus UPDATED_STATUS = MediaApplicationStatus.APPROVED;
     private static final UUID TEST_ID = UUID.randomUUID();
@@ -119,10 +107,6 @@ class MediaApplicationTest {
                                                                 "", imageInputStream
             );
 
-
-            when(blobContainerClient.getBlobClient(any())).thenReturn(blobClient);
-            when(blobContainerClient.getBlobContainerUrl()).thenReturn(BLOB_IMAGE_URL);
-
             MvcResult mvcResult = mockMvc.perform(multipart(ROOT_URL)
                                                       .file(imageFile)
                                                       .flashAttr("application", mediaApplication)
@@ -149,10 +133,6 @@ class MediaApplicationTest {
                                                                 "", imageInputStream
             );
 
-
-            when(blobContainerClient.getBlobClient(any())).thenReturn(blobClient);
-            when(blobContainerClient.getBlobContainerUrl()).thenReturn(BLOB_IMAGE_URL);
-
             return mockMvc.perform(multipart(ROOT_URL)
                                        .file(imageFile)
                                        .flashAttr("application", application)
@@ -178,58 +158,18 @@ class MediaApplicationTest {
     }
 
     @Test
-    void testCreateApplicationEmptyEmail() throws Exception {
-        MvcResult mvcResult = createApplicationRequest(FULL_NAME, "", EMPLOYER, PENDING_STATUS);
+    void testCreateApplicationEmptyValues() throws Exception {
+        MvcResult mvcResult = createApplicationRequest("", "", "", null);
         assertEquals(HttpStatus.BAD_REQUEST.value(), mvcResult.getResponse().getStatus(), STATUSES_NOT_MATCH);
-        assertEquals(
-            "{\"email\":\"email shouldn't be blank or null\"}",
-            mvcResult.getResponse().getContentAsString(),
-            ERROR_MESSAGE_MISMATCH
-        );
-    }
 
-    @Test
-    void testCreateApplicationEmptyEmployer() throws Exception {
-        MvcResult mvcResult = createApplicationRequest(FULL_NAME, EMAIL, "", PENDING_STATUS);
-        assertEquals(HttpStatus.BAD_REQUEST.value(), mvcResult.getResponse().getStatus(), STATUSES_NOT_MATCH);
-        assertEquals(
-            "{\"employer\":\"employer shouldn't be blank or null\"}",
-            mvcResult.getResponse().getContentAsString(),
-            ERROR_MESSAGE_MISMATCH
-        );
-    }
-
-    @Test
-    void testCreateApplicationEmptyName() throws Exception {
-        MvcResult mvcResult = createApplicationRequest("", EMAIL, EMPLOYER, PENDING_STATUS);
-        assertEquals(HttpStatus.BAD_REQUEST.value(), mvcResult.getResponse().getStatus(), STATUSES_NOT_MATCH);
-        assertEquals(
-            "{\"fullName\":\"fullName shouldn't be blank or null\"}",
-            mvcResult.getResponse().getContentAsString(),
-            ERROR_MESSAGE_MISMATCH
-        );
-    }
-
-    @Test
-    void testCreateApplicationEmptyStatus() throws Exception {
-        MvcResult mvcResult = createApplicationRequest(FULL_NAME, EMAIL, EMPLOYER, null);
-        assertEquals(HttpStatus.BAD_REQUEST.value(), mvcResult.getResponse().getStatus(), STATUSES_NOT_MATCH);
-        assertEquals(
-            "{\"status\":\"status shouldn't be null\"}",
-            mvcResult.getResponse().getContentAsString(),
-            ERROR_MESSAGE_MISMATCH
-        );
-    }
-
-    @Test
-    void testCreateApplicationNullStatus() throws Exception {
-        MvcResult mvcResult = createApplicationRequest(FULL_NAME, EMAIL, EMPLOYER, null);
-        assertEquals(HttpStatus.BAD_REQUEST.value(), mvcResult.getResponse().getStatus(), STATUSES_NOT_MATCH);
-        assertEquals(
-            "{\"status\":\"status shouldn't be null\"}",
-            mvcResult.getResponse().getContentAsString(),
-            ERROR_MESSAGE_MISMATCH
-        );
+        assertThat(mvcResult.getResponse().getContentAsString())
+            .isNotEmpty()
+            .contains(
+                "\"fullName\":\"fullName shouldn't be blank or null\"",
+                "\"email\":\"email shouldn't be blank or null\"",
+                "\"employer\":\"employer shouldn't be blank or null\"",
+                "\"status\":\"status shouldn't be null\""
+            );
     }
 
     @Test

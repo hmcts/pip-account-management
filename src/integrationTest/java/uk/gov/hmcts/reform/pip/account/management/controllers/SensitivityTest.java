@@ -10,7 +10,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
@@ -18,7 +17,6 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import uk.gov.hmcts.reform.pip.account.management.Application;
-import uk.gov.hmcts.reform.pip.account.management.config.AzureConfigurationClientTestConfiguration;
 import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
@@ -34,12 +32,11 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest(classes = {AzureConfigurationClientTestConfiguration.class, Application.class},
-    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(classes = {Application.class}, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
-@ActiveProfiles(profiles = "integration")
+@ActiveProfiles("integration")
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+@Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_CLASS, scripts = "classpath:add-admin-users.sql")
 @WithMockUser(username = "admin", authorities = { "APPROLE_api.request.admin" })
 @SuppressWarnings("PMD.TooManyMethods")
 class SensitivityTest {
@@ -103,7 +100,6 @@ class SensitivityTest {
     }
 
     @Test
-    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = SQL_SCRIPT)
     void testIsUserAuthenticatedReturnsTrueWhenPublicListAndThirdParty() throws Exception {
         user.setUserProvenance(UserProvenances.THIRD_PARTY);
         user.setRoles(Roles.VERIFIED_THIRD_PARTY_ALL);
@@ -131,7 +127,6 @@ class SensitivityTest {
     }
 
     @Test
-    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = SQL_SCRIPT)
     void testIsUserAuthenticatedReturnsTrueWhenPrivateListAndThirdParty() throws Exception {
         user.setUserProvenance(UserProvenances.THIRD_PARTY);
         user.setRoles(Roles.GENERAL_THIRD_PARTY);
@@ -168,7 +163,6 @@ class SensitivityTest {
     }
 
     @Test
-    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = SQL_SCRIPT)
     void testIsUserAuthenticatedReturnsTrueWhenClassifiedListAndThirdPartyPressRole() throws Exception {
         user.setUserProvenance(UserProvenances.THIRD_PARTY);
         user.setRoles(Roles.VERIFIED_THIRD_PARTY_PRESS);
@@ -178,7 +172,6 @@ class SensitivityTest {
     }
 
     @Test
-    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = SQL_SCRIPT)
     void testIsUserAuthenticatedReturnsFalseWhenClassifiedListAndThirdPartyNonPressRole() throws Exception {
         user.setUserProvenance(UserProvenances.THIRD_PARTY);
         user.setRoles(Roles.VERIFIED_THIRD_PARTY_CRIME_CFT);
