@@ -210,6 +210,7 @@ The service can also be adapted using the yaml files found in the following loca
 - [src/test/resources/application-test.yaml](./src/test/resources/application-test.yaml) for changes to other test types (e.g. unit tests).
 - [src/integrationTest/resources/application-integration.yaml](./src/integrationTest/resources/application-integration.yaml) for changes to the application when it's running integration tests.
 - [src/integrationTest/resources/application-integration-basic.yaml](./src/integrationTest/resources/application-integration-basic.yaml) for changes to the application when it's running integration tests which do not need to spin up the database.
+- [src/integrationTest/resources/application-integration-jpa.yaml](./src/integrationTest/resources/application-integration-jpa.yaml) for changes to the application when it's running repository integration tests.
 - [src/integrationTest/resources/application-functional.yaml](./src/functionalTest/resources/application-functional.yaml) for changes to the application when its running functional tests.
 
 ### Fortify
