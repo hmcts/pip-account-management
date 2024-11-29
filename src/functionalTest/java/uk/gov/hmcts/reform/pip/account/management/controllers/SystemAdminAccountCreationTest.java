@@ -34,7 +34,8 @@ public class SystemAdminAccountCreationTest extends FunctionalTestBase {
 
     @Test
     void shouldBeAbleToCreateASystemAdminAccount() {
-        SystemAdminAccount requestBody = new SystemAdminAccount(TEST_EMAIL, TEST_FIRST_NAME, TEST_SURNAME, TEST_PROVENANCE_ID);
+        SystemAdminAccount requestBody =
+                new SystemAdminAccount(TEST_EMAIL, TEST_FIRST_NAME, TEST_SURNAME, TEST_PROVENANCE_ID);
 
         final Response response =
                 doPostRequest(SYSTEM_ADMIN_URL, Map.of(AUTHORIZATION, BEARER + accessToken), requestBody.toString());
