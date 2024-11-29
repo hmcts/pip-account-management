@@ -43,6 +43,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("integration")
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @WithMockUser(username = "admin", authorities = {"APPROLE_api.request.admin"})
 class BulkAccountCreationTest extends IntegrationTestBase {
     private static final String ROOT_URL = "/account";
@@ -88,7 +89,6 @@ class BulkAccountCreationTest extends IntegrationTestBase {
     }
 
     @Test
-    @DirtiesContext(methodMode = DirtiesContext.MethodMode.BEFORE_METHOD)
     void testUploadBulkMedia() throws Exception {
         when(publicationService.sendMediaNotificationEmail(anyString(), anyString(), anyBoolean())).thenReturn(true);
 
@@ -111,7 +111,6 @@ class BulkAccountCreationTest extends IntegrationTestBase {
     }
 
     @Test
-    @DirtiesContext(methodMode = DirtiesContext.MethodMode.BEFORE_METHOD)
     void testUploadBulkMediaWhenFailedToSendNotificationEmail() throws Exception {
         when(publicationService.sendMediaNotificationEmail(anyString(), anyString(), anyBoolean())).thenReturn(false);
 
@@ -150,7 +149,6 @@ class BulkAccountCreationTest extends IntegrationTestBase {
     }
 
     @Test
-    @DirtiesContext(methodMode = DirtiesContext.MethodMode.BEFORE_METHOD)
     void testUploadBulkMediaEmailOnly() throws Exception {
         when(publicationService.sendMediaNotificationEmail(anyString(), anyString(), anyBoolean())).thenReturn(true);
 
