@@ -12,7 +12,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static org.springframework.http.HttpStatus.OK;
 
-public class BulkAccountCreationTest extends FunctionalTestBase {
+class BulkAccountCreationTest extends FunctionalTestBase {
     private static final String ISSUER_ID = "x-issuer-id";
     private static final String MOCK_FILE = "files/test-csv.csv";
     private static final String BULK_UPLOAD_URL = "account/media-bulk-upload";
