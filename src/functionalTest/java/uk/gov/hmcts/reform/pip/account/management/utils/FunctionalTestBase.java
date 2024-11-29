@@ -73,6 +73,18 @@ public class FunctionalTestBase {
             .thenReturn();
     }
 
+    protected Response doPostMultipartForBulkUpload(final String path, final Map<String, String> additionalHeaders,
+                                                     final File file, String issuerId) {
+        return given()
+            .relaxedHTTPSValidation()
+            .headers(additionalHeaders)
+            .multiPart("file", file)
+            .multiPart("issuerId", issuerId)
+            .when()
+            .post(path)
+            .thenReturn();
+    }
+
     protected Response doDeleteRequest(final String path, final Map<String, String> additionalHeaders,
                                        final String body) {
         return given()
