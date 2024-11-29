@@ -10,6 +10,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
@@ -36,7 +37,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("integration")
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
-@Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_CLASS, scripts = "classpath:add-admin-users.sql")
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @WithMockUser(username = "admin", authorities = { "APPROLE_api.request.admin" })
 @SuppressWarnings("PMD.TooManyMethods")
 class SensitivityTest {
@@ -100,6 +101,7 @@ class SensitivityTest {
     }
 
     @Test
+    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = SQL_SCRIPT)
     void testIsUserAuthenticatedReturnsTrueWhenPublicListAndThirdParty() throws Exception {
         user.setUserProvenance(UserProvenances.THIRD_PARTY);
         user.setRoles(Roles.VERIFIED_THIRD_PARTY_ALL);
@@ -127,6 +129,7 @@ class SensitivityTest {
     }
 
     @Test
+    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = SQL_SCRIPT)
     void testIsUserAuthenticatedReturnsTrueWhenPrivateListAndThirdParty() throws Exception {
         user.setUserProvenance(UserProvenances.THIRD_PARTY);
         user.setRoles(Roles.GENERAL_THIRD_PARTY);
@@ -163,6 +166,7 @@ class SensitivityTest {
     }
 
     @Test
+    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = SQL_SCRIPT)
     void testIsUserAuthenticatedReturnsTrueWhenClassifiedListAndThirdPartyPressRole() throws Exception {
         user.setUserProvenance(UserProvenances.THIRD_PARTY);
         user.setRoles(Roles.VERIFIED_THIRD_PARTY_PRESS);
@@ -172,6 +176,7 @@ class SensitivityTest {
     }
 
     @Test
+    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = SQL_SCRIPT)
     void testIsUserAuthenticatedReturnsFalseWhenClassifiedListAndThirdPartyNonPressRole() throws Exception {
         user.setUserProvenance(UserProvenances.THIRD_PARTY);
         user.setRoles(Roles.VERIFIED_THIRD_PARTY_CRIME_CFT);
