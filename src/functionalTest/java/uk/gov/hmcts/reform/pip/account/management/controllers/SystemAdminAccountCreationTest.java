@@ -20,7 +20,7 @@ import static org.springframework.http.HttpStatus.OK;
 @ExtendWith(SpringExtension.class)
 @ActiveProfiles(profiles = "functional")
 @SpringBootTest(classes = {OAuthClient.class})
-public class SystemAdminAccountCreationTest extends FunctionalTestBase {
+class SystemAdminAccountCreationTest extends FunctionalTestBase {
     private static final String TEST_EMAIL_PREFIX = String.format(
             "pip-am-test-email-%s", ThreadLocalRandom.current().nextInt(1000, 9999));
     private static final String TEST_EMAIL = String.format("%s@justice.gov.uk", TEST_EMAIL_PREFIX);
