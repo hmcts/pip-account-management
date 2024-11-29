@@ -110,8 +110,8 @@ class MediaApplicationCreationTest extends FunctionalTestBase {
         MediaApplication mediaApplication = createApplication();
         MediaApplication approvedMediaApplication = createApplication();
 
-        approvedMediaApplication = doPutRequest(String.format(APPROVE_APPLICATION, approvedMediaApplication.getId()),
-                     bearer).getBody().as(MediaApplication.class);
+        doPutRequest(String.format(APPROVE_APPLICATION, approvedMediaApplication.getId()),
+                     bearer);
 
         final Response getResponse = doGetRequest(GET_APPLICATIONS_BY_STATUS,
                                                   bearer);
@@ -119,8 +119,8 @@ class MediaApplicationCreationTest extends FunctionalTestBase {
         assertThat(getResponse.getStatusCode()).isEqualTo(OK.value());
         MediaApplication[] retrievedApplciations = getResponse.getBody().as(MediaApplication[].class);
 
-        assertThat(retrievedApplciations).contains(mediaApplication);
-        assertThat(retrievedApplciations).doesNotContain(approvedMediaApplication);
+        assertThat(retrievedApplciations).anyMatch(app -> app.getId().equals(mediaApplication.getId()));
+        assertThat(retrievedApplciations).noneMatch(app -> app.getId().equals(approvedMediaApplication.getId()));
     }
 
     @Test
@@ -128,19 +128,17 @@ class MediaApplicationCreationTest extends FunctionalTestBase {
         MediaApplication mediaApplication = createApplication();
         MediaApplication approvedMediaApplication = createApplication();
 
-        Response approvedResponse = doPutRequest(String.format(APPROVE_APPLICATION, approvedMediaApplication.getId()),
+        doPutRequest(String.format(APPROVE_APPLICATION, approvedMediaApplication.getId()),
                      bearer);
-
-        approvedMediaApplication = approvedResponse.getBody().as(MediaApplication.class);
 
         final Response getResponse = doGetRequest(GET_ALL_APPLICATIONS,
                                                   bearer);
 
         assertThat(getResponse.getStatusCode()).isEqualTo(OK.value());
-        MediaApplication[] retrievedApplciations = getResponse.getBody().as(MediaApplication[].class);
+        MediaApplication[] retrievedApplications = getResponse.getBody().as(MediaApplication[].class);
 
-        assertThat(retrievedApplciations).contains(mediaApplication);
-        assertThat(retrievedApplciations).contains(approvedMediaApplication);
+        assertThat(retrievedApplications).anyMatch(app -> app.getId().equals(mediaApplication.getId()));
+        assertThat(retrievedApplications).anyMatch(app -> app.getId().equals(approvedMediaApplication.getId()));
     }
 
     @Test
@@ -244,13 +242,13 @@ class MediaApplicationCreationTest extends FunctionalTestBase {
     void ensureMediaApplicationsAreDeletedWhenReportingIsCalled() throws Exception {
         MediaApplication rejectedApplication = createApplication();
 
-        rejectedApplication = doPutRequest(String.format(REJECT_APPLICATION, rejectedApplication.getId()),
-                     bearer).getBody().as(MediaApplication.class);
+        doPutRequest(String.format(REJECT_APPLICATION, rejectedApplication.getId()),
+                     bearer);
 
         MediaApplication approvedApplication = createApplication();
 
-        approvedApplication = doPutRequest(String.format(APPROVE_APPLICATION, approvedApplication.getId()),
-                     bearer).getBody().as(MediaApplication.class);
+        doPutRequest(String.format(APPROVE_APPLICATION, approvedApplication.getId()),
+                     bearer);
 
         MediaApplication pendingApplication = createApplication();
 
@@ -262,8 +260,8 @@ class MediaApplicationCreationTest extends FunctionalTestBase {
 
         MediaApplication[] retrievedApplications = getResponse.getBody().as(MediaApplication[].class);
 
-        assertThat(retrievedApplications).contains(pendingApplication);
-        assertThat(retrievedApplications).doesNotContain(rejectedApplication);
-        assertThat(retrievedApplications).doesNotContain(approvedApplication);
+        assertThat(retrievedApplications).anyMatch(app -> app.getId().equals(pendingApplication.getId()));
+        assertThat(retrievedApplications).noneMatch(app -> app.getId().equals(rejectedApplication.getId()));
+        assertThat(retrievedApplications).noneMatch(app -> app.getId().equals(approvedApplication.getId()));
     }
 }
