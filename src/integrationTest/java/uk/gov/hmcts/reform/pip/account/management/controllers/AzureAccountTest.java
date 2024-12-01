@@ -77,6 +77,8 @@ class AzureAccountTest extends IntegrationTestBase {
     private static final String EMAIL_VALIDATION_MESSAGE = "email: must be a well-formed email address";
     private static final String INVALID_FIRST_NAME_MESSAGE = "firstName: must not be empty";
     private static final String INVALID_ROLE_MESSAGE = "role: must not be null";
+    private static final String UNSENT_EMAIL_MESSAGE = "Account has been successfully created, however "
+        + "email has failed to send.";
     private static final String DIRECTORY_ERROR = "Error when persisting account into Azure. "
         + "Check that the user doesn't already exist in the directory";
     private static final String TEST_MESSAGE_ID = "AzureAccount ID added to account";
@@ -89,6 +91,7 @@ class AzureAccountTest extends IntegrationTestBase {
     private static final String NOT_FOUND_STATUS_CODE_MESSAGE = "Status code does not match not found";
     private static final String INVALID_EMAIL_ERROR = "Error message is displayed for an invalid email";
     private static final String FORBIDDEN_STATUS_CODE = "Status code does not match forbidden";
+    private static final String MESSAGE_ERROR = "Error message does not match";
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
@@ -203,6 +206,59 @@ class AzureAccountTest extends IntegrationTestBase {
         assertEquals(FIRST_NAME, returnedAzureAccount.getFirstName(), TEST_MESSAGE_FIRST_NAME);
         assertEquals(SURNAME, returnedAzureAccount.getSurname(), TEST_MESSAGE_SURNAME);
         assertEquals(Roles.INTERNAL_ADMIN_CTSC, returnedAzureAccount.getRole(), TEST_MESSAGE_ROLE);
+    }
+
+    @Test
+    void creationOfValidAccountWhenFailedToSendNotificationEmail() throws Exception {
+        when(publicationService.sendNotificationEmail(anyString(), anyString(), anyString())).thenReturn(false);
+
+        AzureAccount azureAccount = new AzureAccount();
+        azureAccount.setEmail(EMAIL);
+        azureAccount.setSurname(SURNAME);
+        azureAccount.setFirstName(FIRST_NAME);
+        azureAccount.setRole(Roles.INTERNAL_ADMIN_CTSC);
+
+        UserCollectionResponse userCollectionResponse = new UserCollectionResponse();
+        userCollectionResponse.setValue(new ArrayList<>());
+
+        when(clientConfiguration.getB2cUrl()).thenReturn(B2C_URL);
+        when(graphClient.users()).thenReturn(usersRequestBuilder);
+        when(usersRequestBuilder.get(any())).thenReturn(userCollectionResponse);
+
+        MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
+            .post(AZURE_URL)
+            .content(OBJECT_MAPPER.writeValueAsString(List.of(azureAccount)))
+            .header(ISSUER_HEADER, ISSUER_ID)
+            .contentType(MediaType.APPLICATION_JSON);
+
+        MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isOk()).andReturn();
+
+        Map<CreationEnum, List<Object>> accounts = OBJECT_MAPPER.readValue(
+            response.getResponse().getContentAsString(),
+            new TypeReference<>() {
+            });
+
+        assertEquals(1, accounts.get(CreationEnum.ERRORED_ACCOUNTS).size(),
+                     "No errored account should be returned"
+        );
+        assertEquals(1, accounts.get(CreationEnum.CREATED_ACCOUNTS).size(),
+                     "1 Created account should be returned"
+        );
+
+        AzureAccount returnedValidAzureAccount = OBJECT_MAPPER.convertValue(
+            accounts.get(CreationEnum.CREATED_ACCOUNTS).get(0), AzureAccount.class
+        );
+
+        assertEquals(ID, returnedValidAzureAccount.getAzureAccountId(), TEST_MESSAGE_ID);
+        assertEquals(EMAIL, returnedValidAzureAccount.getEmail(), TEST_MESSAGE_EMAIL);
+        assertEquals(FIRST_NAME, returnedValidAzureAccount.getFirstName(), TEST_MESSAGE_FIRST_NAME);
+        assertEquals(SURNAME, returnedValidAzureAccount.getSurname(), TEST_MESSAGE_SURNAME);
+        assertEquals(Roles.INTERNAL_ADMIN_CTSC, returnedValidAzureAccount.getRole(), TEST_MESSAGE_ROLE);
+
+        ErroredAzureAccount returnedInvalidAccount = OBJECT_MAPPER.convertValue(
+            accounts.get(CreationEnum.ERRORED_ACCOUNTS).get(0), ErroredAzureAccount.class);
+
+        assertEquals(UNSENT_EMAIL_MESSAGE, returnedInvalidAccount.getErrorMessages().get(0), MESSAGE_ERROR);
     }
 
     @Test
@@ -383,6 +439,59 @@ class AzureAccountTest extends IntegrationTestBase {
     }
 
     @Test
+    void testNoSurnameAccountWhenFailedToSendNotificationEMail() throws Exception {
+        when(publicationService.sendMediaNotificationEmail(anyString(), anyString(), anyBoolean())).thenReturn(false);
+
+        User userToReturn = new User();
+        userToReturn.setId(ID);
+        userToReturn.setGivenName(GIVEN_NAME);
+
+        AzureAccount azureAccount = new AzureAccount();
+        azureAccount.setEmail(EMAIL);
+        azureAccount.setFirstName(FIRST_NAME);
+        azureAccount.setRole(Roles.VERIFIED);
+
+        when(graphClient.users()).thenReturn(usersRequestBuilder);
+        when(usersRequestBuilder.post(any())).thenReturn(userToReturn);
+
+        UserCollectionResponse userCollectionResponse = new UserCollectionResponse();
+        userCollectionResponse.setValue(new ArrayList<>());
+
+        when(clientConfiguration.getB2cUrl()).thenReturn(B2C_URL);
+        when(graphClient.users()).thenReturn(usersRequestBuilder);
+        when(usersRequestBuilder.get(any())).thenReturn(userCollectionResponse);
+
+        MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
+            .post(AZURE_URL)
+            .content(OBJECT_MAPPER.writeValueAsString(List.of(azureAccount)))
+            .header(ISSUER_HEADER, ISSUER_ID)
+            .contentType(MediaType.APPLICATION_JSON);
+
+        MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder)
+            .andExpect(status().isOk()).andReturn();
+
+        Map<CreationEnum, List<Object>> accounts =
+            OBJECT_MAPPER.readValue(
+                response.getResponse().getContentAsString(),
+                new TypeReference<>() {
+                }
+            );
+
+        assertEquals(1, accounts.get(CreationEnum.ERRORED_ACCOUNTS).size(),
+                     SINGLE_ERRORED_ACCOUNT
+        );
+        assertEquals(1, accounts.get(CreationEnum.CREATED_ACCOUNTS).size(),
+                     ZERO_CREATED_ACCOUNTS
+        );
+
+        ErroredAzureAccount returnedInvalidAccount = OBJECT_MAPPER.convertValue(
+            accounts.get(CreationEnum.ERRORED_ACCOUNTS).get(0), ErroredAzureAccount.class
+        );
+
+        assertEquals(UNSENT_EMAIL_MESSAGE, returnedInvalidAccount.getErrorMessages().get(0), MESSAGE_ERROR);
+    }
+
+    @Test
     void testCreationOfNoRoleAccount() throws Exception {
         AzureAccount azureAccount = new AzureAccount();
         azureAccount.setEmail(EMAIL);
@@ -430,7 +539,6 @@ class AzureAccountTest extends IntegrationTestBase {
 
     @Test
     void testCreationOfDuplicateAccount() throws Exception {
-
         when(graphClient.users()).thenReturn(usersRequestBuilder);
         when(usersRequestBuilder.post(any())).thenThrow(apiException);
 

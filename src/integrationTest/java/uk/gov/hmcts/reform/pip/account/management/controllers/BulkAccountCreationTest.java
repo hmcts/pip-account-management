@@ -23,6 +23,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.testcontainers.shaded.org.apache.commons.io.IOUtils;
 import uk.gov.hmcts.reform.pip.account.management.Application;
 import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
+import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredAzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.utils.IntegrationTestBase;
 
 import java.io.InputStream;
@@ -129,6 +130,13 @@ class BulkAccountCreationTest extends IntegrationTestBase {
 
             assertEquals(2, users.get(CreationEnum.CREATED_ACCOUNTS).size(), MAP_SIZE_MESSAGE);
             assertEquals(1, users.get(CreationEnum.ERRORED_ACCOUNTS).size(), MAP_SIZE_MESSAGE);
+
+            ErroredAzureAccount returnedInvalidAccount = OBJECT_MAPPER.convertValue(
+                users.get(CreationEnum.ERRORED_ACCOUNTS).get(0), ErroredAzureAccount.class
+            );
+
+            assertEquals("Account has been successfully created, however email has failed to send.",
+                         returnedInvalidAccount.getErrorMessages().get(0), "Message error does not match");
         }
     }
 
