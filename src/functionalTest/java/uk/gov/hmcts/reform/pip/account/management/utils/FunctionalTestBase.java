@@ -73,12 +73,30 @@ public class FunctionalTestBase {
             .thenReturn();
     }
 
-    protected Response doDeleteRequest(final String path, final Map<String, String> additionalHeaders,
-                                       final String body) {
+    protected Response doPutRequest(final String path, final Map<String, String> additionalHeaders) {
+        return given()
+            .relaxedHTTPSValidation()
+            .headers(getRequestHeaders(additionalHeaders))
+            .when()
+            .put(path)
+            .thenReturn();
+    }
+
+    protected Response doPutRequestWithJsonBody(final String path, final Map<String, String> additionalHeaders,
+                                                String body) {
         return given()
             .relaxedHTTPSValidation()
             .headers(getRequestHeaders(additionalHeaders))
             .body(body)
+            .when()
+            .put(path)
+            .thenReturn();
+    }
+
+    protected Response doDeleteRequest(final String path, final Map<String, String> additionalHeaders) {
+        return given()
+            .relaxedHTTPSValidation()
+            .headers(getRequestHeaders(additionalHeaders))
             .when()
             .delete(path)
             .thenReturn();
