@@ -1,6 +1,5 @@
 package uk.gov.hmcts.reform.pip.account.management.service;
 
-import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
 import nl.altindag.log.LogCaptor;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
@@ -9,11 +8,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
-import uk.gov.hmcts.reform.pip.account.management.Application;
-import uk.gov.hmcts.reform.pip.account.management.config.AzureConfigurationClientTestConfiguration;
+import org.springframework.web.reactive.function.client.WebClient;
 import uk.gov.hmcts.reform.pip.account.management.model.MediaApplication;
 import uk.gov.hmcts.reform.pip.account.management.model.MediaApplicationStatus;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
@@ -32,13 +28,11 @@ import static uk.gov.hmcts.reform.pip.account.management.helper.MediaApplication
 import static uk.gov.hmcts.reform.pip.account.management.helper.MediaApplicationHelper.createApplicationList;
 
 @ExtendWith(MockitoExtension.class)
-@SpringBootTest(classes = {AzureConfigurationClientTestConfiguration.class, Application.class})
 @ActiveProfiles({"test", "non-async"})
-@AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
 @SuppressWarnings({"PMD.TooManyMethods"})
 class PublicationServiceTest {
 
-    private static MockWebServer mockPublicationServicesEndpoint;
+    private final MockWebServer mockPublicationServicesEndpoint = new MockWebServer();
 
     private static final String SENT_MESSAGE = "test email sent";
     private static final String EMAIL = "test@email.com";
@@ -47,15 +41,20 @@ class PublicationServiceTest {
     private static final String ERROR_LOG_EMPTY_MESSAGE = "Error log is not empty";
     private static final String ERROR_LOG_MATCH_MESSAGE = "Error log does not match";
 
-    @Autowired
     PublicationService publicationService;
 
     LogCaptor logCaptor = LogCaptor.forClass(PublicationService.class);
 
     @BeforeEach
     void setup() throws IOException {
-        mockPublicationServicesEndpoint = new MockWebServer();
         mockPublicationServicesEndpoint.start(8081);
+
+        WebClient mockedWebClient =
+            WebClient.builder()
+                     .baseUrl(mockPublicationServicesEndpoint.url("/").toString())
+                     .build();
+
+        publicationService = new PublicationService(mockedWebClient);
     }
 
     @AfterEach
