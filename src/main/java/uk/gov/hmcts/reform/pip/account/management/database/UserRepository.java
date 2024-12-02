@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
+import uk.gov.hmcts.reform.pip.model.report.AccountMiData;
 
 import java.util.List;
 import java.util.Optional;
@@ -24,10 +25,10 @@ public interface UserRepository extends JpaRepository<PiUser, Long> {
 
     Optional<PiUser> findByUserId(UUID userId);
 
-    @Query(value = "SELECT cast(user_id as text), provenance_user_id, user_provenance, roles, created_date, "
-        + "last_signed_in_date FROM pi_user",
-        nativeQuery = true)
-    List<String> getAccManDataForMI();
+    @Query("SELECT new uk.gov.hmcts.reform.pip.model.report.AccountMiData("
+        + "u.userId, u.provenanceUserId, u.userProvenance, u.roles, u.createdDate, u.lastSignedInDate) "
+        + "FROM PiUser u")
+    List<AccountMiData> getAccountDataForMi();
 
     @Query(value = "SELECT * FROM pi_user WHERE CAST(last_verified_date AS DATE) = CURRENT_DATE - (interval '1' day)"
         + " * :daysAgo AND user_provenance = 'PI_AAD' AND roles = 'VERIFIED'", nativeQuery = true)

@@ -10,6 +10,7 @@ import uk.gov.hmcts.reform.pip.account.management.helpers.EmailHelper;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
+import uk.gov.hmcts.reform.pip.model.report.AccountMiData;
 
 import java.util.List;
 
@@ -26,13 +27,13 @@ public class AccountFilteringService {
         this.userRepository = userRepository;
     }
 
-    public String getAccManDataForMiReporting() {
-        StringBuilder builder = new StringBuilder(85);
-        builder.append("user_id,provenance_user_id,user_provenance,roles,created_date,last_signed_in_date")
-            .append(System.lineSeparator());
-        userRepository.getAccManDataForMI()
-            .forEach(line -> builder.append(line).append(System.lineSeparator()));
-        return builder.toString();
+    /**
+     * Method which will retrieve MI reporting data for all accounts.
+     *
+     * @return A list of MI Data objects for all accounts.
+     */
+    public List<AccountMiData> getAccountDataForMi() {
+        return userRepository.getAccountDataForMi();
     }
 
     /**
