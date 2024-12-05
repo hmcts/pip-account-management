@@ -19,7 +19,6 @@ import uk.gov.hmcts.reform.pip.model.system.admin.ActionResult;
 import uk.gov.hmcts.reform.pip.model.system.admin.CreateSystemAdminAction;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -38,20 +37,20 @@ public class SystemAdminB2CAccountService {
     private final AzureUserService azureUserService;
     private final UserRepository userRepository;
     private final PublicationService publicationService;
-    private final AzureAccountService azureAccountService;
+    private final AccountService accountService;
     private final Integer maxSystemAdminValue;
 
     @Autowired
     public SystemAdminB2CAccountService(Validator validator, AzureUserService azureUserService,
                                         UserRepository userRepository, PublicationService publicationService,
                                         @Value("${admin.max-system-admin}")Integer maxSystemAdminValue,
-                                        AzureAccountService azureAccountService) {
+                                        AccountService accountService) {
         this.validator = validator;
         this.azureUserService = azureUserService;
         this.userRepository = userRepository;
         this.publicationService = publicationService;
         this.maxSystemAdminValue = maxSystemAdminValue;
-        this.azureAccountService = azureAccountService;
+        this.accountService = accountService;
     }
 
     /**
@@ -61,18 +60,12 @@ public class SystemAdminB2CAccountService {
      * @return  The PiUser of the created system admin account.
      */
     public PiUser addSystemAdminAccount(SystemAdminAccount account, String issuerId) {
-
-        String displayName = "";
-        String provenanceUserId = verifyAdminUser(issuerId);
-        if (!provenanceUserId.isEmpty()) {
-            displayName = azureAccountService.retrieveAzureAccount(provenanceUserId).getDisplayName();
-        }
-
-        validateSystemAdminAccount(account, issuerId, displayName);
+        PiUser piUser = accountService.getUserById(UUID.fromString(issuerId));
+        validateSystemAdminAccount(account, issuerId, piUser.getEmail());
         try {
             User user = azureUserService.createUser(account.convertToAzureAccount(), false);
             PiUser createdUser = userRepository.save(account.convertToPiUser(user.getId()));
-            handleNewSystemAdminAccountAction(account, issuerId, ActionResult.SUCCEEDED, displayName);
+            handleNewSystemAdminAccountAction(account, issuerId, ActionResult.SUCCEEDED, piUser.getEmail());
 
             publicationService.sendNotificationEmail(
                 account.getEmail(),
@@ -83,19 +76,20 @@ public class SystemAdminB2CAccountService {
         } catch (AzureCustomException e) {
             ErroredSystemAdminAccount erroredSystemAdminAccount = new ErroredSystemAdminAccount(account);
             erroredSystemAdminAccount.setErrorMessages(List.of(e.getLocalizedMessage()));
-            handleNewSystemAdminAccountAction(account, issuerId, ActionResult.FAILED, displayName);
+            handleNewSystemAdminAccountAction(account, issuerId, ActionResult.FAILED, piUser.getEmail());
             throw new SystemAdminAccountException(erroredSystemAdminAccount);
         }
+
     }
 
     /**
      * This method handles the logging and publishing that a new system admin account has been created.
      * @param systemAdminAccount The system admin account that has been created
      * @param adminId The ID of the admin user who is creating the account.
-     * @param name The name of the admin user who is creating the account
+     * @param email The email of the admin user who is creating the account
      */
     public void handleNewSystemAdminAccountAction(SystemAdminAccount systemAdminAccount, String adminId,
-                                                  ActionResult result, String name) {
+                                                  ActionResult result, String email) {
         log.info(writeLog(UUID.fromString(adminId),
                           "has attempted to create a System Admin account, which has: " + result.toString()));
 
@@ -105,7 +99,7 @@ public class SystemAdminB2CAccountService {
         CreateSystemAdminAction createSystemAdminAction = new CreateSystemAdminAction();
         createSystemAdminAction.setAccountEmail(systemAdminAccount.getEmail());
         createSystemAdminAction.setEmailList(existingAdminEmails);
-        createSystemAdminAction.setRequesterName(name);
+        createSystemAdminAction.setRequesterEmail(email);
         createSystemAdminAction.setActionResult(result);
 
         publicationService.sendSystemAdminAccountAction(createSystemAdminAction);
@@ -115,9 +109,9 @@ public class SystemAdminB2CAccountService {
      * A helper method which specifically handles validation failures on the system admin account.
      * @param account The system admin account to validate.
      * @param issuerId The ID of the admin user that is issuing the account.
-     * @param name The name of the admin user requesting the account.
+     * @param email The email of the admin user requesting the account.
      */
-    private void validateSystemAdminAccount(SystemAdminAccount account, String issuerId, String name) {
+    private void validateSystemAdminAccount(SystemAdminAccount account, String issuerId, String email) {
         Set<ConstraintViolation<SystemAdminAccount>> constraintViolationSet = validator.validate(account);
 
         if (!constraintViolationSet.isEmpty()) {
@@ -126,14 +120,14 @@ public class SystemAdminB2CAccountService {
                                                            .stream().map(constraint -> constraint.getPropertyPath()
                     + ": " + constraint.getMessage()).toList());
 
-            handleNewSystemAdminAccountAction(account, issuerId, ActionResult.FAILED, name);
+            handleNewSystemAdminAccountAction(account, issuerId, ActionResult.FAILED, email);
             throw new SystemAdminAccountException(erroredSystemAdminAccount);
         }
 
         if (userRepository.findByEmailAndUserProvenance(account.getEmail(), UserProvenances.PI_AAD).isPresent()) {
             ErroredSystemAdminAccount erroredSystemAdminAccount = new ErroredSystemAdminAccount(account);
             erroredSystemAdminAccount.setDuplicate(true);
-            handleNewSystemAdminAccountAction(account, issuerId, ActionResult.FAILED, name);
+            handleNewSystemAdminAccountAction(account, issuerId, ActionResult.FAILED, email);
             throw new SystemAdminAccountException(erroredSystemAdminAccount);
         }
 
@@ -144,22 +138,8 @@ public class SystemAdminB2CAccountService {
         if (systemAdminUsers.size() >= maxSystemAdminValue) {
             ErroredSystemAdminAccount erroredSystemAdminAccount = new ErroredSystemAdminAccount(account);
             erroredSystemAdminAccount.setAboveMaxSystemAdmin(true);
-            handleNewSystemAdminAccountAction(account, issuerId, ActionResult.ATTEMPTED, name);
+            handleNewSystemAdminAccountAction(account, issuerId, ActionResult.ATTEMPTED, email);
             throw new SystemAdminAccountException(erroredSystemAdminAccount);
         }
-    }
-
-    /**
-     * Method to find whether user is SYSTEM_ADMIN or not.
-     * @param issuerId The ID of the admin user
-     * @return Boolean user is SYSTEM_ADMIN or not
-     */
-    private String verifyAdminUser(String issuerId) {
-        Optional<PiUser> adminUser = userRepository.findByUserId(UUID.fromString(issuerId));
-        if (adminUser.isPresent() && adminUser.get().getRoles().equals(Roles.SYSTEM_ADMIN)) {
-            return adminUser.get().getProvenanceUserId();
-        }
-
-        return "";
     }
 }

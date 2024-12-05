@@ -610,6 +610,7 @@ class AccountTest {
     }
 
     @Test
+    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = "classpath:add-admin-users.sql")
     void testV2SystemAdminDeletesVerifiedUser() throws Exception {
         validUser.setUserProvenance(UserProvenances.CFT_IDAM);
         validUser.setRoles(Roles.VERIFIED);
@@ -675,6 +676,7 @@ class AccountTest {
     }
 
     @Test
+    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = "classpath:add-admin-users.sql")
     void testV2SystemAdminDeletesSuperAdminUser() throws Exception {
         superAdminUser.setUserProvenance(UserProvenances.CFT_IDAM);
         String superAdminUserId = getSuperAdminUserId(superAdminUser);
