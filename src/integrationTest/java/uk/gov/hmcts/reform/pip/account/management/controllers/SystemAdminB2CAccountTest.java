@@ -32,6 +32,7 @@ import uk.gov.hmcts.reform.pip.account.management.model.SystemAdminAccount;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -223,7 +224,7 @@ class SystemAdminB2CAccountTest {
             MockMvcRequestBuilders
                 .post(CREATE_SYSTEM_ADMIN_URL)
                 .content(OBJECT_MAPPER.writeValueAsString(systemAdmin))
-                .header(ISSUER_HEADER, ISSUER_ID)
+                .header(ISSUER_HEADER, UUID.randomUUID().toString())
                 .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult responseCreateSystemAdminUser = mockMvc.perform(createRequest)
