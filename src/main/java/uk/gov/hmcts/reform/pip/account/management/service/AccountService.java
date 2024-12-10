@@ -139,7 +139,6 @@ public class AccountService {
     public boolean isUserAuthorisedForPublication(UUID userId, ListType listType, Sensitivity sensitivity) {
         PiUser userToCheck = checkUserReturned(userRepository.findByUserId(userId), userId);
         return sensitivityService.checkAuthorisation(userToCheck, listType, sensitivity);
-
     }
 
     /**
