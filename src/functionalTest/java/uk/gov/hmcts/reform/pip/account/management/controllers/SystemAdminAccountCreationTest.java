@@ -60,4 +60,32 @@ class SystemAdminAccountCreationTest extends FunctionalTestBase {
         assertThat(response.jsonPath().getString("email")).isEqualTo(TEST_USER_EMAIL);
         assertThat(response.jsonPath().getString("provenanceUserId")).isEqualTo(TEST_USER_PROVENANCE_ID);
     }
+
+    @Test
+    public void shouldFailToCreateSystemAdminAccountWithoutEmail() {
+        String requestBody = """
+        {
+            "provenanceUserId": "%s"
+        }
+        """.formatted(TEST_USER_PROVENANCE_ID);
+
+        Response response = doPostRequest(SYSTEM_ADMIN_URL, bearer, requestBody);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+    }
+
+    @Test
+    public void shouldFailToCreateSystemAdminAccountWithoutProvenanceUserId() {
+        String requestBody = """
+        {
+            "email": "%s"
+        }
+        """.formatted(TEST_USER_EMAIL);
+
+        Response response = doPostRequest(SYSTEM_ADMIN_URL, bearer, requestBody);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+    }
+
+
 }
