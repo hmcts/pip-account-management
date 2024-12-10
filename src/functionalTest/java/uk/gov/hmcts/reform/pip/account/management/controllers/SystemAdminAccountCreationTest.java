@@ -28,7 +28,7 @@ class SystemAdminAccountCreationTest extends FunctionalTestBase {
     private static final String TEST_USER_EMAIL = TEST_USER_EMAIL_PREFIX + "@justice.gov.uk";
     private static final String TEST_USER_PROVENANCE_ID = UUID.randomUUID().toString();
 
-    private static final String TESTING_SUPPORT_APPLICATION_URL = "/testing-support/account/";
+    private static final String TESTING_SUPPORT_ACCOUNT_URL = "/testing-support/account/";
     private static final String ACCOUNT_URL = "/account";
     private static final String SYSTEM_ADMIN_URL = ACCOUNT_URL + "/system-admin";
     private static final String BEARER = "Bearer ";
@@ -42,7 +42,7 @@ class SystemAdminAccountCreationTest extends FunctionalTestBase {
 
     @AfterAll
     public void teardown() {
-        doDeleteRequest(TESTING_SUPPORT_APPLICATION_URL + TEST_USER_EMAIL, bearer);
+        doDeleteRequest(TESTING_SUPPORT_ACCOUNT_URL + TEST_USER_EMAIL, bearer);
     }
 
     @Test
