@@ -23,12 +23,15 @@ import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
+import uk.gov.hmcts.reform.pip.model.report.AccountMiData;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.http.HttpStatus.FORBIDDEN;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
@@ -59,11 +62,10 @@ class CustomAccountRetrievalTest {
     private static final String NOT_FOUND_STATUS_CODE_MESSAGE = "Status code does not match not found";
     private static final String USER_SHOULD_MATCH = "Users should match";
     private static final String FORBIDDEN_STATUS_CODE = "Status code does not match forbidden";
+    private static final String VALIDATION_MI_REPORT = "Should successfully retrieve MI data";
 
     private static final String UNAUTHORIZED_ROLE = "APPROLE_unknown.authorized";
     private static final String UNAUTHORIZED_USERNAME = "unauthorized_isAuthorized";
-    private static final String EXPECTED_HEADERS = "user_id,provenance_user_id,user_provenance,roles,"
-        + "created_date,last_signed_in_date";
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final PiUser VALID_USER = createUser(true, UUID.randomUUID().toString());
@@ -106,22 +108,23 @@ class CustomAccountRetrievalTest {
                 }
             );
 
-        String createdUserId = mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).get(0).toString();
+        String createdUserId = mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).getFirst().toString();
 
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .get(MI_REPORTING_ACCOUNT_DATA_URL);
 
-        String responseMiData = mockMvc.perform(request).andExpect(status().isOk()).andReturn()
-            .getResponse().getContentAsString();
+        MvcResult responseMiData = mockMvc.perform(request).andExpect(status().isOk()).andReturn();
 
-        assertEquals(EXPECTED_HEADERS, responseMiData.split("\n")[0],
-                     "Should successfully retrieve MI data headers"
+        assertNotNull(responseMiData.getResponse(), VALIDATION_MI_REPORT);
+
+        List<AccountMiData> miData = Arrays.asList(
+            OBJECT_MAPPER.readValue(
+                responseMiData.getResponse().getContentAsString(),
+                AccountMiData[].class
+            )
         );
 
-        assertTrue(
-            responseMiData.contains(createdUserId),
-            "Should successfully retrieve MI data"
-        );
+        assertEquals(createdUserId, miData.getLast().getUserId().toString(), VALIDATION_MI_REPORT);
     }
 
     @Test
