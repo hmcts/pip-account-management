@@ -46,7 +46,7 @@ class SystemAdminAccountCreationTest extends FunctionalTestBase {
     }
 
     @Test
-    public void createSystemAdminAccount() {
+    void createSystemAdminAccount() {
         String requestBody = """
             {
                 "email": "%s",
@@ -62,7 +62,7 @@ class SystemAdminAccountCreationTest extends FunctionalTestBase {
     }
 
     @Test
-    public void shouldFailToCreateSystemAdminAccountWithoutEmail() {
+    void shouldFailToCreateSystemAdminAccountWithoutEmail() {
         String requestBody = """
             {
                 "provenanceUserId": "%s"
@@ -75,7 +75,7 @@ class SystemAdminAccountCreationTest extends FunctionalTestBase {
     }
 
     @Test
-    public void shouldFailToCreateSystemAdminAccountWithoutProvenanceUserId() {
+    void shouldFailToCreateSystemAdminAccountWithoutProvenanceUserId() {
         String requestBody = """
             {
                 "email": "%s"
@@ -86,6 +86,5 @@ class SystemAdminAccountCreationTest extends FunctionalTestBase {
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
     }
-
 
 }

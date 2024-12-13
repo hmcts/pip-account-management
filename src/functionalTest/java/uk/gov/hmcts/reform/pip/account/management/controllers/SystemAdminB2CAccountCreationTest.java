@@ -54,7 +54,7 @@ class SystemAdminB2CAccountCreationTest extends FunctionalTestBase {
     }
 
     @Test
-    public void createSystemAdminB2CAccount() {
+    void createSystemAdminB2CAccount() {
         String requestBody = """
             {
                 "email": "%s",
@@ -70,7 +70,7 @@ class SystemAdminB2CAccountCreationTest extends FunctionalTestBase {
     }
 
     @Test
-    public void shouldCreateSystemAdminB2CAccountWithoutProvenanceUserId() {
+    void shouldCreateSystemAdminB2CAccountWithoutProvenanceUserId() {
         String requestBody = """
             {
                 "email": "%s"
@@ -85,7 +85,7 @@ class SystemAdminB2CAccountCreationTest extends FunctionalTestBase {
     }
 
     @Test
-    public void shouldFailToCreateSystemAdminB2CAccountWithoutEmail() {
+    void shouldFailToCreateSystemAdminB2CAccountWithoutEmail() {
         String requestBody = """
             {
                 "provenanceUserId": "%s"
@@ -98,7 +98,7 @@ class SystemAdminB2CAccountCreationTest extends FunctionalTestBase {
     }
 
     @Test
-    public void shouldFailToCreateSystemAdminB2CAccountWithoutIssuerId() {
+    void shouldFailToCreateSystemAdminB2CAccountWithoutIssuerId() {
         String requestBody = """
             {
                 "email": "%s",

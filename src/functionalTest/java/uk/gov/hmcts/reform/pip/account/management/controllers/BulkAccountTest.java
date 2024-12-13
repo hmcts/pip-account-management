@@ -13,11 +13,12 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import uk.gov.hmcts.reform.pip.account.management.utils.FunctionalTestBase;
 import uk.gov.hmcts.reform.pip.account.management.utils.OAuthClient;
 
+import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -44,15 +45,16 @@ class BulkAccountTest extends FunctionalTestBase {
         bearer = Map.of(HttpHeaders.AUTHORIZATION, BEARER + accessToken);
         issuerId = Map.of(ISSUER_ID, USER_ID);
 
-        StringBuilder csvContent = new StringBuilder("email,firstName,surname\n");
+        StringBuilder csvContent = new StringBuilder(400);
+        csvContent.append("email,firstName,surname\n");
 
         for (int i = 0; i < 5; i++) {
             String email = generateTestEmail();
             csvContent.append(email).append(",testBulkFirstName,testBulkSurname\n");
         }
 
-        var mockFilePath = Files.createTempFile("mock-bulk-upload", ".csv");
-        try (FileWriter writer = new FileWriter(mockFilePath.toFile())) {
+        Path mockFilePath = Files.createTempFile("mock-bulk-upload", ".csv");
+        try (BufferedWriter writer = Files.newBufferedWriter(mockFilePath)) {
             writer.write(csvContent.toString());
         }
 
@@ -81,7 +83,7 @@ class BulkAccountTest extends FunctionalTestBase {
     }
 
     @Test
-    public void createAccountsInBulk() {
+    void createAccountsInBulk() {
         File mockFile = new File(System.getProperty(MOCK_FILE));
 
         Response response = doPostMultipartForBulk(BULK_UPLOAD_URL, bearer, issuerId, mockFile);
@@ -92,7 +94,7 @@ class BulkAccountTest extends FunctionalTestBase {
     }
 
     @Test
-    public void shouldReturnOkButNotCreateAccountsForDuplicates() {
+    void shouldReturnOkButNotCreateAccountsForDuplicates() {
         File mockFile = new File(System.getProperty(MOCK_FILE));
 
         Response response = doPostMultipartForBulk(BULK_UPLOAD_URL, bearer, issuerId, mockFile);
