@@ -31,6 +31,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 @SpringBootTest(classes = {OAuthClient.class})
 class BulkAccountTest extends FunctionalTestBase {
     private static final String USER_ID = UUID.randomUUID().toString();
+    private static final String COMMON_PREFIX = "pip-am-test-email-bulk-";
     private static final String MOCK_FILE = "files/test-csv.csv";
     private static final String BULK_UPLOAD_URL = "account/media-bulk-upload";
     private static final String TESTING_SUPPORT_ACCOUNT_URL = "/testing-support/account/";
@@ -62,24 +63,14 @@ class BulkAccountTest extends FunctionalTestBase {
     }
 
     private String generateTestEmail() {
-        String prefix = String.format("pip-am-test-email-%s", ThreadLocalRandom.current().nextInt(1000, 9999));
+        String prefix = String.format(COMMON_PREFIX + "%s", ThreadLocalRandom.current().nextInt(1000, 9999));
         return prefix + "@justice.gov.uk";
     }
 
     @AfterAll
     public void teardown() throws IOException {
-        File mockFile = new File(System.getProperty(MOCK_FILE));
-
-        List<String> emails = Files.lines(mockFile.toPath(), StandardCharsets.UTF_8)
-            .skip(1)
-            .map(line -> line.split(",")[0])
-            .toList();
-
-        for (String email : emails) {
-            doDeleteRequest(TESTING_SUPPORT_ACCOUNT_URL + email, bearer);
-        }
-
-        Files.deleteIfExists(mockFile.toPath());
+        doDeleteRequest(TESTING_SUPPORT_ACCOUNT_URL + COMMON_PREFIX, bearer);
+        Files.deleteIfExists(Path.of(MOCK_FILE));
     }
 
     @Test
@@ -103,13 +94,4 @@ class BulkAccountTest extends FunctionalTestBase {
         assertThat(response.jsonPath().getList("CREATED_ACCOUNTS").isEmpty()).isTrue();
         assertThat(response.jsonPath().getList("ERRORED_ACCOUNTS").isEmpty()).isTrue();
     }
-
 }
-
-
-
-
-
-
-
-
