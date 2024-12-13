@@ -30,7 +30,8 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 class BulkAccountTest extends FunctionalTestBase {
     private static final String USER_ID = UUID.randomUUID().toString();
     private static final String EMAIL_PREFIX = "pip-am-test-email-";
-    private static final String TEST_SUITE_PREFIX = String.format("%s-", ThreadLocalRandom.current().nextInt(1000, 9999));
+    private static final String TEST_SUITE_PREFIX = String.format("%s-",
+        ThreadLocalRandom.current().nextInt(1000, 9999));
     private static final String TEST_SUITE_EMAIL_PREFIX = EMAIL_PREFIX + TEST_SUITE_PREFIX;
     private static final String BULK_UPLOAD_URL = "account/media-bulk-upload";
     private static final String TESTING_SUPPORT_ACCOUNT_URL = "/testing-support/account/";
