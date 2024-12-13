@@ -32,12 +32,12 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 class BulkAccountTest extends FunctionalTestBase {
     private static final String USER_ID = UUID.randomUUID().toString();
     private static final String COMMON_PREFIX = "pip-am-test-email-bulk-";
-    private static final String MOCK_FILE = "files/test-csv.csv";
     private static final String BULK_UPLOAD_URL = "account/media-bulk-upload";
     private static final String TESTING_SUPPORT_ACCOUNT_URL = "/testing-support/account/";
     private static final String BEARER = "Bearer ";
     private static final String ISSUER_ID = "x-issuer-id";
 
+    private String mockFile;
     private Map<String, String> bearer;
     private Map<String, String> issuerId;
 
@@ -59,7 +59,7 @@ class BulkAccountTest extends FunctionalTestBase {
             writer.write(csvContent.toString());
         }
 
-        System.setProperty(MOCK_FILE, mockFilePath.toString());
+        mockFile = mockFilePath.toString();
     }
 
     private String generateTestEmail() {
@@ -70,14 +70,14 @@ class BulkAccountTest extends FunctionalTestBase {
     @AfterAll
     public void teardown() throws IOException {
         doDeleteRequest(TESTING_SUPPORT_ACCOUNT_URL + COMMON_PREFIX, bearer);
-        Files.deleteIfExists(Path.of(MOCK_FILE));
+        Files.deleteIfExists(Path.of(mockFile));
     }
 
     @Test
     void createAccountsInBulk() {
-        File mockFile = new File(System.getProperty(MOCK_FILE));
+        File mockBulkUploadFile = new File(mockFile);
 
-        Response response = doPostMultipartForBulk(BULK_UPLOAD_URL, bearer, issuerId, mockFile);
+        Response response = doPostMultipartForBulk(BULK_UPLOAD_URL, bearer, issuerId, mockBulkUploadFile);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK.value());
         assertThat(response.jsonPath().getList("CREATED_ACCOUNTS").size()).isEqualTo(5);
@@ -86,9 +86,9 @@ class BulkAccountTest extends FunctionalTestBase {
 
     @Test
     void shouldReturnOkButNotCreateAccountsForDuplicates() {
-        File mockFile = new File(System.getProperty(MOCK_FILE));
+        File mockBulkUploadFile = new File(mockFile);
 
-        Response response = doPostMultipartForBulk(BULK_UPLOAD_URL, bearer, issuerId, mockFile);
+        Response response = doPostMultipartForBulk(BULK_UPLOAD_URL, bearer, issuerId, mockBulkUploadFile);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK.value());
         assertThat(response.jsonPath().getList("CREATED_ACCOUNTS").isEmpty()).isTrue();
