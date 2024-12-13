@@ -64,10 +64,10 @@ class SystemAdminAccountCreationTest extends FunctionalTestBase {
     @Test
     public void shouldFailToCreateSystemAdminAccountWithoutEmail() {
         String requestBody = """
-        {
-            "provenanceUserId": "%s"
-        }
-        """.formatted(TEST_USER_PROVENANCE_ID);
+            {
+                "provenanceUserId": "%s"
+            }
+            """.formatted(TEST_USER_PROVENANCE_ID);
 
         Response response = doPostRequest(SYSTEM_ADMIN_URL, bearer, requestBody);
 
@@ -77,10 +77,10 @@ class SystemAdminAccountCreationTest extends FunctionalTestBase {
     @Test
     public void shouldFailToCreateSystemAdminAccountWithoutProvenanceUserId() {
         String requestBody = """
-        {
-            "email": "%s"
-        }
-        """.formatted(TEST_USER_EMAIL);
+            {
+                "email": "%s"
+            }
+            """.formatted(TEST_USER_EMAIL);
 
         Response response = doPostRequest(SYSTEM_ADMIN_URL, bearer, requestBody);
 

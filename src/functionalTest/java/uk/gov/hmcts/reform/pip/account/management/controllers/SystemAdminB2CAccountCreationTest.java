@@ -72,10 +72,10 @@ class SystemAdminB2CAccountCreationTest extends FunctionalTestBase {
     @Test
     public void shouldCreateSystemAdminB2CAccountWithoutProvenanceUserId() {
         String requestBody = """
-        {
-            "email": "%s"
-        }
-        """.formatted(TEST_USER_EMAIL_2);
+            {
+                "email": "%s"
+            }
+            """.formatted(TEST_USER_EMAIL_2);
 
         Response response = doPostRequestForB2C(SYSTEM_ADMIN_B2C_URL, bearer, issuerId, requestBody);
 
@@ -87,10 +87,10 @@ class SystemAdminB2CAccountCreationTest extends FunctionalTestBase {
     @Test
     public void shouldFailToCreateSystemAdminB2CAccountWithoutEmail() {
         String requestBody = """
-        {
-            "provenanceUserId": "%s"
-        }
-        """.formatted(TEST_USER_PROVENANCE_ID);
+            {
+                "provenanceUserId": "%s"
+            }
+            """.formatted(TEST_USER_PROVENANCE_ID);
 
         Response response = doPostRequestForB2C(SYSTEM_ADMIN_B2C_URL, bearer, issuerId, requestBody);
 

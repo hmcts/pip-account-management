@@ -92,7 +92,7 @@ class BulkAccountTest extends FunctionalTestBase {
     }
 
     @Test
-    public void shouldReturnOKButNotCreateAccountsForDuplicates() {
+    public void shouldReturnOkButNotCreateAccountsForDuplicates() {
         File mockFile = new File(System.getProperty(MOCK_FILE));
 
         Response response = doPostMultipartForBulk(BULK_UPLOAD_URL, bearer, issuerId, mockFile);
