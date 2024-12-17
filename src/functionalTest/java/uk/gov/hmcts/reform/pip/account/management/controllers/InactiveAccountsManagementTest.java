@@ -1,0 +1,275 @@
+package uk.gov.hmcts.reform.pip.account.management.controllers;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.dockerjava.zerodep.shaded.org.apache.hc.core5.http.HttpHeaders;
+import io.restassured.response.Response;
+import org.json.JSONObject;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
+import uk.gov.hmcts.reform.pip.account.management.model.AzureAccount;
+import uk.gov.hmcts.reform.pip.account.management.model.MediaApplication;
+import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
+import uk.gov.hmcts.reform.pip.account.management.utils.FunctionalTestBase;
+import uk.gov.hmcts.reform.pip.account.management.utils.OAuthClient;
+import uk.gov.hmcts.reform.pip.model.account.Roles;
+import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
+
+import java.io.IOException;
+import java.time.Clock;
+import java.time.ZonedDateTime;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
+
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.springframework.http.HttpStatus.NO_CONTENT;
+import static org.springframework.http.HttpStatus.OK;
+
+@ExtendWith(SpringExtension.class)
+@ActiveProfiles(profiles = "functional")
+@SpringBootTest(classes = {OAuthClient.class})
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@SuppressWarnings("PMD.TooManyMethods")
+class InactiveAccountsManagementTest extends FunctionalTestBase {
+    private static final String USER_ID = UUID.randomUUID().toString();
+    private static final String TEST_NAME = "E2E Account Management Test Name";
+    private static final String TEST_EMPLOYER = "E2E Account Management Test Employer";
+    private static final Integer TEST_EMAIL_RANDOM_NUMBER =
+        ThreadLocalRandom.current().nextInt(1000, 9999);
+    private static final String TEST_EMAIL_PREFIX = String.format(
+        "pip-am-test-email-%s", TEST_EMAIL_RANDOM_NUMBER);
+    private static final String TEST_ADMIN_EMAIL_PREFIX = String.format(
+        "pip-am-test-admin-email-%s", TEST_EMAIL_RANDOM_NUMBER);
+    private static final String TEST_IDAM_ADMIN_EMAIL_PREFIX = String.format(
+        "pip-am-test-idam-admin-email-%s", TEST_EMAIL_RANDOM_NUMBER);
+    private static final String EMAIL_DOMAIN = "%s@justice.gov.uk";
+    private static final String TEST_EMAIL =
+        String.format(EMAIL_DOMAIN, TEST_EMAIL_PREFIX);
+    private static final String TEST_ADMIN_EMAIL =
+        String.format(EMAIL_DOMAIN, TEST_ADMIN_EMAIL_PREFIX);
+    private static final String TEST_IDAM_ADMIN_EMAIL =
+        String.format(EMAIL_DOMAIN, TEST_IDAM_ADMIN_EMAIL_PREFIX);
+    private static final String FIRST_NAME = "E2E Account Management";
+    private static final String SURNAME = "Test Name";
+    private static final String STATUS = "PENDING";
+    private static final String LAST_SINGED_IN_DATE = "lastSignedInDate";
+    private static final String MEDIA_APPLICATION_URL = "/application";
+    private static final String MOCK_FILE = "files/test-image.png";
+    private static final String BEARER = "Bearer ";
+    private static final String ISSUER_ID = "x-issuer-id";
+    private static final Clock CL = Clock.systemUTC();
+    private static final String IDAM_ADMIN_USER_PROVENANCE_ID = UUID.randomUUID().toString();
+    private Map<String, String> headers;
+    private Map<String, String> issuerId;
+    private String mediaUserProvenanceId;
+    private String adminProvenanceId;
+    private static final String ACCOUNT_URL = "/account";
+    private static final String ADD_USER_B2C_URL = ACCOUNT_URL + "/add/azure";
+    private static final String ADD_PI_USER_URL = ACCOUNT_URL + "/add/pi";
+    private static final String UPDATE_USER_INFO = ACCOUNT_URL + "/provenance";
+    private static final String NOTIFY_INACTIVE_MEDIA_ACCOUNT = ACCOUNT_URL + "/media/inactive/notify";
+    private static final String DELETE_INACTIVE_MEDIA_ACCOUNT = ACCOUNT_URL + "/media/inactive";
+    private static final String NOTIFY_INACTIVE_ADMIN_ACCOUNT = ACCOUNT_URL + "/admin/inactive/notify";
+    private static final String DELETE_INACTIVE_ADMIN_ACCOUNT = ACCOUNT_URL + "/admin/inactive";
+    private static final String NOTIFY_INACTIVE_IDAM_ACCOUNT = ACCOUNT_URL + "/idam/inactive/notify";
+    private static final String DELETE_INACTIVE_IDAM_ACCOUNT = ACCOUNT_URL + "/idam/inactive";
+    private static final String ADD_SYSTEM_ADMIN_B2C_URL = ACCOUNT_URL + "/add/system-admin";
+
+    @BeforeAll
+    public void startUp() throws IOException {
+
+        headers = Map.of(HttpHeaders.AUTHORIZATION, BEARER + accessToken);
+        issuerId = Map.of(ISSUER_ID, USER_ID);
+
+        //ADD MEDIA USER
+        createApplication();
+        AzureAccount mediaUserAzureAccount = createAzureAccount(TEST_EMAIL, Roles.VERIFIED);
+        mediaUserProvenanceId = mediaUserAzureAccount.getAzureAccountId();
+        createUser(TEST_EMAIL, mediaUserAzureAccount.getAzureAccountId(),
+                                   Roles.VERIFIED, UserProvenances.PI_AAD);
+
+        //ADD SYSTEM ADMIN
+        PiUser systemAdminAccount = createSystemAdminAccount(TEST_ADMIN_EMAIL);
+        adminProvenanceId = systemAdminAccount.getProvenanceUserId();
+
+        //ADD IDAM SYSTEM ADMIN
+        createUser(TEST_IDAM_ADMIN_EMAIL, IDAM_ADMIN_USER_PROVENANCE_ID,
+                   Roles.VERIFIED, UserProvenances.CFT_IDAM);
+    }
+
+    private MediaApplication createApplication() throws IOException {
+        Response response = doPostMultipartForApplication(MEDIA_APPLICATION_URL, headers,
+                                                          new ClassPathResource(MOCK_FILE).getFile(),
+                                                          TEST_NAME, TEST_EMAIL, TEST_EMPLOYER, STATUS);
+
+        assertThat(response.getStatusCode()).isEqualTo(OK.value());
+
+        return response.getBody().as(MediaApplication.class);
+    }
+
+    private AzureAccount createAzureAccount(String email, Roles role) {
+        String requestBody = """
+            [
+                {
+                    "email": "%s",
+                    "firstName": "%s",
+                    "surname": "%s",
+                    "role": "%s",
+                    "displayName": "%s"
+                }
+            ]
+            """.formatted(email, FIRST_NAME, SURNAME, role, TEST_NAME);
+
+
+        Response postResponse = doPostRequest(ADD_USER_B2C_URL, headers, issuerId, requestBody);
+        ObjectMapper mapper = new ObjectMapper();
+        List<AzureAccount> azureAccountList = mapper.convertValue(
+            postResponse.jsonPath().getJsonObject("CREATED_ACCOUNTS"),
+            new TypeReference<>() {
+            }
+        );
+        assertThat(azureAccountList.size()).isEqualTo(1);
+
+        return azureAccountList.get(0);
+    }
+
+    private PiUser createSystemAdminAccount(String email) {
+        String requestBody = """
+            {
+                "email": "%s",
+                "firstName": "%s",
+                "surname": "%s"
+            }
+            """.formatted(email, FIRST_NAME, SURNAME);
+
+
+        Response response = doPostRequest(ADD_SYSTEM_ADMIN_B2C_URL, headers, issuerId, requestBody);
+        PiUser piUser = response.getBody().as(PiUser.class);
+        assertThat(response.getStatusCode()).isEqualTo(OK.value());
+
+        return piUser;
+    }
+
+    private String createUser(String email,
+                              String provenancesId, Roles role, UserProvenances provenances) {
+        String requestBody = """
+            [
+                {
+                    "email": "%s",
+                    "provenanceUserId": "%s",
+                    "roles": "%s",
+                    "userProvenance": "%s"
+                }
+            ]
+            """.formatted(email, provenancesId, role, provenances);
+
+        Response postResponse = doPostRequest(ADD_PI_USER_URL, headers, issuerId, requestBody);
+        ObjectMapper mapper = new ObjectMapper();
+        List<UUID> piUsersList = mapper.convertValue(
+            postResponse.jsonPath().getJsonObject("CREATED_ACCOUNTS"),
+            new TypeReference<>() {
+            }
+        );
+        assertThat(piUsersList.size()).isEqualTo(1);
+        return piUsersList.get(0).toString();
+    }
+
+    void updateUserAccountLastVerifiedDate(String userProvenancesId, UserProvenances userProvenances,
+                                           Map<String, String> fieldsToUpdate) {
+        JSONObject jsonFieldsToUpdate = new JSONObject(fieldsToUpdate);
+
+        Response response = doPutRequestWithJsonBody(UPDATE_USER_INFO + "/" + userProvenances + "/" + userProvenancesId,
+                                              headers, jsonFieldsToUpdate.toString());
+
+        assertThat(response.getStatusCode()).isEqualTo(OK.value());
+    }
+
+    @Test
+    @Order(1)
+    void shouldBeAbleToNotifyInactiveMediaAccounts() {
+        ZonedDateTime localDateTime = ZonedDateTime.now(CL).minusDays(350);
+        Map<String, String> updateParameters = Map.of(
+            "lastVerifiedDate", localDateTime.toString()
+        );
+        updateUserAccountLastVerifiedDate(mediaUserProvenanceId,
+                                          UserProvenances.PI_AAD, updateParameters);
+        Response response = doPostRequest(NOTIFY_INACTIVE_MEDIA_ACCOUNT, headers, "");
+        assertThat(response.getStatusCode()).isEqualTo(NO_CONTENT.value());
+    }
+
+    @Test
+    @Order(2)
+    void shouldBeAbleToDeleteInactiveMediaAccounts() {
+        ZonedDateTime localDateTime = ZonedDateTime.now(CL).minusDays(365);
+        Map<String, String> updateParameters = Map.of(
+            "lastVerifiedDate", localDateTime.toString()
+        );
+        updateUserAccountLastVerifiedDate(mediaUserProvenanceId,
+                                          UserProvenances.PI_AAD, updateParameters);
+        Response response = doDeleteRequest(DELETE_INACTIVE_MEDIA_ACCOUNT, headers);
+        assertThat(response.getStatusCode()).isEqualTo(NO_CONTENT.value());
+    }
+
+    @Test
+    @Order(3)
+    void shouldBeAbleToNotifyInactiveAdminAccounts() {
+        ZonedDateTime localDateTime = ZonedDateTime.now(CL).minusDays(76);
+        Map<String, String> updateParameters = Map.of(
+            LAST_SINGED_IN_DATE, localDateTime.toString()
+        );
+        updateUserAccountLastVerifiedDate(adminProvenanceId,
+                                          UserProvenances.PI_AAD, updateParameters);
+        Response response = doPostRequest(NOTIFY_INACTIVE_ADMIN_ACCOUNT, headers, "");
+        assertThat(response.getStatusCode()).isEqualTo(NO_CONTENT.value());
+    }
+
+    @Test
+    @Order(4)
+    void shouldBeAbleToDeleteInactiveAdminAccounts() {
+        ZonedDateTime localDateTime = ZonedDateTime.now(CL).minusDays(90);
+        Map<String, String> updateParameters = Map.of(
+            LAST_SINGED_IN_DATE, localDateTime.toString()
+        );
+        updateUserAccountLastVerifiedDate(adminProvenanceId,
+                                          UserProvenances.PI_AAD, updateParameters);
+        Response response = doDeleteRequest(DELETE_INACTIVE_ADMIN_ACCOUNT, headers);
+        assertThat(response.getStatusCode()).isEqualTo(NO_CONTENT.value());
+    }
+
+    @Test
+    @Order(5)
+    void shouldBeAbleToNotifyInactiveIdamAdminAccounts() {
+        ZonedDateTime localDateTime = ZonedDateTime.now(CL).minusDays(118);
+        Map<String, String> updateParameters = Map.of(
+            LAST_SINGED_IN_DATE, localDateTime.toString()
+        );
+        updateUserAccountLastVerifiedDate(IDAM_ADMIN_USER_PROVENANCE_ID,
+                                          UserProvenances.CFT_IDAM, updateParameters);
+        Response response = doPostRequest(NOTIFY_INACTIVE_IDAM_ACCOUNT, headers, "");
+        assertThat(response.getStatusCode()).isEqualTo(NO_CONTENT.value());
+    }
+
+    @Test
+    @Order(6)
+    void shouldBeAbleToDeleteInactiveIdamAdminAccounts() {
+        ZonedDateTime localDateTime = ZonedDateTime.now(CL).minusDays(132);
+        Map<String, String> updateParameters = Map.of(
+            LAST_SINGED_IN_DATE, localDateTime.toString()
+        );
+        updateUserAccountLastVerifiedDate(IDAM_ADMIN_USER_PROVENANCE_ID,
+                                          UserProvenances.CFT_IDAM, updateParameters);
+        Response response = doDeleteRequest(DELETE_INACTIVE_IDAM_ACCOUNT, headers);
+        assertThat(response.getStatusCode()).isEqualTo(NO_CONTENT.value());
+    }
+
+}

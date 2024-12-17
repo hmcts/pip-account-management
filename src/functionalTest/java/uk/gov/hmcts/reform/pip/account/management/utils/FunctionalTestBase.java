@@ -58,6 +58,18 @@ public class FunctionalTestBase {
             .thenReturn();
     }
 
+    protected Response doPostRequest(final String path, final Map<String, String> additionalHeaders,
+                                     final Map<String, String> issuerId, final String body) {
+        return given()
+            .relaxedHTTPSValidation()
+            .headers(getRequestHeaders(additionalHeaders))
+            .headers(getRequestHeaders(issuerId))
+            .body(body)
+            .when()
+            .post(path)
+            .thenReturn();
+    }
+
     protected Response doPostMultipartForApplication(final String path, final Map<String, String> additionalHeaders,
                                       final File file, String name, String email, String employer, String status) {
         return given()
