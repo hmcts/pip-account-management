@@ -10,6 +10,7 @@ import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
@@ -68,6 +69,18 @@ public class AuthorisationService {
             ));
         }
         return isAuthorised;
+    }
+
+    public boolean userCanCreateSystemAdmin(UUID userId) {
+        Optional<PiUser> adminUser = userRepository.findByUserId(userId);
+        boolean isSystemAdmin = adminUser.isPresent() && adminUser.get().getRoles().equals(Roles.SYSTEM_ADMIN);
+
+        if (!isSystemAdmin) {
+            log.error(writeLog(
+                String.format("User with ID %s is forbidden to create a B2C system admin", userId)
+            ));
+        }
+        return isSystemAdmin;
     }
 
     private boolean isAuthorisedRole(UUID userId, UUID adminUserId) {
