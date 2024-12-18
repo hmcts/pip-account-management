@@ -3,7 +3,7 @@ package uk.gov.hmcts.reform.pip.account.management.controllers;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,16 +20,12 @@ import uk.gov.hmcts.reform.pip.model.authentication.roles.IsAdmin;
 @RequestMapping("/account")
 @Validated
 @IsAdmin
+@AllArgsConstructor
 @SecurityRequirement(name = "bearerAuth")
 public class SystemAdminAccountController {
     private static final String PI_USER = "{piUser}";
 
     private final SystemAdminAccountService systemAdminAccountService;
-
-    @Autowired
-    public SystemAdminAccountController(SystemAdminAccountService systemAdminAccountService) {
-        this.systemAdminAccountService = systemAdminAccountService;
-    }
 
     /**
      * Create a system admin account for SSO user on the user table.
