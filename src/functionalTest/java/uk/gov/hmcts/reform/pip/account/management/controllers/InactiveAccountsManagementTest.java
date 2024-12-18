@@ -50,15 +50,15 @@ class InactiveAccountsManagementTest extends FunctionalTestBase {
         "pip-am-test-email-%s", TEST_EMAIL_RANDOM_NUMBER);
     private static final String TEST_ADMIN_EMAIL_PREFIX = String.format(
         "pip-am-test-admin-email-%s", TEST_EMAIL_RANDOM_NUMBER);
-    private static final String TEST_IDAM_ADMIN_EMAIL_PREFIX = String.format(
-        "pip-am-test-idam-admin-email-%s", TEST_EMAIL_RANDOM_NUMBER);
+    private static final String TEST_IDAM_EMAIL_PREFIX = String.format(
+        "pip-am-test-idam-email-%s", TEST_EMAIL_RANDOM_NUMBER);
     private static final String EMAIL_DOMAIN = "%s@justice.gov.uk";
     private static final String TEST_EMAIL =
         String.format(EMAIL_DOMAIN, TEST_EMAIL_PREFIX);
     private static final String TEST_ADMIN_EMAIL =
         String.format(EMAIL_DOMAIN, TEST_ADMIN_EMAIL_PREFIX);
-    private static final String TEST_IDAM_ADMIN_EMAIL =
-        String.format(EMAIL_DOMAIN, TEST_IDAM_ADMIN_EMAIL_PREFIX);
+    private static final String TEST_IDAM_EMAIL =
+        String.format(EMAIL_DOMAIN, TEST_IDAM_EMAIL_PREFIX);
     private static final String FIRST_NAME = "E2E Account Management";
     private static final String SURNAME = "Test Name";
     private static final String STATUS = "PENDING";
@@ -68,7 +68,7 @@ class InactiveAccountsManagementTest extends FunctionalTestBase {
     private static final String BEARER = "Bearer ";
     private static final String ISSUER_ID = "x-issuer-id";
     private static final Clock CL = Clock.systemUTC();
-    private static final String IDAM_ADMIN_USER_PROVENANCE_ID = UUID.randomUUID().toString();
+    private static final String IDAM_USER_PROVENANCE_ID = UUID.randomUUID().toString();
     private Map<String, String> headers;
     private Map<String, String> issuerId;
     private String mediaUserProvenanceId;
@@ -85,8 +85,12 @@ class InactiveAccountsManagementTest extends FunctionalTestBase {
     private static final String DELETE_INACTIVE_IDAM_ACCOUNT = ACCOUNT_URL + "/idam/inactive";
     private static final String ADD_SYSTEM_ADMIN_B2C_URL = ACCOUNT_URL + "/add/system-admin";
 
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
     @BeforeAll
     public void startUp() throws IOException {
+
+        OBJECT_MAPPER.findAndRegisterModules();
 
         headers = Map.of(HttpHeaders.AUTHORIZATION, BEARER + accessToken);
         issuerId = Map.of(ISSUER_ID, USER_ID);
@@ -102,8 +106,8 @@ class InactiveAccountsManagementTest extends FunctionalTestBase {
         PiUser systemAdminAccount = createSystemAdminAccount(TEST_ADMIN_EMAIL);
         adminProvenanceId = systemAdminAccount.getProvenanceUserId();
 
-        //ADD IDAM SYSTEM ADMIN
-        createUser(TEST_IDAM_ADMIN_EMAIL, IDAM_ADMIN_USER_PROVENANCE_ID,
+        //ADD IDAM USER
+        createUser(TEST_IDAM_EMAIL, IDAM_USER_PROVENANCE_ID,
                    Roles.VERIFIED, UserProvenances.CFT_IDAM);
     }
 
@@ -131,10 +135,9 @@ class InactiveAccountsManagementTest extends FunctionalTestBase {
             """.formatted(email, FIRST_NAME, SURNAME, role, TEST_NAME);
 
 
-        Response postResponse = doPostRequest(ADD_USER_B2C_URL, headers, issuerId, requestBody);
-        ObjectMapper mapper = new ObjectMapper();
-        List<AzureAccount> azureAccountList = mapper.convertValue(
-            postResponse.jsonPath().getJsonObject("CREATED_ACCOUNTS"),
+        Response response = doPostRequest(ADD_USER_B2C_URL, headers, issuerId, requestBody);
+        List<AzureAccount> azureAccountList = OBJECT_MAPPER.convertValue(
+            response.jsonPath().getJsonObject("CREATED_ACCOUNTS"),
             new TypeReference<>() {
             }
         );
@@ -174,8 +177,7 @@ class InactiveAccountsManagementTest extends FunctionalTestBase {
             """.formatted(email, provenancesId, role, provenances);
 
         Response postResponse = doPostRequest(ADD_PI_USER_URL, headers, issuerId, requestBody);
-        ObjectMapper mapper = new ObjectMapper();
-        List<UUID> piUsersList = mapper.convertValue(
+        List<UUID> piUsersList = OBJECT_MAPPER.convertValue(
             postResponse.jsonPath().getJsonObject("CREATED_ACCOUNTS"),
             new TypeReference<>() {
             }
@@ -248,12 +250,12 @@ class InactiveAccountsManagementTest extends FunctionalTestBase {
 
     @Test
     @Order(5)
-    void shouldBeAbleToNotifyInactiveIdamAdminAccounts() {
+    void shouldBeAbleToNotifyInactiveIdamAccounts() {
         ZonedDateTime localDateTime = ZonedDateTime.now(CL).minusDays(118);
         Map<String, String> updateParameters = Map.of(
             LAST_SINGED_IN_DATE, localDateTime.toString()
         );
-        updateUserAccountLastVerifiedDate(IDAM_ADMIN_USER_PROVENANCE_ID,
+        updateUserAccountLastVerifiedDate(IDAM_USER_PROVENANCE_ID,
                                           UserProvenances.CFT_IDAM, updateParameters);
         Response response = doPostRequest(NOTIFY_INACTIVE_IDAM_ACCOUNT, headers, "");
         assertThat(response.getStatusCode()).isEqualTo(NO_CONTENT.value());
@@ -261,12 +263,12 @@ class InactiveAccountsManagementTest extends FunctionalTestBase {
 
     @Test
     @Order(6)
-    void shouldBeAbleToDeleteInactiveIdamAdminAccounts() {
+    void shouldBeAbleToDeleteInactiveIdamAccounts() {
         ZonedDateTime localDateTime = ZonedDateTime.now(CL).minusDays(132);
         Map<String, String> updateParameters = Map.of(
             LAST_SINGED_IN_DATE, localDateTime.toString()
         );
-        updateUserAccountLastVerifiedDate(IDAM_ADMIN_USER_PROVENANCE_ID,
+        updateUserAccountLastVerifiedDate(IDAM_USER_PROVENANCE_ID,
                                           UserProvenances.CFT_IDAM, updateParameters);
         Response response = doDeleteRequest(DELETE_INACTIVE_IDAM_ACCOUNT, headers);
         assertThat(response.getStatusCode()).isEqualTo(NO_CONTENT.value());
