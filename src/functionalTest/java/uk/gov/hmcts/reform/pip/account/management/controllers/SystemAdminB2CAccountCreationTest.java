@@ -27,14 +27,17 @@ class SystemAdminB2CAccountCreationTest extends FunctionalTestBase {
         "pip-am-test-email-%s", ThreadLocalRandom.current().nextInt(1000, 9999));
     private static final String TEST_USER_EMAIL_PREFIX_2 = String.format(
         "pip-am-test-email-%s", ThreadLocalRandom.current().nextInt(1000, 9999));
+    private static final String TEST_USER_EMAIL_PREFIX_3 = String.format(
+        "pip-am-test-email-%s", ThreadLocalRandom.current().nextInt(1000, 9999));
     private static final String TEST_USER_EMAIL_1 = TEST_USER_EMAIL_PREFIX_1 + "@justice.gov.uk";
     private static final String TEST_USER_EMAIL_2 = TEST_USER_EMAIL_PREFIX_2 + "@justice.gov.uk";
+    private static final String TEST_USER_EMAIL_3 = TEST_USER_EMAIL_PREFIX_3 + "@justice.gov.uk";
     private static final String TEST_USER_PROVENANCE_ID = UUID.randomUUID().toString();
-    private static final String USER_ID = UUID.randomUUID().toString();
 
     private static final String TESTING_SUPPORT_ACCOUNT_URL = "/testing-support/account/";
     private static final String ACCOUNT_URL = "/account";
     private static final String SYSTEM_ADMIN_B2C_URL = ACCOUNT_URL + "/add/system-admin";
+    private static final String SYSTEM_ADMIN_SSO_URL = ACCOUNT_URL + "/system-admin";
     private static final String BEARER = "Bearer ";
     private static final String ISSUER_ID = "x-issuer-id";
 
@@ -44,13 +47,25 @@ class SystemAdminB2CAccountCreationTest extends FunctionalTestBase {
     @BeforeAll
     public void startUp() {
         bearer = Map.of(HttpHeaders.AUTHORIZATION, BEARER + accessToken);
-        issuerId = Map.of(ISSUER_ID, USER_ID);
+
+        String requestBody = """
+            {
+                "email": "%s",
+                "provenanceUserId": "%s"
+            }
+            """.formatted(TEST_USER_EMAIL_3, UUID.randomUUID().toString());
+
+        String userId =  doPostRequest(SYSTEM_ADMIN_SSO_URL, bearer, requestBody)
+            .jsonPath().getString("userId");
+
+        issuerId = Map.of(ISSUER_ID, userId);
     }
 
     @AfterAll
     public void teardown() {
         doDeleteRequest(TESTING_SUPPORT_ACCOUNT_URL + TEST_USER_EMAIL_1, bearer);
         doDeleteRequest(TESTING_SUPPORT_ACCOUNT_URL + TEST_USER_EMAIL_2, bearer);
+        doDeleteRequest(TESTING_SUPPORT_ACCOUNT_URL + TEST_USER_EMAIL_3, bearer);
     }
 
     @Test
