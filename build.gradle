@@ -200,7 +200,7 @@ dependencyCheck {
 }
 
 ext {
-  log4JVersion = "2.24.1"
+  log4JVersion = "2.24.3"
   reformLoggingVersion = "6.1.7"
 }
 
