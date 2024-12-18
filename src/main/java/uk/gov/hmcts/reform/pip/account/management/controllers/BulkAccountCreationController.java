@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -27,17 +27,13 @@ import java.util.Map;
 @ApiResponse(responseCode = "403", description = "User has not been authorized")
 @Validated
 @IsAdmin
+@AllArgsConstructor
 @SecurityRequirement(name = "bearerAuth")
 public class BulkAccountCreationController {
     private static final String ISSUER_ID = "x-issuer-id";
     private static final String OK_CODE = "200";
 
     private final BulkAccountCreationService bulkAccountCreationService;
-
-    @Autowired
-    public BulkAccountCreationController(BulkAccountCreationService bulkAccountCreationService) {
-        this.bulkAccountCreationService = bulkAccountCreationService;
-    }
 
     @ApiResponse(responseCode = OK_CODE,
         description = "CREATED_ACCOUNTS:[{Created user ids}], ERRORED_ACCOUNTS: [{failed accounts}]")
