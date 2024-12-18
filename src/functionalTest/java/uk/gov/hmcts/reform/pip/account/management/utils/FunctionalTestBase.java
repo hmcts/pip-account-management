@@ -82,6 +82,16 @@ public class FunctionalTestBase {
             .thenReturn();
     }
 
+    protected Response doPutRequestWithBody(final String path, final Map<String, String> additionalHeaders, String body) {
+        return given()
+            .relaxedHTTPSValidation()
+            .headers(getRequestHeaders(additionalHeaders))
+            .body(body)
+            .when()
+            .put(path)
+            .thenReturn();
+    }
+
     protected Response doPutRequestWithJsonBody(final String path, final Map<String, String> additionalHeaders,
                                                 String body) {
         return given()
