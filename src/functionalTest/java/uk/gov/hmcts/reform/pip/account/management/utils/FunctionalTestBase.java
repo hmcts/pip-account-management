@@ -4,11 +4,13 @@ import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.util.CollectionUtils;
-import uk.gov.hmcts.reform.pip.account.management.Application;
 
 import java.io.File;
 import java.util.Map;
@@ -17,9 +19,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import static io.restassured.RestAssured.given;
 import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
 
-@SpringBootTest(classes = {Application.class, OAuthClient.class},
-    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@ExtendWith(SpringExtension.class)
+@ActiveProfiles(profiles = "functional")
+@SpringBootTest(classes = {OAuthClient.class})
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@SuppressWarnings("PMD.TooManyMethods")
 public class FunctionalTestBase {
 
     protected static final String CONTENT_TYPE_VALUE = "application/json";
@@ -47,7 +51,8 @@ public class FunctionalTestBase {
             .thenReturn();
     }
 
-    protected Response doGetRequestWithRequestParams(final String path, final Map<String, String> additionalHeaders, Map<String, String> params) {
+    protected Response doGetRequestWithRequestParams(final String path, final Map<String, String> additionalHeaders,
+                                                     Map<String, String> params) {
         return given()
             .relaxedHTTPSValidation()
             .headers(getRequestHeaders(additionalHeaders))
@@ -117,7 +122,8 @@ public class FunctionalTestBase {
             .thenReturn();
     }
 
-    protected Response doPutRequestWithBody(final String path, final Map<String, String> additionalHeaders, String body) {
+    protected Response doPutRequestWithBody(final String path,
+                                            final Map<String, String> additionalHeaders, String body) {
         return given()
             .relaxedHTTPSValidation()
             .headers(getRequestHeaders(additionalHeaders))
