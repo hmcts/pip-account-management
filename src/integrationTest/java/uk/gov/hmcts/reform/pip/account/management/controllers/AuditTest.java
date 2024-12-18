@@ -24,6 +24,9 @@ import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
 import uk.gov.hmcts.reform.pip.model.enums.AuditAction;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.http.HttpStatus.FORBIDDEN;
@@ -43,6 +46,7 @@ class AuditTest {
 
     private static final String ROOT_URL = "/audit";
     private static final String EMAIL = "test_account_admin@hmcts.net";
+    private static final String ADDITIONAL_USER_EMAIL = "test_account_admin_2@hmcts.net";
     private static final Roles ROLES = Roles.SYSTEM_ADMIN;
     private static final UserProvenances USER_PROVENANCE = UserProvenances.PI_AAD;
     private static final String AUDIT_DETAILS = "User requested to view all third party users";
@@ -53,6 +57,8 @@ class AuditTest {
     private static final String FORBIDDEN_STATUS_CODE = "Status code does not match forbidden";
     private static final String GET_AUDIT_LOG_FAILED = "Failed to retrieve audit log";
     private static final AuditAction AUDIT_ACTION = AuditAction.MANAGE_THIRD_PARTY_USER_VIEW;
+    private static final AuditAction ADDITIONAL_USER_AUDIT_ACTION = AuditAction.MANAGE_USER;
+    private static final String ADDITIONAL_USER_AUDIT_DETAILS = "Manage user";
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
@@ -115,6 +121,264 @@ class AuditTest {
         assertEquals(EMAIL, auditLog2.getUserEmail(), GET_AUDIT_LOG_FAILED);
         assertEquals(USER_ID, auditLog2.getUserId(), GET_AUDIT_LOG_FAILED);
         assertEquals(AUDIT_DETAILS, auditLog2.getDetails(), GET_AUDIT_LOG_FAILED);
+    }
+
+    @Test
+    void testGetAllAuditLogsFilterByEmail() throws Exception {
+        MockHttpServletRequestBuilder mockHttpServletRequestBuilder1 = MockMvcRequestBuilders
+            .post(ROOT_URL)
+            .content(OBJECT_MAPPER.writeValueAsString(createAuditLog()))
+            .contentType(MediaType.APPLICATION_JSON);
+
+        mockMvc.perform(mockHttpServletRequestBuilder1).andExpect(status().isOk());
+
+        MockHttpServletRequestBuilder mockHttpServletRequestBuilder2 = MockMvcRequestBuilders
+            .post(ROOT_URL)
+            .content(OBJECT_MAPPER.writeValueAsString(new AuditLog(
+                ADDITIONAL_USER_ID,
+                ADDITIONAL_USER_EMAIL,
+                ROLES,
+                USER_PROVENANCE,
+                AUDIT_ACTION,
+                AUDIT_DETAILS
+            )))
+            .contentType(MediaType.APPLICATION_JSON);
+        mockMvc.perform(mockHttpServletRequestBuilder2).andExpect(status().isOk());
+
+        MvcResult mvcResult = mockMvc.perform(get(ROOT_URL + "?email=" + EMAIL))
+            .andExpect(status().isOk())
+            .andReturn();
+
+        CustomPageImpl<AuditLog> pageResponse =
+            OBJECT_MAPPER.readValue(
+                mvcResult.getResponse().getContentAsString(),
+                new TypeReference<>() {
+                }
+            );
+        AuditLog auditLog1 = pageResponse.getContent().get(0);
+
+        assertEquals(EMAIL, auditLog1.getUserEmail(), GET_AUDIT_LOG_FAILED);
+        assertEquals(USER_ID, auditLog1.getUserId(), GET_AUDIT_LOG_FAILED);
+        assertEquals(AUDIT_DETAILS, auditLog1.getDetails(), GET_AUDIT_LOG_FAILED);
+    }
+
+    @Test
+    void testGetAllAuditLogsPartialEmailFilter() throws Exception {
+        MockHttpServletRequestBuilder mockHttpServletRequestBuilder1 = MockMvcRequestBuilders
+            .post(ROOT_URL)
+            .content(OBJECT_MAPPER.writeValueAsString(createAuditLog()))
+            .contentType(MediaType.APPLICATION_JSON);
+
+        mockMvc.perform(mockHttpServletRequestBuilder1).andExpect(status().isOk());
+
+        MockHttpServletRequestBuilder mockHttpServletRequestBuilder2 = MockMvcRequestBuilders
+            .post(ROOT_URL)
+            .content(OBJECT_MAPPER.writeValueAsString(new AuditLog(
+                ADDITIONAL_USER_ID,
+                EMAIL,
+                ROLES,
+                USER_PROVENANCE,
+                AUDIT_ACTION,
+                AUDIT_DETAILS
+            )))
+            .contentType(MediaType.APPLICATION_JSON);
+        mockMvc.perform(mockHttpServletRequestBuilder2).andExpect(status().isOk());
+
+        MvcResult mvcResult = mockMvc.perform(get(ROOT_URL + "?email=test_account_admin"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+        CustomPageImpl<AuditLog> pageResponse =
+            OBJECT_MAPPER.readValue(
+                mvcResult.getResponse().getContentAsString(),
+                new TypeReference<>() {
+                }
+            );
+
+        AuditLog auditLog1 = pageResponse.getContent().get(0);
+
+        assertEquals(EMAIL, auditLog1.getUserEmail(), GET_AUDIT_LOG_FAILED);
+        assertEquals(ADDITIONAL_USER_ID, auditLog1.getUserId(), GET_AUDIT_LOG_FAILED);
+        assertEquals(AUDIT_DETAILS, auditLog1.getDetails(), GET_AUDIT_LOG_FAILED);
+
+        AuditLog auditLog2 = pageResponse.getContent().get(1);
+
+        assertEquals(EMAIL, auditLog2.getUserEmail(), GET_AUDIT_LOG_FAILED);
+        assertEquals(USER_ID, auditLog2.getUserId(), GET_AUDIT_LOG_FAILED);
+        assertEquals(AUDIT_DETAILS, auditLog2.getDetails(), GET_AUDIT_LOG_FAILED);
+    }
+
+    @Test
+    void testGetAllAuditLogsFilterByUserId() throws Exception {
+        MockHttpServletRequestBuilder mockHttpServletRequestBuilder1 = MockMvcRequestBuilders
+            .post(ROOT_URL)
+            .content(OBJECT_MAPPER.writeValueAsString(createAuditLog()))
+            .contentType(MediaType.APPLICATION_JSON);
+
+        mockMvc.perform(mockHttpServletRequestBuilder1).andExpect(status().isOk());
+
+        MockHttpServletRequestBuilder mockHttpServletRequestBuilder2 = MockMvcRequestBuilders
+            .post(ROOT_URL)
+            .content(OBJECT_MAPPER.writeValueAsString(new AuditLog(
+                ADDITIONAL_USER_ID,
+                ADDITIONAL_USER_EMAIL,
+                ROLES,
+                USER_PROVENANCE,
+                AUDIT_ACTION,
+                AUDIT_DETAILS
+            )))
+            .contentType(MediaType.APPLICATION_JSON);
+        mockMvc.perform(mockHttpServletRequestBuilder2).andExpect(status().isOk());
+
+        MvcResult mvcResult = mockMvc.perform(get(ROOT_URL + "?userId=" + ADDITIONAL_USER_ID))
+            .andExpect(status().isOk())
+            .andReturn();
+
+        CustomPageImpl<AuditLog> pageResponse =
+            OBJECT_MAPPER.readValue(
+                mvcResult.getResponse().getContentAsString(),
+                new TypeReference<>() {
+                }
+            );
+        AuditLog auditLog1 = pageResponse.getContent().get(0);
+
+        assertEquals(ADDITIONAL_USER_EMAIL, auditLog1.getUserEmail(), GET_AUDIT_LOG_FAILED);
+        assertEquals(ADDITIONAL_USER_ID, auditLog1.getUserId(), GET_AUDIT_LOG_FAILED);
+        assertEquals(AUDIT_DETAILS, auditLog1.getDetails(), GET_AUDIT_LOG_FAILED);
+    }
+
+    @Test
+    void testGetAllAuditLogsFilterByAuditAction() throws Exception {
+        MockHttpServletRequestBuilder mockHttpServletRequestBuilder1 = MockMvcRequestBuilders
+            .post(ROOT_URL)
+            .content(OBJECT_MAPPER.writeValueAsString(createAuditLog()))
+            .contentType(MediaType.APPLICATION_JSON);
+
+        mockMvc.perform(mockHttpServletRequestBuilder1).andExpect(status().isOk());
+
+        MockHttpServletRequestBuilder mockHttpServletRequestBuilder2 = MockMvcRequestBuilders
+            .post(ROOT_URL)
+            .content(OBJECT_MAPPER.writeValueAsString(new AuditLog(
+                ADDITIONAL_USER_ID,
+                ADDITIONAL_USER_EMAIL,
+                ROLES,
+                USER_PROVENANCE,
+                ADDITIONAL_USER_AUDIT_ACTION,
+                ADDITIONAL_USER_AUDIT_DETAILS
+            )))
+            .contentType(MediaType.APPLICATION_JSON);
+        mockMvc.perform(mockHttpServletRequestBuilder2).andExpect(status().isOk());
+
+        MvcResult mvcResult = mockMvc.perform(get(ROOT_URL + "?actions=" + ADDITIONAL_USER_AUDIT_ACTION))
+            .andExpect(status().isOk())
+            .andReturn();
+
+        CustomPageImpl<AuditLog> pageResponse =
+            OBJECT_MAPPER.readValue(
+                mvcResult.getResponse().getContentAsString(),
+                new TypeReference<>() {
+                }
+            );
+        AuditLog auditLog1 = pageResponse.getContent().get(0);
+
+
+        assertEquals(pageResponse.getContent().size(), 1, GET_AUDIT_LOG_FAILED);
+        assertEquals(ADDITIONAL_USER_EMAIL, auditLog1.getUserEmail(), GET_AUDIT_LOG_FAILED);
+        assertEquals(ADDITIONAL_USER_ID, auditLog1.getUserId(), GET_AUDIT_LOG_FAILED);
+        assertEquals(ADDITIONAL_USER_AUDIT_DETAILS, auditLog1.getDetails(), GET_AUDIT_LOG_FAILED);
+    }
+
+    @Test
+    void testGetAllAuditLogsFilterByDate() throws Exception {
+        MockHttpServletRequestBuilder mockHttpServletRequestBuilder1 = MockMvcRequestBuilders
+            .post(ROOT_URL)
+            .content(OBJECT_MAPPER.writeValueAsString(createAuditLog()))
+            .contentType(MediaType.APPLICATION_JSON);
+
+        mockMvc.perform(mockHttpServletRequestBuilder1).andExpect(status().isOk());
+
+        MockHttpServletRequestBuilder mockHttpServletRequestBuilder2 = MockMvcRequestBuilders
+            .post(ROOT_URL)
+            .content(OBJECT_MAPPER.writeValueAsString(new AuditLog(
+                ADDITIONAL_USER_ID,
+                ADDITIONAL_USER_EMAIL,
+                ROLES,
+                USER_PROVENANCE,
+                ADDITIONAL_USER_AUDIT_ACTION,
+                ADDITIONAL_USER_AUDIT_DETAILS
+            )))
+            .contentType(MediaType.APPLICATION_JSON);
+        mockMvc.perform(mockHttpServletRequestBuilder2).andExpect(status().isOk());
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        LocalDate filterDate = LocalDate.parse(LocalDate.now().toString(), formatter);
+
+        MvcResult mvcResult = mockMvc.perform(get(ROOT_URL + "?filterDate=" + filterDate))
+            .andExpect(status().isOk())
+            .andReturn();
+
+        CustomPageImpl<AuditLog> pageResponse =
+            OBJECT_MAPPER.readValue(
+                mvcResult.getResponse().getContentAsString(),
+                new TypeReference<>() {
+                }
+            );
+
+        AuditLog auditLog1 = pageResponse.getContent().get(0);
+
+        assertEquals(ADDITIONAL_USER_EMAIL, auditLog1.getUserEmail(), GET_AUDIT_LOG_FAILED);
+        assertEquals(ADDITIONAL_USER_ID, auditLog1.getUserId(), GET_AUDIT_LOG_FAILED);
+        assertEquals(ADDITIONAL_USER_AUDIT_DETAILS, auditLog1.getDetails(), GET_AUDIT_LOG_FAILED);
+
+        AuditLog auditLog2 = pageResponse.getContent().get(1);
+
+        assertEquals(EMAIL, auditLog2.getUserEmail(), GET_AUDIT_LOG_FAILED);
+        assertEquals(USER_ID, auditLog2.getUserId(), GET_AUDIT_LOG_FAILED);
+        assertEquals(AUDIT_DETAILS, auditLog2.getDetails(), GET_AUDIT_LOG_FAILED);
+    }
+
+    @Test
+    void testGetAllAuditLogsFilterByEmailAndUserIdAndAuditActionAndDate() throws Exception {
+        MockHttpServletRequestBuilder mockHttpServletRequestBuilder1 = MockMvcRequestBuilders
+            .post(ROOT_URL)
+            .content(OBJECT_MAPPER.writeValueAsString(createAuditLog()))
+            .contentType(MediaType.APPLICATION_JSON);
+
+        mockMvc.perform(mockHttpServletRequestBuilder1).andExpect(status().isOk());
+
+        MockHttpServletRequestBuilder mockHttpServletRequestBuilder2 = MockMvcRequestBuilders
+            .post(ROOT_URL)
+            .content(OBJECT_MAPPER.writeValueAsString(new AuditLog(
+                ADDITIONAL_USER_ID,
+                ADDITIONAL_USER_EMAIL,
+                ROLES,
+                USER_PROVENANCE,
+                ADDITIONAL_USER_AUDIT_ACTION,
+                ADDITIONAL_USER_AUDIT_DETAILS
+            )))
+            .contentType(MediaType.APPLICATION_JSON);
+        mockMvc.perform(mockHttpServletRequestBuilder2).andExpect(status().isOk());
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        LocalDate filterDate = LocalDate.parse(LocalDate.now().toString(), formatter);
+
+        MvcResult mvcResult = mockMvc.perform(get(ROOT_URL + "?email=" + ADDITIONAL_USER_EMAIL
+             + "&userId=" + ADDITIONAL_USER_ID + "&actions=" + ADDITIONAL_USER_AUDIT_ACTION
+                                                      + "&filterDate=" + filterDate))
+            .andExpect(status().isOk())
+            .andReturn();
+
+        CustomPageImpl<AuditLog> pageResponse =
+            OBJECT_MAPPER.readValue(
+                mvcResult.getResponse().getContentAsString(),
+                new TypeReference<>() {
+                }
+            );
+        AuditLog auditLog1 = pageResponse.getContent().get(0);
+
+        assertEquals(ADDITIONAL_USER_EMAIL, auditLog1.getUserEmail(), GET_AUDIT_LOG_FAILED);
+        assertEquals(ADDITIONAL_USER_ID, auditLog1.getUserId(), GET_AUDIT_LOG_FAILED);
+        assertEquals(ADDITIONAL_USER_AUDIT_DETAILS, auditLog1.getDetails(), GET_AUDIT_LOG_FAILED);
     }
 
     @Test
