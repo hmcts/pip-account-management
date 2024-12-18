@@ -3,7 +3,7 @@ package uk.gov.hmcts.reform.pip.account.management.controllers;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
@@ -24,6 +24,7 @@ import uk.gov.hmcts.reform.pip.model.authentication.roles.IsAdmin;
 @ApiResponse(responseCode = "403", description = "User has not been authorized")
 @Validated
 @IsAdmin
+@AllArgsConstructor
 @SecurityRequirement(name = "bearerAuth")
 public class SystemAdminB2CAccountController {
     private static final String ISSUER_ID = "x-issuer-id";
@@ -32,11 +33,6 @@ public class SystemAdminB2CAccountController {
     private static final String PI_USER = "{piUser}";
 
     private final SystemAdminB2CAccountService systemAdminB2CAccountService;
-
-    @Autowired
-    public SystemAdminB2CAccountController(SystemAdminB2CAccountService systemAdminB2CAccountService) {
-        this.systemAdminB2CAccountService = systemAdminB2CAccountService;
-    }
 
     /**
      * POST endpoint that deals with creating a new System Admin Account (including PI and Azure)
