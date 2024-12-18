@@ -47,6 +47,16 @@ public class FunctionalTestBase {
             .thenReturn();
     }
 
+    protected Response doGetRequestWithRequestParams(final String path, final Map<String, String> additionalHeaders, Map<String, String> params) {
+        return given()
+            .relaxedHTTPSValidation()
+            .headers(getRequestHeaders(additionalHeaders))
+            .params(params)
+            .when()
+            .get(path)
+            .thenReturn();
+    }
+
     protected Response doPostRequest(final String path, final Map<String, String> additionalHeaders,
                                      final String body) {
         return given()

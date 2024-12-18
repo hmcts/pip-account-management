@@ -33,8 +33,10 @@ import java.util.concurrent.ThreadLocalRandom;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.springframework.http.HttpStatus.CREATED;
+import static org.springframework.http.HttpStatus.FORBIDDEN;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.HttpStatus.OK;
+import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 
 @ExtendWith(SpringExtension.class)
 @ActiveProfiles(profiles = "functional")
@@ -54,6 +56,7 @@ public class PiAccountControllerTest extends FunctionalTestBase {
     private static final String DELETE_ENDPOINT = "/account/delete/%s";
     private static final String DELETE_ENDPOINT_V2 = "/account/v2/%s";
     private static final String CREATE_SYSTEM_ADMIN_SSO = "/account/system-admin";
+    private static final String UPDATE_ACCOUNT_ROLE_ENDPOINT = "/account/update/%s/%s";
     private static final String ISSUER_ID = "x-issuer-id";
     private static final String ADMIN_ID = "x-admin-id";
 
@@ -63,6 +66,10 @@ public class PiAccountControllerTest extends FunctionalTestBase {
 
     private Map<String, String> bearer;
     private PiUser systemAdminUser;
+    private String ctscSuperAdminId;
+    private String localSuperAdminId;
+    private String localAdminId;
+    private String thirdPartyUserId;
 
     @BeforeAll
     public void startUp() throws JsonProcessingException {
@@ -78,11 +85,22 @@ public class PiAccountControllerTest extends FunctionalTestBase {
 
         systemAdminUser = doPostRequest(CREATE_SYSTEM_ADMIN_SSO,
                       bearer, objectMapper.writeValueAsString(systemAdminAccount)).getBody().as(PiUser.class);
+
+
+        ctscSuperAdminId = (String) createAccount(generateEmail(), UUID.randomUUID().toString(), Roles.INTERNAL_SUPER_ADMIN_CTSC)
+            .as(createdResponseType).get(CreationEnum.CREATED_ACCOUNTS).get(0);
+
+        localSuperAdminId = (String) createAccount(generateEmail(), UUID.randomUUID().toString(), Roles.INTERNAL_SUPER_ADMIN_LOCAL)
+            .as(createdResponseType).get(CreationEnum.CREATED_ACCOUNTS).get(0);
+
+        localAdminId = (String) createAccount(generateEmail(), UUID.randomUUID().toString(), Roles.INTERNAL_ADMIN_LOCAL)
+            .as(createdResponseType).get(CreationEnum.CREATED_ACCOUNTS).get(0);
     }
 
     @AfterAll
     public void teardown() {
         doDeleteRequest(TESTING_SUPPORT_DELETE_ACCOUNT_URL + TEST_EMAIL_PREFIX, bearer);
+        doDeleteRequest(String.format(DELETE_ENDPOINT, thirdPartyUserId), bearer);
     }
 
     private String generateEmail() {
@@ -90,14 +108,21 @@ public class PiAccountControllerTest extends FunctionalTestBase {
             ThreadLocalRandom.current().nextInt(1000, 9999) + "@justice.gov.uk";
     }
 
-
     private Response createAccount(String email, String provenanceId) throws JsonProcessingException {
+        return createAccount(email, provenanceId, Roles.VERIFIED, UserProvenances.PI_AAD);
+    }
+
+    private Response createAccount(String email, String provenanceId, Roles role) throws JsonProcessingException {
+        return createAccount(email, provenanceId, role, UserProvenances.PI_AAD);
+    }
+
+    private Response createAccount(String email, String provenanceId, Roles role, UserProvenances userProvenance) throws JsonProcessingException {
         PiUser piUser = new PiUser();
         piUser.setEmail(email);
-        piUser.setRoles(Roles.VERIFIED);
+        piUser.setRoles(role);
         piUser.setForenames("TEST");
         piUser.setSurname("USER");
-        piUser.setUserProvenance(UserProvenances.PI_AAD);
+        piUser.setUserProvenance(userProvenance);
         piUser.setProvenanceUserId(provenanceId);
 
         List<PiUser> users = new ArrayList<>();
@@ -114,6 +139,18 @@ public class PiAccountControllerTest extends FunctionalTestBase {
         return createResponse;
     }
 
+    private List<PiUser> generateThirdParty() {
+        PiUser piUser = new PiUser();
+        piUser.setRoles(Roles.GENERAL_THIRD_PARTY);
+        piUser.setUserProvenance(UserProvenances.THIRD_PARTY);
+        piUser.setProvenanceUserId(generateEmail());
+
+        List<PiUser> users = new ArrayList<>();
+        users.add(piUser);
+
+        return users;
+    }
+
     @Test
     void shouldBeAbleToCreateAccount() throws Exception {
         String email = generateEmail();
@@ -121,6 +158,35 @@ public class PiAccountControllerTest extends FunctionalTestBase {
         Response createdResponse = createAccount(email, provenanceId);
         assertThat(createdResponse.getBody().as(createdResponseType).get(CreationEnum.CREATED_ACCOUNTS).size())
             .isEqualTo(1);
+    }
+
+    @Test
+    void shouldNotBeAbleToCreateThirdPartyAccountIfNotSystemAdmin() throws Exception {
+        List<PiUser> thirdParty = generateThirdParty();
+
+        Map<String, String> headers = new HashMap<>(bearer);
+        headers.put(ISSUER_ID, ctscSuperAdminId);
+
+        final Response createResponse = doPostRequest(CREATE_PI_ACCOUNT_PATH,
+                                                      headers, objectMapper.writeValueAsString(thirdParty));
+
+        assertThat(createResponse.getStatusCode()).isEqualTo(FORBIDDEN.value());
+    }
+
+    @Test
+    void shouldBeAbleToCreateThirdPartyAccountIfSystemAdmin() throws Exception {
+        List<PiUser> thirdParty = generateThirdParty();
+
+        Map<String, String> headers = new HashMap<>(bearer);
+        headers.put(ISSUER_ID, systemAdminUser.getUserId());
+
+        final Response createdResponse = doPostRequest(CREATE_PI_ACCOUNT_PATH,
+                                                      headers, objectMapper.writeValueAsString(thirdParty));
+
+        assertThat(createdResponse.getStatusCode()).isEqualTo(CREATED.value());
+
+        thirdPartyUserId = (String) createdResponse.getBody()
+            .as(createdResponseType).get(CreationEnum.CREATED_ACCOUNTS).get(0);
     }
 
     @Test
@@ -302,6 +368,290 @@ public class PiAccountControllerTest extends FunctionalTestBase {
 
         Response getUserResponse = doGetRequest(String.format(GET_BY_PROVENANCE_ID, provenanceId), bearer);
         assertThat(getUserResponse.getStatusCode()).isEqualTo(NOT_FOUND.value());
+    }
+
+    @Test
+    void shouldBeAbleToDeleteAccountV2WhenCTSCSuperAdmin() throws Exception {
+        String email = generateEmail();
+        String provenanceId = UUID.randomUUID().toString();
+        Response createdResponse = createAccount(email, provenanceId, Roles.INTERNAL_ADMIN_LOCAL);
+
+        String createdUserId = (String) createdResponse.getBody()
+            .as(createdResponseType).get(CreationEnum.CREATED_ACCOUNTS).get(0);
+
+        Map<String, String> headers = new HashMap<>(bearer);
+        headers.put(ADMIN_ID, ctscSuperAdminId);
+
+        Response deleteResponse = doDeleteRequest(String.format(DELETE_ENDPOINT_V2, createdUserId), headers);
+
+        assertThat(deleteResponse.getStatusCode()).isEqualTo(OK.value());
+
+        Response getUserResponse = doGetRequest(String.format(GET_BY_PROVENANCE_ID, provenanceId), bearer);
+        assertThat(getUserResponse.getStatusCode()).isEqualTo(NOT_FOUND.value());
+    }
+
+    @Test
+    void shouldBeAbleToDeleteAccountV2WhenLocalSuperAdmin() throws Exception {
+        String email = generateEmail();
+        String provenanceId = UUID.randomUUID().toString();
+        Response createdResponse = createAccount(email, provenanceId, Roles.INTERNAL_ADMIN_LOCAL);
+
+        String createdUserId = (String) createdResponse.getBody()
+            .as(createdResponseType).get(CreationEnum.CREATED_ACCOUNTS).get(0);
+
+        Map<String, String> headers = new HashMap<>(bearer);
+        headers.put(ADMIN_ID, ctscSuperAdminId);
+
+        Response deleteResponse = doDeleteRequest(String.format(DELETE_ENDPOINT_V2, createdUserId), headers);
+
+        assertThat(deleteResponse.getStatusCode()).isEqualTo(OK.value());
+
+        Response getUserResponse = doGetRequest(String.format(GET_BY_PROVENANCE_ID, provenanceId), bearer);
+        assertThat(getUserResponse.getStatusCode()).isEqualTo(NOT_FOUND.value());
+    }
+
+    @Test
+    void shouldNotBeAbleToDeleteAccountWhenLocalAdmin() throws Exception {
+        String email = generateEmail();
+        String provenanceId = UUID.randomUUID().toString();
+        Response createdResponse = createAccount(email, provenanceId, Roles.INTERNAL_ADMIN_LOCAL);
+
+        String createdUserId = (String) createdResponse.getBody()
+            .as(createdResponseType).get(CreationEnum.CREATED_ACCOUNTS).get(0);
+
+        Map<String, String> headers = new HashMap<>(bearer);
+        headers.put(ADMIN_ID, localAdminId);
+
+        Response deleteResponse = doDeleteRequest(String.format(DELETE_ENDPOINT_V2, createdUserId), headers);
+
+        assertThat(deleteResponse.getStatusCode()).isEqualTo(FORBIDDEN.value());
+
+        Response getUserResponse = doGetRequest(String.format(GET_BY_PROVENANCE_ID, provenanceId), bearer);
+        assertThat(getUserResponse.getStatusCode()).isEqualTo(OK.value());
+    }
+
+    @Test
+    void shouldBeAbleToDeleteAccountWhenSSO() throws Exception {
+        String email = generateEmail();
+        String provenanceId = UUID.randomUUID().toString();
+        Response createdResponse = createAccount(email, provenanceId, Roles.INTERNAL_ADMIN_LOCAL, UserProvenances.SSO);
+
+        String createdUserId = (String) createdResponse.getBody()
+            .as(createdResponseType).get(CreationEnum.CREATED_ACCOUNTS).get(0);
+
+        Map<String, String> headers = new HashMap<>(bearer);
+        headers.put(ADMIN_ID, localAdminId);
+
+        Response deleteResponse = doDeleteRequest(String.format(DELETE_ENDPOINT_V2, createdUserId), headers);
+
+        assertThat(deleteResponse.getStatusCode()).isEqualTo(OK.value());
+
+        Response getUserResponse = doGetRequest(String.format(GET_BY_PROVENANCE_ID, provenanceId), bearer);
+        assertThat(getUserResponse.getStatusCode()).isEqualTo(NOT_FOUND.value());
+    }
+
+    @Test
+    void shouldNotBeAbleToDeleteVerifiedAccountV2WhenNonSystemAdmin() throws Exception {
+        String email = generateEmail();
+        String provenanceId = UUID.randomUUID().toString();
+        Response createdResponse = createAccount(email, provenanceId);
+
+        String createdUserId = (String) createdResponse.getBody()
+            .as(createdResponseType).get(CreationEnum.CREATED_ACCOUNTS).get(0);
+
+        Map<String, String> headers = new HashMap<>(bearer);
+        headers.put(ADMIN_ID, ctscSuperAdminId);
+
+        Response deleteResponse = doDeleteRequest(String.format(DELETE_ENDPOINT_V2, createdUserId), headers);
+
+        assertThat(deleteResponse.getStatusCode()).isEqualTo(FORBIDDEN.value());
+
+        Response getUserResponse = doGetRequest(String.format(GET_BY_PROVENANCE_ID, provenanceId), bearer);
+        assertThat(getUserResponse.getStatusCode()).isEqualTo(OK.value());
+    }
+
+    @Test
+    void shouldNotBeAbleToDeleteAccountWhenUserNotProvided() throws Exception {
+        String email = generateEmail();
+        String provenanceId = UUID.randomUUID().toString();
+        Response createdResponse = createAccount(email, provenanceId);
+
+        String createdUserId = (String) createdResponse.getBody()
+            .as(createdResponseType).get(CreationEnum.CREATED_ACCOUNTS).get(0);
+
+        Response deleteResponse = doDeleteRequest(String.format(DELETE_ENDPOINT_V2, createdUserId), bearer);
+
+        assertThat(deleteResponse.getStatusCode()).isEqualTo(FORBIDDEN.value());
+
+        Response getUserResponse = doGetRequest(String.format(GET_BY_PROVENANCE_ID, provenanceId), bearer);
+        assertThat(getUserResponse.getStatusCode()).isEqualTo(OK.value());
+    }
+
+    @Test
+    void shouldNotBeAbleToUpdateTheirOwnAccount() {
+        Map<String, String> headers = new HashMap<>(bearer);
+        headers.put(ADMIN_ID, ctscSuperAdminId);
+
+        Response updateResponse = doPutRequest(
+            String.format(UPDATE_ACCOUNT_ROLE_ENDPOINT, ctscSuperAdminId, "INTERNAL_ADMIN_LOCAL"), headers);
+
+        assertThat(updateResponse.getStatusCode()).isEqualTo(FORBIDDEN.value());
+
+        PiUser getUserResponse =
+            doGetRequest(String.format(GET_BY_USER_ID, ctscSuperAdminId), bearer).getBody().as(PiUser.class);
+
+        assertThat(getUserResponse.getRoles()).isEqualTo(Roles.INTERNAL_SUPER_ADMIN_CTSC);
+    }
+
+    @Test
+    void shouldNotBeAbleToUpdateRoleWhenUserNotProvided() {
+        Response updateResponse = doPutRequest(
+            String.format(UPDATE_ACCOUNT_ROLE_ENDPOINT, ctscSuperAdminId, "INTERNAL_ADMIN_LOCAL"), bearer);
+
+        assertThat(updateResponse.getStatusCode()).isEqualTo(FORBIDDEN.value());
+
+        PiUser getUserResponse =
+            doGetRequest(String.format(GET_BY_USER_ID, ctscSuperAdminId), bearer).getBody().as(PiUser.class);
+
+        assertThat(getUserResponse.getRoles()).isEqualTo(Roles.INTERNAL_SUPER_ADMIN_CTSC);
+    }
+
+    @Test
+    void shouldBeAbleToUpdateRoleIfSystemAdmin() throws JsonProcessingException {
+        String email = generateEmail();
+        String provenanceId = UUID.randomUUID().toString();
+        Response createdResponse = createAccount(email, provenanceId, Roles.INTERNAL_ADMIN_LOCAL);
+
+        String createdUserId = (String) createdResponse.getBody()
+            .as(createdResponseType).get(CreationEnum.CREATED_ACCOUNTS).get(0);
+
+        Map<String, String> headers = new HashMap<>(bearer);
+        headers.put(ADMIN_ID, systemAdminUser.getUserId());
+
+        Response updateResponse = doPutRequest(
+            String.format(UPDATE_ACCOUNT_ROLE_ENDPOINT, createdUserId, "INTERNAL_SUPER_ADMIN_CTSC"), headers);
+
+        assertThat(updateResponse.getStatusCode()).isEqualTo(OK.value());
+
+        PiUser getUserResponse =
+            doGetRequest(String.format(GET_BY_USER_ID, createdUserId), bearer).getBody().as(PiUser.class);
+
+        assertThat(getUserResponse.getRoles()).isEqualTo(Roles.INTERNAL_SUPER_ADMIN_CTSC);
+    }
+
+    @Test
+    void shouldBeAbleToUpdateRoleIfCTSCSuperAdmin() throws JsonProcessingException {
+        String email = generateEmail();
+        String provenanceId = UUID.randomUUID().toString();
+        Response createdResponse = createAccount(email, provenanceId, Roles.INTERNAL_ADMIN_LOCAL);
+
+        String createdUserId = (String) createdResponse.getBody()
+            .as(createdResponseType).get(CreationEnum.CREATED_ACCOUNTS).get(0);
+
+        Map<String, String> headers = new HashMap<>(bearer);
+        headers.put(ADMIN_ID, ctscSuperAdminId);
+
+        Response updateResponse = doPutRequest(
+            String.format(UPDATE_ACCOUNT_ROLE_ENDPOINT, createdUserId, "INTERNAL_SUPER_ADMIN_CTSC"), headers);
+
+        assertThat(updateResponse.getStatusCode()).isEqualTo(OK.value());
+
+        PiUser getUserResponse =
+            doGetRequest(String.format(GET_BY_USER_ID, createdUserId), bearer).getBody().as(PiUser.class);
+
+        assertThat(getUserResponse.getRoles()).isEqualTo(Roles.INTERNAL_SUPER_ADMIN_CTSC);
+    }
+
+    @Test
+    void shouldBeAbleToUpdateRoleIfCTSCLocalAdmin() throws JsonProcessingException {
+        String email = generateEmail();
+        String provenanceId = UUID.randomUUID().toString();
+        Response createdResponse = createAccount(email, provenanceId, Roles.INTERNAL_ADMIN_LOCAL);
+
+        String createdUserId = (String) createdResponse.getBody()
+            .as(createdResponseType).get(CreationEnum.CREATED_ACCOUNTS).get(0);
+
+        Map<String, String> headers = new HashMap<>(bearer);
+        headers.put(ADMIN_ID, localSuperAdminId);
+
+        Response updateResponse = doPutRequest(
+            String.format(UPDATE_ACCOUNT_ROLE_ENDPOINT, createdUserId, "INTERNAL_SUPER_ADMIN_CTSC"), headers);
+
+        assertThat(updateResponse.getStatusCode()).isEqualTo(OK.value());
+
+        PiUser getUserResponse =
+            doGetRequest(String.format(GET_BY_USER_ID, createdUserId), bearer).getBody().as(PiUser.class);
+
+        assertThat(getUserResponse.getRoles()).isEqualTo(Roles.INTERNAL_SUPER_ADMIN_CTSC);
+    }
+
+    @Test
+    void shouldNotBeAbleToUpdateRoleIfNotSuperAdmin() throws JsonProcessingException {
+        String email = generateEmail();
+        String provenanceId = UUID.randomUUID().toString();
+        Response createdResponse = createAccount(email, provenanceId, Roles.INTERNAL_ADMIN_LOCAL);
+
+        String createdUserId = (String) createdResponse.getBody()
+            .as(createdResponseType).get(CreationEnum.CREATED_ACCOUNTS).get(0);
+
+        Map<String, String> headers = new HashMap<>(bearer);
+        headers.put(ADMIN_ID, localAdminId);
+
+        Response updateResponse = doPutRequest(
+            String.format(UPDATE_ACCOUNT_ROLE_ENDPOINT, createdUserId, "INTERNAL_SUPER_ADMIN_CTSC"), headers);
+
+        assertThat(updateResponse.getStatusCode()).isEqualTo(FORBIDDEN.value());
+
+        PiUser getUserResponse =
+            doGetRequest(String.format(GET_BY_USER_ID, createdUserId), bearer).getBody().as(PiUser.class);
+
+        assertThat(getUserResponse.getRoles()).isEqualTo(Roles.INTERNAL_ADMIN_LOCAL);
+    }
+
+    @Test
+    void shouldNotBeAbleToUpdateRoleIfVerifiedAccount() throws JsonProcessingException {
+        String email = generateEmail();
+        String provenanceId = UUID.randomUUID().toString();
+        Response createdResponse = createAccount(email, provenanceId);
+
+        String createdUserId = (String) createdResponse.getBody()
+            .as(createdResponseType).get(CreationEnum.CREATED_ACCOUNTS).get(0);
+
+        Map<String, String> headers = new HashMap<>(bearer);
+        headers.put(ADMIN_ID, localSuperAdminId);
+
+        Response updateResponse = doPutRequest(
+            String.format(UPDATE_ACCOUNT_ROLE_ENDPOINT, createdUserId, "INTERNAL_SUPER_ADMIN_CTSC"), headers);
+
+        assertThat(updateResponse.getStatusCode()).isEqualTo(FORBIDDEN.value());
+
+        PiUser getUserResponse =
+            doGetRequest(String.format(GET_BY_USER_ID, createdUserId), bearer).getBody().as(PiUser.class);
+
+        assertThat(getUserResponse.getRoles()).isEqualTo(Roles.VERIFIED);
+    }
+
+    @Test
+    void shouldBeAbleToUpdateRoleIfSSO() throws JsonProcessingException {
+        String email = generateEmail();
+        String provenanceId = UUID.randomUUID().toString();
+        Response createdResponse = createAccount(email, provenanceId, Roles.INTERNAL_ADMIN_LOCAL, UserProvenances.SSO);
+
+        String createdUserId = (String) createdResponse.getBody()
+            .as(createdResponseType).get(CreationEnum.CREATED_ACCOUNTS).get(0);
+
+        Map<String, String> headers = new HashMap<>(bearer);
+        headers.put(ADMIN_ID, localAdminId);
+
+        Response updateResponse = doPutRequest(
+            String.format(UPDATE_ACCOUNT_ROLE_ENDPOINT, createdUserId, "INTERNAL_SUPER_ADMIN_CTSC"), headers);
+
+        assertThat(updateResponse.getStatusCode()).isEqualTo(OK.value());
+
+        PiUser getUserResponse =
+            doGetRequest(String.format(GET_BY_USER_ID, createdUserId), bearer).getBody().as(PiUser.class);
+
+        assertThat(getUserResponse.getRoles()).isEqualTo(Roles.INTERNAL_SUPER_ADMIN_CTSC);
     }
 
 }
