@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -44,6 +45,7 @@ public class SystemAdminB2CAccountController {
     @ApiResponse(responseCode = OK_CODE, description = PI_USER)
     @ApiResponse(responseCode = BAD_REQUEST_CODE, description = "{ErroredSystemAdminAccount}")
     @PostMapping("/add/system-admin")
+    @PreAuthorize("@authorisationService.userCanCreateSystemAdmin(#issuerId)")
     public ResponseEntity<? extends PiUser> createSystemAdminAccount(//NOSONAR
         @RequestHeader(ISSUER_ID) String issuerId, @RequestBody SystemAdminAccount account) {
         return ResponseEntity.ok(systemAdminB2CAccountService.addSystemAdminAccount(account, issuerId));
