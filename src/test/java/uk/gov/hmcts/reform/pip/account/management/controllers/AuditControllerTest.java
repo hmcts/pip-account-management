@@ -14,6 +14,8 @@ import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
 import uk.gov.hmcts.reform.pip.model.enums.AuditAction;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -29,11 +31,15 @@ class AuditControllerTest {
     private AuditController auditController;
 
     private static final String STATUS_CODE_MATCH = "Status code responses should match";
+    private static final String EMAIL = "a@b.com";
+    private static final String USER_ID = "123";
+    private static final List<AuditAction> AUDIT_ACTIONS = new ArrayList<>();
+    private static final String FILTER_DATE = "2023-11-01";
 
     @Test
     void testGetAllAuditLogs() {
-        ResponseEntity<Page<AuditLog>> response = auditController.getAllAuditLogs(0, 25);
-
+        ResponseEntity<Page<AuditLog>> response = auditController.getAllAuditLogs(0, 25,
+            EMAIL, USER_ID, AUDIT_ACTIONS, FILTER_DATE);
         assertEquals(HttpStatus.OK, response.getStatusCode(), STATUS_CODE_MATCH);
     }
 
