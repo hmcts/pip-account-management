@@ -21,7 +21,9 @@ import org.springframework.web.bind.annotation.RestController;
 import uk.gov.hmcts.reform.pip.account.management.model.AuditLog;
 import uk.gov.hmcts.reform.pip.account.management.service.AuditService;
 import uk.gov.hmcts.reform.pip.model.authentication.roles.IsAdmin;
+import uk.gov.hmcts.reform.pip.model.enums.AuditAction;
 
+import java.util.List;
 import java.util.UUID;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
@@ -41,14 +43,19 @@ public class AuditController {
     private static final String OK_ERROR_CODE = "200";
     private static final String NOT_FOUND_ERROR_CODE = "404";
 
-    @ApiResponse(responseCode = OK_ERROR_CODE, description = "All audit logs returned as a page.")
+    @ApiResponse(responseCode = OK_ERROR_CODE, description = "All audit logs returned as a page with filtering.")
     @Operation(summary = "Get all audit logs returned as a page")
     @GetMapping
     public ResponseEntity<Page<AuditLog>> getAllAuditLogs(
         @RequestParam(name = "pageNumber", defaultValue = "0") int pageNumber,
-        @RequestParam(name = "pageSize", defaultValue = "25") int pageSize) {
+        @RequestParam(name = "pageSize", defaultValue = "25") int pageSize,
+        @RequestParam(name = "email", defaultValue = "", required = false) String email,
+        @RequestParam(name = "userId", defaultValue = "", required = false) String userId,
+        @RequestParam(name = "actions", defaultValue = "", required = false) List<AuditAction> auditActions,
+        @RequestParam(name = "filterDate", defaultValue = "", required = false) String filterDate) {
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
-        return ResponseEntity.ok(auditService.getAllAuditLogs(pageable));
+        return ResponseEntity.ok(auditService.getAllAuditLogs(pageable, email, userId,
+            auditActions, filterDate));
     }
 
     @ApiResponse(responseCode = OK_ERROR_CODE, description = "Audit log with id {id} returned.")

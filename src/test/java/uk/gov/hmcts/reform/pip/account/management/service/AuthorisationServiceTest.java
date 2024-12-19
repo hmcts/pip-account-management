@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -666,5 +667,46 @@ class AuthorisationServiceTest {
             .as(EXCEPTION_MATCHED_MESSAGE)
             .isInstanceOf(NotFoundException.class)
             .hasMessage(String.format("User with supplied user id: %s could not be found", ADMIN_USER_ID));
+    }
+
+    @Test
+    void testUserCanCreateSystemAdmin() {
+        UUID userId = UUID.randomUUID();
+        PiUser user = new PiUser();
+        user.setRoles(Roles.SYSTEM_ADMIN);
+
+        when(userRepository.findByUserId(userId)).thenReturn(Optional.of(user));
+
+        assertThat(authorisationService.userCanCreateSystemAdmin(userId)).isTrue();
+    }
+
+    @Test
+    void testUserCannotCreateSystemAdminIfAccountNotFound() {
+        UUID userId = UUID.randomUUID();
+
+        when(userRepository.findByUserId(userId)).thenReturn(Optional.empty());
+
+        try (LogCaptor logCaptor = LogCaptor.forClass(AuthorisationService.class)) {
+            assertThat(authorisationService.userCanCreateSystemAdmin(userId)).isFalse();
+
+            assertThat(logCaptor.getErrorLogs().get(0)).contains(
+                String.format("User with ID %s is forbidden to create a B2C system admin", userId));
+        }
+    }
+
+    @Test
+    void testUserCannotCreateSystemAdminIfUserIsNotSystemAdmin() {
+        UUID userId = UUID.randomUUID();
+        PiUser user = new PiUser();
+        user.setRoles(Roles.INTERNAL_ADMIN_LOCAL);
+
+        when(userRepository.findByUserId(userId)).thenReturn(Optional.of(user));
+
+        try (LogCaptor logCaptor = LogCaptor.forClass(AuthorisationService.class)) {
+            assertThat(authorisationService.userCanCreateSystemAdmin(userId)).isFalse();
+
+            assertThat(logCaptor.getErrorLogs().get(0)).contains(
+                String.format("User with ID %s is forbidden to create a B2C system admin", userId));
+        }
     }
 }
