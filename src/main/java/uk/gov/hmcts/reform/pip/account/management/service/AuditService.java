@@ -1,7 +1,7 @@
 package uk.gov.hmcts.reform.pip.account.management.service;
 
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -18,15 +18,11 @@ import java.util.UUID;
  */
 @Slf4j
 @Service
+@AllArgsConstructor
 public class AuditService {
     private static final String AUDIT_LOG_NOT_FOUND = "Audit log with id %s could not be found";
 
     private final AuditRepository auditRepository;
-
-    @Autowired
-    public AuditService(AuditRepository auditRepository) {
-        this.auditRepository = auditRepository;
-    }
 
     /**
      * Get all audit logs in a page object and descending order on timestamp.
