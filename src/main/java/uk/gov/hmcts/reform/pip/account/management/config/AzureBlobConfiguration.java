@@ -15,7 +15,7 @@ import org.springframework.core.env.Environment;
 import java.util.Arrays;
 
 @Configuration
-@Profile("!test & !integration & !integration-jpa & !functional")
+@Profile("!test & !integration & !integration-basic & !integration-jpa & !functional")
 public class AzureBlobConfiguration {
     private static final String BLOB_ENDPOINT = "https://%s.blob.core.windows.net/";
     private static final String DEV_PROFILE = "blobStorageDev";
