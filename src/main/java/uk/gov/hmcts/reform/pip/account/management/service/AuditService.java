@@ -104,7 +104,6 @@ public class AuditService {
             .findAllByUserEmailStartingWithIgnoreCase(prefix);
 
         if (!auditLogsToDelete.isEmpty()) {
-
             List<UUID> auditLogIds = auditLogsToDelete.stream()
                 .map(AuditLog::getId)
                 .toList();
