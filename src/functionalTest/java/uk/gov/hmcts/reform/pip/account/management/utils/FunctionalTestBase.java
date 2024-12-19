@@ -2,9 +2,9 @@ package uk.gov.hmcts.reform.pip.account.management.utils;
 
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
+import lombok.AllArgsConstructor;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.TestInstance;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.util.CollectionUtils;
@@ -20,11 +20,11 @@ import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
 @SpringBootTest(classes = {Application.class, OAuthClient.class},
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@AllArgsConstructor
 public class FunctionalTestBase {
 
     protected static final String CONTENT_TYPE_VALUE = "application/json";
 
-    @Autowired
     private OAuthClient authClient;
 
     protected String accessToken;
@@ -42,6 +42,18 @@ public class FunctionalTestBase {
         return given()
             .relaxedHTTPSValidation()
             .headers(getRequestHeaders(additionalHeaders))
+            .when()
+            .get(path)
+            .thenReturn();
+    }
+
+    protected Response doGetRequestWithQueryParameters(final String path, final Map<String, String> additionalHeaders,
+                                                       final String pageNumber, final String pageSize) {
+        return given()
+            .relaxedHTTPSValidation()
+            .headers(getRequestHeaders(additionalHeaders))
+            .queryParam("pageNumber", pageNumber)
+            .queryParam("pageSize", pageSize)
             .when()
             .get(path)
             .thenReturn();
