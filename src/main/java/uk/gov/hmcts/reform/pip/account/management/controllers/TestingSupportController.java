@@ -4,8 +4,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.AllArgsConstructor;
 import org.apache.commons.lang3.tuple.Pair;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 import uk.gov.hmcts.reform.pip.account.management.model.AzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.service.AccountService;
+import uk.gov.hmcts.reform.pip.account.management.service.AuditService;
 import uk.gov.hmcts.reform.pip.account.management.service.MediaApplicationService;
 import uk.gov.hmcts.reform.pip.model.authentication.roles.IsAdmin;
 
@@ -31,6 +32,7 @@ import uk.gov.hmcts.reform.pip.model.authentication.roles.IsAdmin;
 @IsAdmin
 @SecurityRequirement(name = "bearerAuth")
 @Validated
+@AllArgsConstructor
 @ConditionalOnProperty(prefix = "testingSupport", name = "enableApi", havingValue = "true")
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
 public class TestingSupportController {
@@ -41,14 +43,8 @@ public class TestingSupportController {
     private static final String BAD_REQUEST_CODE = "400";
 
     private final AccountService accountService;
-
     private final MediaApplicationService mediaApplicationService;
-
-    @Autowired
-    public TestingSupportController(AccountService accountService, MediaApplicationService mediaApplicationService) {
-        this.accountService = accountService;
-        this.mediaApplicationService = mediaApplicationService;
-    }
+    private final AuditService auditService;
 
     @ApiResponse(responseCode = CREATED_CODE, description = "{PiUser}")
     @ApiResponse(responseCode = BAD_REQUEST_CODE, description = "Failed to create user account")
@@ -79,5 +75,14 @@ public class TestingSupportController {
     @Transactional
     public ResponseEntity<String> deleteMediaApplicationsWithEmailPrefix(@PathVariable String emailPrefix) {
         return ResponseEntity.ok(mediaApplicationService.deleteAllApplicationsWithEmailPrefix(emailPrefix));
+    }
+
+    @ApiResponse(responseCode = OK_CODE,
+        description = "Audit logs deleted with email starting with {emailPrefix}")
+    @Operation(summary = "Delete all audit logs created by user with email prefix")
+    @DeleteMapping("audit/{emailPrefix}")
+    @Transactional
+    public ResponseEntity<String> deleteAuditLogsWithEmailPrefix(@PathVariable String emailPrefix) {
+        return ResponseEntity.ok(auditService.deleteAllLogsWithUserEmailPrefix(emailPrefix));
     }
 }
