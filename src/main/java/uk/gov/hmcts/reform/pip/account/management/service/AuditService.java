@@ -10,6 +10,7 @@ import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.NotFo
 import uk.gov.hmcts.reform.pip.account.management.model.AuditLog;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -60,5 +61,20 @@ public class AuditService {
     public String deleteAuditLogs() {
         auditRepository.deleteAllByTimestampBefore(LocalDateTime.now().minusDays(90));
         return "Audit logs that met the max retention period have been deleted";
+    }
+
+    public String deleteAllLogsWithUserEmailPrefix(String prefix) {
+        List<AuditLog> auditLogsToDelete = auditRepository
+            .findAllByUserEmailStartingWithIgnoreCase(prefix);
+
+        if (!auditLogsToDelete.isEmpty()) {
+
+            List<UUID> auditLogIds = auditLogsToDelete.stream()
+                .map(AuditLog::getId)
+                .toList();
+            auditRepository.deleteByIdIn(auditLogIds);
+        }
+        return String.format("%s audit log(s) deleted with user email starting with %s",
+                             auditLogsToDelete.size(), prefix);
     }
 }
