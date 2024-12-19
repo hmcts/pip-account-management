@@ -20,6 +20,7 @@ import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
 @SpringBootTest(classes = {Application.class, OAuthClient.class},
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@SuppressWarnings("PMD.TooManyMethods")
 public class FunctionalTestBase {
 
     protected static final String CONTENT_TYPE_VALUE = "application/json";
@@ -42,6 +43,18 @@ public class FunctionalTestBase {
         return given()
             .relaxedHTTPSValidation()
             .headers(getRequestHeaders(additionalHeaders))
+            .when()
+            .get(path)
+            .thenReturn();
+    }
+
+    protected Response doGetRequestWithQueryParameters(final String path, final Map<String, String> additionalHeaders,
+                                                       final String pageNumber, final String pageSize) {
+        return given()
+            .relaxedHTTPSValidation()
+            .headers(getRequestHeaders(additionalHeaders))
+            .queryParam("pageNumber", pageNumber)
+            .queryParam("pageSize", pageSize)
             .when()
             .get(path)
             .thenReturn();

@@ -133,4 +133,16 @@ class AuditServiceTest {
                      response, "Deletion response was not as expected");
         verify(auditRepository, times(1)).deleteAllByTimestampBefore(any());
     }
+
+    @Test
+    void deleteAuditLogsByEmail() {
+        List<AuditLog> auditLogs = List.of(auditLogExample);
+        when(auditRepository.findAllByUserEmailStartingWithIgnoreCase(EMAIL)).thenReturn(auditLogs);
+
+        String response = auditService.deleteAllLogsWithUserEmailPrefix(EMAIL);
+
+        assertEquals("1 audit log(s) deleted with user email starting with " + EMAIL, response,
+                     "Deletion response was not as expected");
+        verify(auditRepository, times(1)).deleteByIdIn(any());
+    }
 }
