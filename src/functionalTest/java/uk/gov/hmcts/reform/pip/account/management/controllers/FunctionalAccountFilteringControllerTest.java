@@ -23,6 +23,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.springframework.http.HttpStatus.OK;
 
+@SuppressWarnings("PMD.TooManyMethods")
 class FunctionalAccountFilteringControllerTest extends AccountHelperBase {
     private static final TypeRef<CustomPageImpl<PiUser>> GET_ALL_USERS_TYPE = new TypeRef<>() {};
 
@@ -40,6 +41,8 @@ class FunctionalAccountFilteringControllerTest extends AccountHelperBase {
 
         systemAdminUser = createSystemAdminAccount();
 
+        createSystemAdminAccount();
+
         PiUser piUser = new PiUser();
         piUser.setRoles(Roles.GENERAL_THIRD_PARTY);
         piUser.setUserProvenance(UserProvenances.THIRD_PARTY);
@@ -55,6 +58,17 @@ class FunctionalAccountFilteringControllerTest extends AccountHelperBase {
             doPostRequest(CREATE_PI_ACCOUNT, headers, objectMapper.writeValueAsString(thirdPartyList));
 
         thirdPartyUserId = getCreatedAccountUserId(createdResponse);
+    }
+
+    private void verifyFilteringController(Map<String, String> requestParams) {
+        Response response = doGetRequestWithRequestParams(GET_ACCOUNTS_EXCEPT_THIRD_PARTY, bearer, requestParams);
+
+        assertThat(response.getStatusCode()).isEqualTo(OK.value());
+
+        Page<PiUser> returnedPage = response.getBody().as(GET_ALL_USERS_TYPE);
+        assertThat(returnedPage.getTotalElements()).isEqualTo(1);
+        assertThat(returnedPage.getContent().get(0))
+            .matches(user -> user.getUserId().equals(systemAdminUser.getUserId()));
     }
 
     @AfterAll
@@ -92,15 +106,43 @@ class FunctionalAccountFilteringControllerTest extends AccountHelperBase {
     void testGetAllAccountsExceptThirdPartyContainsAdminUser() {
         Map<String, String> requestParams = new ConcurrentHashMap<>();
         requestParams.put("userId", systemAdminUser.getUserId());
+        verifyFilteringController(requestParams);
+    }
+
+    @Test
+    void testGetAllAccountsExceptThirdPartyWithProvenanceId() {
+        Map<String, String> requestParams = new ConcurrentHashMap<>();
+        requestParams.put("userProvenanceId", systemAdminUser.getProvenanceUserId());
+        verifyFilteringController(requestParams);
+    }
+
+    @Test
+    void testGetAllAccountsExceptThirdPartyWithRole() {
+        Map<String, String> requestParams = new ConcurrentHashMap<>();
+        requestParams.put("userProvenanceId", systemAdminUser.getProvenanceUserId());
+        requestParams.put("roles", "SYSTEM_ADMIN");
+        verifyFilteringController(requestParams);
+    }
+
+    @Test
+    void testGetAllAccountsExceptThirdPartyWithEmail() {
+        Map<String, String> requestParams = new ConcurrentHashMap<>();
+        requestParams.put("email", systemAdminUser.getEmail());
+        verifyFilteringController(requestParams);
+    }
+
+    @Test
+    void testGetAllAccountsExceptThirdPartyWithPageSizeAndPageNumber() {
+        Map<String, String> requestParams = new ConcurrentHashMap<>();
+        requestParams.put("pageSize", "1");
+        requestParams.put("pageNumber", "1");
 
         Response response = doGetRequestWithRequestParams(GET_ACCOUNTS_EXCEPT_THIRD_PARTY, bearer, requestParams);
 
         assertThat(response.getStatusCode()).isEqualTo(OK.value());
 
         Page<PiUser> returnedPage = response.getBody().as(GET_ALL_USERS_TYPE);
-        assertThat(returnedPage.getTotalElements()).isEqualTo(1);
-        assertThat(returnedPage.getContent().get(0))
-            .matches(user -> user.getUserId().equals(systemAdminUser.getUserId()));
+        assertThat(returnedPage.getContent().size()).isEqualTo(1);
     }
 
     @Test
