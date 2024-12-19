@@ -6,37 +6,25 @@ import io.restassured.response.Response;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 import uk.gov.hmcts.reform.pip.account.management.model.MediaApplication;
 import uk.gov.hmcts.reform.pip.account.management.model.MediaApplicationStatus;
-import uk.gov.hmcts.reform.pip.account.management.utils.FunctionalTestBase;
-import uk.gov.hmcts.reform.pip.account.management.utils.OAuthClient;
+import uk.gov.hmcts.reform.pip.account.management.utils.AccountHelperBase;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ThreadLocalRandom;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.HttpStatus.NO_CONTENT;
 import static org.springframework.http.HttpStatus.OK;
 
-@ExtendWith(SpringExtension.class)
-@ActiveProfiles(profiles = "functional")
-@SpringBootTest(classes = {OAuthClient.class})
 @SuppressWarnings("PMD.TooManyMethods")
-class MediaApplicationCreationTest extends FunctionalTestBase {
+class MediaApplicationCreationTest extends AccountHelperBase {
 
     private static final String TEST_NAME = "E2E Account Management Test Name";
     private static final String TEST_EMPLOYER = "E2E Account Management Test Employer";
-    private static final String TEST_EMAIL_PREFIX = String.format(
-        "pip-am-test-email-%s", ThreadLocalRandom.current().nextInt(1000, 9999));
-
     private static final String TEST_EMAIL = TEST_EMAIL_PREFIX + "@justice.gov.uk";
     private static final String STATUS = "PENDING";
 
@@ -50,13 +38,10 @@ class MediaApplicationCreationTest extends FunctionalTestBase {
     private static final String GET_APPLICATIONS_BY_STATUS = "/application/status/PENDING";
     private static final String REPORTING = "/application/reporting";
     private static final String GET_ALL_APPLICATIONS = "/application";
-    private static final String BEARER = "Bearer ";
     private static final String MOCK_FILE = "files/test-image.png";
 
     Map<String, List<String>> reasons =
         Map.of("Reason 1", List.of("Reason 1", "Reason 2"), "Reason 2", List.of("Reason 3", "Reason 4"));
-
-    private Map<String, String> bearer;
 
     @BeforeAll
     public void startUp() {
