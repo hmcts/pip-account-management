@@ -43,7 +43,6 @@ import static org.springframework.http.HttpStatus.OK;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @SuppressWarnings("PMD.TooManyMethods")
 class InactiveAccountsManagementTest extends FunctionalTestBase {
-    private static final String USER_ID = UUID.randomUUID().toString();
     private static final String TEST_NAME = "E2E Account Management Test Name";
     private static final String TEST_EMPLOYER = "E2E Account Management Test Employer";
     private static final Integer TEST_EMAIL_RANDOM_NUMBER =
@@ -54,6 +53,8 @@ class InactiveAccountsManagementTest extends FunctionalTestBase {
         "pip-am-test-admin-email-%s", TEST_EMAIL_RANDOM_NUMBER);
     private static final String TEST_IDAM_EMAIL_PREFIX = String.format(
         "pip-am-test-idam-email-%s", TEST_EMAIL_RANDOM_NUMBER);
+    private static final String TEST_B2C_SYSTEM_ADMIN_EMAIL_PREFIX = String.format(
+        "pip-am-test-b2c-email-%s", TEST_EMAIL_RANDOM_NUMBER);
     private static final String EMAIL_DOMAIN = "%s@justice.gov.uk";
     private static final String TEST_EMAIL =
         String.format(EMAIL_DOMAIN, TEST_EMAIL_PREFIX);
@@ -61,6 +62,7 @@ class InactiveAccountsManagementTest extends FunctionalTestBase {
         String.format(EMAIL_DOMAIN, TEST_ADMIN_EMAIL_PREFIX);
     private static final String TEST_IDAM_EMAIL =
         String.format(EMAIL_DOMAIN, TEST_IDAM_EMAIL_PREFIX);
+    private static final String TEST_B2C_SYSTEM_ADMIN_EMAIL = TEST_B2C_SYSTEM_ADMIN_EMAIL_PREFIX + "@justice.gov.uk";
     private static final String FIRST_NAME = "E2E Account Management";
     private static final String SURNAME = "Test Name";
     private static final String STATUS = "PENDING";
@@ -91,16 +93,26 @@ class InactiveAccountsManagementTest extends FunctionalTestBase {
     private static final String ADD_SYSTEM_ADMIN_B2C_URL = ACCOUNT_URL + "/add/system-admin";
     private static final String TESTING_SUPPORT_APPLICATION_URL = "/testing-support/application/";
     private static final String GET_PI_USER_URL = "/account/%s";
+    private static final String SYSTEM_ADMIN_SSO_URL = ACCOUNT_URL + "/system-admin";
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     @BeforeAll
     public void startUp() throws IOException {
 
+        String requestBody = """
+            {
+                "email": "%s",
+                "provenanceUserId": "%s"
+            }
+            """.formatted(TEST_B2C_SYSTEM_ADMIN_EMAIL, UUID.randomUUID().toString());
+
         OBJECT_MAPPER.findAndRegisterModules();
 
         headers = Map.of(HttpHeaders.AUTHORIZATION, BEARER + accessToken);
-        issuerId = Map.of(ISSUER_ID, USER_ID);
+        String userId =  doPostRequest(SYSTEM_ADMIN_SSO_URL, headers, requestBody)
+            .jsonPath().getString("userId");
+        issuerId = Map.of(ISSUER_ID, userId);
 
         //ADD MEDIA USER
         createApplication();
@@ -124,6 +136,7 @@ class InactiveAccountsManagementTest extends FunctionalTestBase {
         doDeleteRequest(TESTING_SUPPORT_APPLICATION_URL + TEST_EMAIL, headers);
         doDeleteRequest(TESTING_SUPPORT_APPLICATION_URL + TEST_ADMIN_EMAIL, headers);
         doDeleteRequest(TESTING_SUPPORT_APPLICATION_URL + TEST_IDAM_EMAIL, headers);
+        doDeleteRequest(TESTING_SUPPORT_APPLICATION_URL + TEST_B2C_SYSTEM_ADMIN_EMAIL, headers);
     }
 
     private MediaApplication createApplication() throws IOException {
@@ -150,7 +163,7 @@ class InactiveAccountsManagementTest extends FunctionalTestBase {
             """.formatted(email, FIRST_NAME, SURNAME, role, TEST_NAME);
 
 
-        Response response = doPostRequest(ADD_USER_B2C_URL, headers, issuerId, requestBody);
+        Response response = doPostRequestForB2C(ADD_USER_B2C_URL, headers, issuerId, requestBody);
         List<AzureAccount> azureAccountList = OBJECT_MAPPER.convertValue(
             response.jsonPath().getJsonObject("CREATED_ACCOUNTS"),
             new TypeReference<>() {
@@ -171,7 +184,7 @@ class InactiveAccountsManagementTest extends FunctionalTestBase {
             """.formatted(email, FIRST_NAME, SURNAME);
 
 
-        Response response = doPostRequest(ADD_SYSTEM_ADMIN_B2C_URL, headers, issuerId, requestBody);
+        Response response = doPostRequestForB2C(ADD_SYSTEM_ADMIN_B2C_URL, headers, issuerId, requestBody);
         PiUser piUser = response.getBody().as(PiUser.class);
         assertThat(response.getStatusCode()).isEqualTo(OK.value());
 
@@ -191,7 +204,7 @@ class InactiveAccountsManagementTest extends FunctionalTestBase {
             ]
             """.formatted(email, provenancesId, role, provenances);
 
-        Response postResponse = doPostRequest(ADD_PI_USER_URL, headers, issuerId, requestBody);
+        Response postResponse = doPostRequestForB2C(ADD_PI_USER_URL, headers, issuerId, requestBody);
         List<UUID> piUsersList = OBJECT_MAPPER.convertValue(
             postResponse.jsonPath().getJsonObject("CREATED_ACCOUNTS"),
             new TypeReference<>() {
