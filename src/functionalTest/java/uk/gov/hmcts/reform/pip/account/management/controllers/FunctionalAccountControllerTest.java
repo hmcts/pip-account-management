@@ -232,7 +232,7 @@ class FunctionalAccountControllerTest extends AccountHelperBase {
         updateParams.put("lastVerifiedDate", "2024-12-01T01:01:01.123456Z");
         updateParams.put("lastSignedInDate", "2024-12-02T01:01:01.123456Z");
 
-        Response updateResponse = doPutRequestWithBody(String.format(UPDATE_ACCOUNT, provenanceId), bearer,
+        Response updateResponse = doPutRequestWithJsonBody(String.format(UPDATE_ACCOUNT, provenanceId), bearer,
                                                        objectMapper.writeValueAsString(updateParams));
 
         assertThat(updateResponse.getStatusCode()).isEqualTo(OK.value());
