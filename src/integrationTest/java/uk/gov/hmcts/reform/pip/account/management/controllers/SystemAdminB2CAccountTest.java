@@ -32,6 +32,7 @@ import uk.gov.hmcts.reform.pip.account.management.model.SystemAdminAccount;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -54,6 +55,7 @@ class SystemAdminB2CAccountTest {
 
     private static final String ISSUER_ID = "1234-1234-1234-1234";
     private static final String SYSTEM_ADMIN_ISSUER_ID = "87f907d2-eb28-42cc-b6e1-ae2b03f7bba2";
+    private static final String SUPER_ADMIN_ISSUER_ID = "87f907d2-eb28-42cc-b6e1-ae2b03f7bba3";
     private static final String ISSUER_HEADER = "x-issuer-id";
     private static final String GIVEN_NAME = "Given Name";
     private static final String ID = "1234";
@@ -222,7 +224,29 @@ class SystemAdminB2CAccountTest {
             MockMvcRequestBuilders
                 .post(CREATE_SYSTEM_ADMIN_URL)
                 .content(OBJECT_MAPPER.writeValueAsString(systemAdmin))
-                .header(ISSUER_HEADER, ISSUER_ID)
+                .header(ISSUER_HEADER, UUID.randomUUID().toString())
+                .contentType(MediaType.APPLICATION_JSON);
+
+        MvcResult responseCreateSystemAdminUser = mockMvc.perform(createRequest)
+            .andExpect(status().isForbidden()).andReturn();
+
+        assertEquals(FORBIDDEN.value(), responseCreateSystemAdminUser.getResponse().getStatus(),
+                     FORBIDDEN_STATUS_CODE
+        );
+    }
+
+    @Test
+    void testCreateSystemAdminUserWhenNotSystemAdmin() throws Exception {
+        SystemAdminAccount systemAdmin = new SystemAdminAccount();
+        systemAdmin.setFirstName(TEST_SYS_ADMIN_FIRSTNAME);
+        systemAdmin.setSurname(TEST_SYS_ADMIN_SURNAME);
+        systemAdmin.setEmail(TEST_SYS_ADMIN_EMAIL);
+
+        MockHttpServletRequestBuilder createRequest =
+            MockMvcRequestBuilders
+                .post(CREATE_SYSTEM_ADMIN_URL)
+                .content(OBJECT_MAPPER.writeValueAsString(systemAdmin))
+                .header(ISSUER_HEADER, SUPER_ADMIN_ISSUER_ID)
                 .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult responseCreateSystemAdminUser = mockMvc.perform(createRequest)

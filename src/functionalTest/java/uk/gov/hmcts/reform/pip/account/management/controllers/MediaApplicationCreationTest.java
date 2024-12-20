@@ -37,7 +37,7 @@ class MediaApplicationCreationTest extends FunctionalTestBase {
     private static final String TEST_EMAIL_PREFIX = String.format(
         "pip-am-test-email-%s", ThreadLocalRandom.current().nextInt(1000, 9999));
 
-    private static final String TEST_EMAIL = String.format(TEST_EMAIL_PREFIX + "@justice.gov.uk");
+    private static final String TEST_EMAIL = TEST_EMAIL_PREFIX + "@justice.gov.uk";
     private static final String STATUS = "PENDING";
 
     private static final String TESTING_SUPPORT_APPLICATION_URL = "/testing-support/application/";

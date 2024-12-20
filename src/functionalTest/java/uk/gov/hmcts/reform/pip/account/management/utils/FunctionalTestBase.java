@@ -58,7 +58,7 @@ public class FunctionalTestBase {
             .thenReturn();
     }
 
-    protected Response doPostRequest(final String path, final Map<String, String> additionalHeaders,
+    protected Response doPostRequestForB2C(final String path, final Map<String, String> additionalHeaders,
                                      final Map<String, String> issuerId, final String body) {
         return given()
             .relaxedHTTPSValidation()
@@ -70,8 +70,21 @@ public class FunctionalTestBase {
             .thenReturn();
     }
 
+    protected Response doPostMultipartForBulk(final String path, final Map<String, String> additionalHeaders,
+                                                     final Map<String, String> issuerId, final File mediaList) {
+        return given()
+            .relaxedHTTPSValidation()
+            .headers(additionalHeaders)
+            .headers(getRequestHeaders(issuerId))
+            .contentType("multipart/form-data")
+            .multiPart("mediaList", mediaList)
+            .when()
+            .post(path)
+            .thenReturn();
+    }
+
     protected Response doPostMultipartForApplication(final String path, final Map<String, String> additionalHeaders,
-                                      final File file, String name, String email, String employer, String status) {
+                                     final File file, String name, String email, String employer, String status) {
         return given()
             .relaxedHTTPSValidation()
             .headers(additionalHeaders)

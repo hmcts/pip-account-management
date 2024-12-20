@@ -119,6 +119,7 @@ class AccountTest {
     private static final String FORBIDDEN_STATUS_CODE = "Status code does not match forbidden";
     private static final String DELETE_USER_FAILURE = "Failed to delete user account";
     private static final String DELETE_USER_SUCCESS = "User deleted";
+    private static final String ADD_USERS_SCRIPT = "classpath:add-admin-users.sql";
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
@@ -610,6 +611,7 @@ class AccountTest {
     }
 
     @Test
+    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = ADD_USERS_SCRIPT)
     void testV2SystemAdminDeletesVerifiedUser() throws Exception {
         validUser.setUserProvenance(UserProvenances.CFT_IDAM);
         validUser.setRoles(Roles.VERIFIED);
@@ -643,7 +645,7 @@ class AccountTest {
     }
 
     @Test
-    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = "classpath:add-admin-users.sql")
+    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = ADD_USERS_SCRIPT)
     void testV2SystemAdminDeletesThirdPartyUser() throws Exception {
 
         PiUser thirdPartyUser = createThirdPartyUser();
@@ -675,6 +677,7 @@ class AccountTest {
     }
 
     @Test
+    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = ADD_USERS_SCRIPT)
     void testV2SystemAdminDeletesSuperAdminUser() throws Exception {
         superAdminUser.setUserProvenance(UserProvenances.CFT_IDAM);
         String superAdminUserId = getSuperAdminUserId(superAdminUser);
@@ -895,7 +898,7 @@ class AccountTest {
     }
 
     @Test
-    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = "classpath:add-admin-users.sql")
+    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = ADD_USERS_SCRIPT)
     void testCreateThirdPartyUser() throws Exception {
         PiUser thirdPartyUser = createThirdPartyUser();
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
@@ -918,7 +921,7 @@ class AccountTest {
     }
 
     @Test
-    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = "classpath:add-admin-users.sql")
+    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = ADD_USERS_SCRIPT)
     void testUnauthorizedCreateThirdPartyUser() throws Exception {
         PiUser thirdPartyUser = createUser(true, Roles.GENERAL_THIRD_PARTY);
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
