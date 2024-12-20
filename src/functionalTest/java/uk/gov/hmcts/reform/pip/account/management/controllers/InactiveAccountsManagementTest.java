@@ -53,8 +53,8 @@ class InactiveAccountsManagementTest extends FunctionalTestBase {
         "pip-am-test-admin-email-%s", TEST_EMAIL_RANDOM_NUMBER);
     private static final String TEST_IDAM_EMAIL_PREFIX = String.format(
         "pip-am-test-idam-email-%s", TEST_EMAIL_RANDOM_NUMBER);
-    private static final String TEST_B2C_SYSTEM_ADMIN_EMAIL_PREFIX = String.format(
-        "pip-am-test-b2c-email-%s", TEST_EMAIL_RANDOM_NUMBER);
+    private static final String TEST_SYSTEM_ADMIN_EMAIL_PREFIX = String.format(
+        "pip-am-test-system-admin-email-%s", TEST_EMAIL_RANDOM_NUMBER);
     private static final String EMAIL_DOMAIN = "%s@justice.gov.uk";
     private static final String TEST_EMAIL =
         String.format(EMAIL_DOMAIN, TEST_EMAIL_PREFIX);
@@ -62,7 +62,7 @@ class InactiveAccountsManagementTest extends FunctionalTestBase {
         String.format(EMAIL_DOMAIN, TEST_ADMIN_EMAIL_PREFIX);
     private static final String TEST_IDAM_EMAIL =
         String.format(EMAIL_DOMAIN, TEST_IDAM_EMAIL_PREFIX);
-    private static final String TEST_B2C_SYSTEM_ADMIN_EMAIL = TEST_B2C_SYSTEM_ADMIN_EMAIL_PREFIX + "@justice.gov.uk";
+    private static final String TEST_SYSTEM_ADMIN_EMAIL = TEST_SYSTEM_ADMIN_EMAIL_PREFIX + "@justice.gov.uk";
     private static final String FIRST_NAME = "E2E Account Management";
     private static final String SURNAME = "Test Name";
     private static final String STATUS = "PENDING";
@@ -105,7 +105,7 @@ class InactiveAccountsManagementTest extends FunctionalTestBase {
                 "email": "%s",
                 "provenanceUserId": "%s"
             }
-            """.formatted(TEST_B2C_SYSTEM_ADMIN_EMAIL, UUID.randomUUID().toString());
+            """.formatted(TEST_SYSTEM_ADMIN_EMAIL, UUID.randomUUID().toString());
 
         OBJECT_MAPPER.findAndRegisterModules();
 
@@ -136,7 +136,7 @@ class InactiveAccountsManagementTest extends FunctionalTestBase {
         doDeleteRequest(TESTING_SUPPORT_APPLICATION_URL + TEST_EMAIL, headers);
         doDeleteRequest(TESTING_SUPPORT_APPLICATION_URL + TEST_ADMIN_EMAIL, headers);
         doDeleteRequest(TESTING_SUPPORT_APPLICATION_URL + TEST_IDAM_EMAIL, headers);
-        doDeleteRequest(TESTING_SUPPORT_APPLICATION_URL + TEST_B2C_SYSTEM_ADMIN_EMAIL, headers);
+        doDeleteRequest(TESTING_SUPPORT_APPLICATION_URL + TEST_SYSTEM_ADMIN_EMAIL, headers);
     }
 
     private MediaApplication createApplication() throws IOException {
