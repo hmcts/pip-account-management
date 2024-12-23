@@ -91,7 +91,7 @@ class InactiveAccountsManagementTest extends FunctionalTestBase {
     private static final String NOTIFY_INACTIVE_IDAM_ACCOUNT = ACCOUNT_URL + "/idam/inactive/notify";
     private static final String DELETE_INACTIVE_IDAM_ACCOUNT = ACCOUNT_URL + "/idam/inactive";
     private static final String ADD_SYSTEM_ADMIN_B2C_URL = ACCOUNT_URL + "/add/system-admin";
-    private static final String TESTING_SUPPORT_APPLICATION_URL = "/testing-support/application/";
+    private static final String TESTING_SUPPORT_APPLICATION_URL = "/testing-support/account/";
     private static final String GET_PI_USER_URL = "/account/%s";
     private static final String SYSTEM_ADMIN_SSO_URL = ACCOUNT_URL + "/system-admin";
 
