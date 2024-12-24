@@ -13,18 +13,15 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import uk.gov.hmcts.reform.pip.account.management.model.AzureAccount;
-import uk.gov.hmcts.reform.pip.account.management.model.MediaApplication;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
 import uk.gov.hmcts.reform.pip.account.management.utils.FunctionalTestBase;
 import uk.gov.hmcts.reform.pip.account.management.utils.OAuthClient;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
 
-import java.io.IOException;
 import java.time.Clock;
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -44,7 +41,6 @@ import static org.springframework.http.HttpStatus.OK;
 @SuppressWarnings("PMD.TooManyMethods")
 class InactiveAccountsManagementTest extends FunctionalTestBase {
     private static final String TEST_NAME = "E2E Account Management Test Name";
-    private static final String TEST_EMPLOYER = "E2E Account Management Test Employer";
     private static final Integer TEST_EMAIL_RANDOM_NUMBER =
         ThreadLocalRandom.current().nextInt(1000, 9999);
     private static final String TEST_EMAIL_PREFIX = String.format(
@@ -65,10 +61,7 @@ class InactiveAccountsManagementTest extends FunctionalTestBase {
     private static final String TEST_SYSTEM_ADMIN_EMAIL = TEST_SYSTEM_ADMIN_EMAIL_PREFIX + "@justice.gov.uk";
     private static final String FIRST_NAME = "E2E Account Management";
     private static final String SURNAME = "Test Name";
-    private static final String STATUS = "PENDING";
     private static final String LAST_SINGED_IN_DATE = "lastSignedInDate";
-    private static final String MEDIA_APPLICATION_URL = "/application";
-    private static final String MOCK_FILE = "files/test-image.png";
     private static final String BEARER = "Bearer ";
     private static final String ISSUER_ID = "x-issuer-id";
     private static final Clock CL = Clock.systemUTC();
@@ -98,7 +91,7 @@ class InactiveAccountsManagementTest extends FunctionalTestBase {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     @BeforeAll
-    public void startUp() throws IOException {
+    public void startUp() {
 
         String requestBody = """
             {
@@ -115,7 +108,6 @@ class InactiveAccountsManagementTest extends FunctionalTestBase {
         issuerId = Map.of(ISSUER_ID, userId);
 
         //ADD MEDIA USER
-        createApplication();
         AzureAccount mediaUserAzureAccount = createAzureAccount(TEST_EMAIL, Roles.VERIFIED);
         mediaUserProvenanceId = mediaUserAzureAccount.getAzureAccountId();
         mediaUserId = createUser(TEST_EMAIL, mediaUserAzureAccount.getAzureAccountId(),
@@ -137,16 +129,6 @@ class InactiveAccountsManagementTest extends FunctionalTestBase {
         doDeleteRequest(TESTING_SUPPORT_ACCOUNT_URL + TEST_ADMIN_EMAIL, headers);
         doDeleteRequest(TESTING_SUPPORT_ACCOUNT_URL + TEST_IDAM_EMAIL, headers);
         doDeleteRequest(TESTING_SUPPORT_ACCOUNT_URL + TEST_SYSTEM_ADMIN_EMAIL, headers);
-    }
-
-    private MediaApplication createApplication() throws IOException {
-        Response response = doPostMultipartForApplication(MEDIA_APPLICATION_URL, headers,
-                                                          new ClassPathResource(MOCK_FILE).getFile(),
-                                                          TEST_NAME, TEST_EMAIL, TEST_EMPLOYER, STATUS);
-
-        assertThat(response.getStatusCode()).isEqualTo(OK.value());
-
-        return response.getBody().as(MediaApplication.class);
     }
 
     private AzureAccount createAzureAccount(String email, Roles role) {
