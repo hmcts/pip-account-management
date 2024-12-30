@@ -462,7 +462,7 @@ class AuditTest {
             ROLES,
             USER_PROVENANCE,
             AUDIT_ACTION,
-            RandomStringUtils.random(256, true, false)
+            RandomStringUtils.secure().next(256, true, false)
         );
 
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
