@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 
-@Profile("integration")
+@Profile({"integration", "integration-basic"})
 @Configuration
 public class AzureConfigurationClientTestConfiguration {
 

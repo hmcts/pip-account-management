@@ -7,13 +7,13 @@ import com.microsoft.graph.models.UserCollectionResponse;
 import com.microsoft.graph.serviceclient.GraphServiceClient;
 import com.microsoft.graph.users.UsersRequestBuilder;
 import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
+import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.annotation.DirtiesContext;
@@ -22,8 +22,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.testcontainers.shaded.org.apache.commons.io.IOUtils;
 import uk.gov.hmcts.reform.pip.account.management.Application;
-import uk.gov.hmcts.reform.pip.account.management.config.AzureConfigurationClientTestConfiguration;
 import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
+import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredAzureAccount;
+import uk.gov.hmcts.reform.pip.account.management.utils.IntegrationTestBase;
 
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -33,17 +34,19 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest(classes = {AzureConfigurationClientTestConfiguration.class, Application.class},
-    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(classes = {Application.class}, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
-@ActiveProfiles(profiles = "integration")
+@ActiveProfiles("integration")
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @WithMockUser(username = "admin", authorities = {"APPROLE_api.request.admin"})
-class BulkAccountCreationTest {
+class BulkAccountCreationTest extends IntegrationTestBase {
     private static final String ROOT_URL = "/account";
     private static final String BULK_UPLOAD = ROOT_URL + "/media-bulk-upload";
 
@@ -61,10 +64,10 @@ class BulkAccountCreationTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @Autowired
+    @MockBean
     private GraphServiceClient graphClient;
 
-    @Autowired
+    @Mock
     private UsersRequestBuilder usersRequestBuilder;
 
     @BeforeEach
@@ -79,21 +82,16 @@ class BulkAccountCreationTest {
 
         when(graphClient.users()).thenReturn(usersRequestBuilder);
         when(usersRequestBuilder.post(any())).thenReturn(user, additionalUser);
-    }
-
-    @AfterEach
-    public void reset() {
-        Mockito.reset(graphClient, usersRequestBuilder);
-    }
-
-    @Test
-    @DirtiesContext(methodMode = DirtiesContext.MethodMode.BEFORE_METHOD)
-    void testUploadBulkMedia() throws Exception {
 
         UserCollectionResponse userCollectionResponse = new UserCollectionResponse();
         userCollectionResponse.setValue(new ArrayList<>());
 
         when(usersRequestBuilder.get(any())).thenReturn(userCollectionResponse);
+    }
+
+    @Test
+    void testUploadBulkMedia() throws Exception {
+        when(publicationService.sendMediaNotificationEmail(anyString(), anyString(), anyBoolean())).thenReturn(true);
 
         try (InputStream inputStream = Thread.currentThread().getContextClassLoader()
             .getResourceAsStream("csv/valid.csv")) {
@@ -114,6 +112,35 @@ class BulkAccountCreationTest {
     }
 
     @Test
+    void testUploadBulkMediaWhenFailedToSendNotificationEmail() throws Exception {
+        when(publicationService.sendMediaNotificationEmail(anyString(), anyString(), anyBoolean())).thenReturn(false);
+
+        try (InputStream inputStream = Thread.currentThread().getContextClassLoader()
+            .getResourceAsStream("csv/valid.csv")) {
+            MockMultipartFile multipartFile = new MockMultipartFile(MEDIA_LIST, IOUtils.toByteArray(inputStream));
+
+            MvcResult mvcResult = mockMvc.perform(multipart(BULK_UPLOAD).file(multipartFile)
+                                                      .header(ISSUER_HEADER, ISSUER_ID))
+                .andExpect(status().isOk()).andReturn();
+            Map<CreationEnum, List<?>> users = OBJECT_MAPPER.readValue(
+                mvcResult.getResponse().getContentAsString(),
+                new TypeReference<>() {
+                }
+            );
+
+            assertEquals(2, users.get(CreationEnum.CREATED_ACCOUNTS).size(), MAP_SIZE_MESSAGE);
+            assertEquals(1, users.get(CreationEnum.ERRORED_ACCOUNTS).size(), MAP_SIZE_MESSAGE);
+
+            ErroredAzureAccount returnedInvalidAccount = OBJECT_MAPPER.convertValue(
+                users.get(CreationEnum.ERRORED_ACCOUNTS).get(0), ErroredAzureAccount.class
+            );
+
+            assertEquals("Account has been successfully created, however email has failed to send.",
+                         returnedInvalidAccount.getErrorMessages().get(0), "Message error does not match");
+        }
+    }
+
+    @Test
     void testUploadBulkMediaFailsCsv() throws Exception {
         try (InputStream inputStream = Thread.currentThread().getContextClassLoader()
             .getResourceAsStream("csv/invalidCsv.txt")) {
@@ -130,12 +157,8 @@ class BulkAccountCreationTest {
     }
 
     @Test
-    @DirtiesContext(methodMode = DirtiesContext.MethodMode.BEFORE_METHOD)
     void testUploadBulkMediaEmailOnly() throws Exception {
-        UserCollectionResponse userCollectionResponse = new UserCollectionResponse();
-        userCollectionResponse.setValue(new ArrayList<>());
-
-        when(usersRequestBuilder.get(any())).thenReturn(userCollectionResponse);
+        when(publicationService.sendMediaNotificationEmail(anyString(), anyString(), anyBoolean())).thenReturn(true);
 
         try (InputStream inputStream = Thread.currentThread().getContextClassLoader()
             .getResourceAsStream("csv/mediaEmailOnly.csv")) {

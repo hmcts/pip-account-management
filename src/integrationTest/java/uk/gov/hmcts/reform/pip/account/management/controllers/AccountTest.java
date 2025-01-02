@@ -1,7 +1,5 @@
 package uk.gov.hmcts.reform.pip.account.management.controllers;
 
-import com.azure.storage.blob.BlobClient;
-import com.azure.storage.blob.BlobContainerClient;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.graph.models.User;
@@ -9,15 +7,14 @@ import com.microsoft.graph.serviceclient.GraphServiceClient;
 import com.microsoft.graph.users.UsersRequestBuilder;
 import com.microsoft.graph.users.item.UserItemRequestBuilder;
 import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.annotation.DirtiesContext;
@@ -28,10 +25,10 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import uk.gov.hmcts.reform.pip.account.management.Application;
-import uk.gov.hmcts.reform.pip.account.management.config.AzureConfigurationClientTestConfiguration;
 import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
 import uk.gov.hmcts.reform.pip.account.management.model.SystemAdminAccount;
+import uk.gov.hmcts.reform.pip.account.management.utils.IntegrationTestBase;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
 import uk.gov.hmcts.reform.pip.model.publication.ListType;
@@ -54,26 +51,18 @@ import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest(classes = {AzureConfigurationClientTestConfiguration.class, Application.class},
-    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(classes = {Application.class}, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
-@ActiveProfiles(profiles = "integration")
+@ActiveProfiles("integration")
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @WithMockUser(username = "admin", authorities = {"APPROLE_api.request.admin"})
 @SuppressWarnings({"PMD.TooManyMethods", "PMD.ExcessiveImports", "PMD.UnitTestShouldIncludeAssert"})
-class AccountTest {
-
-    @Autowired
-    BlobContainerClient blobContainerClient;
-
-    @Autowired
-    BlobClient blobClient;
-
+class AccountTest extends IntegrationTestBase {
     @Autowired
     private MockMvc mockMvc;
 
-    @Autowired
+    @MockBean
     GraphServiceClient graphClient;
 
     @Mock
@@ -174,11 +163,6 @@ class AccountTest {
 
         when(graphClient.users()).thenReturn(usersRequestBuilder);
         when(usersRequestBuilder.post(any())).thenReturn(userToReturn, additionalUser);
-    }
-
-    @AfterEach
-    public void reset() {
-        Mockito.reset(graphClient, usersRequestBuilder, userItemRequestBuilder);
     }
 
     @Test
