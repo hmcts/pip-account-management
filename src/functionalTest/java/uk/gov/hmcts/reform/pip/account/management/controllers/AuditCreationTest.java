@@ -51,7 +51,9 @@ class AuditCreationTest extends FunctionalTestBase {
     }
 
     @AfterAll
-    public void teardown() { doDeleteRequest(TESTING_SUPPORT_AUDIT_URL + TEST_EMAIL_PREFIX, bearer); }
+    public void teardown() {
+        doDeleteRequest(TESTING_SUPPORT_AUDIT_URL + TEST_EMAIL_PREFIX, bearer);
+    }
 
     private AuditLog createAuditLog() {
 
