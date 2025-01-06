@@ -39,8 +39,9 @@ class AuditCreationTest extends FunctionalTestBase {
 
     private static final String AUDIT_URL = "/audit";
     private static final String GET_AUDIT_URL = "/audit/%s";
-    private static final String TESTING_SUPPORT_APPLICATION_URL = "/testing-support/audit/";
+    private static final String TESTING_SUPPORT_AUDIT_URL = "/testing-support/audit/";
     private static final String BEARER = "Bearer ";
+    private static final String CONTENT = "content";
 
     private Map<String, String> bearer;
 
@@ -50,9 +51,7 @@ class AuditCreationTest extends FunctionalTestBase {
     }
 
     @AfterAll
-    public void teardown() {
-        doDeleteRequest(TESTING_SUPPORT_APPLICATION_URL + TEST_EMAIL_PREFIX, bearer);
-    }
+    public void teardown() { doDeleteRequest(TESTING_SUPPORT_AUDIT_URL + TEST_EMAIL_PREFIX, bearer); }
 
     private AuditLog createAuditLog() {
 
@@ -97,11 +96,16 @@ class AuditCreationTest extends FunctionalTestBase {
         assertThat(getResponse.jsonPath().getInt("pageable.pageNumber")).isEqualTo(0);
         assertThat(getResponse.jsonPath().getInt("pageable.pageSize")).isEqualTo(25);
 
-        List<AuditLog> retrievedAuditLogs = getResponse.jsonPath().getList("content", AuditLog.class);
+        List<AuditLog> retrievedAuditLogs = getResponse.jsonPath().getList(CONTENT, AuditLog.class);
 
-        assertThat(retrievedAuditLogs).isNotNull();
-        assertThat(retrievedAuditLogs.size()).isEqualTo(2);
-        assertThat(retrievedAuditLogs.getFirst().getId()).isEqualTo(auditLog.getId());
+        List<AuditLog> filteredAuditTestLogsOnly = retrievedAuditLogs
+            .stream()
+            .filter(log -> TEST_EMAIL.equals(log.getUserEmail()))
+            .toList();
+
+        assertThat(filteredAuditTestLogsOnly).isNotNull();
+        assertThat(filteredAuditTestLogsOnly.size()).isEqualTo(2);
+        assertThat(filteredAuditTestLogsOnly.getFirst().getId()).isEqualTo(auditLog.getId());
     }
 
     @Test
@@ -117,11 +121,16 @@ class AuditCreationTest extends FunctionalTestBase {
         assertThat(getResponse.jsonPath().getInt("totalPages")).isEqualTo(2);
         assertThat(getResponse.jsonPath().getInt("totalElements")).isEqualTo(4);
 
-        List<AuditLog> retrievedAuditLogs = getResponse.jsonPath().getList("content", AuditLog.class);
+        List<AuditLog> retrievedAuditLogs = getResponse.jsonPath().getList(CONTENT, AuditLog.class);
 
-        assertThat(retrievedAuditLogs).isNotNull();
-        assertThat(retrievedAuditLogs.size()).isEqualTo(2);
-        assertThat(retrievedAuditLogs.getFirst().getId()).isEqualTo(auditLog.getId());
+        List<AuditLog> filteredAuditTestLogsOnly = retrievedAuditLogs
+            .stream()
+            .filter(log -> TEST_EMAIL.equals(log.getUserEmail()))
+            .toList();
+
+        assertThat(filteredAuditTestLogsOnly).isNotNull();
+        assertThat(filteredAuditTestLogsOnly.getFirst().getId()).isEqualTo(auditLog.getId());
+        assertThat(filteredAuditTestLogsOnly.size()).isEqualTo(2);
     }
 
     @Test
@@ -141,10 +150,15 @@ class AuditCreationTest extends FunctionalTestBase {
 
         Response getResponse = doGetRequest(String.format(AUDIT_URL), bearer);
 
-        List<AuditLog> retrievedAuditLogs = getResponse.jsonPath().getList("content", AuditLog.class);
+        List<AuditLog> retrievedAuditLogs = getResponse.jsonPath().getList(CONTENT, AuditLog.class);
 
-        assertThat(retrievedAuditLogs).isNotNull();
-        assertThat(retrievedAuditLogs.size()).isEqualTo(3);
-        assertThat(retrievedAuditLogs.getFirst().getId()).isEqualTo(auditLog.getId());
+        List<AuditLog> filteredAuditTestLogsOnly = retrievedAuditLogs
+            .stream()
+            .filter(log -> TEST_EMAIL.equals(log.getUserEmail()))
+            .toList();
+
+        assertThat(filteredAuditTestLogsOnly).isNotNull();
+        assertThat(filteredAuditTestLogsOnly.size()).isEqualTo(3);
+        assertThat(filteredAuditTestLogsOnly.getFirst().getId()).isEqualTo(auditLog.getId());
     }
 }
