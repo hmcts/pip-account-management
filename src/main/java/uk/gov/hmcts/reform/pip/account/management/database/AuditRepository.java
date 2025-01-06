@@ -17,8 +17,6 @@ public interface AuditRepository extends JpaRepository<AuditLog, UUID> {
     @Transactional
     void deleteAllByTimestampBefore(LocalDateTime timestamp);
 
-    Page<AuditLog> findAllByOrderByTimestampDesc(Pageable pageable);
-
     List<AuditLog> findAllByUserEmailStartingWithIgnoreCase(@Param("prefix") String prefix);
 
     void deleteByIdIn(List<UUID> id);
