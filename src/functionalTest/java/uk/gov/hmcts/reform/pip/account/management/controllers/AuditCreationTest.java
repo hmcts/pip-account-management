@@ -163,4 +163,5 @@ class AuditCreationTest extends FunctionalTestBase {
         assertThat(filteredAuditTestLogsOnly.size()).isEqualTo(3);
         assertThat(filteredAuditTestLogsOnly.getFirst().getId()).isEqualTo(auditLog.getId());
     }
+
 }
