@@ -37,6 +37,7 @@ import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
 import uk.gov.hmcts.reform.pip.model.enums.AuditAction;
 
 import java.io.InputStream;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -49,6 +50,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static uk.gov.hmcts.reform.pip.model.enums.AuditAction.PUBLICATION_UPLOAD;
 
@@ -305,10 +307,27 @@ class TestingSupportApiTest extends IntegrationTestBase {
 
         assertThat(deleteResponse.getResponse().getContentAsString())
             .as("Audit Log delete response does not match")
-            .isEqualTo("1 audit log(s) deleted with user email starting with " + EMAIL_PREFIX);
+            .isEqualTo("2 audit log(s) deleted with user email starting with " + EMAIL_PREFIX);
 
         mockMvc.perform(get(AUDIT_URL + "/" + auditLog.getId()))
             .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void testTestingSupportUpdateAuditLogTimestampWithId() throws Exception {
+        AuditLog auditLog = createAuditLog();
+        LocalDate expiredDate = auditLog.getTimestamp().minusDays(200).toLocalDate();
+
+        mockMvc.perform(get(AUDIT_URL + "/" + auditLog.getId()))
+            .andExpect(status().isOk());
+
+        MvcResult updateAudit = mockMvc.perform(put(TESTING_SUPPORT_AUDIT_URL + auditLog.getId()))
+            .andExpect(status().isOk())
+            .andReturn();
+
+        assertThat(updateAudit.getResponse().getContentAsString())
+            .as("Audit Log update response does not match")
+            .contains("1 audit log(s) updated with timestamp " + expiredDate);
     }
 
     @Test

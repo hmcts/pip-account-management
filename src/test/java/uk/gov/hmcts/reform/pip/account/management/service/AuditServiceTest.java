@@ -145,4 +145,14 @@ class AuditServiceTest {
                      "Deletion response was not as expected");
         verify(auditRepository, times(1)).deleteByIdIn(any());
     }
+
+    @Test
+    void updateAuditTimestampByAuditId() {
+        when(auditRepository.findById(ID)).thenReturn(Optional.of(auditLogExample));
+
+        String response = auditService.updateAuditTimestampWithAuditId(ID.toString());
+
+        assertEquals("1 audit log(s) updated with timestamp " + auditLogExample.getTimestamp(), response,
+                     "Update response was not as expected");
+    }
 }
