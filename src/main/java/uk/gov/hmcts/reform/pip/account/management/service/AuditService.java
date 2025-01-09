@@ -112,4 +112,15 @@ public class AuditService {
         return String.format("%s audit log(s) deleted with user email starting with %s",
                              auditLogsToDelete.size(), prefix);
     }
+
+    public String updateAuditTimestampWithAuditId(String auditId) {
+        AuditLog auditLogToUpdate = getAuditLogById(UUID.fromString(auditId));
+
+        LocalDateTime expired = LocalDateTime.now().minusDays(200);
+
+        auditLogToUpdate.setTimestamp(expired);
+        auditRepository.save(auditLogToUpdate);
+
+        return String.format("1 audit log(s) updated with timestamp %s", expired);
+    }
 }
