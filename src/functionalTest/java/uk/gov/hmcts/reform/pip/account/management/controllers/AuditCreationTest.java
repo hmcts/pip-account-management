@@ -76,6 +76,12 @@ class AuditCreationTest extends FunctionalTestBase {
         return response.getBody().as(AuditLog.class);
     }
 
+    private void deleteAuditLog() {
+        Response response = doDeleteRequest(AUDIT_URL, bearer);
+
+        assertThat(response.getStatusCode()).isEqualTo(OK.value());
+    }
+
     @Test
     void shouldBeAbleToCreateAndGetAnAuditRecord() {
         AuditLog auditLog = createAuditLog();
@@ -92,7 +98,8 @@ class AuditCreationTest extends FunctionalTestBase {
     void shouldBeAbleToGetAllAuditLogsUsingDefaultDisplayParameters() {
         AuditLog auditLog = createAuditLog();
 
-        Response getResponse = doGetRequest(String.format(AUDIT_URL), bearer);
+        Response getResponse = doGetRequestWithQueryParameters(String.format(AUDIT_URL), bearer,
+                                                               "", "", TEST_EMAIL_PREFIX);
 
         assertThat(getResponse.getStatusCode()).isEqualTo(OK.value());
         assertThat(getResponse.jsonPath().getInt("pageable.pageNumber")).isEqualTo(0);
@@ -100,14 +107,9 @@ class AuditCreationTest extends FunctionalTestBase {
 
         List<AuditLog> retrievedAuditLogs = getResponse.jsonPath().getList(CONTENT, AuditLog.class);
 
-        List<AuditLog> filteredAuditTestLogsOnly = retrievedAuditLogs
-            .stream()
-            .filter(log -> TEST_EMAIL.equals(log.getUserEmail()))
-            .toList();
-
-        assertThat(filteredAuditTestLogsOnly).isNotNull();
-        assertThat(filteredAuditTestLogsOnly.size()).isEqualTo(2);
-        assertThat(filteredAuditTestLogsOnly.getFirst().getId()).isEqualTo(auditLog.getId());
+        assertThat(retrievedAuditLogs).isNotNull();
+        assertThat(retrievedAuditLogs.size()).isEqualTo(2);
+        assertThat(retrievedAuditLogs.getFirst().getId()).isEqualTo(auditLog.getId());
     }
 
     @Test
@@ -115,7 +117,7 @@ class AuditCreationTest extends FunctionalTestBase {
         AuditLog auditLog = createAuditLog();
 
         Response getResponse = doGetRequestWithQueryParameters(String.format(AUDIT_URL), bearer,
-                                                               PAGE_NUMBER.toString(), PAGE_SIZE.toString());
+                                                   PAGE_NUMBER.toString(), PAGE_SIZE.toString(), TEST_EMAIL_PREFIX);
 
         assertThat(getResponse.getStatusCode()).isEqualTo(OK.value());
         assertThat(getResponse.jsonPath().getInt("pageable.pageNumber")).isEqualTo(0);
@@ -125,14 +127,9 @@ class AuditCreationTest extends FunctionalTestBase {
 
         List<AuditLog> retrievedAuditLogs = getResponse.jsonPath().getList(CONTENT, AuditLog.class);
 
-        List<AuditLog> filteredAuditTestLogsOnly = retrievedAuditLogs
-            .stream()
-            .filter(log -> TEST_EMAIL.equals(log.getUserEmail()))
-            .toList();
-
-        assertThat(filteredAuditTestLogsOnly).isNotNull();
-        assertThat(filteredAuditTestLogsOnly.getFirst().getId()).isEqualTo(auditLog.getId());
-        assertThat(filteredAuditTestLogsOnly.size()).isEqualTo(2);
+        assertThat(retrievedAuditLogs).isNotNull();
+        assertThat(retrievedAuditLogs.getFirst().getId()).isEqualTo(auditLog.getId());
+        assertThat(retrievedAuditLogs.size()).isEqualTo(2);
     }
 
     @Test
@@ -146,22 +143,37 @@ class AuditCreationTest extends FunctionalTestBase {
     void shouldReturnOkForDeleteAuditLogsIfAllInDate() {
         AuditLog auditLog = createAuditLog();
 
-        Response response = doDeleteRequest(AUDIT_URL, bearer);
+        deleteAuditLog();
 
-        assertThat(response.getStatusCode()).isEqualTo(OK.value());
-
-        Response getResponse = doGetRequest(String.format(AUDIT_URL), bearer);
+        Response getResponse = doGetRequestWithQueryParameters(String.format(AUDIT_URL), bearer,
+                                                               "", "", TEST_EMAIL_PREFIX);
 
         List<AuditLog> retrievedAuditLogs = getResponse.jsonPath().getList(CONTENT, AuditLog.class);
 
-        List<AuditLog> filteredAuditTestLogsOnly = retrievedAuditLogs
-            .stream()
-            .filter(log -> TEST_EMAIL.equals(log.getUserEmail()))
-            .toList();
+        assertThat(retrievedAuditLogs).isNotNull();
+        assertThat(retrievedAuditLogs.getFirst().getId()).isEqualTo(auditLog.getId());
+        assertThat(retrievedAuditLogs.size()).isEqualTo(3);
+    }
 
-        assertThat(filteredAuditTestLogsOnly).isNotNull();
-        assertThat(filteredAuditTestLogsOnly.size()).isEqualTo(3);
-        assertThat(filteredAuditTestLogsOnly.getFirst().getId()).isEqualTo(auditLog.getId());
+    @Test
+    void shouldBeAbleToDeleteAnOutOfDateAudit() {
+        Response getResponse = doGetRequestWithQueryParameters(String.format(AUDIT_URL), bearer,
+                                                               "", "", TEST_EMAIL_PREFIX);
+        List<AuditLog> retrievedAuditLogs = getResponse.jsonPath().getList(CONTENT, AuditLog.class);
+        assertThat(retrievedAuditLogs.size()).isEqualTo(4);
+
+        AuditLog auditLog = createAuditLog();
+        doPutRequest(TESTING_SUPPORT_AUDIT_URL + auditLog.getId(), bearer);
+
+        getResponse = doGetRequestWithQueryParameters(String.format(AUDIT_URL), bearer, "", "", TEST_EMAIL_PREFIX);
+        retrievedAuditLogs = getResponse.jsonPath().getList(CONTENT, AuditLog.class);
+        assertThat(retrievedAuditLogs.size()).isEqualTo(5);
+
+        deleteAuditLog();
+
+        getResponse = doGetRequestWithQueryParameters(String.format(AUDIT_URL), bearer, "", "", TEST_EMAIL_PREFIX);
+        retrievedAuditLogs = getResponse.jsonPath().getList(CONTENT, AuditLog.class);
+        assertThat(retrievedAuditLogs.size()).isEqualTo(4);
     }
 
 }
