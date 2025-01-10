@@ -3,7 +3,7 @@ package uk.gov.hmcts.reform.pip.account.management.utils;
 import com.azure.storage.blob.BlobClient;
 import com.azure.storage.blob.BlobContainerClient;
 import org.junit.jupiter.api.BeforeEach;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import uk.gov.hmcts.reform.pip.account.management.service.PublicationService;
 import uk.gov.hmcts.reform.pip.account.management.service.SubscriptionService;
 
@@ -13,16 +13,16 @@ import static org.mockito.Mockito.when;
 public class IntegrationTestBase {
     private static final String BLOB_IMAGE_URL = "https://localhost";
 
-    @MockBean
+    @MockitoBean
     protected SubscriptionService subscriptionService;
 
-    @MockBean
+    @MockitoBean
     protected PublicationService publicationService;
 
-    @MockBean
+    @MockitoBean
     protected BlobContainerClient blobContainerClient;
 
-    @MockBean
+    @MockitoBean
     protected BlobClient blobClient;
 
     @BeforeEach
