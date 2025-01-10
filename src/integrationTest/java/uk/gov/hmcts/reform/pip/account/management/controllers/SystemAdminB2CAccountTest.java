@@ -5,13 +5,11 @@ import com.microsoft.graph.models.User;
 import com.microsoft.graph.models.UserCollectionResponse;
 import com.microsoft.graph.serviceclient.GraphServiceClient;
 import com.microsoft.graph.users.UsersRequestBuilder;
-import com.microsoft.kiota.ApiException;
 import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
+import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -19,16 +17,17 @@ import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import uk.gov.hmcts.reform.pip.account.management.Application;
-import uk.gov.hmcts.reform.pip.account.management.config.AzureConfigurationClientTestConfiguration;
 import uk.gov.hmcts.reform.pip.account.management.model.AzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
 import uk.gov.hmcts.reform.pip.account.management.model.SystemAdminAccount;
+import uk.gov.hmcts.reform.pip.account.management.utils.IntegrationTestBase;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,14 +40,13 @@ import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.FORBIDDEN;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest(classes = {AzureConfigurationClientTestConfiguration.class, Application.class},
-    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(classes = {Application.class}, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
-@ActiveProfiles(profiles = "integration")
+@ActiveProfiles("integration")
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @WithMockUser(username = "admin", authorities = {"APPROLE_api.request.admin"})
-class SystemAdminB2CAccountTest {
+class SystemAdminB2CAccountTest extends IntegrationTestBase {
     private static final String ROOT_URL = "/account";
     private static final String CREATE_SYSTEM_ADMIN_URL = ROOT_URL + "/add/system-admin";
     private static final String AZURE_PATH = "/azure/";
@@ -69,15 +67,11 @@ class SystemAdminB2CAccountTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @Autowired
+    @MockitoBean
     GraphServiceClient graphClient;
 
-    @Autowired
+    @Mock
     UsersRequestBuilder usersRequestBuilder;
-
-
-    @Autowired
-    ApiException apiException;
 
     @BeforeAll
     static void startup() {
@@ -100,11 +94,6 @@ class SystemAdminB2CAccountTest {
         userCollectionResponse.setValue(azUsers);
 
         when(usersRequestBuilder.get(any())).thenReturn(userCollectionResponse);
-    }
-
-    @AfterEach
-    public void reset() {
-        Mockito.reset(graphClient, usersRequestBuilder);
     }
 
     @Test
@@ -133,6 +122,20 @@ class SystemAdminB2CAccountTest {
         assertEquals(
             systemAdmin.getEmail(), returnedUser.getEmail(),
             "Failed to create user"
+        );
+
+        MockHttpServletRequestBuilder getRequest = MockMvcRequestBuilders
+            .get(ROOT_URL + AZURE_PATH + returnedUser.getProvenanceUserId());
+
+        MvcResult responseGetUser =
+            mockMvc.perform(getRequest).andExpect(status().isOk()).andReturn();
+
+        AzureAccount returnedAzureAccount = OBJECT_MAPPER.readValue(
+            responseGetUser.getResponse().getContentAsString(),
+            AzureAccount.class
+        );
+        assertEquals(returnedUser.getEmail(), returnedAzureAccount.getEmail(),
+                     "Should return the correct user"
         );
     }
 
@@ -171,44 +174,6 @@ class SystemAdminB2CAccountTest {
 
         assertEquals(BAD_REQUEST.value(), responseCreateSystemAdminUser.getResponse().getStatus(),
                      "Number of system admin accounts exceeded the max limit"
-        );
-    }
-
-    @Test
-    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = "classpath:add-admin-users.sql")
-    void testGetAzureUserInfo() throws Exception {
-        SystemAdminAccount systemAdmin = new SystemAdminAccount();
-        systemAdmin.setFirstName(TEST_SYS_ADMIN_FIRSTNAME);
-        systemAdmin.setSurname(TEST_SYS_ADMIN_SURNAME);
-        systemAdmin.setEmail(TEST_SYS_ADMIN_EMAIL);
-
-        MockHttpServletRequestBuilder createRequest =
-            MockMvcRequestBuilders
-                .post(CREATE_SYSTEM_ADMIN_URL)
-                .content(OBJECT_MAPPER.writeValueAsString(systemAdmin))
-                .header(ISSUER_HEADER, SYSTEM_ADMIN_ISSUER_ID)
-                .contentType(MediaType.APPLICATION_JSON);
-
-        MvcResult responseCreateSystemAdminUser = mockMvc.perform(createRequest)
-            .andExpect(status().isOk()).andReturn();
-
-        PiUser returnedUser = OBJECT_MAPPER.readValue(
-            responseCreateSystemAdminUser.getResponse().getContentAsString(),
-            PiUser.class
-        );
-
-        MockHttpServletRequestBuilder getRequest = MockMvcRequestBuilders
-            .get(ROOT_URL + AZURE_PATH + returnedUser.getProvenanceUserId());
-
-        MvcResult responseGetUser =
-            mockMvc.perform(getRequest).andExpect(status().isOk()).andReturn();
-
-        AzureAccount returnedAzureAccount = OBJECT_MAPPER.readValue(
-            responseGetUser.getResponse().getContentAsString(),
-            AzureAccount.class
-        );
-        assertEquals(returnedUser.getEmail(), returnedAzureAccount.getEmail(),
-                     "Should return the correct user"
         );
     }
 

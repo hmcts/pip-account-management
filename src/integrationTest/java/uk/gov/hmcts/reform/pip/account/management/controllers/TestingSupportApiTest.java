@@ -1,7 +1,5 @@
 package uk.gov.hmcts.reform.pip.account.management.controllers;
 
-import com.azure.storage.blob.BlobClient;
-import com.azure.storage.blob.BlobContainerClient;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.graph.models.User;
@@ -13,7 +11,6 @@ import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -21,18 +18,19 @@ import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import uk.gov.hmcts.reform.pip.account.management.Application;
-import uk.gov.hmcts.reform.pip.account.management.config.AzureConfigurationClientTestConfiguration;
 import uk.gov.hmcts.reform.pip.account.management.config.ClientConfiguration;
 import uk.gov.hmcts.reform.pip.account.management.model.AzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.MediaApplication;
 import uk.gov.hmcts.reform.pip.account.management.model.MediaApplicationStatus;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
+import uk.gov.hmcts.reform.pip.account.management.utils.IntegrationTestBase;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
 
@@ -51,16 +49,13 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest(classes = {AzureConfigurationClientTestConfiguration.class, Application.class},
-    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(classes = {Application.class}, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
-@ActiveProfiles(profiles = "integration")
+@ActiveProfiles("integration")
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
 @WithMockUser(username = "admin", authorities = {"APPROLE_api.request.admin"})
-
-@SuppressWarnings({"PMD.TooManyMethods", "PMD.ExcessiveImports",
-    "PMD.UnitTestShouldIncludeAssert", "PMD.CouplingBetweenObjects"})
-class TestingSupportApiTest {
+@SuppressWarnings({"PMD.TooManyMethods", "PMD.ExcessiveImports", "PMD.UnitTestShouldIncludeAssert"})
+class TestingSupportApiTest extends IntegrationTestBase {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private static final String TESTING_SUPPORT_BASE_URL = "/testing-support/";
@@ -71,7 +66,6 @@ class TestingSupportApiTest {
     private static final String ACCOUNT_URL = "/account/";
     private static final String ACCOUNT_ADD_USER_URL = ACCOUNT_URL + "add/pi";
     private static final String APPLICATION_URL = "/application";
-    private static final String BLOB_IMAGE_URL = "https://localhost";
     private static final String B2C_URL = "URL";
 
     private static final String ISSUER_HEADER = "x-issuer-id";
@@ -98,13 +92,7 @@ class TestingSupportApiTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @Autowired
-    BlobContainerClient blobContainerClient;
-
-    @Autowired
-    BlobClient blobClient;
-
-    @Autowired
+    @MockitoBean
     GraphServiceClient graphClient;
 
     @Mock
@@ -156,9 +144,6 @@ class TestingSupportApiTest {
         assertEquals(EMAIL, createdAccount.getEmail(),
                      "Azure account creation error"
         );
-
-        //Reset azure mock setup
-        Mockito.reset(graphClient, usersRequestBuilder);
 
         //User mock setup
         when(graphClient.users()).thenReturn(usersRequestBuilder);
@@ -348,9 +333,6 @@ class TestingSupportApiTest {
             MockMultipartFile imageFile = new MockMultipartFile("file", "test-image.png",
                                                                 "", imageInputStream
             );
-
-            when(blobContainerClient.getBlobClient(any())).thenReturn(blobClient);
-            when(blobContainerClient.getBlobContainerUrl()).thenReturn(BLOB_IMAGE_URL);
 
             MockHttpServletRequestBuilder postRequest = multipart(APPLICATION_URL)
                 .file(imageFile)
