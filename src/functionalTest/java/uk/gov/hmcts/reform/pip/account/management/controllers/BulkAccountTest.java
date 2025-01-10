@@ -5,13 +5,8 @@ import io.restassured.response.Response;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
-import uk.gov.hmcts.reform.pip.account.management.utils.FunctionalTestBase;
-import uk.gov.hmcts.reform.pip.account.management.utils.OAuthClient;
+import uk.gov.hmcts.reform.pip.account.management.utils.AccountHelperBase;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -24,22 +19,15 @@ import java.util.concurrent.ThreadLocalRandom;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
-@ExtendWith(SpringExtension.class)
-@ActiveProfiles(profiles = "functional")
-@SpringBootTest(classes = {OAuthClient.class})
-class BulkAccountTest extends FunctionalTestBase {
+class BulkAccountTest extends AccountHelperBase {
     private static final String USER_ID = UUID.randomUUID().toString();
     private static final String EMAIL_PREFIX = "pip-am-test-email-";
     private static final String TEST_SUITE_PREFIX = String.format("%s-",
         ThreadLocalRandom.current().nextInt(1000, 9999));
     private static final String TEST_SUITE_EMAIL_PREFIX = EMAIL_PREFIX + TEST_SUITE_PREFIX;
     private static final String BULK_UPLOAD_URL = "account/media-bulk-upload";
-    private static final String TESTING_SUPPORT_ACCOUNT_URL = "/testing-support/account/";
-    private static final String BEARER = "Bearer ";
-    private static final String ISSUER_ID = "x-issuer-id";
 
     private String mockFile;
-    private Map<String, String> bearer;
     private Map<String, String> issuerId;
 
     @BeforeAll
@@ -70,7 +58,7 @@ class BulkAccountTest extends FunctionalTestBase {
 
     @AfterAll
     public void teardown() throws IOException {
-        doDeleteRequest(TESTING_SUPPORT_ACCOUNT_URL + TEST_SUITE_EMAIL_PREFIX, bearer);
+        doDeleteRequest(TESTING_SUPPORT_DELETE_ACCOUNT_URL + TEST_SUITE_EMAIL_PREFIX, bearer);
         Files.deleteIfExists(Path.of(mockFile));
     }
 
