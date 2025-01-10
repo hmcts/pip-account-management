@@ -82,7 +82,6 @@ class TestingSupportApiTest extends IntegrationTestBase {
     private static final String EMAIL = EMAIL_PREFIX + "user123@test.com";
     private static final String PASSWORD = "P@55word11";
     private static final String ID = "1234";
-    private static final UUID USER_ID = UUID.randomUUID();
 
     private static final String PROVENANCE_USER_ID = UUID.randomUUID().toString();
     private static final UserProvenances PROVENANCE = UserProvenances.PI_AAD;
@@ -404,7 +403,6 @@ class TestingSupportApiTest extends IntegrationTestBase {
     @SuppressWarnings("PMD.SignatureDeclareThrowsException")
     private AuditLog createAuditLog() throws Exception {
         AuditLog auditLog = new AuditLog();
-        auditLog.setId(USER_ID);
         auditLog.setUserId(ID);
         auditLog.setUserEmail(EMAIL);
         auditLog.setRoles(ROLE);
