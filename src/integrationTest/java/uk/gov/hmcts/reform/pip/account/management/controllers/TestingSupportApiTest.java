@@ -25,6 +25,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import uk.gov.hmcts.reform.pip.account.management.Application;
 import uk.gov.hmcts.reform.pip.account.management.config.ClientConfiguration;
+import uk.gov.hmcts.reform.pip.account.management.model.AuditLog;
 import uk.gov.hmcts.reform.pip.account.management.model.AzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.MediaApplication;
@@ -33,8 +34,10 @@ import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
 import uk.gov.hmcts.reform.pip.account.management.utils.IntegrationTestBase;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
+import uk.gov.hmcts.reform.pip.model.enums.AuditAction;
 
 import java.io.InputStream;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -47,14 +50,17 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static uk.gov.hmcts.reform.pip.model.enums.AuditAction.PUBLICATION_UPLOAD;
 
 @SpringBootTest(classes = {Application.class}, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 @ActiveProfiles("integration")
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
 @WithMockUser(username = "admin", authorities = {"APPROLE_api.request.admin"})
-@SuppressWarnings({"PMD.TooManyMethods", "PMD.ExcessiveImports", "PMD.UnitTestShouldIncludeAssert"})
+@SuppressWarnings({"PMD.TooManyMethods", "PMD.ExcessiveImports", "PMD.UnitTestShouldIncludeAssert",
+    "PMD.CouplingBetweenObjects"})
 class TestingSupportApiTest extends IntegrationTestBase {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
@@ -62,6 +68,7 @@ class TestingSupportApiTest extends IntegrationTestBase {
     private static final String TESTING_SUPPORT_ACCOUNT_URL = TESTING_SUPPORT_BASE_URL + "account/";
     private static final String TESTING_SUPPORT_APPLICATION_URL = TESTING_SUPPORT_BASE_URL + "application/";
     private static final String TESTING_SUPPORT_CREATE_ACCOUNT_URL = TESTING_SUPPORT_BASE_URL + "account";
+    private static final String TESTING_SUPPORT_AUDIT_URL = TESTING_SUPPORT_BASE_URL + "audit/";
 
     private static final String ACCOUNT_URL = "/account/";
     private static final String ACCOUNT_ADD_USER_URL = ACCOUNT_URL + "add/pi";
@@ -85,6 +92,10 @@ class TestingSupportApiTest extends IntegrationTestBase {
     private static final String FULL_NAME = "Test user";
     private static final String EMPLOYER = "Test employer";
     private static final MediaApplicationStatus PENDING_STATUS = MediaApplicationStatus.PENDING;
+
+    private static final String AUDIT_URL = "/audit";
+    private static final AuditAction ACTION = PUBLICATION_UPLOAD;
+    private static final String DETAILS = "Publication successfully uploaded";
 
     private static final String UNAUTHORIZED_ROLE = "APPROLE_unknown.authorized";
     private static final String UNAUTHORIZED_USERNAME = "unauthorized_isAuthorized";
@@ -283,6 +294,42 @@ class TestingSupportApiTest extends IntegrationTestBase {
     }
 
     @Test
+    void testTestingSupportDeleteAuditLogsWithEmailPrefix() throws Exception {
+        AuditLog auditLog = createAuditLog();
+
+        mockMvc.perform(get(AUDIT_URL + "/" + auditLog.getId()))
+            .andExpect(status().isOk());
+
+        MvcResult deleteResponse = mockMvc.perform(delete(TESTING_SUPPORT_AUDIT_URL + EMAIL_PREFIX))
+            .andExpect(status().isOk())
+            .andReturn();
+
+        assertThat(deleteResponse.getResponse().getContentAsString())
+            .as("Audit Log delete response does not match")
+            .isEqualTo("2 audit log(s) deleted with user email starting with " + EMAIL_PREFIX);
+
+        mockMvc.perform(get(AUDIT_URL + "/" + auditLog.getId()))
+            .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void testTestingSupportUpdateAuditLogTimestampWithId() throws Exception {
+        AuditLog auditLog = createAuditLog();
+        LocalDate expiredDate = auditLog.getTimestamp().minusDays(200).toLocalDate();
+
+        mockMvc.perform(get(AUDIT_URL + "/" + auditLog.getId()))
+            .andExpect(status().isOk());
+
+        MvcResult updateAudit = mockMvc.perform(put(TESTING_SUPPORT_AUDIT_URL + auditLog.getId()))
+            .andExpect(status().isOk())
+            .andReturn();
+
+        assertThat(updateAudit.getResponse().getContentAsString())
+            .as("Audit Log update response does not match")
+            .contains("1 audit log(s) updated with timestamp " + expiredDate);
+    }
+
+    @Test
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testUnauthorisedTestingSupportDeleteAccounts() throws Exception {
         mockMvc.perform(delete(TESTING_SUPPORT_ACCOUNT_URL + EMAIL_PREFIX))
@@ -293,6 +340,13 @@ class TestingSupportApiTest extends IntegrationTestBase {
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testUnauthorisedTestingSupportDeleteApplications() throws Exception {
         mockMvc.perform(delete(TESTING_SUPPORT_APPLICATION_URL + EMAIL_PREFIX))
+            .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
+    void testUnauthorisedTestingSupportDeleteAudits() throws Exception {
+        mockMvc.perform(delete(TESTING_SUPPORT_AUDIT_URL + EMAIL_PREFIX))
             .andExpect(status().isForbidden());
     }
 
@@ -317,7 +371,6 @@ class TestingSupportApiTest extends IntegrationTestBase {
         newAccount.setSurname(SURNAME);
         return newAccount;
     }
-
 
     @SuppressWarnings("PMD.SignatureDeclareThrowsException")
     private MediaApplication createApplication() throws Exception {
@@ -346,4 +399,28 @@ class TestingSupportApiTest extends IntegrationTestBase {
             return OBJECT_MAPPER.readValue(mvcResult.getResponse().getContentAsString(), MediaApplication.class);
         }
     }
+
+    @SuppressWarnings("PMD.SignatureDeclareThrowsException")
+    private AuditLog createAuditLog() throws Exception {
+        AuditLog auditLog = new AuditLog();
+        auditLog.setUserId(ID);
+        auditLog.setUserEmail(EMAIL);
+        auditLog.setRoles(ROLE);
+        auditLog.setUserProvenance(PROVENANCE);
+        auditLog.setAction(ACTION);
+        auditLog.setDetails(DETAILS);
+
+        MockHttpServletRequestBuilder postRequest = MockMvcRequestBuilders
+            .post(AUDIT_URL)
+            .content(OBJECT_MAPPER.writeValueAsString(auditLog))
+            .header(ISSUER_HEADER, ISSUER_ID)
+            .contentType(MediaType.APPLICATION_JSON);
+
+        MvcResult mvcResult = mockMvc.perform(postRequest)
+            .andExpect(status().isOk())
+            .andReturn();
+
+        return OBJECT_MAPPER.readValue(mvcResult.getResponse().getContentAsString(), AuditLog.class);
+    }
+
 }

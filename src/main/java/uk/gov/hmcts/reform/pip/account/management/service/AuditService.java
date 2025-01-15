@@ -1,7 +1,7 @@
 package uk.gov.hmcts.reform.pip.account.management.service;
 
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -24,15 +24,11 @@ import java.util.UUID;
  */
 @Slf4j
 @Service
+@AllArgsConstructor
 public class AuditService {
     private static final String AUDIT_LOG_NOT_FOUND = "Audit log with id %s could not be found";
 
     private final AuditRepository auditRepository;
-
-    @Autowired
-    public AuditService(AuditRepository auditRepository) {
-        this.auditRepository = auditRepository;
-    }
 
     /**
      * Get all audit logs in a page object and descending order on timestamp.
@@ -101,5 +97,30 @@ public class AuditService {
     public String deleteAuditLogs() {
         auditRepository.deleteAllByTimestampBefore(LocalDateTime.now().minusDays(90));
         return "Audit logs that met the max retention period have been deleted";
+    }
+
+    public String deleteAllLogsWithUserEmailPrefix(String prefix) {
+        List<AuditLog> auditLogsToDelete = auditRepository
+            .findAllByUserEmailStartingWithIgnoreCase(prefix);
+
+        if (!auditLogsToDelete.isEmpty()) {
+            List<UUID> auditLogIds = auditLogsToDelete.stream()
+                .map(AuditLog::getId)
+                .toList();
+            auditRepository.deleteByIdIn(auditLogIds);
+        }
+        return String.format("%s audit log(s) deleted with user email starting with %s",
+                             auditLogsToDelete.size(), prefix);
+    }
+
+    public String updateAuditTimestampWithAuditId(String auditId) {
+        AuditLog auditLogToUpdate = getAuditLogById(UUID.fromString(auditId));
+
+        LocalDateTime expired = LocalDateTime.now().minusDays(200);
+
+        auditLogToUpdate.setTimestamp(expired);
+        auditRepository.save(auditLogToUpdate);
+
+        return String.format("1 audit log(s) updated with timestamp %s", expired);
     }
 }
