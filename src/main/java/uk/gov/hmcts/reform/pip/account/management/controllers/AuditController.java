@@ -5,7 +5,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -34,6 +34,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 @ApiResponse(responseCode = "401", description = "Invalid access credential")
 @ApiResponse(responseCode = "403", description = "User has not been authorized")
 @IsAdmin
+@AllArgsConstructor
 @SecurityRequirement(name = "bearerAuth")
 public class AuditController {
 
@@ -41,11 +42,6 @@ public class AuditController {
 
     private static final String OK_ERROR_CODE = "200";
     private static final String NOT_FOUND_ERROR_CODE = "404";
-
-    @Autowired
-    public AuditController(AuditService auditService) {
-        this.auditService = auditService;
-    }
 
     @ApiResponse(responseCode = OK_ERROR_CODE, description = "All audit logs returned as a page with filtering.")
     @Operation(summary = "Get all audit logs returned as a page")
