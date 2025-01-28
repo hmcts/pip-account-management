@@ -11,12 +11,14 @@ import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
 import uk.gov.hmcts.reform.pip.account.management.service.AccountFilteringService;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
+import uk.gov.hmcts.reform.pip.model.report.AccountMiData;
 
 import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -35,6 +37,17 @@ class AccountFilteringControllerTest {
         assertEquals(HttpStatus.OK,
                      accountFilteringController.getMiData().getStatusCode(),
                      STATUS_CODE_MATCH);
+    }
+
+    @Test
+    void testMiDataV2ReturnsOk() {
+        AccountMiData accountMiData = new AccountMiData();
+        accountMiData.setProvenanceUserId("1234");
+
+        when(accountFilteringService.getAccountDataForMi()).thenReturn(List.of(accountMiData));
+        ResponseEntity<List<AccountMiData>> listAccountMiData = accountFilteringController.getMiDataV2();
+        assertEquals(HttpStatus.OK, listAccountMiData.getStatusCode(), STATUS_CODE_MATCH);
+        assertTrue(listAccountMiData.getBody().contains(accountMiData), "Expected Account MI Data not found");
     }
 
     @Test

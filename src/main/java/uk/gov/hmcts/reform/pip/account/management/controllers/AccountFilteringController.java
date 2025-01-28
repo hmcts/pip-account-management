@@ -26,6 +26,7 @@ import uk.gov.hmcts.reform.pip.account.management.service.AccountFilteringServic
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
 import uk.gov.hmcts.reform.pip.model.authentication.roles.IsAdmin;
+import uk.gov.hmcts.reform.pip.model.report.AccountMiData;
 
 import java.util.List;
 
@@ -61,8 +62,16 @@ public class AccountFilteringController {
     @Operation(summary = "Returns a list of (anonymized) account data for MI reporting. This endpoint will be "
         + "deprecated in the future, in favour of returning a JSON model")
     @GetMapping("/mi-data")
+    @Deprecated
     public ResponseEntity<String> getMiData() {
         return ResponseEntity.status(HttpStatus.OK).body(accountFilteringService.getAccManDataForMiReporting());
+    }
+
+    @ApiResponse(responseCode = OK_CODE, description = "List of Accounts MI Data")
+    @Operation(summary = "Returns anonymized account data for MI reporting")
+    @GetMapping("/v2/mi-data")
+    public ResponseEntity<List<AccountMiData>> getMiDataV2() {
+        return ResponseEntity.status(HttpStatus.OK).body(accountFilteringService.getAccountDataForMi());
     }
 
     @ApiResponse(responseCode = OK_CODE, description = "List of third party accounts")

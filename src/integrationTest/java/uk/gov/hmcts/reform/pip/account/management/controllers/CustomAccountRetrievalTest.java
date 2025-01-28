@@ -21,11 +21,14 @@ import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
+import uk.gov.hmcts.reform.pip.model.report.AccountMiData;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.http.HttpStatus.FORBIDDEN;
@@ -45,6 +48,7 @@ class CustomAccountRetrievalTest {
     private static final String PI_URL = ROOT_URL + "/add/pi";
     private static final String GET_ALL_ACCOUNTS_EXCEPT_THIRD_PARTY = ROOT_URL + "/all";
     private static final String MI_REPORTING_ACCOUNT_DATA_URL = ROOT_URL + "/mi-data";
+    private static final String MI_REPORTING_ACCOUNT_DATA_URL_V2 = ROOT_URL + "/v2/mi-data";
 
     private static final String EMAIL = "test_account_admin@hmcts.net";
     private static final String INVALID_EMAIL = "ab";
@@ -126,6 +130,59 @@ class CustomAccountRetrievalTest {
     void testUnauthorizedGetMiData() throws Exception {
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .get(MI_REPORTING_ACCOUNT_DATA_URL);
+
+        MvcResult response = mockMvc.perform(request).andExpect(status().isForbidden()).andReturn();
+        assertEquals(FORBIDDEN.value(), response.getResponse().getStatus(),
+                     FORBIDDEN_STATUS_CODE
+        );
+    }
+
+
+    @Test
+    void testMiDataV2() throws Exception {
+        String provenanceId = UUID.randomUUID().toString();
+        VALID_USER.setProvenanceUserId(provenanceId);
+        MockHttpServletRequestBuilder createRequest =
+            MockMvcRequestBuilders
+                .post(PI_URL)
+                .content(OBJECT_MAPPER.writeValueAsString(List.of(VALID_USER)))
+                .header(ISSUER_HEADER, ISSUER_ID)
+                .contentType(MediaType.APPLICATION_JSON);
+
+        MvcResult responseCreateUser = mockMvc.perform(createRequest)
+            .andExpect(status().isCreated()).andReturn();
+        Map<CreationEnum, List<Object>> mappedResponse =
+            OBJECT_MAPPER.readValue(
+                responseCreateUser.getResponse().getContentAsString(),
+                new TypeReference<>() {
+                }
+            );
+
+        String createdUserId = mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).get(0).toString();
+
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+            .get(MI_REPORTING_ACCOUNT_DATA_URL_V2);
+
+        MvcResult miDataResponse = mockMvc.perform(request).andExpect(status().isOk()).andReturn();
+        List<AccountMiData> accountMiData =
+            Arrays.stream(OBJECT_MAPPER.readValue(
+                miDataResponse.getResponse().getContentAsString(), AccountMiData[].class)).toList();
+
+        assertThat(accountMiData)
+            .as("Returned account MI data must match user object")
+            .anyMatch(account -> createdUserId.equals(account.getUserId().toString())
+                && provenanceId.equals(account.getProvenanceUserId())
+                && UserProvenances.PI_AAD.equals(account.getUserProvenance())
+                && Roles.INTERNAL_ADMIN_CTSC.equals(account.getRoles())
+                && account.getCreatedDate() != null
+                && account.getLastSignedInDate() != null);
+    }
+
+    @Test
+    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
+    void testUnauthorizedGetMiDataV2() throws Exception {
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+            .get(MI_REPORTING_ACCOUNT_DATA_URL_V2);
 
         MvcResult response = mockMvc.perform(request).andExpect(status().isForbidden()).andReturn();
         assertEquals(FORBIDDEN.value(), response.getResponse().getStatus(),
