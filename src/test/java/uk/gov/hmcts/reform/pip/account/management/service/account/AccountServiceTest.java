@@ -25,7 +25,7 @@ import uk.gov.hmcts.reform.pip.account.management.model.account.PiUser;
 import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredAzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredPiUser;
 import uk.gov.hmcts.reform.pip.account.management.service.SensitivityService;
-import uk.gov.hmcts.reform.pip.account.management.service.SubscriptionService;
+import uk.gov.hmcts.reform.pip.account.management.service.subscription.UserSubscriptionService;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
 import uk.gov.hmcts.reform.pip.model.publication.ListType;
@@ -78,7 +78,7 @@ class AccountServiceTest {
     private SensitivityService sensitivityService;
 
     @Mock
-    private SubscriptionService subscriptionService;
+    private UserSubscriptionService userSubscriptionService;
 
     @Mock
     AzureAccountService azureAccountService;
@@ -286,15 +286,14 @@ class AccountServiceTest {
 
         doNothing().when(userRepository).delete(PI_USER);
         doNothing().when(azureUserService).deleteUser(PI_USER.getProvenanceUserId());
-        when(subscriptionService.sendSubscriptionDeletionRequest(VALID_USER_ID.toString()))
+        when(userSubscriptionService.deleteAllByUserId(VALID_USER_ID.toString()))
             .thenReturn(SUBSCRIPTIONS_DELETED);
 
         accountService.deleteAccount(USER_UUID);
 
-        verify(azureUserService, times(1)).deleteUser(PI_USER.getProvenanceUserId());
-        verify(subscriptionService, times(1))
-            .sendSubscriptionDeletionRequest(VALID_USER_ID.toString());
-        verify(userRepository, times(1)).delete(PI_USER);
+        verify(azureUserService).deleteUser(PI_USER.getProvenanceUserId());
+        verify(userSubscriptionService).deleteAllByUserId(VALID_USER_ID.toString());
+        verify(userRepository).delete(PI_USER);
     }
 
     @Test
@@ -302,13 +301,13 @@ class AccountServiceTest {
         when(userRepository.findByUserId(VALID_USER_ID_SSO)).thenReturn(Optional.of(PI_USER_SSO));
 
         doNothing().when(userRepository).delete(PI_USER_SSO);
-        when(subscriptionService.sendSubscriptionDeletionRequest(VALID_USER_ID_SSO.toString()))
+        when(userSubscriptionService.deleteAllByUserId(VALID_USER_ID_SSO.toString()))
             .thenReturn(SUBSCRIPTIONS_DELETED);
 
         accountService.deleteAccount(VALID_USER_ID_SSO);
 
         verifyNoInteractions(azureUserService);
-        verify(subscriptionService).sendSubscriptionDeletionRequest(VALID_USER_ID_SSO.toString());
+        verify(userSubscriptionService).deleteAllByUserId(VALID_USER_ID_SSO.toString());
         verify(userRepository).delete(PI_USER_SSO);
     }
 
@@ -317,13 +316,13 @@ class AccountServiceTest {
         when(userRepository.findByUserId(VALID_USER_ID_IDAM)).thenReturn(Optional.of(PI_USER_IDAM));
 
         doNothing().when(userRepository).delete(PI_USER_IDAM);
-        when(subscriptionService.sendSubscriptionDeletionRequest(VALID_USER_ID_IDAM.toString()))
+        when(userSubscriptionService.deleteAllByUserId(VALID_USER_ID_IDAM.toString()))
             .thenReturn(SUBSCRIPTIONS_DELETED);
 
         accountService.deleteAccount(VALID_USER_ID_IDAM);
 
         verifyNoInteractions(azureUserService);
-        verify(subscriptionService).sendSubscriptionDeletionRequest(VALID_USER_ID_IDAM.toString());
+        verify(userSubscriptionService).deleteAllByUserId(VALID_USER_ID_IDAM.toString());
         verify(userRepository).delete(PI_USER_IDAM);
     }
 
@@ -345,7 +344,7 @@ class AccountServiceTest {
 
         doNothing().when(userRepository).delete(PI_USER);
         doThrow(new AzureCustomException(TEST)).when(azureUserService).deleteUser(PI_USER.getProvenanceUserId());
-        when(subscriptionService.sendSubscriptionDeletionRequest(VALID_USER_ID.toString()))
+        when(userSubscriptionService.deleteAllByUserId(VALID_USER_ID.toString()))
             .thenReturn(SUBSCRIPTIONS_DELETED);
 
         try (LogCaptor logCaptor = LogCaptor.forClass(AccountService.class)) {
@@ -380,7 +379,7 @@ class AccountServiceTest {
             .isEqualTo("2 account(s) deleted with email starting with " + EMAIL_PREFIX);
 
         verify(azureUserService, times(2)).deleteUser(any());
-        verify(subscriptionService, times(2)).sendSubscriptionDeletionRequest(any());
+        verify(userSubscriptionService, times(2)).deleteAllByUserId(any());
         verify(userRepository, times(2)).delete(any());
     }
 
@@ -396,7 +395,7 @@ class AccountServiceTest {
 
         verify(userRepository, never()).findByUserId(any());
         verify(azureUserService, never()).deleteUser(any());
-        verify(subscriptionService, never()).sendSubscriptionDeletionRequest(any());
+        verify(userSubscriptionService, never()).deleteAllByUserId(any());
         verify(userRepository, never()).delete(any());
     }
 

@@ -19,8 +19,8 @@ import uk.gov.hmcts.reform.pip.account.management.model.account.PiUser;
 import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredAzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredPiUser;
 import uk.gov.hmcts.reform.pip.account.management.service.SensitivityService;
-import uk.gov.hmcts.reform.pip.account.management.service.SubscriptionService;
 import uk.gov.hmcts.reform.pip.account.management.service.helpers.DateTimeHelper;
+import uk.gov.hmcts.reform.pip.account.management.service.subscription.UserSubscriptionService;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
 import uk.gov.hmcts.reform.pip.model.enums.UserActions;
@@ -54,18 +54,12 @@ public class AccountService {
     private static final int MAX_PAGE_SIZE = 25;
 
     private final Validator validator;
-
     private final AzureUserService azureUserService;
-
     private final AzureAccountService azureAccountService;
-
     private final AccountFilteringService accountFilteringService;
-
     private final UserRepository userRepository;
-
     private final SensitivityService sensitivityService;
-
-    private final SubscriptionService subscriptionService;
+    private final UserSubscriptionService userSubscriptionService;
 
     @Autowired
     public AccountService(
@@ -75,15 +69,14 @@ public class AccountService {
         AccountFilteringService accountFilteringService,
         UserRepository userRepository,
         SensitivityService sensitivityService,
-        SubscriptionService subscriptionService
-    ) {
+        UserSubscriptionService userSubscriptionService) {
         this.validator = validator;
         this.azureUserService = azureUserService;
         this.azureAccountService = azureAccountService;
         this.accountFilteringService = accountFilteringService;
         this.userRepository = userRepository;
         this.sensitivityService = sensitivityService;
-        this.subscriptionService = subscriptionService;
+        this.userSubscriptionService = userSubscriptionService;
     }
 
     /**
@@ -208,7 +201,7 @@ public class AccountService {
                                             userToDelete.getProvenanceUserId(), ex.getMessage())));
         }
 
-        subscriptionService.sendSubscriptionDeletionRequest(userToDelete.getUserId().toString());
+        userSubscriptionService.deleteAllByUserId(userToDelete.getUserId().toString());
         userRepository.delete(userToDelete);
         return String.format("User with ID %s has been deleted", userToDelete.getUserId());
     }
