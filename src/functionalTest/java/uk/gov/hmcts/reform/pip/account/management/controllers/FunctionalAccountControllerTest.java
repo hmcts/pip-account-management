@@ -38,7 +38,6 @@ class FunctionalAccountControllerTest extends AccountHelperBase {
     private static final String GET_BY_PROVENANCE_ID = "/account/provenance/PI_AAD/%s";
     private static final String GET_BY_USER_ID = "/account/%s";
     private static final String USER_IS_AUTHORISED_FOR_LIST = "/account/isAuthorised/%s/%s/%s";
-    private static final String MAP_EMAILS = "/account/emails";
     private static final String UPDATE_ACCOUNT = "/account/provenance/PI_AAD/%s";
     private static final String DELETE_ENDPOINT = "/account/delete/%s";
     private static final String DELETE_ENDPOINT_V2 = "/account/v2/%s";
@@ -200,28 +199,6 @@ class FunctionalAccountControllerTest extends AccountHelperBase {
 
         assertThat(getUserResponse.getStatusCode()).isEqualTo(OK.value());
         assertThat(getUserResponse.getBody().as(Boolean.class)).isFalse();
-    }
-
-    @Test
-    void shouldBeAbleToMapUserEmails() throws Exception {
-        String createdUserId = getCreatedAccountUserId(createAccount(email, provenanceId));
-
-        String unknownUserId = UUID.randomUUID().toString();
-
-        Response getEmailsResponse = doPostRequest(MAP_EMAILS, bearer,
-                                                   objectMapper.writeValueAsString(
-                                                     List.of(createdUserId, unknownUserId)));
-
-        assertThat(getEmailsResponse.getStatusCode()).isEqualTo(OK.value());
-
-        Map<String, Optional<String>> responseBody = getEmailsResponse.getBody().as(EMAILS_RESPONSE_TYPE);
-
-        assertThat(responseBody).matches(map -> map.containsKey(createdUserId));
-        assertThat(responseBody).matches(map -> map.containsKey(unknownUserId));
-
-        assertThat(responseBody.get(createdUserId)).isPresent().matches(returnedEmail ->
-                                                                            returnedEmail.get().equals(email));
-        assertThat(responseBody.get(unknownUserId)).isNotPresent();
     }
 
     @Test

@@ -76,7 +76,6 @@ class AccountTest extends IntegrationTestBase {
     private static final String CREATE_MEDIA_USER_URL = "/application";
     private static final String GET_PROVENANCE_USER_URL = ROOT_URL + "/provenance/";
     private static final String UPDATE_ACCOUNT_URL = ROOT_URL + "/provenance/";
-    private static final String EMAIL_URL = ROOT_URL + "/emails";
     private static final String CREATE_SYSTEM_ADMIN_URL = ROOT_URL + "/add/system-admin";
 
     private static final String EMAIL = "test_account_admin@hmcts.net";
@@ -99,7 +98,6 @@ class AccountTest extends IntegrationTestBase {
 
     private static final String ERROR_RESPONSE_USER_PROVENANCE = "No user found with provenance user ID: 1234";
     private static final String NOT_FOUND_STATUS_CODE_MESSAGE = "Status code does not match not found";
-    private static final String TEST_UUID_STRING = UUID.randomUUID().toString();
     private static final String USER_SHOULD_MATCH = "Users should match";
     private static final String DELETE_PATH = "/delete/";
     private static final String DELETE_PATH_V2 = "/v2/";
@@ -408,21 +406,6 @@ class AccountTest extends IntegrationTestBase {
         assertTrue(
             response.getResponse().getContentAsString().contains(ERROR_RESPONSE_USER_PROVENANCE),
             "Should contain error message"
-        );
-    }
-
-    @Test
-    void testGetUserEmailsByIds() throws Exception {
-        MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
-            .post(EMAIL_URL)
-            .content(OBJECT_MAPPER.writeValueAsString(List.of(TEST_UUID_STRING)))
-            .contentType(MediaType.APPLICATION_JSON);
-
-        MvcResult mvcResult =
-            mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isOk()).andReturn();
-
-        assertEquals(OK.value(), mvcResult.getResponse().getStatus(),
-                     "Status codes does match OK"
         );
     }
 
@@ -944,21 +927,6 @@ class AccountTest extends IntegrationTestBase {
             .get(String.format("%s/isAuthorised/%s/%s/%s", ROOT_URL, UUID.randomUUID(),
                                ListType.SJP_PRESS_LIST, Sensitivity.PUBLIC
             ));
-
-        MvcResult mvcResult = mockMvc.perform(request).andExpect(status().isForbidden()).andReturn();
-
-        assertEquals(FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
-                     FORBIDDEN_STATUS_CODE
-        );
-    }
-
-    @Test
-    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
-    void testUnauthorizedGetUserEmailsByIds() throws Exception {
-        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
-            .post(EMAIL_URL)
-            .content(OBJECT_MAPPER.writeValueAsString(List.of(TEST_UUID_STRING)))
-            .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult mvcResult = mockMvc.perform(request).andExpect(status().isForbidden()).andReturn();
 

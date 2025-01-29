@@ -29,7 +29,6 @@ import uk.gov.hmcts.reform.pip.model.publication.Sensitivity;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
 
 @RestController
@@ -103,13 +102,6 @@ public class AccountController {
                                                        @PathVariable ListType listType,
                                                        @PathVariable Sensitivity sensitivity) {
         return ResponseEntity.ok(accountService.isUserAuthorisedForPublication(userId, listType, sensitivity));
-    }
-
-    @ApiResponse(responseCode = OK_CODE, description = "{Map<String, Optional>}")
-    @Operation(summary = "Get a map of userId and email from a list of userIds")
-    @PostMapping("/emails")
-    public ResponseEntity<Map<String, Optional<String>>> getUserEmailsByIds(@RequestBody List<String> userIdsList) {
-        return ResponseEntity.ok(accountService.findUserEmailsByIds(userIdsList));
     }
 
     @ApiResponse(responseCode = OK_CODE, description = "Account with provenance {userProvenance} and provenance id "
