@@ -48,7 +48,6 @@ class SubscriptionControllerTest {
     private static final List<String> LIST_LANGUAGE = Arrays.asList("ENGLISH");
     private static final String LOCATION_ID = "1";
     private static final String ACTIONING_USER_ID = "1234-1234";
-    private static final String REQUESTER_NAME = "ReqName";
     private static final String USER_ID = UUID.randomUUID().toString();
 
     @Mock
@@ -246,17 +245,6 @@ class SubscriptionControllerTest {
             ),
             subscriptionController.configureListTypesForSubscription(USER_ID, subscriptionListType),
                 RETURNED_SUBSCRIPTION_NOT_MATCHED
-        );
-    }
-
-    @Test
-    void testDeleteSubscriptionsByUserId() {
-        when(userSubscriptionService.deleteAllByUserId("test string")).thenReturn(
-            "All subscriptions deleted for user id");
-        assertEquals(
-            "All subscriptions deleted for user id",
-            subscriptionController.deleteAllSubscriptionsForUser("test string").getBody(),
-            "Subscription for user should be deleted"
         );
     }
 

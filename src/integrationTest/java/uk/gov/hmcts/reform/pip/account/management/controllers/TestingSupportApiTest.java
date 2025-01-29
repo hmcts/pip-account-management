@@ -31,13 +31,18 @@ import uk.gov.hmcts.reform.pip.account.management.model.account.AuditLog;
 import uk.gov.hmcts.reform.pip.account.management.model.account.AzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.account.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.account.PiUser;
+import uk.gov.hmcts.reform.pip.account.management.model.subscription.Subscription;
+import uk.gov.hmcts.reform.pip.account.management.model.subscription.usersubscription.UserSubscription;
 import uk.gov.hmcts.reform.pip.account.management.utils.IntegrationTestBase;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
 import uk.gov.hmcts.reform.pip.model.enums.AuditAction;
+import uk.gov.hmcts.reform.pip.model.subscription.Channel;
+import uk.gov.hmcts.reform.pip.model.subscription.SearchType;
 
 import java.io.InputStream;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -68,6 +73,7 @@ class TestingSupportApiTest extends IntegrationTestBase {
     private static final String TESTING_SUPPORT_ACCOUNT_URL = TESTING_SUPPORT_BASE_URL + "account/";
     private static final String TESTING_SUPPORT_APPLICATION_URL = TESTING_SUPPORT_BASE_URL + "application/";
     private static final String TESTING_SUPPORT_CREATE_ACCOUNT_URL = TESTING_SUPPORT_BASE_URL + "account";
+    private static final String TESTING_SUPPORT_SUBSCRIPTION_URL = TESTING_SUPPORT_BASE_URL + "subscription/";
     private static final String TESTING_SUPPORT_AUDIT_URL = TESTING_SUPPORT_BASE_URL + "audit/";
 
     private static final String ACCOUNT_URL = "/account/";
@@ -92,6 +98,16 @@ class TestingSupportApiTest extends IntegrationTestBase {
     private static final String FULL_NAME = "Test user";
     private static final String EMPLOYER = "Test employer";
     private static final MediaApplicationStatus PENDING_STATUS = MediaApplicationStatus.PENDING;
+
+    private static final String SUBSCRIPTION_PATH = "/subscription";
+    private static final String SUBSCRIPTION_BY_USER_PATH = "/subscription/user/%s";
+    private static final String LOCATION_NAME_PREFIX = "TEST_123_";
+    private static final String LOCATION_NAME = "Court1";
+    private static final String USER_ID_HEADER = "x-user-id";
+    private static final String ACTIONING_USER_ID = "1234-1234";
+
+    private static final String USER_ID = UUID.randomUUID().toString();
+    private static final String CASE_ID = "T485913";
 
     private static final String AUDIT_URL = "/audit";
     private static final AuditAction ACTION = PUBLICATION_UPLOAD;
@@ -294,6 +310,35 @@ class TestingSupportApiTest extends IntegrationTestBase {
     }
 
     @Test
+    void testTestingSupportDeleteSubscriptionsWithLocationNamePrefix() throws Exception {
+        Subscription subscription = createSubscription();
+
+        MockHttpServletRequestBuilder postRequest = MockMvcRequestBuilders.post(SUBSCRIPTION_PATH)
+            .content(OBJECT_MAPPER.writeValueAsString(subscription))
+            .header(USER_ID_HEADER, ACTIONING_USER_ID)
+            .contentType(MediaType.APPLICATION_JSON);
+
+        mockMvc.perform(postRequest)
+            .andExpect(status().isCreated());
+
+        MvcResult deleteResponse = mockMvc.perform(delete(TESTING_SUPPORT_SUBSCRIPTION_URL + LOCATION_NAME_PREFIX))
+            .andExpect(status().isOk())
+            .andReturn();
+
+        assertThat(deleteResponse.getResponse().getContentAsString())
+            .as("Subscription response does not match")
+            .isEqualTo("1 subscription(s) deleted for location name starting with " + LOCATION_NAME_PREFIX);
+
+        MvcResult mvcResult = mockMvc.perform(get(String.format(SUBSCRIPTION_BY_USER_PATH,  USER_ID))).andReturn();
+        UserSubscription userSubscription =
+            OBJECT_MAPPER.readValue(mvcResult.getResponse().getContentAsString(), UserSubscription.class);
+
+        assertThat(userSubscription.getLocationSubscriptions().size()).isEqualTo(0);
+        assertThat(userSubscription.getCaseSubscriptions().size()).isEqualTo(0);
+        assertThat(userSubscription.getListTypeSubscriptions().size()).isEqualTo(0);
+    }
+
+    @Test
     void testTestingSupportDeleteAuditLogsWithEmailPrefix() throws Exception {
         AuditLog auditLog = createAuditLog();
 
@@ -340,6 +385,13 @@ class TestingSupportApiTest extends IntegrationTestBase {
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testUnauthorisedTestingSupportDeleteApplications() throws Exception {
         mockMvc.perform(delete(TESTING_SUPPORT_APPLICATION_URL + EMAIL_PREFIX))
+            .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(username = "unauthorized_isAuthorized", authorities = {"APPROLE_unknown.authorized"})
+    void testUnauthorisedTestingSupportDeleteSubscriptions() throws Exception {
+        mockMvc.perform(delete(TESTING_SUPPORT_SUBSCRIPTION_URL + LOCATION_NAME_PREFIX))
             .andExpect(status().isForbidden());
     }
 
@@ -398,6 +450,20 @@ class TestingSupportApiTest extends IntegrationTestBase {
 
             return OBJECT_MAPPER.readValue(mvcResult.getResponse().getContentAsString(), MediaApplication.class);
         }
+    }
+
+    private Subscription createSubscription() {
+        Subscription subscription = new Subscription();
+
+        subscription.setLocationName(LOCATION_NAME_PREFIX + LOCATION_NAME);
+        subscription.setChannel(Channel.API_COURTEL);
+        subscription.setSearchType(SearchType.CASE_ID);
+        subscription.setSearchValue(CASE_ID);
+        subscription.setCaseNumber(CASE_ID);
+        subscription.setCreatedDate(LocalDateTime.now());
+        subscription.setUserId(USER_ID);
+
+        return subscription;
     }
 
     @SuppressWarnings("PMD.SignatureDeclareThrowsException")

@@ -218,14 +218,6 @@ public class SubscriptionController {
             .body(subscriptionService.getLocalSubscriptionsDataForMiReporting());
     }
 
-    @ApiResponse(responseCode = OK_CODE, description = "Deleted all subscriptions for user id {userId}")
-    @Operation(summary = "Deletes all subscriptions for the supplied user id")
-    @Transactional
-    @DeleteMapping("/user/{userId}")
-    public ResponseEntity<String> deleteAllSubscriptionsForUser(@Parameter @PathVariable String userId) {
-        return ResponseEntity.ok(userSubscriptionService.deleteAllByUserId(userId));
-    }
-
     @ApiResponse(responseCode = OK_CODE, description =
         "Subscriptions list for location id {locationId} found")
     @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description =
