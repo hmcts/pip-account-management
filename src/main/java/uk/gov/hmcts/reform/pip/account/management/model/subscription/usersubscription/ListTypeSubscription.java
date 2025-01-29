@@ -6,9 +6,6 @@ import uk.gov.hmcts.reform.pip.model.subscription.Channel;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-/**
- * Model which represents a list type subscription.
- */
 @Data
 public class ListTypeSubscription {
 
