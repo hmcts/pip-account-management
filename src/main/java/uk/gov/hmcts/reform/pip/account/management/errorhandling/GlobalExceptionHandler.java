@@ -12,7 +12,6 @@ import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.context.request.WebRequest;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.CsvParseException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.NotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.SubscriptionNotFoundException;
@@ -83,18 +82,13 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(SubscriptionNotFoundException.class)
-    public ResponseEntity<ExceptionResponse> handleSubscriptionNotFound(
-        SubscriptionNotFoundException ex, WebRequest request) {
+    public ResponseEntity<ExceptionResponse> handle(SubscriptionNotFoundException ex) {
 
         log.error(writeLog(
             "404, Subscription has not been found. Cause: " + ex.getMessage()));
 
-        ExceptionResponse exceptionResponse = new ExceptionResponse();
-        exceptionResponse.setMessage(ex.getMessage());
-        exceptionResponse.setTimestamp(LocalDateTime.now());
-
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
-            .body(exceptionResponse);
+            .body(generateExceptionResponse(ex.getMessage()));
     }
 
     @ExceptionHandler(CsvParseException.class)

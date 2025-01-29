@@ -12,7 +12,6 @@ import uk.gov.hmcts.reform.pip.account.management.model.subscription.usersubscri
 import uk.gov.hmcts.reform.pip.account.management.model.subscription.usersubscription.LocationSubscription;
 import uk.gov.hmcts.reform.pip.account.management.model.subscription.usersubscription.UserSubscription;
 
-
 import java.util.List;
 import java.util.Optional;
 

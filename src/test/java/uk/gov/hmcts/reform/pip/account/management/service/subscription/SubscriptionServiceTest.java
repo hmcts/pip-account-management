@@ -4,7 +4,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -40,6 +39,7 @@ import static uk.gov.hmcts.reform.pip.model.publication.ListType.CIVIL_DAILY_CAU
 
 @ActiveProfiles("non-async")
 @ExtendWith({MockitoExtension.class})
+@SuppressWarnings("PMD.TooManyMethods")
 class SubscriptionServiceTest {
     private static final String USER_ID = "Ralph21";
     private static final String SEARCH_VALUE = "193254";
@@ -75,9 +75,6 @@ class SubscriptionServiceTest {
     private Subscription mockSubscription;
     private Subscription findableSubscription;
     private SubscriptionListType mockSubscriptionListType;
-
-    @Captor
-    private ArgumentCaptor<List<UUID>> listCaptor;
 
     @Mock
     DataManagementService dataManagementService;

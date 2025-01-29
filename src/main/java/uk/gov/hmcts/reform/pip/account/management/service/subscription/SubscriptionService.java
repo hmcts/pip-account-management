@@ -3,13 +3,13 @@ package uk.gov.hmcts.reform.pip.account.management.service.subscription;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import uk.gov.hmcts.reform.pip.model.enums.UserActions;
 import uk.gov.hmcts.reform.pip.account.management.database.SubscriptionListTypeRepository;
 import uk.gov.hmcts.reform.pip.account.management.database.SubscriptionRepository;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.SubscriptionNotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.model.subscription.Subscription;
 import uk.gov.hmcts.reform.pip.account.management.model.subscription.SubscriptionListType;
 import uk.gov.hmcts.reform.pip.account.management.service.DataManagementService;
+import uk.gov.hmcts.reform.pip.model.enums.UserActions;
 
 import java.util.ArrayList;
 import java.util.List;

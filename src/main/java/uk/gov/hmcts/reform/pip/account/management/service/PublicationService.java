@@ -31,7 +31,7 @@ import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
 
 @Slf4j
 @Service
-@SuppressWarnings("PMD.LooseCoupling")
+@SuppressWarnings({"PMD.LooseCoupling", "PMD.TooManyMethods"})
 /**
  * Service to communicate with publication-services microservice and send appropriate emails via govnotify on the
  * creation of a new administrator account.
@@ -307,8 +307,9 @@ public class PublicationService {
         }
     }
 
-    private DeleteLocationSubscriptionAction formatSystemAdminAction(List<String> emails,
-                                                                     String requesterEmail, ActionResult actionResult, String additionalDetails) {
+    private DeleteLocationSubscriptionAction formatSystemAdminAction(List<String> emails, String requesterEmail,
+                                                                     ActionResult actionResult,
+                                                                     String additionalDetails) {
         DeleteLocationSubscriptionAction systemAdminAction = new DeleteLocationSubscriptionAction();
         systemAdminAction.setEmailList(emails);
         systemAdminAction.setRequesterEmail(requesterEmail);

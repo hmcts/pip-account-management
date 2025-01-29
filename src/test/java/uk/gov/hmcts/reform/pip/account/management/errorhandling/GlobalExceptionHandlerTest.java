@@ -3,7 +3,6 @@ package uk.gov.hmcts.reform.pip.account.management.errorhandling;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import jakarta.validation.ConstraintViolationException;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -11,14 +10,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.validation.BindException;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingRequestHeaderException;
-import org.springframework.web.context.request.ServletWebRequest;
 import uk.gov.hmcts.reform.pip.account.management.controllers.account.AccountController;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.CsvParseException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.NotFoundException;
@@ -38,6 +35,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
+@SuppressWarnings("PMD.TooManyMethods")
 class GlobalExceptionHandlerTest {
 
     private static final String ERROR_MESSAGE = "Exception Message";
@@ -123,11 +121,7 @@ class GlobalExceptionHandlerTest {
         SubscriptionNotFoundException subscriptionNotFoundException
             = new SubscriptionNotFoundException(ERROR_MESSAGE);
 
-        MockHttpServletRequest mockHttpServletRequest = new MockHttpServletRequest();
-        ServletWebRequest servletWebRequest = new ServletWebRequest(mockHttpServletRequest);
-
-        ResponseEntity<ExceptionResponse> responseEntity =
-            globalExceptionHandler.handleSubscriptionNotFound(subscriptionNotFoundException, servletWebRequest);
+        ResponseEntity<ExceptionResponse> responseEntity = globalExceptionHandler.handle(subscriptionNotFoundException);
 
         assertEquals(HttpStatus.NOT_FOUND, responseEntity.getStatusCode(), "Status code should be not found");
         assertNotNull(responseEntity.getBody(), "Response should contain a body");

@@ -32,6 +32,7 @@ import static uk.gov.hmcts.reform.pip.account.management.helpers.SubscriptionUti
 import static uk.gov.hmcts.reform.pip.account.management.helpers.SubscriptionUtils.createMockSubscriptionList;
 
 @ExtendWith({MockitoExtension.class})
+@SuppressWarnings("PMD.TooManyMethods")
 class UserSubscriptionServiceTest {
     private static final String USER_ID = "Ralph21";
     private static final String USER_ID_NO_SUBS = "Tina21";
