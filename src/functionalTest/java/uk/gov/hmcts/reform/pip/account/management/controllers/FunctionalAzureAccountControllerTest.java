@@ -7,8 +7,8 @@ import io.restassured.response.Response;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import uk.gov.hmcts.reform.pip.account.management.model.AzureAccount;
-import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
+import uk.gov.hmcts.reform.pip.account.management.model.account.AzureAccount;
+import uk.gov.hmcts.reform.pip.account.management.model.account.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.utils.AccountHelperBase;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 

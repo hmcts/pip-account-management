@@ -32,6 +32,15 @@ class CustomExceptionTest {
     }
 
     @Test
+    void testCreationOfSubscriptionNotFoundException() {
+        SubscriptionNotFoundException subscriptionNotFoundException
+            = new SubscriptionNotFoundException(TEST_MESSAGE);
+        assertEquals(TEST_MESSAGE, subscriptionNotFoundException.getMessage(),
+                     ASSERTION_MESSAGE
+        );
+    }
+
+    @Test
     void testCreationOfCsvParseException() {
         CsvParseException csvParseException = new CsvParseException(TEST_MESSAGE);
         assertEquals("Failed to parse CSV File due to: " + TEST_MESSAGE, csvParseException.getMessage(),
@@ -51,4 +60,13 @@ class CustomExceptionTest {
                      "The system admin account should match the system admin passed in");
     }
 
+    @Test
+    void testPendingMigrationScriptException() {
+        PendingMigrationScriptException pendingMigrationScriptException =
+            new PendingMigrationScriptException(TEST_MESSAGE);
+
+        assertEquals("Found migration not yet applied: " + TEST_MESSAGE,
+                     pendingMigrationScriptException.getMessage(),
+                     "Exception message does not match expected message");
+    }
 }

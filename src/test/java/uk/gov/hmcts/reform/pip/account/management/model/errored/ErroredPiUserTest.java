@@ -3,7 +3,7 @@ package uk.gov.hmcts.reform.pip.account.management.model.errored;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import uk.gov.hmcts.reform.pip.account.management.model.AzureAccount;
+import uk.gov.hmcts.reform.pip.account.management.model.account.AzureAccount;
 
 class ErroredPiUserTest {
     private static ErroredPiUser erroredPiUser;

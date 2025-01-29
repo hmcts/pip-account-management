@@ -18,11 +18,12 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import uk.gov.hmcts.reform.pip.account.management.model.AzureAccount;
-import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
-import uk.gov.hmcts.reform.pip.account.management.service.AccountService;
+import uk.gov.hmcts.reform.pip.account.management.model.account.AzureAccount;
+import uk.gov.hmcts.reform.pip.account.management.model.account.CreationEnum;
+import uk.gov.hmcts.reform.pip.account.management.service.account.AccountService;
 import uk.gov.hmcts.reform.pip.account.management.service.AuditService;
 import uk.gov.hmcts.reform.pip.account.management.service.MediaApplicationService;
+import uk.gov.hmcts.reform.pip.account.management.service.subscription.SubscriptionLocationService;
 import uk.gov.hmcts.reform.pip.model.authentication.roles.IsAdmin;
 
 @RestController
@@ -45,6 +46,7 @@ public class TestingSupportController {
 
     private final AccountService accountService;
     private final MediaApplicationService mediaApplicationService;
+    private final SubscriptionLocationService subscriptionLocationService;
     private final AuditService auditService;
 
     @ApiResponse(responseCode = CREATED_CODE, description = "{PiUser}")
@@ -76,6 +78,17 @@ public class TestingSupportController {
     @Transactional
     public ResponseEntity<String> deleteMediaApplicationsWithEmailPrefix(@PathVariable String emailPrefix) {
         return ResponseEntity.ok(mediaApplicationService.deleteAllApplicationsWithEmailPrefix(emailPrefix));
+    }
+
+    @ApiResponse(responseCode = OK_CODE,
+        description = "Subscription(s) deleted for location name starting with {locationNamePrefix}")
+    @Operation(summary = "Delete all subscriptions with location name prefix")
+    @DeleteMapping("/subscription/{locationNamePrefix}")
+    @Transactional
+    public ResponseEntity<String> deleteSubscriptionsWithLocationNamePrefix(@PathVariable String locationNamePrefix) {
+        return ResponseEntity.ok(
+            subscriptionLocationService.deleteAllSubscriptionsWithLocationNamePrefix(locationNamePrefix)
+        );
     }
 
     @ApiResponse(responseCode = OK_CODE,

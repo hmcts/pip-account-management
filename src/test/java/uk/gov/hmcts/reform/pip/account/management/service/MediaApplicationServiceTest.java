@@ -36,10 +36,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
-import static uk.gov.hmcts.reform.pip.account.management.helper.MediaApplicationHelper.FILE;
-import static uk.gov.hmcts.reform.pip.account.management.helper.MediaApplicationHelper.STATUS;
-import static uk.gov.hmcts.reform.pip.account.management.helper.MediaApplicationHelper.TEST_ID;
-import static uk.gov.hmcts.reform.pip.account.management.helper.MediaApplicationHelper.createApplication;
+import static uk.gov.hmcts.reform.pip.account.management.helpers.MediaApplicationHelper.FILE;
+import static uk.gov.hmcts.reform.pip.account.management.helpers.MediaApplicationHelper.STATUS;
+import static uk.gov.hmcts.reform.pip.account.management.helpers.MediaApplicationHelper.TEST_ID;
+import static uk.gov.hmcts.reform.pip.account.management.helpers.MediaApplicationHelper.createApplication;
 
 @ExtendWith(MockitoExtension.class)
 @SuppressWarnings("PMD.TooManyMethods")

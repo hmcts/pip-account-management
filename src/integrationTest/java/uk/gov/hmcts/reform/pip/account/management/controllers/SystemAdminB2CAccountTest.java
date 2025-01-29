@@ -24,9 +24,9 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import uk.gov.hmcts.reform.pip.account.management.Application;
-import uk.gov.hmcts.reform.pip.account.management.model.AzureAccount;
-import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
-import uk.gov.hmcts.reform.pip.account.management.model.SystemAdminAccount;
+import uk.gov.hmcts.reform.pip.account.management.model.account.AzureAccount;
+import uk.gov.hmcts.reform.pip.account.management.model.account.PiUser;
+import uk.gov.hmcts.reform.pip.account.management.model.account.SystemAdminAccount;
 import uk.gov.hmcts.reform.pip.account.management.utils.IntegrationTestBase;
 
 import java.util.ArrayList;

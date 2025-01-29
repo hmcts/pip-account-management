@@ -1,17 +1,21 @@
 package uk.gov.hmcts.reform.pip.account.management.errorhandling;
 
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.context.request.WebRequest;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.CsvParseException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.NotFoundException;
+import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.SubscriptionNotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.SystemAdminAccountException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.UserWithProvenanceNotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredSystemAdminAccount;
@@ -78,6 +82,21 @@ public class GlobalExceptionHandler {
             .body(generateExceptionResponse(ex.getMessage()));
     }
 
+    @ExceptionHandler(SubscriptionNotFoundException.class)
+    public ResponseEntity<ExceptionResponse> handleSubscriptionNotFound(
+        SubscriptionNotFoundException ex, WebRequest request) {
+
+        log.error(writeLog(
+            "404, Subscription has not been found. Cause: " + ex.getMessage()));
+
+        ExceptionResponse exceptionResponse = new ExceptionResponse();
+        exceptionResponse.setMessage(ex.getMessage());
+        exceptionResponse.setTimestamp(LocalDateTime.now());
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+            .body(exceptionResponse);
+    }
+
     @ExceptionHandler(CsvParseException.class)
     public ResponseEntity<ExceptionResponse> handle(CsvParseException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -105,6 +124,64 @@ public class GlobalExceptionHandler {
         ex.getBindingResult().getFieldErrors().forEach(error -> errorMap.put(error.getField(),
                                                                              error.getDefaultMessage()));
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorMap);
+    }
+
+    /**
+     * This exception creates the following style of message:
+     * "Bad Request: userId must not be null, searchValue must not be blank" etc.
+     *
+     * @param ex - a MethodArgumentNotValidException, created when an invalid json object is passed as a parameter to
+     *           the post endpoint (e.g. an empty request)
+     * @return - a ResponseEntity containing the exception response
+     */
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ExceptionResponse> handle(MethodArgumentNotValidException ex) {
+
+        ExceptionResponse exceptionResponse = new ExceptionResponse();
+        StringBuilder responseText = new StringBuilder("Bad Request: ");
+        for (int i = 0; i < ex.getBindingResult().getErrorCount(); i++) {
+            responseText.append(ex.getFieldErrors().get(i).getField())
+                .append(' ')
+                .append(ex.getBindingResult().getAllErrors().get(i).getDefaultMessage())
+                .append(", ");
+        }
+        exceptionResponse.setMessage(responseText.substring(0, responseText.length() - 2));
+        exceptionResponse.setTimestamp(LocalDateTime.now());
+
+        log.error(writeLog(
+            "400, Invalid argument provided when creating subscriptions. Cause: "
+                + exceptionResponse.getMessage()));
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+            .body(exceptionResponse);
+    }
+
+    /**
+     * This will create a message of the following style:
+     * "Bad Request: SearchType {search} should be one of the following types: [ LOCATION_ID CASE_ID CASE_URN ]"
+     * Note: this exception also covers the "channel" enum in the same way.
+     *
+     * @param ex - an invalidformatexception, created when e.g. a value that does not adhere to an enum restriction
+     * @return - a ResponseEntity containing the exception response
+     */
+    @ExceptionHandler(InvalidFormatException.class)
+    public ResponseEntity<ExceptionResponse> handle(InvalidFormatException ex) {
+        StringBuilder responseText = new StringBuilder(100);
+        responseText.append("Bad Request: ").append(ex.getTargetType().getSimpleName()).append(' ')
+            .append(ex.getValue()).append(" should be one of the following types: [ ");
+        for (int i = 0; i < ex.getTargetType().getFields().length; i++) {
+            responseText.append(ex.getTargetType().getFields()[i].getName()).append(' ');
+        }
+        responseText.append(']');
+        ExceptionResponse exceptionResponse = new ExceptionResponse();
+        exceptionResponse.setMessage(responseText.toString());
+        exceptionResponse.setTimestamp(LocalDateTime.now());
+
+        log.error(writeLog(
+            "400, Invalid argument provided when creating subscriptions. Cause: " + ex.getMessage()));
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+            .body(exceptionResponse);
     }
 
     private ExceptionResponse generateExceptionResponse(String message) {

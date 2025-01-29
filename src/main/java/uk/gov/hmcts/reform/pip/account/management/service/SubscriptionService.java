@@ -36,7 +36,9 @@ public class SubscriptionService {
         try {
             return webClient.delete().uri(url + "/subscription/user/" + userId)
                 .attributes(clientRegistrationId("subscriptionManagementApi"))
-                .retrieve().bodyToMono(String.class).block();
+                .retrieve()
+                .bodyToMono(String.class)
+                .block();
         } catch (WebClientException ex) {
             return String.format("Deletion request to subscription management failed with error %s",
                                  ex.getMessage());
