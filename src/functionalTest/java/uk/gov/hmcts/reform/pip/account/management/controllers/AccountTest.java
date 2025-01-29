@@ -33,7 +33,7 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.HttpStatus.OK;
 
 @SuppressWarnings("PMD.TooManyMethods")
-class FunctionalAccountControllerTest extends AccountHelperBase {
+class AccountTest extends AccountHelperBase {
 
     private static final String GET_BY_PROVENANCE_ID = "/account/provenance/PI_AAD/%s";
     private static final String GET_BY_USER_ID = "/account/%s";

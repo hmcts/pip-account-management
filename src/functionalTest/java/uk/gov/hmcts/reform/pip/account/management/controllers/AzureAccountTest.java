@@ -21,7 +21,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.springframework.http.HttpStatus.OK;
 
-class FunctionalAzureAccountControllerTest extends AccountHelperBase {
+class AzureAccountTest extends AccountHelperBase {
     private static final String CREATE_AZURE_ACCOUNT = "/account/add/azure";
     private static final String GET_AZURE_ACCOUNT_INFO = "/account/azure/%s";
 

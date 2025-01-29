@@ -24,7 +24,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.springframework.http.HttpStatus.OK;
 
 @SuppressWarnings("PMD.TooManyMethods")
-class FunctionalAccountFilteringControllerTest extends AccountHelperBase {
+class AccountFilteringTest extends AccountHelperBase {
     private static final TypeRef<CustomPageImpl<PiUser>> GET_ALL_USERS_TYPE = new TypeRef<>() {};
 
     private PiUser systemAdminUser;

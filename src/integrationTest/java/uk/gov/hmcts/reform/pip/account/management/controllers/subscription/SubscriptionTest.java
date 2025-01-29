@@ -62,7 +62,7 @@ import static uk.gov.hmcts.reform.pip.model.account.Roles.SYSTEM_ADMIN;
 @WithMockUser(username = "admin", authorities = {"APPROLE_api.request.admin"})
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
 @SuppressWarnings({"PMD.TooManyMethods", "PMD.ExcessiveImports", "PMD.ExcessiveClassLength"})
-class SubscriptionControllerTests extends IntegrationTestBase {
+class SubscriptionTest extends IntegrationTestBase {
 
     protected static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
@@ -137,20 +137,20 @@ class SubscriptionControllerTests extends IntegrationTestBase {
 
     private static final String ACTIONING_USER_ID = "87f907d2-eb28-42cc-b6e1-ae2b03f7bba5";
     private static final String INVALID_ACTIONING_USER_ID = "87f907d2-eb28-42cc-b6e1-ae2b03f7bba6";
+    private static final String SYSTEM_ADMIN_PROVENANCE_ID = "e5f1cc77-6e9a-40ab-8da0-a9666b328466";
+    private static final String SYSTEM_ADMIN_USER_ID = "87f907d2-eb28-42cc-b6e1-ae2b03f7bba4";
     private static final String USER_ID_HEADER = "x-user-id";
     private static final String TEST_EMAIL = "test-email-cath@justice.gov.uk";
+
+    private static final String ADD_ADMIN_USERS_SCRIPT = "classpath:add-admin-users.sql";
+    private static final String ADD_VERIFIED_USERS_SCRIPT = "classpath:add-verified-users.sql";
 
     private static String rawArtefact;
 
     @Autowired
     protected MockMvc mvc;
 
-    private final String systemAdminProvenanceId = "e5f1cc77-6e9a-40ab-8da0-a9666b328466";
-
-    private final String systemAdminUserId = "87f907d2-eb28-42cc-b6e1-ae2b03f7bba4";
-
     private static PiUser systemAdminUser = new PiUser();
-
     private static PiUser verifiedUser = new PiUser();
 
     @BeforeAll
@@ -413,7 +413,7 @@ class SubscriptionControllerTests extends IntegrationTestBase {
     }
 
     @Test
-    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = "classpath:add-admin-users.sql")
+    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = ADD_ADMIN_USERS_SCRIPT)
     void testDeleteSubscriptionByIdReturnsOkIfSystemAdmin() throws Exception {
         MockHttpServletRequestBuilder mappedSubscription = setupMockSubscription(LOCATION_ID, SearchType.LOCATION_ID,
                                                                                  ACTIONING_USER_ID
@@ -434,7 +434,7 @@ class SubscriptionControllerTests extends IntegrationTestBase {
         );
 
         MvcResult deleteResponse = mvc.perform(delete(SUBSCRIPTION_BASE_URL + returnedSubscription.getId())
-                                                   .header(USER_ID_HEADER, systemAdminUserId))
+                                                   .header(USER_ID_HEADER, SYSTEM_ADMIN_USER_ID))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -447,7 +447,7 @@ class SubscriptionControllerTests extends IntegrationTestBase {
     }
 
     @Test
-    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = "classpath:add-verified-users.sql")
+    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = ADD_VERIFIED_USERS_SCRIPT)
     void testDeleteSubscriptionByIdReturnsOkIfUserMatched() throws Exception {
         MockHttpServletRequestBuilder mappedSubscription = setupMockSubscription(LOCATION_ID, SearchType.LOCATION_ID,
                                                                                  ACTIONING_USER_ID
@@ -481,7 +481,7 @@ class SubscriptionControllerTests extends IntegrationTestBase {
     }
 
     @Test
-    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = "classpath:add-verified-users.sql")
+    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = ADD_VERIFIED_USERS_SCRIPT)
     void testDeleteSubscriptionByIdReturnsForbiddenIfUserMismatched() throws Exception {
         MockHttpServletRequestBuilder mappedSubscription = setupMockSubscription(LOCATION_ID);
 
@@ -506,7 +506,7 @@ class SubscriptionControllerTests extends IntegrationTestBase {
 
     @DisplayName("Check response if delete fails")
     @Test
-    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = "classpath:add-verified-users.sql")
+    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = ADD_VERIFIED_USERS_SCRIPT)
     void failedDelete() throws Exception {
         String randomUuid = UUID_STRING;
         MvcResult response = mvc.perform(delete(SUBSCRIPTION_BASE_URL + randomUuid)
@@ -906,7 +906,7 @@ class SubscriptionControllerTests extends IntegrationTestBase {
 
 
     @Test
-    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = "classpath:add-admin-users.sql")
+    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = ADD_ADMIN_USERS_SCRIPT)
     void testBulkDeletedSubscribersV2ReturnsOkIfSystemAdmin() throws Exception {
         MvcResult caseSubscription = mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, ACTIONING_USER_ID))
             .andReturn();
@@ -924,7 +924,7 @@ class SubscriptionControllerTests extends IntegrationTestBase {
         MvcResult deleteResponse = mvc.perform(delete(DELETED_BULK_SUBSCRIPTION_V2_PATH)
                                                    .contentType(MediaType.APPLICATION_JSON)
                                                    .content(subscriptionIdRequest)
-                                                   .header(USER_ID_HEADER, systemAdminUserId))
+                                                   .header(USER_ID_HEADER, SYSTEM_ADMIN_USER_ID))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -950,7 +950,7 @@ class SubscriptionControllerTests extends IntegrationTestBase {
     }
 
     @Test
-    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = "classpath:add-verified-users.sql")
+    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = ADD_VERIFIED_USERS_SCRIPT)
     void testBulkDeletedSubscribersV2ReturnsOkIfUserMatched() throws Exception {
         MvcResult caseSubscription = mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, ACTIONING_USER_ID))
             .andReturn();
@@ -994,7 +994,7 @@ class SubscriptionControllerTests extends IntegrationTestBase {
     }
 
     @Test
-    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = "classpath:add-verified-users.sql")
+    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = ADD_VERIFIED_USERS_SCRIPT)
     void testBulkDeletedSubscribersV2ReturnsForbiddenIfUserMismatched() throws Exception {
         MvcResult caseSubscription = mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, VALID_USER_ID))
             .andReturn();
@@ -1172,14 +1172,14 @@ class SubscriptionControllerTests extends IntegrationTestBase {
     }
 
     @Test
-    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = "classpath:add-admin-users.sql")
+    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = ADD_ADMIN_USERS_SCRIPT)
     void testDeleteSubscriptionByLocation() throws Exception {
         doNothing().when(publicationService)
             .sendLocationDeletionSubscriptionEmail(List.of(TEST_EMAIL), LOCATION_NAME_1);
 
-        doNothing().when(publicationService)
-            .sendSystemAdminEmail(List.of(TEST_EMAIL, TEST_EMAIL), TEST_EMAIL,
-                                  ActionResult.SUCCEEDED, systemAdminProvenanceId);
+        doNothing().when(publicationService).sendSystemAdminEmail(
+            List.of(TEST_EMAIL, TEST_EMAIL), TEST_EMAIL, ActionResult.SUCCEEDED, SYSTEM_ADMIN_PROVENANCE_ID
+        );
 
         mvc.perform(setupMockSubscription(LOCATION_ID, SearchType.LOCATION_ID, UUID_STRING));
 
@@ -1188,7 +1188,7 @@ class SubscriptionControllerTests extends IntegrationTestBase {
 
         MvcResult deleteResponse = mvc.perform(delete(
                 SUBSCRIPTIONS_BY_LOCATION + LOCATION_ID)
-                                                   .header(USER_ID_HEADER, systemAdminUserId))
+                                                   .header(USER_ID_HEADER, SYSTEM_ADMIN_USER_ID))
             .andExpect(status().isOk()).andReturn();
 
         assertNotNull(deleteResponse.getResponse(), VALIDATION_EMPTY_RESPONSE);
@@ -1204,7 +1204,7 @@ class SubscriptionControllerTests extends IntegrationTestBase {
     void testDeleteSubscriptionByLocationNotFound() throws Exception {
         MvcResult response = mvc.perform(delete(
                 SUBSCRIPTIONS_BY_LOCATION + LOCATION_ID)
-                                             .header(USER_ID_HEADER, systemAdminUserId))
+                                             .header(USER_ID_HEADER, SYSTEM_ADMIN_USER_ID))
             .andExpect(status().isNotFound())
             .andReturn();
 
@@ -1217,7 +1217,7 @@ class SubscriptionControllerTests extends IntegrationTestBase {
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testDeleteSubscriptionByLocationUnauthorized() throws Exception {
         MvcResult response = mvc.perform(delete(SUBSCRIPTIONS_BY_LOCATION + LOCATION_ID)
-                                             .header(USER_ID_HEADER, systemAdminUserId))
+                                             .header(USER_ID_HEADER, SYSTEM_ADMIN_USER_ID))
             .andExpect(status().isForbidden()).andReturn();
 
         assertEquals(FORBIDDEN.value(), response.getResponse().getStatus(),
