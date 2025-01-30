@@ -195,7 +195,7 @@ class MediaApplicationCreationTest extends AccountHelperBase {
         MediaApplication mediaApplication = createApplication();
 
         Response rejectedApplicationResponse =
-            doPutRequestWithJsonBody(String.format(REJECT_APPLICATION_WITH_REASONS, mediaApplication.getId()),
+            doPutRequestWithBody(String.format(REJECT_APPLICATION_WITH_REASONS, mediaApplication.getId()),
                      bearer, new ObjectMapper().writeValueAsString(reasons));
 
         assertThat(rejectedApplicationResponse.getStatusCode()).isEqualTo(OK.value());
@@ -213,7 +213,7 @@ class MediaApplicationCreationTest extends AccountHelperBase {
     void shouldNoLongerBeAbleToGetImageWhenApplicationIsRejectedWithReasons() throws Exception {
         MediaApplication mediaApplication = createApplication();
 
-        doPutRequestWithJsonBody(String.format(REJECT_APPLICATION_WITH_REASONS, mediaApplication.getId()),
+        doPutRequestWithBody(String.format(REJECT_APPLICATION_WITH_REASONS, mediaApplication.getId()),
                                      bearer,
                                  new ObjectMapper().writeValueAsString(reasons));
 

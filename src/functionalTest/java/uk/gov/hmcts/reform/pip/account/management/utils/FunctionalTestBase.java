@@ -25,21 +25,25 @@ import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @SuppressWarnings("PMD.TooManyMethods")
 public class FunctionalTestBase {
-
     protected static final String CONTENT_TYPE_VALUE = "application/json";
 
     @Autowired
     private OAuthClient authClient;
 
     protected String accessToken;
+    protected String dataManagementAccessToken;
 
     @Value("${test-url}")
     private String testUrl;
+
+    @Value("${data-management-test-url}")
+    private String dataManagementUrl;
 
     @BeforeAll
     void setUp() {
         RestAssured.baseURI = testUrl;
         accessToken = authClient.generateAccessToken();
+        dataManagementAccessToken = authClient.generateDataManagementAccessToken();
     }
 
     protected Response doGetRequest(final String path, final Map<String, String> additionalHeaders) {
@@ -76,7 +80,7 @@ public class FunctionalTestBase {
     }
 
     protected Response doPostRequest(final String path, final Map<String, String> additionalHeaders,
-                                     final String body) {
+                                     final Object body) {
         return given()
             .relaxedHTTPSValidation()
             .headers(getRequestHeaders(additionalHeaders))
@@ -135,8 +139,8 @@ public class FunctionalTestBase {
             .thenReturn();
     }
 
-    protected Response doPutRequestWithJsonBody(final String path, final Map<String, String> additionalHeaders,
-                                                String body) {
+    protected Response doPutRequestWithBody(final String path, final Map<String, String> additionalHeaders,
+                                            Object body) {
         return given()
             .relaxedHTTPSValidation()
             .headers(getRequestHeaders(additionalHeaders))
@@ -150,6 +154,39 @@ public class FunctionalTestBase {
         return given()
             .relaxedHTTPSValidation()
             .headers(getRequestHeaders(additionalHeaders))
+            .when()
+            .delete(path)
+            .thenReturn();
+    }
+
+    protected Response doDeleteRequestWithBody(final String path, final Map<String, String> additionalHeaders,
+                                               final Object body) {
+        return given()
+            .relaxedHTTPSValidation()
+            .headers(getRequestHeaders(additionalHeaders))
+            .body(body)
+            .when()
+            .delete(path)
+            .thenReturn();
+    }
+
+    protected Response doDataManagementPostRequest(final String path, final Map<String, String> additionalHeaders,
+                                                   final Object body) {
+        return given()
+            .relaxedHTTPSValidation()
+            .headers(getRequestHeaders(additionalHeaders))
+            .baseUri(dataManagementUrl)
+            .body(body)
+            .when()
+            .post(path)
+            .thenReturn();
+    }
+
+    protected Response doDataManagementDeleteRequest(final String path, final Map<String, String> additionalHeaders) {
+        return given()
+            .relaxedHTTPSValidation()
+            .headers(getRequestHeaders(additionalHeaders))
+            .baseUri(dataManagementUrl)
             .when()
             .delete(path)
             .thenReturn();

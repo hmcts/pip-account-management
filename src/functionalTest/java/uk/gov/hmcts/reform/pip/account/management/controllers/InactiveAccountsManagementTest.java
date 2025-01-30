@@ -200,8 +200,8 @@ class InactiveAccountsManagementTest extends FunctionalTestBase {
                                            Map<String, String> fieldsToUpdate) {
         JSONObject jsonFieldsToUpdate = new JSONObject(fieldsToUpdate);
 
-        Response response = doPutRequestWithJsonBody(UPDATE_USER_INFO + "/" + userProvenances + "/" + userProvenancesId,
-                                              headers, jsonFieldsToUpdate.toString());
+        Response response = doPutRequestWithBody(UPDATE_USER_INFO + "/" + userProvenances + "/" + userProvenancesId,
+                                                 headers, jsonFieldsToUpdate.toString());
 
         assertThat(response.getStatusCode()).isEqualTo(OK.value());
     }
