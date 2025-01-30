@@ -16,7 +16,6 @@ import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.Subsc
 import uk.gov.hmcts.reform.pip.account.management.model.account.PiUser;
 import uk.gov.hmcts.reform.pip.account.management.model.subscription.Subscription;
 import uk.gov.hmcts.reform.pip.account.management.model.subscription.SubscriptionListType;
-import uk.gov.hmcts.reform.pip.account.management.service.DataManagementService;
 import uk.gov.hmcts.reform.pip.account.management.service.PublicationService;
 import uk.gov.hmcts.reform.pip.account.management.service.account.AccountService;
 
@@ -59,9 +58,6 @@ class SubscriptionLocationServiceTest {
 
     private PiUser piUser;
     private static final UUID USER_ID = UUID.randomUUID();
-
-    @Mock
-    DataManagementService dataManagementService;
 
     @Mock
     private AccountService accountService;
@@ -109,8 +105,6 @@ class SubscriptionLocationServiceTest {
                 .thenReturn(mockSubscriptionList);
             when(subscriptionListTypeRepository.findByUserId(any()))
                 .thenReturn(Optional.of(mockSubscriptionListType.get(0)));
-            when(dataManagementService.getCourtName(LOCATION_ID))
-                .thenReturn(COURT_NAME);
             when(accountService.getUserById(USER_ID))
                 .thenReturn(piUser);
             when(userRepository.findByRoles(SYSTEM_ADMIN)).thenReturn(List.of(sysAdminUser1, sysAdminUser2));
@@ -159,8 +153,6 @@ class SubscriptionLocationServiceTest {
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionLocationService.class)) {
             when(subscriptionRepository.findSubscriptionsByLocationId(LOCATION_ID))
                 .thenReturn(mockSubscriptionList);
-            when(dataManagementService.getCourtName(LOCATION_ID))
-                .thenReturn(COURT_NAME);
             doNothing().when(publicationService).sendLocationDeletionSubscriptionEmail(any(), any());
             when(accountService.getUserById(USER_ID)).thenReturn(null);
 

@@ -30,10 +30,6 @@ spring:
             authorization-grant-type: client_credentials
             scopes:
               - ${PUBLICATION_SERVICES_AZ_API}/.default
-          dataManagementApi:
-            authorization-grant-type: client_credentials
-            scopes:
-              - ${DATA_MANAGEMENT_AZ_API}/.default
   config:
     import: "optional:configtree:/mnt/secrets/pip-ss-kv/"
   jackson:
@@ -78,7 +74,6 @@ spring:
 
 service-to-service:
   publication-services: ${PUBLICATION_SERVICES_URL:https://pip-publication-services.staging.platform.hmcts.net}
-  data-management: ${DATA_MANAGEMENT_URL:https://pip-data-management.staging.platform.hmcts.net}
 
 azure:
   id:

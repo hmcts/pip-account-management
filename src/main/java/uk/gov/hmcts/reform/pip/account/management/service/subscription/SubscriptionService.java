@@ -8,7 +8,6 @@ import uk.gov.hmcts.reform.pip.account.management.database.SubscriptionRepositor
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.SubscriptionNotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.model.subscription.Subscription;
 import uk.gov.hmcts.reform.pip.account.management.model.subscription.SubscriptionListType;
-import uk.gov.hmcts.reform.pip.account.management.service.DataManagementService;
 import uk.gov.hmcts.reform.pip.model.enums.UserActions;
 
 import java.util.ArrayList;
@@ -29,15 +28,13 @@ public class SubscriptionService {
 
     private final SubscriptionRepository repository;
     private final SubscriptionListTypeRepository subscriptionListTypeRepository;
-    private final DataManagementService dataManagementService;
     private final SubscriptionLocationService subscriptionLocationService;
 
     @Autowired
-    public SubscriptionService(SubscriptionRepository repository, DataManagementService dataManagementService,
+    public SubscriptionService(SubscriptionRepository repository,
                                SubscriptionListTypeRepository subscriptionListTypeRepository,
                                SubscriptionLocationService subscriptionLocationService) {
         this.repository = repository;
-        this.dataManagementService = dataManagementService;
         this.subscriptionListTypeRepository = subscriptionListTypeRepository;
         this.subscriptionLocationService = subscriptionLocationService;
     }
@@ -47,12 +44,8 @@ public class SubscriptionService {
                           subscription.getSearchType().toString()));
 
         duplicateSubscriptionHandler(subscription);
-
         subscription.setLastUpdatedDate(subscription.getCreatedDate());
 
-        if (subscription.getSearchType().equals(LOCATION_ID)) {
-            subscription.setLocationName(dataManagementService.getCourtName(subscription.getSearchValue()));
-        }
         return repository.save(subscription);
     }
 

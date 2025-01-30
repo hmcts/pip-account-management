@@ -13,7 +13,6 @@ import uk.gov.hmcts.reform.pip.account.management.database.SubscriptionRepositor
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.SubscriptionNotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.model.subscription.Subscription;
 import uk.gov.hmcts.reform.pip.account.management.model.subscription.SubscriptionListType;
-import uk.gov.hmcts.reform.pip.account.management.service.DataManagementService;
 import uk.gov.hmcts.reform.pip.model.subscription.Channel;
 import uk.gov.hmcts.reform.pip.model.subscription.SearchType;
 
@@ -35,7 +34,6 @@ import static uk.gov.hmcts.reform.pip.account.management.helpers.SubscriptionUti
 import static uk.gov.hmcts.reform.pip.account.management.helpers.SubscriptionUtils.createMockSubscriptionList;
 import static uk.gov.hmcts.reform.pip.account.management.helpers.SubscriptionUtils.findableSubscription;
 import static uk.gov.hmcts.reform.pip.model.publication.ListType.CIVIL_DAILY_CAUSE_LIST;
-
 
 @ActiveProfiles("non-async")
 @ExtendWith({MockitoExtension.class})
@@ -75,9 +73,6 @@ class SubscriptionServiceTest {
     private Subscription mockSubscription;
     private Subscription findableSubscription;
     private SubscriptionListType mockSubscriptionListType;
-
-    @Mock
-    DataManagementService dataManagementService;
 
     @Mock
     SubscriptionLocationService subscriptionLocationService;
@@ -136,7 +131,6 @@ class SubscriptionServiceTest {
     @Test
     void testCreateSubscriptionWithCourtName() {
         mockSubscription.setSearchType(SearchType.LOCATION_ID);
-        when(dataManagementService.getCourtName(SEARCH_VALUE)).thenReturn(COURT_NAME);
         when(subscriptionRepository.save(mockSubscription)).thenReturn(mockSubscription);
         assertEquals(subscriptionService.createSubscription(mockSubscription, ACTIONING_USER_ID), mockSubscription,
                      SUBSCRIPTION_CREATED_ERROR
@@ -146,7 +140,6 @@ class SubscriptionServiceTest {
     @Test
     void testCreateSubscriptionWithCourtNameWithoutListType() {
         mockSubscription.setSearchType(SearchType.LOCATION_ID);
-        when(dataManagementService.getCourtName(SEARCH_VALUE)).thenReturn(COURT_NAME);
         when(subscriptionRepository.save(mockSubscription)).thenReturn(mockSubscription);
         assertEquals(subscriptionService.createSubscription(mockSubscription, ACTIONING_USER_ID), mockSubscription,
                      SUBSCRIPTION_CREATED_ERROR
@@ -156,7 +149,6 @@ class SubscriptionServiceTest {
     @Test
     void testCreateSubscriptionWithCourtNameWithMultipleListType() {
         mockSubscription.setSearchType(SearchType.LOCATION_ID);
-        when(dataManagementService.getCourtName(SEARCH_VALUE)).thenReturn(COURT_NAME);
         when(subscriptionRepository.save(mockSubscription)).thenReturn(mockSubscription);
         assertEquals(subscriptionService.createSubscription(mockSubscription, ACTIONING_USER_ID), mockSubscription,
                      SUBSCRIPTION_CREATED_ERROR
@@ -167,7 +159,6 @@ class SubscriptionServiceTest {
     void testCreateDuplicateSubscription() {
         mockSubscription.setSearchType(SearchType.LOCATION_ID);
         mockSubscription.setSearchValue(SEARCH_VALUE);
-        when(dataManagementService.getCourtName(SEARCH_VALUE)).thenReturn(COURT_NAME);
         when(subscriptionRepository.save(mockSubscription)).thenReturn(mockSubscription);
         when(subscriptionRepository.findByUserId(USER_ID)).thenReturn(List.of(mockSubscription));
 

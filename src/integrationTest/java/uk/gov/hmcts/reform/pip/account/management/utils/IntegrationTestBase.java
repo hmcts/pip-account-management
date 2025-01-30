@@ -4,7 +4,6 @@ import com.azure.storage.blob.BlobClient;
 import com.azure.storage.blob.BlobContainerClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import uk.gov.hmcts.reform.pip.account.management.service.DataManagementService;
 import uk.gov.hmcts.reform.pip.account.management.service.PublicationService;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -15,9 +14,6 @@ public class IntegrationTestBase {
 
     @MockitoBean
     protected PublicationService publicationService;
-
-    @MockitoBean
-    protected DataManagementService dataManagementService;
 
     @MockitoBean
     protected BlobContainerClient blobContainerClient;

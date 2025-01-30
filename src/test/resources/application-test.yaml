@@ -1,7 +1,5 @@
 service-to-service:
   publication-services: http://localhost:8081
-  subscription-management: http://localhost:4550
-  data-management: http://localhost:8090
 
 dbMigration:
   runOnStartup: true

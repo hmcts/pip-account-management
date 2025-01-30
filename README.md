@@ -241,7 +241,7 @@ curl --request POST \
 ```
 You can copy the above curl command into either Postman or Insomnia and they will automatically be converted to the relevant formats for those programs.
 
-*Note - the `_FOR_ANOTHER_SERVICE` variables need to be extracted from another registered microservice within the broader CaTH umbrella (e.g. [pip-data-management](https://github.com/hmcts/pip-data-management))*
+*Note - the `_FOR_ANOTHER_SERVICE` variables need to be extracted from another registered microservice within the broader CaTH umbrella (e.g. [pip-publication-services](https://github.com/hmcts/pip-publication-services))*
 
 ### Using the bearer token
 You can use the bearer token in the Authorization header when making requests. Here is an example using the create PI user endpoint:

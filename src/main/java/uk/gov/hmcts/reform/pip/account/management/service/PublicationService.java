@@ -273,8 +273,8 @@ public class PublicationService {
         }
     }
 
-    public void sendLocationDeletionSubscriptionEmail(List<String> emails, String locationName) {
-        LocationSubscriptionDeletion payload = formatLocationSubscriptionDeletion(emails, locationName);
+    public void sendLocationDeletionSubscriptionEmail(List<String> emails, String locationId) {
+        LocationSubscriptionDeletion payload = formatLocationSubscriptionDeletion(emails, locationId);
         try {
             webClient.post().uri(url + "/" + NOTIFY_LOCATION_SUBSCRIPTION_PATH)
                 .body(BodyInserters.fromValue(payload)).retrieve()
@@ -355,9 +355,9 @@ public class PublicationService {
     }
 
     private LocationSubscriptionDeletion formatLocationSubscriptionDeletion(
-        List<String> emails, String locationName) {
+        List<String> emails, String locationId) {
         LocationSubscriptionDeletion locationSubscriptionDeletion = new LocationSubscriptionDeletion();
-        locationSubscriptionDeletion.setLocationName(locationName);
+        locationSubscriptionDeletion.setLocationId(locationId);
         locationSubscriptionDeletion.setSubscriberEmails(emails);
         return locationSubscriptionDeletion;
     }

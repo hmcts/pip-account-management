@@ -10,7 +10,6 @@ import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.Subsc
 import uk.gov.hmcts.reform.pip.account.management.model.account.PiUser;
 import uk.gov.hmcts.reform.pip.account.management.model.subscription.Subscription;
 import uk.gov.hmcts.reform.pip.account.management.model.subscription.SubscriptionListType;
-import uk.gov.hmcts.reform.pip.account.management.service.DataManagementService;
 import uk.gov.hmcts.reform.pip.account.management.service.PublicationService;
 import uk.gov.hmcts.reform.pip.account.management.service.account.AccountService;
 import uk.gov.hmcts.reform.pip.model.system.admin.ActionResult;
@@ -32,7 +31,6 @@ public class SubscriptionLocationService {
 
     private final SubscriptionRepository subscriptionRepository;
     private final SubscriptionListTypeRepository subscriptionListTypeRepository;
-    private final DataManagementService dataManagementService;
     private final PublicationService publicationService;
     private final AccountService accountService;
     private final UserRepository userRepository;
@@ -40,14 +38,12 @@ public class SubscriptionLocationService {
 
     @Autowired
     public SubscriptionLocationService(
-        DataManagementService dataManagementService,
         PublicationService publicationService,
         AccountService accountService,
         UserRepository userRepository,
         SubscriptionRepository subscriptionRepository,
         SubscriptionListTypeRepository subscriptionListTypeRepository
     ) {
-        this.dataManagementService = dataManagementService;
         this.publicationService = publicationService;
         this.accountService = accountService;
         this.userRepository = userRepository;
@@ -81,11 +77,10 @@ public class SubscriptionLocationService {
         log.info(writeLog(String.format("%s subscription(s) have been deleted for location %s by user %s",
                                         subIds.size(), locationId, userId)));
 
-        String locationName = dataManagementService.getCourtName(locationId);
-        notifySubscriberAboutSubscriptionDeletion(locationSubscriptions, locationName);
+        notifySubscriberAboutSubscriptionDeletion(locationSubscriptions, locationId);
         notifySystemAdminAboutSubscriptionDeletion(userId,
-            String.format("Total %s subscription(s) for location %s",
-                          locationSubscriptions.size(), locationName));
+            String.format("Total %s subscription(s) for location ID %s",
+                          locationSubscriptions.size(), locationId));
 
         return String.format("Total %s subscriptions deleted for location id %s", subIds.size(), locationId);
     }
@@ -126,9 +121,9 @@ public class SubscriptionLocationService {
     }
 
     private void notifySubscriberAboutSubscriptionDeletion(List<Subscription> locationSubscriptions,
-                                                           String locationName) {
+                                                           String locationId) {
         List<String> userEmails = getUserEmailsForAllSubscriptions(locationSubscriptions);
-        publicationService.sendLocationDeletionSubscriptionEmail(userEmails, locationName);
+        publicationService.sendLocationDeletionSubscriptionEmail(userEmails, locationId);
     }
 
     private void notifySystemAdminAboutSubscriptionDeletion(String userId, String additionalDetails) {
