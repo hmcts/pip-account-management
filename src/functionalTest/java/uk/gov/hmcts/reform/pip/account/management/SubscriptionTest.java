@@ -179,8 +179,9 @@ class SubscriptionTest extends AccountHelperBase {
             headerMap,
             createTestSubscription(LOCATION_ID, USER_ID, LOCATION_NAME)
         );
-        final String subscriptionId = responseCreateSubscription.asString().split(" ")[5];
+        assertThat(responseCreateSubscription.getStatusCode()).isEqualTo(CREATED.value());
 
+        final String subscriptionId = responseCreateSubscription.asString().split(" ")[5];
         Response responseFindByLocationId = doGetRequest(SUBSCRIPTION_BY_LOCATION_URL + LOCATION_ID, bearer);
         assertThat(responseFindByLocationId.getStatusCode()).isEqualTo(OK.value());
         List<Subscription> returnedSubscriptionsByLocationId = List.of(responseFindByLocationId.getBody().as(
@@ -245,11 +246,11 @@ class SubscriptionTest extends AccountHelperBase {
             "Subscriptions with ID " + subscriptionId + " deleted");
     }
 
-    private Subscription createTestSubscription(String locationid, String userId, String locationName) {
+    private Subscription createTestSubscription(String locationId, String userId, String locationName) {
         Subscription subscription = new Subscription();
         subscription.setUserId(userId);
         subscription.setSearchType(SearchType.LOCATION_ID);
-        subscription.setSearchValue(locationid);
+        subscription.setSearchValue(locationId);
         subscription.setChannel(Channel.EMAIL);
         subscription.setCreatedDate(LocalDateTime.now());
         subscription.setLocationName(locationName);
