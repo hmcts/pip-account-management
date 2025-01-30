@@ -176,30 +176,4 @@ class GlobalExceptionHandlerTest {
         assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode(), SHOULD_BE_BAD_REQUEST_EXCEPTION);
         assertNotNull(responseEntity.getBody(), NOT_NULL_MESSAGE);
     }
-
-    //    @Test
-    //    void testMethodArgumentNotValidException() {
-    //        GlobalExceptionHandler globalExceptionHandler = new GlobalExceptionHandler();
-    //        when(methodArgumentNotValidException.getBindingResult()).thenReturn(bindingResult);
-    //        when(bindingResult.getErrorCount()).thenReturn(1);
-    //        FieldError newFieldError = new FieldError("hello", "hello", "Hello");
-    //        when(methodArgumentNotValidException.getFieldErrors()).thenReturn(List.of(newFieldError));
-    //        ObjectError newObjectError = new ObjectError("must not be null", "must not be null");
-    //        when(bindingResult.getAllErrors()).thenReturn(List.of(newObjectError));
-    //        ResponseEntity<ExceptionResponse> responseEntity =
-    //            globalExceptionHandler.handle(methodArgumentNotValidException);
-    //        assertTrue(responseEntity.getBody().getMessage().contains("must not be null"), "Incorrect response text");
-    //        assertTrue(responseEntity.getBody().getMessage().contains("Bad Request: "), "Incorrect response type");
-    //    }
-    //
-    //    @Test
-    //    void testInvalidFormatException() {
-    //        doReturn(SearchType.class).when(invalidFormatException).getTargetType();
-    //        when(invalidFormatException.getValue()).thenReturn("valueString");
-    //        ResponseEntity<ExceptionResponse> responseEntity =
-    //            globalExceptionHandler.handle(invalidFormatException);
-    //        assertTrue(responseEntity.getBody().getMessage().contains("Bad Request: "), "Incorrect response");
-    //        assertTrue(responseEntity.getBody().getMessage().contains("LOCATION_ID CASE_ID CASE_URN"),
-    //                   "Incorrect response text");
-    //    }
 }
