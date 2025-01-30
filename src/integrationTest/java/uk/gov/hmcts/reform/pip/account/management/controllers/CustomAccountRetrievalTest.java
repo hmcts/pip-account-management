@@ -16,6 +16,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.testcontainers.shaded.org.apache.commons.lang3.RandomUtils;
 import uk.gov.hmcts.reform.pip.account.management.Application;
 import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
@@ -141,11 +142,13 @@ class CustomAccountRetrievalTest {
     @Test
     void testMiDataV2() throws Exception {
         String provenanceId = UUID.randomUUID().toString();
-        VALID_USER.setProvenanceUserId(provenanceId);
+        PiUser validUser = createUser(true, provenanceId);
+        validUser.setEmail("test-account-am-" + RandomUtils.nextInt() + "@hmcts.net");
+
         MockHttpServletRequestBuilder createRequest =
             MockMvcRequestBuilders
                 .post(PI_URL)
-                .content(OBJECT_MAPPER.writeValueAsString(List.of(VALID_USER)))
+                .content(OBJECT_MAPPER.writeValueAsString(List.of(validUser)))
                 .header(ISSUER_HEADER, ISSUER_ID)
                 .contentType(MediaType.APPLICATION_JSON);
 
