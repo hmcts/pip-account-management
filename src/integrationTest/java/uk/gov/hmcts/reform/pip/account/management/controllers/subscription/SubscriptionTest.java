@@ -19,7 +19,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import uk.gov.hmcts.reform.pip.account.management.Application;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.ExceptionResponse;
 import uk.gov.hmcts.reform.pip.account.management.model.subscription.Subscription;
 import uk.gov.hmcts.reform.pip.account.management.model.subscription.usersubscription.CaseSubscription;
@@ -30,21 +29,18 @@ import uk.gov.hmcts.reform.pip.model.account.PiUser;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.subscription.Channel;
 import uk.gov.hmcts.reform.pip.model.subscription.SearchType;
-import uk.gov.hmcts.reform.pip.model.system.admin.ActionResult;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.Mockito.doNothing;
 import static org.springframework.http.HttpStatus.FORBIDDEN;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -52,19 +48,18 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static uk.gov.hmcts.reform.pip.model.account.Roles.SYSTEM_ADMIN;
 
-@SpringBootTest(classes = {Application.class},
-    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("integration")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @WithMockUser(username = "admin", authorities = {"APPROLE_api.request.admin"})
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
-@SuppressWarnings({"PMD.ExcessiveImports", "PMD.ExcessiveClassLength"})
+@SuppressWarnings({"PMD.ExcessiveImports"})
 class SubscriptionTest extends IntegrationTestBase {
 
-    protected static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-    private static final String LOCATION_NAME_1 = "Single Justice Procedure";
+    private static final String LOCATION_NAME = "Single Justice Procedure";
     private static final String UUID_STRING = "f54c9783-7f56-4a69-91bc-55b582c0206f";
     private static final String VALID_USER_ID = "60e75e34-ad8e-4ac3-8f26-7de73e5c987b";
 
@@ -80,14 +75,14 @@ class SubscriptionTest extends IntegrationTestBase {
     private static final String VALIDATION_PARTY_NAMES = "Returned party names do not match expected parties";
     private static final String VALIDATION_LOCATION_NAME =
         "Returned location name does not match expected location name";
-    public static final String VALIDATION_BAD_REQUEST = "Incorrect response - should be 400.";
+    private static final String VALIDATION_BAD_REQUEST = "Incorrect response - should be 400.";
     private static final String VALIDATION_CASE_ID = "Case ID does not match expected case";
     private static final String VALIDATION_LOCATION_LIST = "Location subscription list contains unknown locations";
     private static final String VALIDATION_SUBSCRIPTION_LIST = "The expected subscription is not displayed";
     private static final String VALIDATION_NO_SUBSCRIPTIONS = "User has unknown subscriptions";
-    public static final String VALIDATION_ONE_CASE_LOCATION = "Location subscription list does not contain 1 case";
-    public static final String VALIDATION_DATE_ADDED = "Date added does not match the expected date added";
-    public static final String VALIDATION_UUID = "UUID should not be null";
+    private static final String VALIDATION_ONE_CASE_LOCATION = "Location subscription list does not contain 1 case";
+    private static final String VALIDATION_DATE_ADDED = "Date added does not match the expected date added";
+    private static final String VALIDATION_UUID = "UUID should not be null";
     private static final String FORBIDDEN_STATUS_CODE = "Status code does not match forbidden";
     private static final String NOT_FOUND_STATUS_CODE = "Status code does not match not found";
     private static final String RESPONSE_MATCH = "Response should match";
@@ -100,24 +95,19 @@ class SubscriptionTest extends IntegrationTestBase {
     private static final String RAW_JSON_MISSING_CHANNEL =
         "{\"userId\": \"3\", \"searchType\": \"CASE_ID\",\"searchValue\": \"321\"}";
 
-    private static final String RAW_JSON_ADD_UPDATE_LIST_TYPE =
-        "{\"listType\": [\"FAMILY_DAILY_CAUSE_LIST\"], \"listLanguage\": [\"ENGLISH\"],\"userId\": \"3\"}";
-
     private static final String LOCATION_ID = "9";
     private static final String CASE_ID = "T485913";
     private static final String CASE_URN = "IBRANE1BVW";
     private static final String CASE_NAME = "Tom Clancy";
     private static final String PARTY_NAMES = "Party A, Party B";
     private static final String SUBSCRIPTION_BASE_URL = "/subscription/";
+    private static final String SUBSCRIPTION_PATH = "/subscription";
     private static final String MI_REPORTING_SUBSCRIPTION_DATA_ALL_URL = "/subscription/mi-data-all";
     private static final String MI_REPORTING_SUBSCRIPTION_DATA_LOCAL_URL = "/subscription/mi-data-local";
     private static final String SUBSCRIPTION_USER_PATH = "/subscription/user/" + UUID_STRING;
-    private static final String UPDATE_LIST_TYPE_PATH = "/subscription/configure-list-types/" + VALID_USER_ID;
-    private static final String ADD_LIST_TYPE_PATH = "/subscription/add-list-types/" + VALID_USER_ID;
     private static final String ARTEFACT_RECIPIENT_PATH = "/subscription/artefact-recipients";
     private static final String DELETED_ARTEFACT_RECIPIENT_PATH = "/subscription/deleted-artefact";
     private static final String DELETED_BULK_SUBSCRIPTION_V2_PATH = "/subscription/v2/bulk";
-    private static final String SUBSCRIPTIONS_BY_LOCATION = "/subscription/location/";
     private static final LocalDateTime DATE_ADDED = LocalDateTime.now();
     private static final String UNAUTHORIZED_ROLE = "APPROLE_unknown.authorized";
     private static final String UNAUTHORIZED_USERNAME = "unauthorized_isAuthorized";
@@ -129,27 +119,23 @@ class SubscriptionTest extends IntegrationTestBase {
     private static final String EXPECTED_MI_DATA_LOCAL_HEADERS = "id,search_value,channel,user_id,court_name,"
         + "created_date";
 
-    protected static final String SUBSCRIPTION_PATH = "/subscription";
-    protected static final uk.gov.hmcts.reform.pip.model.subscription.Subscription SUBSCRIPTION =
-        new uk.gov.hmcts.reform.pip.model.subscription.Subscription();
-
     private static final String ACTIONING_USER_ID = "87f907d2-eb28-42cc-b6e1-ae2b03f7bba5";
     private static final String INVALID_ACTIONING_USER_ID = "87f907d2-eb28-42cc-b6e1-ae2b03f7bba6";
-    private static final String SYSTEM_ADMIN_PROVENANCE_ID = "e5f1cc77-6e9a-40ab-8da0-a9666b328466";
     private static final String SYSTEM_ADMIN_USER_ID = "87f907d2-eb28-42cc-b6e1-ae2b03f7bba4";
     private static final String USER_ID_HEADER = "x-user-id";
     private static final String TEST_EMAIL = "test-email-cath@justice.gov.uk";
 
     private static final String ADD_ADMIN_USERS_SCRIPT = "classpath:add-admin-users.sql";
     private static final String ADD_VERIFIED_USERS_SCRIPT = "classpath:add-verified-users.sql";
+    private static final Subscription SUBSCRIPTION = new Subscription();
+
+    private static PiUser systemAdminUser = new PiUser();
+    private static PiUser verifiedUser = new PiUser();
 
     private static String rawArtefact;
 
     @Autowired
-    protected MockMvc mvc;
-
-    private static PiUser systemAdminUser = new PiUser();
-    private static PiUser verifiedUser = new PiUser();
+    private MockMvc mvc;
 
     @BeforeAll
     static void setup() throws IOException {
@@ -171,7 +157,7 @@ class SubscriptionTest extends IntegrationTestBase {
     protected MockHttpServletRequestBuilder setupMockSubscription(String searchValue) throws JsonProcessingException {
 
         SUBSCRIPTION.setSearchValue(searchValue);
-        SUBSCRIPTION.setLocationName(LOCATION_NAME_1);
+        SUBSCRIPTION.setLocationName(LOCATION_NAME);
         SUBSCRIPTION.setCaseName(CASE_NAME);
         SUBSCRIPTION.setCaseNumber(CASE_ID);
         SUBSCRIPTION.setUrn(CASE_URN);
@@ -243,44 +229,18 @@ class SubscriptionTest extends IntegrationTestBase {
             getResponse.getResponse().getContentAsString(),
             Subscription.class
         );
-        assertEquals(
-            SUBSCRIPTION.getChannel(),
-            returnedSubscription.getChannel(),
-            VALIDATION_CHANNEL_NAME
-        );
-        assertEquals(
-            SUBSCRIPTION.getSearchType(),
-            returnedSubscription.getSearchType(),
-            VALIDATION_SEARCH_TYPE
-        );
-        assertEquals(
-            SUBSCRIPTION.getSearchValue(),
-            returnedSubscription.getSearchValue(),
-            VALIDATION_SEARCH_VALUE
-        );
-        assertEquals(
-            SUBSCRIPTION.getUserId(),
-            returnedSubscription.getUserId(),
-            VALIDATION_USER_ID
-        );
+        assertEquals(SUBSCRIPTION.getChannel(), returnedSubscription.getChannel(), VALIDATION_CHANNEL_NAME);
+        assertEquals(SUBSCRIPTION.getSearchType(), returnedSubscription.getSearchType(), VALIDATION_SEARCH_TYPE);
+        assertEquals(SUBSCRIPTION.getSearchValue(), returnedSubscription.getSearchValue(), VALIDATION_SEARCH_VALUE);
+        assertEquals(SUBSCRIPTION.getUserId(), returnedSubscription.getUserId(), VALIDATION_USER_ID);
 
         assertNotNull(returnedSubscription.getId(), VALIDATION_UUID);
 
-        assertEquals(CASE_NAME, returnedSubscription.getCaseName(),
-                     VALIDATION_CASE_NAME
-        );
-        assertEquals(CASE_ID, returnedSubscription.getCaseNumber(),
-                     VALIDATION_CASE_NUMBER
-        );
-        assertEquals(CASE_URN, returnedSubscription.getUrn(),
-                     VALIDATION_CASE_URN
-        );
-        assertEquals(PARTY_NAMES, returnedSubscription.getPartyNames(),
-                     VALIDATION_PARTY_NAMES
-        );
-        assertEquals(LOCATION_NAME_1, returnedSubscription.getLocationName(),
-                     VALIDATION_LOCATION_NAME
-        );
+        assertEquals(CASE_NAME, returnedSubscription.getCaseName(), VALIDATION_CASE_NAME);
+        assertEquals(CASE_ID, returnedSubscription.getCaseNumber(), VALIDATION_CASE_NUMBER);
+        assertEquals(CASE_URN, returnedSubscription.getUrn(), VALIDATION_CASE_URN);
+        assertEquals(PARTY_NAMES, returnedSubscription.getPartyNames(), VALIDATION_PARTY_NAMES);
+        assertEquals(LOCATION_NAME, returnedSubscription.getLocationName(), VALIDATION_LOCATION_NAME);
     }
 
     @DisplayName("Ensure post endpoint actually posts a subscription to db")
@@ -289,7 +249,9 @@ class SubscriptionTest extends IntegrationTestBase {
         SUBSCRIPTION.setPartyNames(PARTY_NAMES);
         MockHttpServletRequestBuilder mappedSubscription = setupMockSubscription(LOCATION_ID);
 
-        MvcResult response = mvc.perform(mappedSubscription).andExpect(status().isCreated()).andReturn();
+        MvcResult response = mvc.perform(mappedSubscription)
+            .andExpect(status().isCreated())
+            .andReturn();
         assertNotNull(response.getResponse().getContentAsString(), VALIDATION_EMPTY_RESPONSE);
 
         String subscriptionResponse = response.getResponse().getContentAsString();
@@ -311,44 +273,17 @@ class SubscriptionTest extends IntegrationTestBase {
         String subscriptionResponse2 = findResponse.getResponse().getContentAsString();
         Subscription returnedSubscription2 = OBJECT_MAPPER.readValue(subscriptionResponse2, Subscription.class);
 
-        assertEquals(
-            SUBSCRIPTION.getChannel(),
-            returnedSubscription2.getChannel(),
-            VALIDATION_CHANNEL_NAME
-        );
-        assertEquals(
-            SUBSCRIPTION.getSearchType(),
-            returnedSubscription2.getSearchType(),
-            VALIDATION_SEARCH_TYPE
-        );
-        assertEquals(
-            SUBSCRIPTION.getSearchValue(),
-            returnedSubscription2.getSearchValue(),
-            VALIDATION_SEARCH_VALUE
-        );
-        assertEquals(
-            SUBSCRIPTION.getUserId(),
-            returnedSubscription2.getUserId(),
-            VALIDATION_USER_ID
-        );
+        assertEquals(SUBSCRIPTION.getChannel(), returnedSubscription2.getChannel(), VALIDATION_CHANNEL_NAME);
+        assertEquals(SUBSCRIPTION.getSearchType(), returnedSubscription2.getSearchType(), VALIDATION_SEARCH_TYPE);
+        assertEquals(SUBSCRIPTION.getSearchValue(), returnedSubscription2.getSearchValue(), VALIDATION_SEARCH_VALUE);
+        assertEquals(SUBSCRIPTION.getUserId(), returnedSubscription2.getUserId(), VALIDATION_USER_ID);
         assertNotNull(returnedSubscription2.getId(), VALIDATION_UUID);
 
-        assertEquals(CASE_NAME, returnedSubscription2.getCaseName(),
-                     VALIDATION_CASE_NAME
-        );
-        assertEquals(CASE_ID, returnedSubscription2.getCaseNumber(),
-                     VALIDATION_CASE_NUMBER
-        );
-        assertEquals(CASE_URN, returnedSubscription2.getUrn(),
-                     VALIDATION_CASE_URN
-        );
-        assertEquals(PARTY_NAMES, returnedSubscription2.getPartyNames(),
-                     VALIDATION_PARTY_NAMES
-        );
-        assertEquals(LOCATION_NAME_1, returnedSubscription2.getLocationName(),
-                     VALIDATION_LOCATION_NAME
-        );
-
+        assertEquals(CASE_NAME, returnedSubscription2.getCaseName(), VALIDATION_CASE_NAME);
+        assertEquals(CASE_ID, returnedSubscription2.getCaseNumber(), VALIDATION_CASE_NUMBER);
+        assertEquals(CASE_URN, returnedSubscription2.getUrn(), VALIDATION_CASE_URN);
+        assertEquals(PARTY_NAMES, returnedSubscription2.getPartyNames(), VALIDATION_PARTY_NAMES);
+        assertEquals(LOCATION_NAME, returnedSubscription2.getLocationName(), VALIDATION_LOCATION_NAME);
     }
 
     @DisplayName("Checks for bad request for invalid searchType enum.")
@@ -482,9 +417,9 @@ class SubscriptionTest extends IntegrationTestBase {
         assertNotNull(response.getResponse().getContentAsString(), VALIDATION_EMPTY_RESPONSE);
 
         String subscriptionResponse = response.getResponse().getContentAsString();
-        String ourUuid =
-            Arrays.stream(subscriptionResponse.split(" ")).max(Comparator.comparingInt(String::length))
-                .orElse(null);
+        String ourUuid = Arrays.stream(subscriptionResponse.split(" "))
+            .max(Comparator.comparingInt(String::length))
+            .orElse(null);
 
         MvcResult getResponse = mvc.perform(getSubscriptionByUuid(ourUuid)).andReturn();
         Subscription returnedSubscription = OBJECT_MAPPER.readValue(
@@ -501,8 +436,7 @@ class SubscriptionTest extends IntegrationTestBase {
     @Test
     @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = ADD_VERIFIED_USERS_SCRIPT)
     void failedDelete() throws Exception {
-        String randomUuid = UUID_STRING;
-        MvcResult response = mvc.perform(delete(SUBSCRIPTION_BASE_URL + randomUuid)
+        MvcResult response = mvc.perform(delete(SUBSCRIPTION_BASE_URL + UUID_STRING)
                                              .header(USER_ID_HEADER, ACTIONING_USER_ID))
             .andExpect(status().isNotFound()).andReturn();
         assertNotNull(response.getResponse().getContentAsString(), VALIDATION_EMPTY_RESPONSE);
@@ -511,7 +445,7 @@ class SubscriptionTest extends IntegrationTestBase {
         ExceptionResponse exceptionResponse = OBJECT_MAPPER.readValue(errorResponse, ExceptionResponse.class);
 
         assertEquals(
-            "No subscription found with the subscription id " + randomUuid,
+            "No subscription found with the subscription id " + UUID_STRING,
             exceptionResponse.getMessage(),
             "Incorrect status code"
         );
@@ -520,8 +454,7 @@ class SubscriptionTest extends IntegrationTestBase {
     @DisplayName("Check response if findBySubId fails")
     @Test
     void failedFind() throws Exception {
-        String randomUuid = UUID_STRING;
-        MvcResult response = mvc.perform(get(SUBSCRIPTION_BASE_URL + randomUuid))
+        MvcResult response = mvc.perform(get(SUBSCRIPTION_BASE_URL + UUID_STRING))
             .andExpect(status()
                            .isNotFound()).andReturn();
         assertNotNull(response.getResponse().getContentAsString(), VALIDATION_EMPTY_RESPONSE);
@@ -530,7 +463,7 @@ class SubscriptionTest extends IntegrationTestBase {
         ExceptionResponse exceptionResponse = OBJECT_MAPPER.readValue(errorResponse, ExceptionResponse.class);
 
         assertEquals(
-            "No subscription found with the subscription id " + randomUuid,
+            "No subscription found with the subscription id " + UUID_STRING,
             exceptionResponse.getMessage(),
             "Incorrect status code"
         );
@@ -559,10 +492,9 @@ class SubscriptionTest extends IntegrationTestBase {
         );
 
         LocationSubscription location = userSubscriptions.getLocationSubscriptions().get(0);
-        assertEquals(LOCATION_NAME_1, location.getLocationName(), VALIDATION_LOCATION_NAME);
+        assertEquals(LOCATION_NAME, location.getLocationName(), VALIDATION_LOCATION_NAME);
         assertEquals(DATE_ADDED.withNano(0), location.getDateAdded().withNano(0),
-                     VALIDATION_DATE_ADDED
-        );
+                     VALIDATION_DATE_ADDED);
 
         CaseSubscription caseSubscription = userSubscriptions.getCaseSubscriptions().get(0);
         assertEquals(CASE_NAME, caseSubscription.getCaseName(), VALIDATION_CASE_NAME);
@@ -616,18 +548,15 @@ class SubscriptionTest extends IntegrationTestBase {
             OBJECT_MAPPER.readValue(response.getResponse().getContentAsString(), UserSubscription.class);
 
         assertEquals(1, userSubscriptions.getLocationSubscriptions().size(),
-                     "Court subscription list does not contain 1 court"
-        );
+                     "Court subscription list does not contain 1 court");
 
         assertEquals(0, userSubscriptions.getCaseSubscriptions().size(),
-                     "Court subscription list contains unknown cases"
-        );
+                     "Court subscription list contains unknown cases");
 
         LocationSubscription location = userSubscriptions.getLocationSubscriptions().get(0);
-        assertEquals(LOCATION_NAME_1, location.getLocationName(), VALIDATION_LOCATION_NAME);
+        assertEquals(LOCATION_NAME, location.getLocationName(), VALIDATION_LOCATION_NAME);
         assertEquals(DATE_ADDED.withNano(0), location.getDateAdded().withNano(0),
-                     VALIDATION_DATE_ADDED
-        );
+                     VALIDATION_DATE_ADDED);
     }
 
     @Test
@@ -643,13 +572,8 @@ class SubscriptionTest extends IntegrationTestBase {
         UserSubscription userSubscriptions =
             OBJECT_MAPPER.readValue(response.getResponse().getContentAsString(), UserSubscription.class);
 
-        assertEquals(0, userSubscriptions.getLocationSubscriptions().size(),
-                     VALIDATION_LOCATION_LIST
-        );
-
-        assertEquals(1, userSubscriptions.getCaseSubscriptions().size(),
-                     VALIDATION_ONE_CASE_LOCATION
-        );
+        assertEquals(0, userSubscriptions.getLocationSubscriptions().size(), VALIDATION_LOCATION_LIST);
+        assertEquals(1, userSubscriptions.getCaseSubscriptions().size(), VALIDATION_ONE_CASE_LOCATION);
 
         CaseSubscription caseSubscription = userSubscriptions.getCaseSubscriptions().get(0);
         assertEquals(CASE_NAME, caseSubscription.getCaseName(), VALIDATION_CASE_NAME);
@@ -672,13 +596,8 @@ class SubscriptionTest extends IntegrationTestBase {
         UserSubscription userSubscriptions =
             OBJECT_MAPPER.readValue(response.getResponse().getContentAsString(), UserSubscription.class);
 
-        assertEquals(0, userSubscriptions.getLocationSubscriptions().size(),
-                     VALIDATION_LOCATION_LIST
-        );
-
-        assertEquals(1, userSubscriptions.getCaseSubscriptions().size(),
-                     VALIDATION_ONE_CASE_LOCATION
-        );
+        assertEquals(0, userSubscriptions.getLocationSubscriptions().size(), VALIDATION_LOCATION_LIST);
+        assertEquals(1, userSubscriptions.getCaseSubscriptions().size(), VALIDATION_ONE_CASE_LOCATION);
 
         CaseSubscription caseSubscription = userSubscriptions.getCaseSubscriptions().get(0);
         assertEquals(CASE_NAME, caseSubscription.getCaseName(), VALIDATION_CASE_NAME);
@@ -699,8 +618,7 @@ class SubscriptionTest extends IntegrationTestBase {
             OBJECT_MAPPER.readValue(response.getResponse().getContentAsString(), UserSubscription.class);
 
         assertEquals(new UserSubscription(), userSubscriptions,
-                     VALIDATION_NO_SUBSCRIPTIONS
-        );
+                     VALIDATION_NO_SUBSCRIPTIONS);
     }
 
     @Test
@@ -713,8 +631,7 @@ class SubscriptionTest extends IntegrationTestBase {
         MvcResult result = mvc.perform(request).andExpect(status().isAccepted()).andReturn();
 
         assertEquals(SUBSCRIBER_REQUEST_SUCCESS, result.getResponse().getContentAsString(),
-                     RESPONSE_MATCH
-        );
+                     RESPONSE_MATCH);
     }
 
     @Test
@@ -727,8 +644,7 @@ class SubscriptionTest extends IntegrationTestBase {
         MvcResult result = mvc.perform(request).andExpect(status().isAccepted()).andReturn();
 
         assertEquals(SUBSCRIBER_REQUEST_SUCCESS, result.getResponse().getContentAsString(),
-                     RESPONSE_MATCH
-        );
+                     RESPONSE_MATCH);
     }
 
     @Test
@@ -741,8 +657,7 @@ class SubscriptionTest extends IntegrationTestBase {
         MvcResult result = mvc.perform(request).andExpect(status().isAccepted()).andReturn();
 
         assertEquals(SUBSCRIBER_REQUEST_SUCCESS, result.getResponse().getContentAsString(),
-                     RESPONSE_MATCH
-        );
+                     RESPONSE_MATCH);
     }
 
     @Test
@@ -756,8 +671,7 @@ class SubscriptionTest extends IntegrationTestBase {
         MvcResult mvcResult = mvc.perform(request).andExpect(status().isForbidden()).andReturn();
 
         assertEquals(FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
-                     FORBIDDEN_STATUS_CODE
-        );
+                     FORBIDDEN_STATUS_CODE);
     }
 
     @Test
@@ -771,8 +685,7 @@ class SubscriptionTest extends IntegrationTestBase {
         MvcResult result = mvc.perform(request).andExpect(status().isAccepted()).andReturn();
 
         assertEquals(SUBSCRIBER_REQUEST_SUCCESS, result.getResponse().getContentAsString(),
-                     RESPONSE_MATCH
-        );
+                     RESPONSE_MATCH);
     }
 
     @Test
@@ -784,8 +697,7 @@ class SubscriptionTest extends IntegrationTestBase {
             mvc.perform(mappedSubscription).andExpect(status().isForbidden()).andReturn();
 
         assertEquals(FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
-                     FORBIDDEN_STATUS_CODE
-        );
+                     FORBIDDEN_STATUS_CODE);
     }
 
     @Test
@@ -795,8 +707,7 @@ class SubscriptionTest extends IntegrationTestBase {
         ).andExpect(status().isForbidden()).andReturn();
 
         assertEquals(FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
-                     FORBIDDEN_STATUS_CODE
-        );
+                     FORBIDDEN_STATUS_CODE);
     }
 
     @Test
@@ -806,8 +717,7 @@ class SubscriptionTest extends IntegrationTestBase {
             .andExpect(status().isForbidden()).andReturn();
 
         assertEquals(FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
-                     FORBIDDEN_STATUS_CODE
-        );
+                     FORBIDDEN_STATUS_CODE);
     }
 
     @Test
@@ -816,71 +726,7 @@ class SubscriptionTest extends IntegrationTestBase {
         MvcResult mvcResult = mvc.perform(get(SUBSCRIPTION_USER_PATH)).andExpect(status().isForbidden()).andReturn();
 
         assertEquals(FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
-                     FORBIDDEN_STATUS_CODE
-        );
-    }
-
-    @Test
-    void testAddListTypesForSubscription() throws Exception {
-        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
-            .post(ADD_LIST_TYPE_PATH)
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(RAW_JSON_ADD_UPDATE_LIST_TYPE);
-        MvcResult result = mvc.perform(request).andExpect(status().isCreated()).andReturn();
-
-        assertEquals(String.format(
-                         "Location list Type successfully added for user %s",
-                         VALID_USER_ID
-                     ),
-                     result.getResponse().getContentAsString(), RESPONSE_MATCH
-        );
-    }
-
-    @Test
-    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
-    void testUnauthorizedAddListTypesForSubscription() throws Exception {
-
-        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
-            .post(ADD_LIST_TYPE_PATH)
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(RAW_JSON_ADD_UPDATE_LIST_TYPE);
-        MvcResult mvcResult = mvc.perform(request).andExpect(status().isForbidden()).andReturn();
-
-        assertEquals(FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
-                     FORBIDDEN_STATUS_CODE
-        );
-    }
-
-    @Test
-    void testConfigureListTypesForSubscription() throws Exception {
-        mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, VALID_USER_ID));
-        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
-            .put(UPDATE_LIST_TYPE_PATH)
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(RAW_JSON_ADD_UPDATE_LIST_TYPE);
-        MvcResult result = mvc.perform(request).andExpect(status().isOk()).andReturn();
-
-        assertEquals(String.format(
-                         "Location list Type successfully updated for user %s",
-                         VALID_USER_ID
-                     ),
-                     result.getResponse().getContentAsString(), RESPONSE_MATCH
-        );
-    }
-
-    @Test
-    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
-    void testUnauthorizedConfigureListTypesForSubscription() throws Exception {
-
-        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
-            .put(UPDATE_LIST_TYPE_PATH)
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(RAW_JSON_ADD_UPDATE_LIST_TYPE);
-        MvcResult mvcResult = mvc.perform(request).andExpect(status().isForbidden()).andReturn();
-
-        assertEquals(FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
-                     FORBIDDEN_STATUS_CODE
-        );
+                     FORBIDDEN_STATUS_CODE);
     }
 
     @Test
@@ -893,8 +739,7 @@ class SubscriptionTest extends IntegrationTestBase {
         MvcResult result = mvc.perform(request).andExpect(status().isAccepted()).andReturn();
 
         assertEquals("Deleted artefact third party subscriber notification request has been accepted",
-                     result.getResponse().getContentAsString(), RESPONSE_MATCH
-        );
+                     result.getResponse().getContentAsString(), RESPONSE_MATCH);
     }
 
 
@@ -932,14 +777,13 @@ class SubscriptionTest extends IntegrationTestBase {
             mvc.perform(getSubscriptionByUuid(caseSubscriptionId))
                 .andExpect(status().isNotFound()).andReturn();
         assertEquals(NOT_FOUND.value(), getCaseSubscriptionResponse.getResponse().getStatus(),
-                     NOT_FOUND_STATUS_CODE
-        );
+                     NOT_FOUND_STATUS_CODE);
+
         MvcResult getLocationSubscriptionResponse =
             mvc.perform(getSubscriptionByUuid(locationSubscriptionId))
                 .andExpect(status().isNotFound()).andReturn();
         assertEquals(NOT_FOUND.value(), getLocationSubscriptionResponse.getResponse().getStatus(),
-                     NOT_FOUND_STATUS_CODE
-        );
+                     NOT_FOUND_STATUS_CODE);
     }
 
     @Test
@@ -976,14 +820,13 @@ class SubscriptionTest extends IntegrationTestBase {
             mvc.perform(getSubscriptionByUuid(caseSubscriptionId))
                 .andExpect(status().isNotFound()).andReturn();
         assertEquals(NOT_FOUND.value(), getCaseSubscriptionResponse.getResponse().getStatus(),
-                     NOT_FOUND_STATUS_CODE
-        );
+                     NOT_FOUND_STATUS_CODE);
+
         MvcResult getLocationSubscriptionResponse =
             mvc.perform(getSubscriptionByUuid(locationSubscriptionId))
                 .andExpect(status().isNotFound()).andReturn();
         assertEquals(NOT_FOUND.value(), getLocationSubscriptionResponse.getResponse().getStatus(),
-                     NOT_FOUND_STATUS_CODE
-        );
+                     NOT_FOUND_STATUS_CODE);
     }
 
     @Test
@@ -1010,8 +853,7 @@ class SubscriptionTest extends IntegrationTestBase {
             .andReturn();
 
         assertEquals(FORBIDDEN.value(), response.getResponse().getStatus(),
-                     FORBIDDEN_STATUS_CODE
-        );
+                     FORBIDDEN_STATUS_CODE);
     }
 
     @Test
@@ -1025,8 +867,7 @@ class SubscriptionTest extends IntegrationTestBase {
             .andExpect(status().isNotFound()).andReturn();
 
         assertEquals(NOT_FOUND.value(), response.getResponse().getStatus(),
-                     NOT_FOUND_STATUS_CODE
-        );
+                     NOT_FOUND_STATUS_CODE);
     }
 
     @Test
@@ -1041,16 +882,7 @@ class SubscriptionTest extends IntegrationTestBase {
             .andExpect(status().isNotFound()).andReturn();
 
         assertEquals(NOT_FOUND.value(), response.getResponse().getStatus(),
-                     NOT_FOUND_STATUS_CODE
-        );
-    }
-
-    private String getSubscriptionId(String response) {
-        String subscriptionId;
-        int startIndex = response.indexOf("the id ") + "the id ".length();
-        int endIndex = response.indexOf(" for user ");
-        subscriptionId = response.substring(startIndex, endIndex);
-        return subscriptionId.trim();
+                     NOT_FOUND_STATUS_CODE);
     }
 
     @Test
@@ -1064,8 +896,7 @@ class SubscriptionTest extends IntegrationTestBase {
         MvcResult mvcResult = mvc.perform(request).andExpect(status().isForbidden()).andReturn();
 
         assertEquals(FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
-                     FORBIDDEN_STATUS_CODE
-        );
+                     FORBIDDEN_STATUS_CODE);
     }
 
     @Test
@@ -1076,8 +907,7 @@ class SubscriptionTest extends IntegrationTestBase {
             .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
 
         assertEquals(EXPECTED_MI_DATA_ALL_HEADERS, response.split("\n")[0],
-                     "Should successfully retrieve MI data headers"
-        );
+                     "Should successfully retrieve MI data headers");
         assertThat(response.contains(VALID_USER_ID));
     }
 
@@ -1089,8 +919,7 @@ class SubscriptionTest extends IntegrationTestBase {
             .andReturn();
 
         assertEquals(FORBIDDEN.value(), response.getResponse().getStatus(),
-                     FORBIDDEN_STATUS_CODE
-        );
+                     FORBIDDEN_STATUS_CODE);
     }
 
     @Test
@@ -1101,8 +930,7 @@ class SubscriptionTest extends IntegrationTestBase {
             .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
 
         assertEquals(EXPECTED_MI_DATA_LOCAL_HEADERS, response.split("\n")[0],
-                     "Should successfully retrieve MI data headers"
-        );
+                     "Should successfully retrieve MI data headers");
         assertThat(response.contains(VALID_USER_ID));
     }
 
@@ -1114,107 +942,14 @@ class SubscriptionTest extends IntegrationTestBase {
             .andReturn();
 
         assertEquals(FORBIDDEN.value(), response.getResponse().getStatus(),
-                     FORBIDDEN_STATUS_CODE
-        );
+                     FORBIDDEN_STATUS_CODE);
     }
 
-    @Test
-    void testFindSubscriptionsByLocationId() throws Exception {
-        mvc.perform(setupMockSubscription(LOCATION_ID, SearchType.LOCATION_ID, UUID_STRING));
-
-        MvcResult response = mvc.perform(get(SUBSCRIPTIONS_BY_LOCATION + LOCATION_ID))
-            .andExpect(status().isOk())
-            .andReturn();
-
-        assertNotNull(response.getResponse(), VALIDATION_EMPTY_RESPONSE);
-
-        List<Subscription> userSubscriptions =
-            Arrays.asList(OBJECT_MAPPER.readValue(response.getResponse().getContentAsString(), Subscription[].class));
-
-        assertEquals(1, userSubscriptions.size(),
-                     "Subscriptions list for location id " + LOCATION_ID + " not found"
-        );
-        assertEquals(LOCATION_ID, userSubscriptions.get(0).getSearchValue(),
-                     "Subscriptions list for location id " + LOCATION_ID + " not found"
-        );
-    }
-
-    @Test
-    void testFindSubscriptionsByLocationIdNotFound() throws Exception {
-
-        MvcResult response = mvc.perform(get(SUBSCRIPTIONS_BY_LOCATION + LOCATION_ID))
-            .andExpect(status().isNotFound())
-            .andReturn();
-
-        assertEquals(NOT_FOUND.value(), response.getResponse().getStatus(),
-                     FORBIDDEN_STATUS_CODE
-        );
-    }
-
-    @Test
-    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
-    void testFindSubscriptionsByLocationIdUnauthorized() throws Exception {
-
-        MvcResult response = mvc.perform(get(SUBSCRIPTIONS_BY_LOCATION + LOCATION_ID))
-            .andExpect(status().isForbidden())
-            .andReturn();
-
-        assertEquals(FORBIDDEN.value(), response.getResponse().getStatus(),
-                     FORBIDDEN_STATUS_CODE
-        );
-    }
-
-    @Test
-    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = ADD_ADMIN_USERS_SCRIPT)
-    void testDeleteSubscriptionByLocation() throws Exception {
-        doNothing().when(publicationService)
-            .sendLocationDeletionSubscriptionEmail(List.of(TEST_EMAIL), LOCATION_NAME_1);
-
-        doNothing().when(publicationService).sendSystemAdminEmail(
-            List.of(TEST_EMAIL, TEST_EMAIL), TEST_EMAIL, ActionResult.SUCCEEDED, SYSTEM_ADMIN_PROVENANCE_ID
-        );
-
-        mvc.perform(setupMockSubscription(LOCATION_ID, SearchType.LOCATION_ID, UUID_STRING));
-
-        mvc.perform(get(SUBSCRIPTIONS_BY_LOCATION + LOCATION_ID))
-            .andExpect(status().isOk());
-
-        MvcResult deleteResponse = mvc.perform(delete(
-                SUBSCRIPTIONS_BY_LOCATION + LOCATION_ID)
-                                                   .header(USER_ID_HEADER, SYSTEM_ADMIN_USER_ID))
-            .andExpect(status().isOk()).andReturn();
-
-        assertNotNull(deleteResponse.getResponse(), VALIDATION_EMPTY_RESPONSE);
-
-        assertEquals(
-            String.format("Total 1 subscriptions deleted for location id %s", LOCATION_ID),
-            deleteResponse.getResponse().getContentAsString(),
-            "Responses are not equal"
-        );
-    }
-
-    @Test
-    void testDeleteSubscriptionByLocationNotFound() throws Exception {
-        MvcResult response = mvc.perform(delete(
-                SUBSCRIPTIONS_BY_LOCATION + LOCATION_ID)
-                                             .header(USER_ID_HEADER, SYSTEM_ADMIN_USER_ID))
-            .andExpect(status().isNotFound())
-            .andReturn();
-
-        assertEquals(NOT_FOUND.value(), response.getResponse().getStatus(),
-                     NOT_FOUND_STATUS_CODE
-        );
-    }
-
-    @Test
-    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
-    void testDeleteSubscriptionByLocationUnauthorized() throws Exception {
-        MvcResult response = mvc.perform(delete(SUBSCRIPTIONS_BY_LOCATION + LOCATION_ID)
-                                             .header(USER_ID_HEADER, SYSTEM_ADMIN_USER_ID))
-            .andExpect(status().isForbidden()).andReturn();
-
-        assertEquals(FORBIDDEN.value(), response.getResponse().getStatus(),
-                     FORBIDDEN_STATUS_CODE
-        );
+    private String getSubscriptionId(String response) {
+        String subscriptionId;
+        int startIndex = response.indexOf("the id ") + "the id ".length();
+        int endIndex = response.indexOf(" for user ");
+        subscriptionId = response.substring(startIndex, endIndex);
+        return subscriptionId.trim();
     }
 }

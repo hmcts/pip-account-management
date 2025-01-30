@@ -20,7 +20,6 @@ import uk.gov.hmcts.reform.pip.model.subscription.Channel;
 import uk.gov.hmcts.reform.pip.model.subscription.SearchType;
 
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -45,7 +44,7 @@ class UserSubscriptionServiceTest {
     private static final String COURT_NAME = "test court name";
     private static final String LIST_NAME = ListType.CIVIL_DAILY_CAUSE_LIST.name();
 
-    private static final List<String> LIST_TYPES = Arrays.asList(ListType.CIVIL_DAILY_CAUSE_LIST.name());
+    private static final List<String> LIST_TYPES = List.of(ListType.CIVIL_DAILY_CAUSE_LIST.name());
     private static final LocalDateTime DATE_ADDED = LocalDateTime.now();
 
     private List<Subscription> mockSubscriptionList;

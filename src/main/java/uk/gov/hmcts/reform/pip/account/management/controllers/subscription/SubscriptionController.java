@@ -19,15 +19,12 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import uk.gov.hmcts.reform.pip.account.management.model.subscription.Subscription;
-import uk.gov.hmcts.reform.pip.account.management.model.subscription.SubscriptionListType;
 import uk.gov.hmcts.reform.pip.account.management.model.subscription.usersubscription.UserSubscription;
-import uk.gov.hmcts.reform.pip.account.management.service.subscription.SubscriptionLocationService;
 import uk.gov.hmcts.reform.pip.account.management.service.subscription.SubscriptionNotificationService;
 import uk.gov.hmcts.reform.pip.account.management.service.subscription.SubscriptionService;
 import uk.gov.hmcts.reform.pip.account.management.service.subscription.UserSubscriptionService;
@@ -38,14 +35,13 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@Tag(name = "Subscription Management API")
+@Tag(name = "Account Management - API for managing account subscriptions")
 @RequestMapping("/subscription")
 @ApiResponse(responseCode = "401", description = "Invalid access credential")
 @ApiResponse(responseCode = "403", description = "User has not been authorized")
 @Valid
 @IsAdmin
 @SecurityRequirement(name = "bearerAuth")
-@SuppressWarnings({"PMD.TooManyMethods"})
 public class SubscriptionController {
 
     private static final String OK_CODE = "200";
@@ -55,19 +51,16 @@ public class SubscriptionController {
     private final SubscriptionService subscriptionService;
     private final UserSubscriptionService userSubscriptionService;
     private final SubscriptionNotificationService subscriptionNotificationService;
-    private final SubscriptionLocationService subscriptionLocationService;
 
     @Autowired
     public SubscriptionController(
         SubscriptionService subscriptionService,
         UserSubscriptionService userSubscriptionService,
-        SubscriptionNotificationService subscriptionNotificationService,
-        SubscriptionLocationService subscriptionLocationService
+        SubscriptionNotificationService subscriptionNotificationService
     ) {
         this.subscriptionService = subscriptionService;
         this.userSubscriptionService = userSubscriptionService;
         this.subscriptionNotificationService = subscriptionNotificationService;
-        this.subscriptionLocationService = subscriptionLocationService;
     }
 
     @PostMapping(consumes = "application/json")
@@ -156,36 +149,6 @@ public class SubscriptionController {
             "Deleted artefact third party subscriber notification request has been accepted");
     }
 
-    @PostMapping("/add-list-types/{userId}")
-    @Operation(summary = "Endpoint to add list type for existing subscription")
-    @ApiResponse(responseCode = "201", description = "Subscription successfully updated for user: {userId}")
-    @ApiResponse(responseCode = "400", description =
-        "This request object has an invalid format. Please check again.")
-    public ResponseEntity<String> addListTypesForSubscription(@PathVariable String userId,
-            @RequestBody SubscriptionListType subscriptionListType) {
-        subscriptionService.addListTypesForSubscription(subscriptionListType, userId);
-        return ResponseEntity.status(HttpStatus.CREATED)
-            .body(String.format(
-                "Location list Type successfully added for user %s",
-                userId
-            ));
-    }
-
-    @PutMapping("/configure-list-types/{userId}")
-    @Operation(summary = "Endpoint to update list type for existing subscription")
-    @ApiResponse(responseCode = "200", description = "Subscription successfully updated for user: {userId}")
-    @ApiResponse(responseCode = "400", description =
-        "This request object has an invalid format. Please check again.")
-    public ResponseEntity<String> configureListTypesForSubscription(@PathVariable String userId,
-            @RequestBody SubscriptionListType subscriptionListType) {
-        subscriptionService.configureListTypesForSubscription(subscriptionListType, userId);
-        return ResponseEntity.status(HttpStatus.OK)
-            .body(String.format(
-                "Location list Type successfully updated for user %s",
-                userId
-            ));
-    }
-
     @ApiResponse(responseCode = OK_CODE, description = "A CSV like structure which contains the data. "
         + "See example for headers ", content = {
             @Content(examples = {@ExampleObject("id,channel,search_type,user_id,court_name,created_date")},
@@ -216,28 +179,5 @@ public class SubscriptionController {
     public ResponseEntity<String> getSubscriptionDataForMiReportingLocal() {
         return ResponseEntity.status(HttpStatus.OK)
             .body(subscriptionService.getLocalSubscriptionsDataForMiReporting());
-    }
-
-    @ApiResponse(responseCode = OK_CODE, description =
-        "Subscriptions list for location id {locationId} found")
-    @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description =
-        "No subscription found with the location id {locationId}")
-    @GetMapping("/location/{locationId}")
-    public ResponseEntity<List<Subscription>> findSubscriptionsByLocationId(
-        @PathVariable String locationId) {
-        return ResponseEntity.ok(subscriptionLocationService.findSubscriptionsByLocationId(locationId));
-    }
-
-    @ApiResponse(responseCode = OK_CODE, description = "Subscription for location {locationId} has been deleted")
-    @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description = "No subscription found for location {locationId}")
-    @Transactional
-    @DeleteMapping("/location/{locationId}")
-    @IsAdmin
-    public ResponseEntity<String> deleteSubscriptionByLocation(@RequestHeader(X_USER_ID_HEADER) String userId,
-                                                               @PathVariable Integer locationId) {
-        return ResponseEntity.ok(subscriptionLocationService.deleteSubscriptionByLocation(
-            locationId.toString(),
-            userId
-        ));
     }
 }

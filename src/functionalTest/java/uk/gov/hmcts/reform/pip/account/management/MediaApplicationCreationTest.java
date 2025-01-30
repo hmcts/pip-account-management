@@ -1,4 +1,4 @@
-package uk.gov.hmcts.reform.pip.account.management.controllers;
+package uk.gov.hmcts.reform.pip.account.management;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.dockerjava.zerodep.shaded.org.apache.hc.core5.http.HttpHeaders;

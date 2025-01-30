@@ -17,7 +17,7 @@ import uk.gov.hmcts.reform.pip.model.subscription.Channel;
 import java.util.List;
 
 @RestController
-@Tag(name = "Subscription Channel API")
+@Tag(name = "Account Management - API for managing subscription channels")
 @RequestMapping("/subscription/channel")
 @ApiResponse(responseCode = "401", description = "Invalid access credential")
 @ApiResponse(responseCode = "403", description = "User has not been authorized")

@@ -1,4 +1,4 @@
-package uk.gov.hmcts.reform.pip.account.management.controllers;
+package uk.gov.hmcts.reform.pip.account.management;
 
 import com.github.dockerjava.zerodep.shaded.org.apache.hc.core5.http.HttpHeaders;
 import io.restassured.response.Response;

@@ -14,7 +14,6 @@ import uk.gov.hmcts.reform.pip.model.publication.ListType;
 import uk.gov.hmcts.reform.pip.model.subscription.Channel;
 import uk.gov.hmcts.reform.pip.model.subscription.SearchType;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -87,9 +86,9 @@ class SubscriptionRepositorySearchTest {
         subscriptionId4 = savedSubscription.getId();
 
         SubscriptionListType subscriptionListType = new SubscriptionListType();
-        subscriptionListType.setListType(Arrays.asList(ListType.CIVIL_DAILY_CAUSE_LIST.name()));
+        subscriptionListType.setListType(List.of(ListType.CIVIL_DAILY_CAUSE_LIST.name()));
         subscriptionListType.setUserId(USER_ID);
-        subscriptionListType.setListLanguage(Arrays.asList(LIST_LANGUAGE));
+        subscriptionListType.setListLanguage(List.of(LIST_LANGUAGE));
         subscriptionListTypeRepository.save(subscriptionListType);
     }
 

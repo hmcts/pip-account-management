@@ -23,7 +23,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import uk.gov.hmcts.reform.pip.account.management.Application;
 import uk.gov.hmcts.reform.pip.account.management.config.ClientConfiguration;
 import uk.gov.hmcts.reform.pip.account.management.model.MediaApplication;
 import uk.gov.hmcts.reform.pip.account.management.model.MediaApplicationStatus;
@@ -59,7 +58,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static uk.gov.hmcts.reform.pip.model.enums.AuditAction.PUBLICATION_UPLOAD;
 
-@SpringBootTest(classes = {Application.class}, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("integration")
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)

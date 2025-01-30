@@ -4,12 +4,10 @@ import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.TestInstance;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.util.CollectionUtils;
 
 import java.io.File;
@@ -19,7 +17,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import static io.restassured.RestAssured.given;
 import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
 
-@ExtendWith(SpringExtension.class)
 @ActiveProfiles(profiles = "functional")
 @SpringBootTest(classes = {OAuthClient.class})
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)

@@ -1,6 +1,5 @@
 package uk.gov.hmcts.reform.pip.account.management.controllers.subscription;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -13,7 +12,6 @@ import uk.gov.hmcts.reform.pip.account.management.helpers.SubscriptionUtils;
 import uk.gov.hmcts.reform.pip.account.management.model.subscription.Subscription;
 import uk.gov.hmcts.reform.pip.account.management.model.subscription.SubscriptionListType;
 import uk.gov.hmcts.reform.pip.account.management.model.subscription.usersubscription.UserSubscription;
-import uk.gov.hmcts.reform.pip.account.management.service.subscription.SubscriptionLocationService;
 import uk.gov.hmcts.reform.pip.account.management.service.subscription.SubscriptionNotificationService;
 import uk.gov.hmcts.reform.pip.account.management.service.subscription.SubscriptionService;
 import uk.gov.hmcts.reform.pip.account.management.service.subscription.UserSubscriptionService;
@@ -23,7 +21,6 @@ import uk.gov.hmcts.reform.pip.model.subscription.Channel;
 import uk.gov.hmcts.reform.pip.model.subscription.SearchType;
 
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -32,7 +29,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
-@ExtendWith({MockitoExtension.class})
+@ExtendWith(MockitoExtension.class)
 class SubscriptionControllerTest {
 
     private Subscription mockSubscription;
@@ -43,9 +40,8 @@ class SubscriptionControllerTest {
     private static final String RETURNED_SUBSCRIPTION_NOT_MATCHED =
         "Returned subscription does not match expected subscription";
     private static final Channel EMAIL = Channel.EMAIL;
-    private static final List<String> LIST_TYPES = Arrays.asList(ListType.CIVIL_DAILY_CAUSE_LIST.name());
-    private static final List<String> LIST_LANGUAGE = Arrays.asList("ENGLISH");
-    private static final String LOCATION_ID = "1";
+    private static final List<String> LIST_TYPES = List.of(ListType.CIVIL_DAILY_CAUSE_LIST.name());
+    private static final List<String> LIST_LANGUAGE = List.of("ENGLISH");
     private static final String ACTIONING_USER_ID = "1234-1234";
     private static final String USER_ID = UUID.randomUUID().toString();
 
@@ -57,9 +53,6 @@ class SubscriptionControllerTest {
 
     @Mock
     SubscriptionNotificationService subscriptionNotificationService;
-
-    @Mock
-    SubscriptionLocationService subscriptionLocationService;
 
     @InjectMocks
     SubscriptionController subscriptionController;
@@ -211,65 +204,5 @@ class SubscriptionControllerTest {
             subscriptionController.getSubscriptionDataForMiReportingAll().getStatusCode(),
             STATUS_CODE_MATCH
         );
-    }
-
-    @Test
-    void testAddListTypesForSubscription() {
-        doNothing().when(subscriptionService).addListTypesForSubscription(subscriptionListType, USER_ID);
-
-        assertEquals(
-            new ResponseEntity<>(
-                String.format(
-                    "Location list Type successfully added for user %s",
-                    USER_ID
-                ),
-                HttpStatus.CREATED
-            ),
-            subscriptionController.addListTypesForSubscription(USER_ID, subscriptionListType),
-                RETURNED_SUBSCRIPTION_NOT_MATCHED
-        );
-    }
-
-    @Test
-    void testConfigureListTypesForSubscription() {
-        doNothing().when(subscriptionService).configureListTypesForSubscription(subscriptionListType, USER_ID);
-
-        assertEquals(
-            new ResponseEntity<>(
-                String.format(
-                    "Location list Type successfully updated for user %s",
-                    USER_ID
-                ),
-                HttpStatus.OK
-            ),
-            subscriptionController.configureListTypesForSubscription(USER_ID, subscriptionListType),
-                RETURNED_SUBSCRIPTION_NOT_MATCHED
-        );
-    }
-
-    @Test
-    void testFindSubscriptionsByLocationId() {
-        when(subscriptionLocationService.findSubscriptionsByLocationId(LOCATION_ID))
-            .thenReturn(mockSubscriptionList);
-        assertEquals(mockSubscriptionList, subscriptionController.findSubscriptionsByLocationId(LOCATION_ID).getBody(),
-                     "The found subscription does not match expected subscription");
-    }
-
-    @Test
-    void testFindSubscriptionsByLocationIdReturnsOk() {
-        when(subscriptionLocationService.findSubscriptionsByLocationId(LOCATION_ID))
-            .thenReturn(mockSubscriptionList);
-        assertEquals(HttpStatus.OK, subscriptionController.findSubscriptionsByLocationId(LOCATION_ID)
-                         .getStatusCode(), STATUS_CODE_MATCH);
-    }
-
-    @Test
-    void testDeleteSubscriptionByLocationReturnsOk() throws JsonProcessingException {
-        when(subscriptionLocationService.deleteSubscriptionByLocation(LOCATION_ID, USER_ID))
-            .thenReturn("Total 10 subscriptions deleted for location id");
-
-        assertEquals(HttpStatus.OK, subscriptionController.deleteSubscriptionByLocation(
-            USER_ID, Integer.parseInt(LOCATION_ID)).getStatusCode(),
-                     "Delete subscription location endpoint has not returned OK");
     }
 }

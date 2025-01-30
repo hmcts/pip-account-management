@@ -33,7 +33,6 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-@SuppressWarnings({"PMD.JUnitTestsShouldIncludeAssert"})
 class AuthorisationServiceTest {
     private static final UUID USER_ID = UUID.randomUUID();
     private static final UUID ANOTHER_USER_ID = UUID.randomUUID();

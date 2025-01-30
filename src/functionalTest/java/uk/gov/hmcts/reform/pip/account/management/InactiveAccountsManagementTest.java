@@ -1,4 +1,4 @@
-package uk.gov.hmcts.reform.pip.account.management.controllers;
+package uk.gov.hmcts.reform.pip.account.management;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -11,14 +11,9 @@ import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 import uk.gov.hmcts.reform.pip.account.management.model.account.AzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.account.PiUser;
 import uk.gov.hmcts.reform.pip.account.management.utils.FunctionalTestBase;
-import uk.gov.hmcts.reform.pip.account.management.utils.OAuthClient;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
 
@@ -34,9 +29,6 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.HttpStatus.NO_CONTENT;
 import static org.springframework.http.HttpStatus.OK;
 
-@ExtendWith(SpringExtension.class)
-@ActiveProfiles(profiles = "functional")
-@SpringBootTest(classes = {OAuthClient.class})
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class InactiveAccountsManagementTest extends FunctionalTestBase {
     private static final String TEST_NAME = "E2E Account Management Test Name";

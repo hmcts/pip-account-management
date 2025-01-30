@@ -1,21 +1,15 @@
-package uk.gov.hmcts.reform.pip.account.management.controllers;
+package uk.gov.hmcts.reform.pip.account.management;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.restassured.response.Response;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 import uk.gov.hmcts.reform.pip.account.management.model.subscription.Subscription;
 import uk.gov.hmcts.reform.pip.account.management.model.subscription.SubscriptionListType;
 import uk.gov.hmcts.reform.pip.account.management.model.subscription.usersubscription.UserSubscription;
 import uk.gov.hmcts.reform.pip.account.management.utils.AccountHelperBase;
-import uk.gov.hmcts.reform.pip.account.management.utils.OAuthClient;
 import uk.gov.hmcts.reform.pip.model.account.PiUser;
 import uk.gov.hmcts.reform.pip.model.publication.ListType;
 import uk.gov.hmcts.reform.pip.model.subscription.Channel;
@@ -24,7 +18,6 @@ import uk.gov.hmcts.reform.pip.model.subscription.SearchType;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -37,10 +30,6 @@ import static org.springframework.http.HttpStatus.CREATED;
 import static org.springframework.http.HttpStatus.OK;
 import static uk.gov.hmcts.reform.pip.account.management.utils.TestUtil.randomLocationId;
 
-@ExtendWith(SpringExtension.class)
-@ActiveProfiles(profiles = "functional")
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@SpringBootTest(classes = {OAuthClient.class})
 class SubscriptionTest extends AccountHelperBase {
 
     @Value("${system-admin-provenance-id}")
@@ -194,7 +183,7 @@ class SubscriptionTest extends AccountHelperBase {
 
         Response responseFindByLocationId = doGetRequest(SUBSCRIPTION_BY_LOCATION_URL + LOCATION_ID, bearer);
         assertThat(responseFindByLocationId.getStatusCode()).isEqualTo(OK.value());
-        List<Subscription> returnedSubscriptionsByLocationId = Arrays.asList(responseFindByLocationId.getBody().as(
+        List<Subscription> returnedSubscriptionsByLocationId = List.of(responseFindByLocationId.getBody().as(
             Subscription[].class));
         assertThat(returnedSubscriptionsByLocationId.get(0).getUserId()).isEqualTo(USER_ID);
         assertThat(returnedSubscriptionsByLocationId.get(0).getLocationName()).isEqualTo(LOCATION_NAME);

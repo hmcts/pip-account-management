@@ -17,7 +17,6 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import uk.gov.hmcts.reform.pip.account.management.Application;
 import uk.gov.hmcts.reform.pip.account.management.model.MediaApplication;
 import uk.gov.hmcts.reform.pip.account.management.model.MediaApplicationStatus;
 import uk.gov.hmcts.reform.pip.account.management.utils.IntegrationTestBase;
@@ -42,7 +41,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest(classes = {Application.class}, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("integration")
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
@@ -209,7 +208,7 @@ class MediaApplicationTest extends IntegrationTestBase {
             MediaApplication[].class
         );
 
-        List<MediaApplication> applicationList = Arrays.asList(arrayApplications);
+        List<MediaApplication> applicationList = List.of(arrayApplications);
 
         assertEquals(application.getEmail(), applicationList.get(0).getEmail(), EMAIL_NOT_MATCH);
         assertEquals(FORMATTED_FULL_NAME, applicationList.get(0).getFullName(), FULLNAME_NOT_FORMATTTED);
