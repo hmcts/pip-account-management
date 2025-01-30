@@ -37,7 +37,6 @@ import static uk.gov.hmcts.reform.pip.model.publication.ListType.CIVIL_DAILY_CAU
 
 @ActiveProfiles("non-async")
 @ExtendWith({MockitoExtension.class})
-@SuppressWarnings("PMD.TooManyMethods")
 class SubscriptionServiceTest {
     private static final String USER_ID = "Ralph21";
     private static final String SEARCH_VALUE = "193254";

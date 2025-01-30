@@ -23,7 +23,6 @@ import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
 @ActiveProfiles(profiles = "functional")
 @SpringBootTest(classes = {OAuthClient.class})
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@SuppressWarnings("PMD.TooManyMethods")
 public class FunctionalTestBase {
     protected static final String CONTENT_TYPE_VALUE = "application/json";
 

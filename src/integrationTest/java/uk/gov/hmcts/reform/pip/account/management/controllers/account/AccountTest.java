@@ -56,7 +56,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @WithMockUser(username = "admin", authorities = {"APPROLE_api.request.admin"})
-@SuppressWarnings({"PMD.TooManyMethods", "PMD.ExcessiveImports", "PMD.UnitTestShouldIncludeAssert"})
+@SuppressWarnings({"PMD.ExcessiveImports", "PMD.UnitTestShouldIncludeAssert"})
 class AccountTest extends IntegrationTestBase {
     @Autowired
     private MockMvc mockMvc;

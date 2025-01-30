@@ -38,7 +38,6 @@ import static org.springframework.http.HttpStatus.OK;
 @ActiveProfiles(profiles = "functional")
 @SpringBootTest(classes = {OAuthClient.class})
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-@SuppressWarnings("PMD.TooManyMethods")
 class InactiveAccountsManagementTest extends FunctionalTestBase {
     private static final String TEST_NAME = "E2E Account Management Test Name";
     private static final Integer TEST_EMAIL_RANDOM_NUMBER =

@@ -24,7 +24,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("integration-basic")
 @WithMockUser(username = "admin", authorities = {"APPROLE_api.request.admin"})
-@SuppressWarnings({"PMD.ExcessiveImports", "PMD.LawOfDemeter"})
 class SubscriptionChannelTest extends IntegrationBasicTestBase {
     private static final String FORBIDDEN_STATUS_CODE = "Status code does not match forbidden";
     private static final String SUBSCRIPTION_CHANNEL_URL = "/subscription/channel";

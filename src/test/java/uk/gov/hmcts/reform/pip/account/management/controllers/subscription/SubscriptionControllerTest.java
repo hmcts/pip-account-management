@@ -33,7 +33,6 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
 @ExtendWith({MockitoExtension.class})
-@SuppressWarnings("PMD.TooManyMethods")
 class SubscriptionControllerTest {
 
     private Subscription mockSubscription;

@@ -25,7 +25,6 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-@SuppressWarnings("PMD.TooManyMethods")
 class InactiveAccountManagementServiceTest {
     private static final UUID MEDIA_USER_UUID = UUID.randomUUID();
     private static final String MEDIA_USER_EMAIL = "media@test.com";

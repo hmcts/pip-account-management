@@ -2,7 +2,6 @@ package uk.gov.hmcts.reform.pip.account.management.controllers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.dockerjava.zerodep.shaded.org.apache.hc.core5.http.HttpHeaders;
-import io.restassured.common.mapper.TypeRef;
 import io.restassured.response.Response;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -22,7 +21,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -32,7 +30,6 @@ import static org.springframework.http.HttpStatus.FORBIDDEN;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.HttpStatus.OK;
 
-@SuppressWarnings("PMD.TooManyMethods")
 class AccountTest extends AccountHelperBase {
 
     private static final String GET_BY_PROVENANCE_ID = "/account/provenance/PI_AAD/%s";
@@ -45,8 +42,6 @@ class AccountTest extends AccountHelperBase {
     private static final String ADMIN_ID = "x-admin-id";
     private static final String SUPER_ADMIN_CTSC_ROLE_NAME = "INTERNAL_SUPER_ADMIN_CTSC";
     private static final String SUPER_ADMIN_LOCAL_ROLE_NAME = "INTERNAL_SUPER_ADMIN_LOCAL";
-
-    private static final TypeRef<Map<String, Optional<String>>> EMAILS_RESPONSE_TYPE = new TypeRef<>() {};
 
     private PiUser systemAdminUser;
     private String ctscSuperAdminId;

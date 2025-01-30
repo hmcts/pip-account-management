@@ -30,7 +30,6 @@ import static uk.gov.hmcts.reform.pip.model.account.Roles.VERIFIED;
 
 @Service
 @Slf4j
-@SuppressWarnings("PMD.LawOfDemeter")
 public class AzureAccountService {
     private static final String EMAIL_NOT_SENT_MESSAGE =
         "Account has been successfully created, however email has failed to send.";

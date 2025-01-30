@@ -59,7 +59,7 @@ import static uk.gov.hmcts.reform.pip.model.account.Roles.SYSTEM_ADMIN;
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @WithMockUser(username = "admin", authorities = {"APPROLE_api.request.admin"})
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
-@SuppressWarnings({"PMD.TooManyMethods", "PMD.ExcessiveImports", "PMD.ExcessiveClassLength"})
+@SuppressWarnings({"PMD.ExcessiveImports", "PMD.ExcessiveClassLength"})
 class SubscriptionTest extends IntegrationTestBase {
 
     protected static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();

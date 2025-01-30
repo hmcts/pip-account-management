@@ -42,7 +42,6 @@ import static uk.gov.hmcts.reform.pip.account.management.helpers.MediaApplicatio
 import static uk.gov.hmcts.reform.pip.account.management.helpers.MediaApplicationHelper.createApplication;
 
 @ExtendWith(MockitoExtension.class)
-@SuppressWarnings("PMD.TooManyMethods")
 class MediaApplicationServiceTest {
 
     @Mock

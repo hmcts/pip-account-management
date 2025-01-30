@@ -20,7 +20,6 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.HttpStatus.NO_CONTENT;
 import static org.springframework.http.HttpStatus.OK;
 
-@SuppressWarnings("PMD.TooManyMethods")
 class MediaApplicationCreationTest extends AccountHelperBase {
 
     private static final String TEST_NAME = "E2E Account Management Test Name";

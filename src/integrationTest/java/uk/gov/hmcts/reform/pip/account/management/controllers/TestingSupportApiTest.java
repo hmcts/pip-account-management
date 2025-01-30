@@ -64,7 +64,7 @@ import static uk.gov.hmcts.reform.pip.model.enums.AuditAction.PUBLICATION_UPLOAD
 @ActiveProfiles("integration")
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
 @WithMockUser(username = "admin", authorities = {"APPROLE_api.request.admin"})
-@SuppressWarnings({"PMD.TooManyMethods", "PMD.ExcessiveImports", "PMD.UnitTestShouldIncludeAssert",
+@SuppressWarnings({"PMD.ExcessiveImports", "PMD.UnitTestShouldIncludeAssert",
     "PMD.CouplingBetweenObjects"})
 class TestingSupportApiTest extends IntegrationTestBase {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();

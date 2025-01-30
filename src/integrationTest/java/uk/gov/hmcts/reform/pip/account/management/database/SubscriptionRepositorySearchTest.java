@@ -24,7 +24,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@SuppressWarnings("PMD.TooManyMethods")
 class SubscriptionRepositorySearchTest {
     private static final String USER_ID = "1";
     private static final String LOCATION_ID = "123";

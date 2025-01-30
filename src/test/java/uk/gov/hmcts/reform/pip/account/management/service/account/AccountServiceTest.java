@@ -57,7 +57,7 @@ import static org.mockito.Mockito.when;
 import static uk.gov.hmcts.reform.pip.model.account.Roles.SYSTEM_ADMIN;
 
 @ExtendWith(MockitoExtension.class)
-@SuppressWarnings({"PMD.TooManyMethods", "PMD.ExcessiveImports", "PMD.CouplingBetweenObjects"})
+@SuppressWarnings({"PMD.ExcessiveImports", "PMD.CouplingBetweenObjects"})
 class AccountServiceTest {
     @Mock
     private AzureUserService azureUserService;

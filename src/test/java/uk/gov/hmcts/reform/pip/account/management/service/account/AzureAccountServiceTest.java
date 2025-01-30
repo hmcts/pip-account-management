@@ -46,7 +46,6 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
-@SuppressWarnings("PMD.TooManyMethods")
 class AzureAccountServiceTest {
     private static final String FULL_NAME = "Full name";
     private static final String ISSUER_ID = "abcdef";
