@@ -8,16 +8,13 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.context.ActiveProfiles;
-import uk.gov.hmcts.reform.pip.account.management.database.SubscriptionListTypeRepository;
 import uk.gov.hmcts.reform.pip.account.management.database.SubscriptionRepository;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.SubscriptionNotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.model.subscription.Subscription;
-import uk.gov.hmcts.reform.pip.account.management.model.subscription.SubscriptionListType;
 import uk.gov.hmcts.reform.pip.model.subscription.Channel;
 import uk.gov.hmcts.reform.pip.model.subscription.SearchType;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -33,16 +30,14 @@ import static org.mockito.Mockito.when;
 import static uk.gov.hmcts.reform.pip.account.management.helpers.SubscriptionUtils.createMockSubscription;
 import static uk.gov.hmcts.reform.pip.account.management.helpers.SubscriptionUtils.createMockSubscriptionList;
 import static uk.gov.hmcts.reform.pip.account.management.helpers.SubscriptionUtils.findableSubscription;
-import static uk.gov.hmcts.reform.pip.model.publication.ListType.CIVIL_DAILY_CAUSE_LIST;
 
 @ActiveProfiles("non-async")
-@ExtendWith({MockitoExtension.class})
+@ExtendWith(MockitoExtension.class)
 class SubscriptionServiceTest {
     private static final String USER_ID = "Ralph21";
     private static final String SEARCH_VALUE = "193254";
     private static final Channel EMAIL = Channel.EMAIL;
     private static final String ACTIONING_USER_ID = "1234-1234";
-    private static final Integer LOCATION_ID = 1;
 
     public static final List<String> EXAMPLE_CSV_ALL = List.of(
         "a01d52c0-5c95-4f75-8994-a1c42cb45aaa,EMAIL,CASE_ID,2fe899ff-96ed-435a-bcad-1411bbe96d2a,1245,"
@@ -62,7 +57,6 @@ class SubscriptionServiceTest {
             + "2023-01-19 13:53:56.434343"
     );
 
-    private static final String COURT_NAME = "test court name";
     private static final LocalDateTime DATE_ADDED = LocalDateTime.now();
 
     private static final String SUBSCRIPTION_CREATED_ERROR = "The returned subscription does "
@@ -71,16 +65,12 @@ class SubscriptionServiceTest {
     private List<Subscription> mockSubscriptionList;
     private Subscription mockSubscription;
     private Subscription findableSubscription;
-    private SubscriptionListType mockSubscriptionListType;
 
     @Mock
     SubscriptionLocationService subscriptionLocationService;
 
     @Mock
     SubscriptionRepository subscriptionRepository;
-
-    @Mock
-    SubscriptionListTypeRepository subscriptionListTypeRepository;
 
     @InjectMocks
     SubscriptionService subscriptionService;
@@ -91,8 +81,6 @@ class SubscriptionServiceTest {
         mockSubscriptionList = createMockSubscriptionList(DATE_ADDED);
         findableSubscription = findableSubscription();
         mockSubscription.setChannel(Channel.EMAIL);
-        mockSubscriptionListType = new SubscriptionListType(USER_ID,
-            List.of(CIVIL_DAILY_CAUSE_LIST.name()), List.of("ENGLISH"));
     }
 
     @Test
@@ -167,36 +155,6 @@ class SubscriptionServiceTest {
         verify(subscriptionRepository, times(1)).delete(mockSubscription);
         assertEquals(returnedSubscription, mockSubscription,
                      "The Returned subscription does match the expected subscription"
-        );
-    }
-
-    @Test
-    void testConfigureListTypesForLocationSubscription() {
-        subscriptionService.configureListTypesForSubscription(mockSubscriptionListType, USER_ID);
-
-        assertEquals(USER_ID, mockSubscription.getUserId(),
-                     SUBSCRIPTION_CREATED_ERROR
-        );
-    }
-
-    @Test
-    void testConfigureEmptyListTypesForLocationSubscription() {
-        mockSubscriptionListType.setListType(new ArrayList<>());
-        subscriptionService.configureListTypesForSubscription(mockSubscriptionListType, USER_ID);
-
-        assertEquals(USER_ID, mockSubscription.getUserId(),
-                     SUBSCRIPTION_CREATED_ERROR
-        );
-    }
-
-    @Test
-    void testAddListTypesForLocationSubscription() {
-        when(subscriptionListTypeRepository.save(mockSubscriptionListType))
-            .thenReturn(mockSubscriptionListType);
-        subscriptionService.addListTypesForSubscription(mockSubscriptionListType, USER_ID);
-
-        assertEquals(USER_ID, mockSubscription.getUserId(),
-                     SUBSCRIPTION_CREATED_ERROR
         );
     }
 

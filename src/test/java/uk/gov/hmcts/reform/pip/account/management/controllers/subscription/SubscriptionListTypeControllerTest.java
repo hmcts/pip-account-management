@@ -9,7 +9,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import uk.gov.hmcts.reform.pip.account.management.model.subscription.SubscriptionListType;
-import uk.gov.hmcts.reform.pip.account.management.service.subscription.SubscriptionService;
+import uk.gov.hmcts.reform.pip.account.management.service.subscription.SubscriptionListTypeService;
 import uk.gov.hmcts.reform.pip.model.publication.ListType;
 
 import java.util.List;
@@ -28,7 +28,7 @@ class SubscriptionListTypeControllerTest {
     private static final String USER_ID = UUID.randomUUID().toString();
 
     @Mock
-    SubscriptionService subscriptionService;
+    SubscriptionListTypeService subscriptionListTypeService;
 
     @InjectMocks
     SubscriptionListTypeController subscriptionListTypeController;
@@ -42,14 +42,11 @@ class SubscriptionListTypeControllerTest {
 
     @Test
     void testAddListTypesForSubscription() {
-        doNothing().when(subscriptionService).addListTypesForSubscription(subscriptionListType, USER_ID);
+        doNothing().when(subscriptionListTypeService).addListTypesForSubscription(subscriptionListType, USER_ID);
 
         assertEquals(
             new ResponseEntity<>(
-                String.format(
-                    "Location list Type successfully added for user %s",
-                    USER_ID
-                ),
+                String.format("Location list Type successfully added for user %s", USER_ID),
                 HttpStatus.CREATED
             ),
             subscriptionListTypeController.addListTypesForSubscription(USER_ID, subscriptionListType),
@@ -59,14 +56,11 @@ class SubscriptionListTypeControllerTest {
 
     @Test
     void testConfigureListTypesForSubscription() {
-        doNothing().when(subscriptionService).configureListTypesForSubscription(subscriptionListType, USER_ID);
+        doNothing().when(subscriptionListTypeService).configureListTypesForSubscription(subscriptionListType, USER_ID);
 
         assertEquals(
             new ResponseEntity<>(
-                String.format(
-                    "Location list Type successfully updated for user %s",
-                    USER_ID
-                ),
+                String.format("Location list Type successfully updated for user %s", USER_ID),
                 HttpStatus.OK
             ),
             subscriptionListTypeController.configureListTypesForSubscription(USER_ID, subscriptionListType),
