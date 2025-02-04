@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS subscription (
     case_name varchar(255),
     case_number varchar(255),
     channel varchar(255),
+    court_name varchar(255)
     created_date timestamp,
     location_name varchar(255),
     search_type varchar(255),
@@ -13,5 +14,6 @@ CREATE TABLE IF NOT EXISTS subscription (
     urn varchar(255),
     user_id varchar(255),
     list_type text[],
-    last_updated_date timestamp
+    last_updated_date timestamp,
+    party_names varchar(255)
 );
