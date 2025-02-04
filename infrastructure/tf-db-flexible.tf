@@ -56,16 +56,5 @@ resource "postgresql_grant" "readonly_mv-flexible" {
   schema      = "public"
   object_type = "table"
   privileges  = ["SELECT"]
-  objects     = ["sdp_mat_view_pi_user"]
-}
-
-resource "postgresql_grant" "readonly_mv-sub-flexible" {
-  provider = postgresql.postgres-flexible
-
-  database    = local.db_name
-  role        = data.azurerm_key_vault_secret.sdp-user.value
-  schema      = "public"
-  object_type = "table"
-  privileges  = ["SELECT"]
-  objects     = ["sdp_mat_view_subscription"]
+  objects     = ["sdp_mat_view_pi_user", "sdp_mat_view_subscription"]
 }
