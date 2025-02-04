@@ -107,7 +107,7 @@ class SubscriptionTest extends IntegrationTestBase {
     private static final String SUBSCRIPTION_USER_PATH = "/subscription/user/" + UUID_STRING;
     private static final String ARTEFACT_RECIPIENT_PATH = "/subscription/artefact-recipients";
     private static final String DELETED_ARTEFACT_RECIPIENT_PATH = "/subscription/deleted-artefact";
-    private static final String DELETED_BULK_SUBSCRIPTION_V2_PATH = "/subscription/v2/bulk";
+    private static final String DELETED_BULK_SUBSCRIPTION_V2_PATH = "/subscription/bulk";
     private static final LocalDateTime DATE_ADDED = LocalDateTime.now();
     private static final String UNAUTHORIZED_ROLE = "APPROLE_unknown.authorized";
     private static final String UNAUTHORIZED_USERNAME = "unauthorized_isAuthorized";

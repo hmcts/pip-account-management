@@ -72,13 +72,13 @@ public class SubscriptionController {
     @ApiResponse(responseCode = "400", description = "This subscription object has an invalid format. Please "
         + "check again.")
     public ResponseEntity<String> createSubscription(
-        @RequestBody @Valid uk.gov.hmcts.reform.pip.model.subscription.Subscription sub,
+        @RequestBody @Valid Subscription subscription,
         @RequestHeader(X_USER_ID_HEADER) String actioningUserId
     ) {
-        Subscription subscription = subscriptionService.createSubscription(new Subscription(sub), actioningUserId);
+        Subscription createdSubscription = subscriptionService.createSubscription(subscription, actioningUserId);
         return ResponseEntity.status(HttpStatus.CREATED)
             .body(String.format("Subscription created with the id %s for user %s",
-                                subscription.getId(), subscription.getUserId()
+                                createdSubscription.getId(), createdSubscription.getUserId()
             ));
     }
 
@@ -101,10 +101,10 @@ public class SubscriptionController {
         description = "No subscription found with the subscription ID: {subIds}")
     @Transactional
     @Operation(summary = "Delete a set of subscriptions using the subscription IDs")
-    @DeleteMapping("/v2/bulk")
+    @DeleteMapping("/bulk")
     @PreAuthorize("@authorisationService.userCanDeleteSubscriptions(#actioningUserId, #subIds)")
-    public ResponseEntity<String> bulkDeleteSubscriptionsV2(@RequestBody List<UUID> subIds,
-                                                            @RequestHeader(X_USER_ID_HEADER) String actioningUserId) {
+    public ResponseEntity<String> bulkDeleteSubscriptions(@RequestBody List<UUID> subIds,
+                                                          @RequestHeader(X_USER_ID_HEADER) String actioningUserId) {
 
         subscriptionService.bulkDeleteSubscriptions(subIds);
         return ResponseEntity.ok(String.format(

@@ -11,6 +11,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -43,6 +44,7 @@ public class Subscription {
      */
     @Valid
     @NotNull
+    @NotBlank
     private String userId;
 
     @NotNull
@@ -77,37 +79,4 @@ public class Subscription {
 
     @Valid
     private LocalDateTime lastUpdatedDate;
-
-    public Subscription(uk.gov.hmcts.reform.pip.model.subscription.Subscription dto) {
-        this.id = dto.getId();
-        this.userId = dto.getUserId();
-        this.searchType = dto.getSearchType();
-        this.searchValue = dto.getSearchValue();
-        this.channel = dto.getChannel();
-        this.createdDate = dto.getCreatedDate();
-        this.caseNumber = dto.getCaseNumber();
-        this.caseName = dto.getCaseName();
-        this.partyNames = dto.getPartyNames();
-        this.urn = dto.getUrn();
-        this.locationName = dto.getLocationName();
-        this.lastUpdatedDate = dto.getLastUpdatedDate();
-    }
-
-    public uk.gov.hmcts.reform.pip.model.subscription.Subscription toDto() {
-        uk.gov.hmcts.reform.pip.model.subscription.Subscription dto =
-            new uk.gov.hmcts.reform.pip.model.subscription.Subscription();
-        dto.setSearchValue(this.searchValue);
-        dto.setChannel(this.channel);
-        dto.setUserId(this.userId);
-        dto.setSearchType(this.searchType);
-        dto.setId(this.id);
-        dto.setCreatedDate(this.createdDate);
-        dto.setCaseNumber(this.caseNumber);
-        dto.setCaseName(this.caseName);
-        dto.setPartyNames(this.partyNames);
-        dto.setUrn(this.urn);
-        dto.setLocationName(this.locationName);
-        dto.setLastUpdatedDate(this.lastUpdatedDate);
-        return dto;
-    }
 }

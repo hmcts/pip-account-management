@@ -65,7 +65,6 @@ class SubscriptionNotificationServiceTest {
     private static final String CASE_ID_SEARCH = SearchType.CASE_ID.name();
     private static final String LIST_TYPE_SEARCH = SearchType.LIST_TYPE.name();
     private static final String MAGISTRATES_PUBLIC_LIST = ListType.MAGISTRATES_PUBLIC_LIST.name();
-    private static final String CIVIL_DAILY_LIST = ListType.CIVIL_DAILY_CAUSE_LIST.name();
     private static final String LIST_LANGUAGE = "ENGLISH";
 
     private Subscription mockSubscription;

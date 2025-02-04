@@ -74,9 +74,6 @@ class SubscriptionControllerTest {
         when(subscriptionService.createSubscription(mockSubscription, ACTIONING_USER_ID))
             .thenReturn(mockSubscription);
 
-        uk.gov.hmcts.reform.pip.model.subscription.Subscription modelSubscription = mockSubscription.toDto();
-        modelSubscription.setCreatedDate(modelSubscription.getCreatedDate());
-
         assertEquals(
             new ResponseEntity<>(
                 String.format("Subscription created with the id %s for user %s",
@@ -84,7 +81,7 @@ class SubscriptionControllerTest {
                 ),
                 HttpStatus.CREATED
             ),
-            subscriptionController.createSubscription(modelSubscription, ACTIONING_USER_ID),
+            subscriptionController.createSubscription(mockSubscription, ACTIONING_USER_ID),
                 RETURNED_SUBSCRIPTION_NOT_MATCHED
         );
     }
@@ -102,7 +99,7 @@ class SubscriptionControllerTest {
                 ),
                 HttpStatus.CREATED
             ),
-            subscriptionController.createSubscription(mockSubscription.toDto(), ACTIONING_USER_ID),
+            subscriptionController.createSubscription(mockSubscription, ACTIONING_USER_ID),
                 RETURNED_SUBSCRIPTION_NOT_MATCHED
         );
     }
@@ -139,7 +136,7 @@ class SubscriptionControllerTest {
         });
 
         doNothing().when(subscriptionService).bulkDeleteSubscriptions(testIds);
-        ResponseEntity<String> response = subscriptionController.bulkDeleteSubscriptionsV2(testIds, ACTIONING_USER_ID);
+        ResponseEntity<String> response = subscriptionController.bulkDeleteSubscriptions(testIds, ACTIONING_USER_ID);
 
         assertEquals(String.format("Subscriptions with ID %s deleted", expectedTestIds), response.getBody(),
                      "Subscription should be deleted");

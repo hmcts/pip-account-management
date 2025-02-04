@@ -238,7 +238,7 @@ class SubscriptionTest extends AccountHelperBase {
         }
 
         Response responseBulkDeleteSubscriptions = doDeleteRequestWithBody(
-            SUBSCRIPTION_URL + "/v2/bulk",
+            SUBSCRIPTION_URL + "/bulk",
             headerMap, List.of(UUID.fromString(subscriptionId))
         );
         assertThat(responseBulkDeleteSubscriptions.getStatusCode()).isEqualTo(OK.value());
