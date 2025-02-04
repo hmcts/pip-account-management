@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS subscription (
     case_name varchar(255),
     case_number varchar(255),
     channel varchar(255),
-    court_name varchar(255)
+    court_name varchar(255),
     created_date timestamp,
     location_name varchar(255),
     search_type varchar(255),
