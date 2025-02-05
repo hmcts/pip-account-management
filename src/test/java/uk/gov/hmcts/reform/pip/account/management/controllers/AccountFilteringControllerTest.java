@@ -22,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
+@SuppressWarnings("squid:S1874")
 class AccountFilteringControllerTest {
     private static final String EMAIL = "a@b.com";
     private static final String STATUS_CODE_MATCH = "Status code responses should match";
