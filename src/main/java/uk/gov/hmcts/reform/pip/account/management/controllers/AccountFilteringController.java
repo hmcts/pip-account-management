@@ -53,7 +53,7 @@ public class AccountFilteringController {
 
     /**
      * Previous version of the MI Reporting endpoint. No longer used and soon to be removed.
-     * @return This endpoint will be removed in the future in favour of the V2 equivalent.
+     * @deprecated This endpoint will be removed in the future in favour of the V2 equivalent.
      */
     @ApiResponse(responseCode = OK_CODE, description = "A CSV like structure which contains the data. "
         + "See example for headers ", content = {

@@ -29,7 +29,7 @@ public class AccountFilteringService {
 
     /**
      * Previous version of the MI Reporting service method. No longer used and soon to be removed.
-     * @return This method will be removed in the future in favour of the V2 equivalent.
+     * @deprecated  This method will be removed in the future in favour of the V2 equivalent.
      */
     @Deprecated(since = "2")
     public String getAccManDataForMiReporting() {
