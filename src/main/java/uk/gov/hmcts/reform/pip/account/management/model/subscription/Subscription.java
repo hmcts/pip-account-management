@@ -60,7 +60,7 @@ public class Subscription {
     private Channel channel;
 
     @Schema(hidden = true)
-    private LocalDateTime createdDate;
+    private LocalDateTime createdDate = LocalDateTime.now();
 
     @Valid
     private String caseNumber;
