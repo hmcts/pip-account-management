@@ -38,7 +38,7 @@ class UserRepositoryTest {
     private static final String EMAIL4 = "TestUser4@justice.gov.uk";
     private static final String EMAIL5 = "TestUser5@justice.gov.uk";
 
-    private static final LocalDateTime TIMESTAMP_NOW = LocalDateTime.now();
+    private static final LocalDateTime TIMESTAMP_NOW = LocalDateTime.of(2025, 2, 5, 2, 2, 2);
     private static final int DAYS = 5;
 
     private static final String USER_MATCHED_MESSAGE = "User does not match";
