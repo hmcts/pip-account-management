@@ -51,6 +51,10 @@ public class AccountFilteringController {
         this.accountFilteringService = accountFilteringService;
     }
 
+    /**
+     * Previous version of the MI Reporting endpoint. No longer used and soon to be removed.
+     * @return This endpoint will be removed in the future in favour of the V2 equivalent.
+     */
     @ApiResponse(responseCode = OK_CODE, description = "A CSV like structure which contains the data. "
         + "See example for headers ", content = {
             @Content(examples = {@ExampleObject("user_id,provenance_user_id,user_provenance,roles,"
@@ -62,7 +66,7 @@ public class AccountFilteringController {
     @Operation(summary = "Returns a list of (anonymized) account data for MI reporting. This endpoint will be "
         + "deprecated in the future, in favour of returning a JSON model")
     @GetMapping("/mi-data")
-    @Deprecated
+    @Deprecated(since = "2")
     public ResponseEntity<String> getMiData() {
         return ResponseEntity.status(HttpStatus.OK).body(accountFilteringService.getAccManDataForMiReporting());
     }

@@ -27,7 +27,11 @@ public class AccountFilteringService {
         this.userRepository = userRepository;
     }
 
-    @Deprecated
+    /**
+     * Previous version of the MI Reporting service method. No longer used and soon to be removed.
+     * @return This method will be removed in the future in favour of the V2 equivalent.
+     */
+    @Deprecated(since = "2")
     public String getAccManDataForMiReporting() {
         StringBuilder builder = new StringBuilder(85);
         builder.append("user_id,provenance_user_id,user_provenance,roles,created_date,last_signed_in_date")
