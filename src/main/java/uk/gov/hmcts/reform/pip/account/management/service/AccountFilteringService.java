@@ -19,6 +19,7 @@ import static uk.gov.hmcts.reform.pip.model.account.Roles.ALL_NON_THIRD_PARTY_RO
 import static uk.gov.hmcts.reform.pip.model.account.UserProvenances.ALL_NON_THIRD_PARTY_PROVENANCES;
 
 @Service
+@SuppressWarnings("squid:S1133")
 public class AccountFilteringService {
     private final UserRepository userRepository;
 

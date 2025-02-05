@@ -38,6 +38,7 @@ import java.util.List;
 @Validated
 @IsAdmin
 @SecurityRequirement(name = "bearerAuth")
+@SuppressWarnings("squid:S1133")
 public class AccountFilteringController {
     private static final String OK_CODE = "200";
     private static final String NOT_FOUND_ERROR_CODE = "404";
