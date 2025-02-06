@@ -20,14 +20,14 @@ import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
 @Service
 @Slf4j
 public class UserSubscriptionService {
-    private final SubscriptionRepository repository;
+    private final SubscriptionRepository subscriptionRepository;
 
     private final SubscriptionListTypeRepository subscriptionListTypeRepository;
 
     @Autowired
-    public UserSubscriptionService(SubscriptionRepository repository,
+    public UserSubscriptionService(SubscriptionRepository subscriptionRepository,
                                    SubscriptionListTypeRepository subscriptionListTypeRepository) {
-        this.repository = repository;
+        this.subscriptionRepository = subscriptionRepository;
         this.subscriptionListTypeRepository = subscriptionListTypeRepository;
     }
 
@@ -37,7 +37,7 @@ public class UserSubscriptionService {
      * @return The list of subscriptions that have been found.
      */
     public UserSubscription findByUserId(String userId) {
-        List<Subscription> subscriptions = repository.findByUserId(userId);
+        List<Subscription> subscriptions = subscriptionRepository.findByUserId(userId);
         if (subscriptions.isEmpty()) {
             return new UserSubscription();
         }
@@ -51,7 +51,7 @@ public class UserSubscriptionService {
      */
     public String deleteAllByUserId(String userId) {
         subscriptionListTypeRepository.deleteByUserId(userId);
-        repository.deleteAllByUserId(userId);
+        subscriptionRepository.deleteAllByUserId(userId);
         String message = String.format("All subscriptions deleted for user id %s", userId);
         log.info(writeLog(message));
         return message;

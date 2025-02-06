@@ -9,7 +9,6 @@ import uk.gov.hmcts.reform.pip.account.management.database.UserRepository;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.SubscriptionNotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.model.account.PiUser;
 import uk.gov.hmcts.reform.pip.account.management.model.subscription.Subscription;
-import uk.gov.hmcts.reform.pip.account.management.model.subscription.SubscriptionListType;
 import uk.gov.hmcts.reform.pip.account.management.service.PublicationService;
 import uk.gov.hmcts.reform.pip.account.management.service.account.AccountService;
 import uk.gov.hmcts.reform.pip.model.system.admin.ActionResult;
@@ -17,7 +16,6 @@ import uk.gov.hmcts.reform.pip.model.system.admin.ActionResult;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
 
 import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
@@ -67,11 +65,12 @@ public class SubscriptionLocationService {
         List<Subscription> locationSubscriptions = findSubscriptionsByLocationId(locationId);
 
         List<UUID> subIds = locationSubscriptions.stream()
-            .map(Subscription::getId).toList();
+            .map(Subscription::getId)
+            .toList();
         subscriptionRepository.deleteByIdIn(subIds);
 
         //DELETE DATA FROM SUBSCRIPTION LIST TYPE TABLE AS WELL.
-        this.deleteAllSubscriptionListTypeForLocation(locationSubscriptions);
+        deleteAllSubscriptionListTypeForLocation(locationSubscriptions);
 
         log.info(writeLog(String.format("%s subscription(s) have been deleted for location %s by user %s",
                                         subIds.size(), locationId, userId)));
@@ -88,27 +87,17 @@ public class SubscriptionLocationService {
         List<String> uniqueUsers = locationSubscriptions.stream()
             .map(Subscription::getUserId).distinct().toList();
 
-        if (!uniqueUsers.isEmpty()) {
-
-            for (String userId : uniqueUsers) {
-                this.deleteSubscriptionListTypeByUser(userId);
-            }
-        }
+        uniqueUsers.forEach(this::deleteSubscriptionListTypeByUser);
     }
 
     public void deleteSubscriptionListTypeByUser(String userId) {
-        List<Subscription> userLocationSubscriptions =
-            subscriptionRepository.findLocationSubscriptionsByUserId(userId);
-
-        if (userLocationSubscriptions.isEmpty()) {
-            Optional<SubscriptionListType> subscriptionListType =
-                subscriptionListTypeRepository.findByUserId(userId);
-            subscriptionListType.ifPresent(subscriptionListTypeRepository::delete);
-        }
+        subscriptionListTypeRepository.findByUserId(userId)
+            .ifPresent(subscriptionListTypeRepository::delete);
     }
 
     public String deleteAllSubscriptionsWithLocationNamePrefix(String prefix) {
-        List<UUID> subscriptionIds = subscriptionRepository.findAllByLocationNameStartingWithIgnoreCase(prefix).stream()
+        List<UUID> subscriptionIds = subscriptionRepository.findAllByLocationNameStartingWithIgnoreCase(prefix)
+            .stream()
             .map(Subscription::getId)
             .toList();
 
