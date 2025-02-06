@@ -15,7 +15,6 @@ import uk.gov.hmcts.reform.pip.account.management.service.account.AccountService
 import uk.gov.hmcts.reform.pip.model.system.admin.ActionResult;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -141,16 +140,10 @@ public class SubscriptionLocationService {
     private List<String> getUserEmailsForAllSubscriptions(List<Subscription> subscriptions) {
         List<String> userIds = subscriptions.stream()
             .map(Subscription::getUserId).toList();
-        Map<String, Optional<String>> usersInfo = accountService.findUserEmailsByIds(userIds);
+        Map<String, String> usersInfo = accountService.findUserEmailsByIds(userIds);
 
         List<String> userEmails = new ArrayList<>();
-
-        usersInfo.forEach((userId, email) ->
-            userEmails.add(
-                email.isPresent() ? email.get() : ""
-            )
-        );
-        userEmails.removeAll(Arrays.asList(""));
+        usersInfo.forEach((userId, email) -> userEmails.add(email));
         return userEmails;
     }
 }

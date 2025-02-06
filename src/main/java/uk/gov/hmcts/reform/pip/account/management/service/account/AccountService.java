@@ -165,16 +165,23 @@ public class AccountService {
         throw new UserWithProvenanceNotFoundException(provenanceUserId);
     }
 
-    public Map<String, Optional<String>> findUserEmailsByIds(List<String> userIdsList) {
-        Map<String, Optional<String>> emailMap = new ConcurrentHashMap<>();
+    /**
+     * Return a map of user ids to emails by querying the user table in the database.
+     * User ids with no matching emails will not be added but will be logged
+     * @param userIdsList user ids to query
+     * @return a map of user ids to emails
+     */
+    public Map<String, String> findUserEmailsByIds(List<String> userIdsList) {
+        Map<String, String> emailMap = new ConcurrentHashMap<>();
         for (String userId : userIdsList) {
-            Optional<PiUser> returnedUser = userRepository.findByUserId(UUID.fromString(userId));
-
-            returnedUser.ifPresent(value ->
-                                       emailMap.put(userId, Optional.ofNullable(value.getEmail()))
-            );
-
-            emailMap.computeIfAbsent(userId, v -> Optional.empty());
+            userRepository.findByUserId(UUID.fromString(userId))
+                .ifPresent(value -> {
+                    if (StringUtils.isNotEmpty(value.getEmail())) {
+                        emailMap.put(userId, value.getEmail());
+                    } else {
+                        log.error(writeLog(String.format("No email with user ID %s found", userId)));
+                    }
+                });
         }
         return emailMap;
     }

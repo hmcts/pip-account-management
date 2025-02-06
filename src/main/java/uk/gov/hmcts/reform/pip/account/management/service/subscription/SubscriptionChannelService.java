@@ -12,7 +12,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -40,22 +39,18 @@ public class SubscriptionChannelService {
     }
 
     /**
-     * Parent method which handles the flow through the service, initially capturing duplicate users, then sending a
-     * request to the account management microservice to match user ids to emails, then pruning and logging those
-     * with no attached email, then building the final map of individual user emails to relevant subscription objects.
-     * The deduplication occurs before sending the request to account management for emails to prevent wasteful API use.
+     * Parent method which handles the subscription flow, initially capturing duplicate users, then matching user
+     * ids to emails and building the final map of individual user emails to relevant subscription objects.
      * @param listOfSubs - a list of subscription objects associated with a publication
      * @return A map of user emails to list of subscriptions
      */
     public Map<String, List<Subscription>> buildEmailSubscriptions(List<Subscription> listOfSubs) {
-        Map<String, List<Subscription>> mappedSubscriptions =
-            deduplicateSubscriptions(listOfSubs);
+        Map<String, List<Subscription>> mappedSubscriptions = deduplicateSubscriptions(listOfSubs);
 
         List<String> userIds = new ArrayList<>(mappedSubscriptions.keySet());
+        Map<String, String> mapOfUsersAndEmails = accountService.findUserEmailsByIds(userIds);
 
-        Map<String, Optional<String>> mapOfUsersAndEmails = accountService.findUserEmailsByIds(userIds);
-
-        if (mapOfUsersAndEmails.values().stream().allMatch(Optional::isEmpty)) {
+        if (mapOfUsersAndEmails.isEmpty()) {
             log.error(writeLog("No email channel found for any of the users provided"));
             return Collections.emptyMap();
         }
@@ -78,36 +73,25 @@ public class SubscriptionChannelService {
      */
     Map<String, List<Subscription>> deduplicateSubscriptions(List<Subscription> listOfSubs) {
         Map<String, List<Subscription>> mapOfSubscriptions = new ConcurrentHashMap<>();
-        listOfSubs.forEach(subscription -> {
-            List<Subscription> currentList = new ArrayList<>();
-            if (mapOfSubscriptions.get(subscription.getUserId()) != null) {
-                currentList = mapOfSubscriptions.get(subscription.getUserId());
-            }
-            currentList.add(subscription);
-            mapOfSubscriptions.put(subscription.getUserId(), currentList);
-        });
+        listOfSubs.forEach(
+            subscription -> mapOfSubscriptions.computeIfAbsent(subscription.getUserId(), x -> new ArrayList<>())
+                .add(subscription)
+        );
         return mapOfSubscriptions;
     }
 
     /**
-     * Logs and removes subscribers associated with empty email records (i.e. those with no matching email in account
-     * management) as well as handling the flipping of userId to email as the key for the map
+     * Handle the flipping of userId to email as the key for the map.
      * @param userIdMap - A map of userIds to the list of subscription objects associated with them.
-     * @param userEmailMap - a map of userIds to their email addresses (optional in case they don't exist in account
-     *                     management.)
+     * @param userEmailMap - a map of userIds to their email addresses.
      * @return Map of email addresses to subscription objects.
      */
     Map<String, List<Subscription>> userIdToUserEmailSwitcher(Map<String, List<Subscription>> userIdMap,
-                                                                     Map<String, Optional<String>> userEmailMap) {
+                                                              Map<String, String> userEmailMap) {
         Map<String, List<Subscription>> cloneMap = new ConcurrentHashMap<>(userIdMap);
 
         cloneMap.forEach((userId, subscriptions) -> {
-
-            if (userEmailMap.get(userId).isEmpty()) {
-                log.error(writeLog(String.format("No email with user ID %s found", userId)));
-            } else {
-                userIdMap.put(userEmailMap.get(userId).get(), subscriptions);
-            }
+            userIdMap.put(userEmailMap.get(userId), subscriptions);
             userIdMap.remove(userId);
         });
         return userIdMap;
@@ -132,9 +116,6 @@ public class SubscriptionChannelService {
             }
         });
 
-        if (invalidChannel.get()) {
-            return Collections.emptyMap();
-        }
-        return switchedMap;
+        return invalidChannel.get() ? Collections.emptyMap() : switchedMap;
     }
 }

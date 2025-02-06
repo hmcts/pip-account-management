@@ -11,9 +11,9 @@ import uk.gov.hmcts.reform.pip.account.management.model.subscription.Subscriptio
 import uk.gov.hmcts.reform.pip.account.management.service.account.AccountService;
 import uk.gov.hmcts.reform.pip.model.subscription.Channel;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -60,9 +60,9 @@ class SubscriptionChannelServiceTest {
 
     @Test
     void buildEmailSubscriptionsSuccess() {
-        Map<String, Optional<String>> userEmailsMap = Map.of(
-            USER2, Optional.of(TEST_EMAIL_2),
-            USER1, Optional.of(TEST_EMAIL_1)
+        Map<String, String> userEmailsMap = Map.of(
+            USER2, TEST_EMAIL_2,
+            USER1, TEST_EMAIL_1
         );
 
         SUB1.setUserId(USER1);
@@ -86,7 +86,7 @@ class SubscriptionChannelServiceTest {
 
     @Test
     void testBuildEmailSubscriptionsWithNoMappedEmails() {
-        when(accountService.findUserEmailsByIds(any())).thenReturn(new ConcurrentHashMap<>());
+        when(accountService.findUserEmailsByIds(any())).thenReturn(Collections.emptyMap());
 
         assertThat(subscriptionChannelService.buildEmailSubscriptions(List.of(SUB1, SUB2)))
             .as(EMAIL_SUBSCRIPTIONS_MESSAGE)
@@ -134,9 +134,9 @@ class SubscriptionChannelServiceTest {
 
     @Test
     void testUserIdToUserSwitcherSuccess() {
-        Map<String, Optional<String>> emailMap = new ConcurrentHashMap<>();
-        emailMap.put(USER1, Optional.of(TEST_EMAIL_1));
-        emailMap.put(USER2, Optional.of(TEST_EMAIL_2));
+        Map<String, String> emailMap = new ConcurrentHashMap<>();
+        emailMap.put(USER1, TEST_EMAIL_1);
+        emailMap.put(USER2, TEST_EMAIL_2);
 
         Map<String, List<Subscription>> subsMap = new ConcurrentHashMap<>();
         subsMap.put(USER1, List.of(SUB1, SUB2));
@@ -150,25 +150,6 @@ class SubscriptionChannelServiceTest {
         assertThat(subscriptionChannelService.userIdToUserEmailSwitcher(subsMap, emailMap))
             .as(USER_ID_SWITCH_MESSAGE)
             .isEqualTo(expectedResponse);
-    }
-
-    @Test
-    void testUserIdToUserSwitcherWithEmailNotFound() {
-        Map<String, Optional<String>> emailMap = new ConcurrentHashMap<>();
-        emailMap.put(USER1, Optional.of(TEST_EMAIL_1));
-        emailMap.put(USER2, Optional.empty());
-
-        Map<String, List<Subscription>> subsMap = new ConcurrentHashMap<>();
-        subsMap.put(USER1, List.of(SUB1, SUB2));
-        subsMap.put(USER2, List.of(SUB3));
-
-        Map<String, List<Subscription>> expectedResponse = new ConcurrentHashMap<>();
-        expectedResponse.put(TEST_EMAIL_1, List.of(SUB1, SUB2));
-
-        assertThat(subscriptionChannelService.userIdToUserEmailSwitcher(subsMap, emailMap))
-            .as(USER_ID_SWITCH_MESSAGE)
-            .isEqualTo(expectedResponse);
-
     }
 
     @Test
