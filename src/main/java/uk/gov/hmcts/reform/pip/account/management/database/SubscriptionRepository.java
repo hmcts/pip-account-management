@@ -59,6 +59,7 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Long
                                                               @Param("list_type") String listType,
                                                               @Param("list_language") String listLanguage);
 
+    @Transactional
     void deleteAllByUserId(String userId);
 
     @Query(value = "SELECT * FROM Subscription "
