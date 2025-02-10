@@ -140,6 +140,60 @@ class CustomAccountRetrievalTest {
     }
 
     @Test
+    void testMiDataV2() throws Exception {
+        String provenanceId = UUID.randomUUID().toString();
+        PiUser validUser = createUser(true, provenanceId);
+        validUser.setEmail("test-account-am-" + RandomUtils.nextInt() + "@hmcts.net");
+
+        MockHttpServletRequestBuilder createRequest =
+            MockMvcRequestBuilders
+                .post(PI_URL)
+                .content(OBJECT_MAPPER.writeValueAsString(List.of(validUser)))
+                .header(ISSUER_HEADER, ISSUER_ID)
+                .contentType(MediaType.APPLICATION_JSON);
+
+        MvcResult responseCreateUser = mockMvc.perform(createRequest)
+            .andExpect(status().isCreated()).andReturn();
+        Map<CreationEnum, List<Object>> mappedResponse =
+            OBJECT_MAPPER.readValue(
+                responseCreateUser.getResponse().getContentAsString(),
+                new TypeReference<>() {
+                }
+            );
+
+        String createdUserId = mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).get(0).toString();
+
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+            .get(MI_REPORTING_ACCOUNT_DATA_URL_V2);
+
+        MvcResult miDataResponse = mockMvc.perform(request).andExpect(status().isOk()).andReturn();
+        List<AccountMiData> accountMiData =
+            Arrays.stream(OBJECT_MAPPER.readValue(
+                miDataResponse.getResponse().getContentAsString(), AccountMiData[].class)).toList();
+
+        assertThat(accountMiData)
+            .as("Returned account MI data must match user object")
+            .anyMatch(account -> createdUserId.equals(account.getUserId().toString())
+                && provenanceId.equals(account.getProvenanceUserId())
+                && UserProvenances.PI_AAD.equals(account.getUserProvenance())
+                && Roles.INTERNAL_ADMIN_CTSC.equals(account.getRoles())
+                && account.getCreatedDate() != null
+                && account.getLastSignedInDate() != null);
+    }
+
+    @Test
+    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
+    void testUnauthorizedGetMiDataV2() throws Exception {
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+            .get(MI_REPORTING_ACCOUNT_DATA_URL_V2);
+
+        MvcResult response = mockMvc.perform(request).andExpect(status().isForbidden()).andReturn();
+        assertEquals(FORBIDDEN.value(), response.getResponse().getStatus(),
+                     FORBIDDEN_STATUS_CODE
+        );
+    }
+
+    @Test
     @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = "classpath:add-admin-users.sql")
     void testGetAllThirdPartyAccounts() throws Exception {
         VALID_USER.setProvenanceUserId("THIRD_PARTY");
