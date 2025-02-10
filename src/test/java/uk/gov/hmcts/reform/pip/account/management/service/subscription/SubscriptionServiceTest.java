@@ -11,6 +11,8 @@ import org.springframework.test.context.ActiveProfiles;
 import uk.gov.hmcts.reform.pip.account.management.database.SubscriptionRepository;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.SubscriptionNotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.model.subscription.Subscription;
+import uk.gov.hmcts.reform.pip.model.report.AllSubscriptionMiData;
+import uk.gov.hmcts.reform.pip.model.report.LocationSubscriptionMiData;
 import uk.gov.hmcts.reform.pip.model.subscription.Channel;
 import uk.gov.hmcts.reform.pip.model.subscription.SearchType;
 
@@ -219,7 +221,20 @@ class SubscriptionServiceTest {
             .as("Wrong comma count compared to header row!")
             .allSatisfy(
                 e -> assertThat(e.chars().filter(character -> character == ',').count()).isEqualTo(countLine1));
+    }
 
+    @Test
+    void testMiServiceLocationV2() {
+        LocationSubscriptionMiData locationSubscriptionMiData = new LocationSubscriptionMiData();
+        locationSubscriptionMiData.setId(UUID.randomUUID());
+
+        when(subscriptionRepository.getLocationSubsDataForMiV2())
+            .thenReturn(List.of(locationSubscriptionMiData));
+
+        List<LocationSubscriptionMiData> locationSubscriptionsMiDataList = subscriptionService
+            .getLocationSubscriptionsDataForMiReportingV2();
+
+        assertThat(locationSubscriptionsMiDataList).contains(locationSubscriptionMiData);
     }
 
     @Test
@@ -242,6 +257,20 @@ class SubscriptionServiceTest {
             .as("Wrong comma count compared to header row!")
             .allSatisfy(
                 e -> assertThat(e.chars().filter(character -> character == ',').count()).isEqualTo(countLine1));
+    }
+
+    @Test
+    void testMiServiceAllV2() {
+        AllSubscriptionMiData allSubscriptionMiData = new AllSubscriptionMiData();
+        allSubscriptionMiData.setId(UUID.randomUUID());
+
+        when(subscriptionRepository.getAllSubsDataForMiV2())
+            .thenReturn(List.of(allSubscriptionMiData));
+
+        List<AllSubscriptionMiData> allSubscriptionsMiDataList = subscriptionService
+            .getAllSubscriptionsDataForMiReportingV2();
+
+        assertThat(allSubscriptionsMiDataList).contains(allSubscriptionMiData);
     }
 }
 

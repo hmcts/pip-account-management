@@ -12,12 +12,15 @@ import uk.gov.hmcts.reform.pip.account.management.model.subscription.usersubscri
 import uk.gov.hmcts.reform.pip.account.management.utils.AccountHelperBase;
 import uk.gov.hmcts.reform.pip.model.account.PiUser;
 import uk.gov.hmcts.reform.pip.model.publication.ListType;
+import uk.gov.hmcts.reform.pip.model.report.AllSubscriptionMiData;
+import uk.gov.hmcts.reform.pip.model.report.LocationSubscriptionMiData;
 import uk.gov.hmcts.reform.pip.model.subscription.Channel;
 import uk.gov.hmcts.reform.pip.model.subscription.SearchType;
 
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -42,6 +45,9 @@ class SubscriptionTest extends AccountHelperBase {
     private static final String CONFIGURE_LIST_TYPE_URL = SUBSCRIPTION_URL + "/configure-list-types/";
     private static final String ADD_LIST_TYPE_URL = SUBSCRIPTION_URL + "/add-list-types/";
     private static final String SUBSCRIPTION_BY_LOCATION_URL = SUBSCRIPTION_URL + "/location/";
+    private static final String MI_DATA_URL = SUBSCRIPTION_URL + "/v2/mi-data-all";
+    private static final String MI_DATA_LOCATION_URL = SUBSCRIPTION_URL + "/v2/mi-data-location";
+
     private static final String TESTING_SUPPORT_SUBSCRIPTION_URL = "/testing-support/subscription/";
     private static final String TESTING_SUPPORT_LOCATION_URL = "/testing-support/location/";
 
@@ -150,7 +156,7 @@ class SubscriptionTest extends AccountHelperBase {
 
         SubscriptionListType listTypeToConfigure = new SubscriptionListType(
             USER_ID,
-            List.of(LIST_TYPE.name(),ListType.CIVIL_DAILY_CAUSE_LIST.name()),
+            List.of(LIST_TYPE.name(), ListType.CIVIL_DAILY_CAUSE_LIST.name()),
             List.of(LIST_LANGUAGE_CONFIGURE)
         );
 
@@ -244,6 +250,60 @@ class SubscriptionTest extends AccountHelperBase {
         assertThat(responseBulkDeleteSubscriptions.getStatusCode()).isEqualTo(OK.value());
         assertThat(responseBulkDeleteSubscriptions.asString()).isEqualTo(
             "Subscriptions with ID " + subscriptionId + " deleted");
+    }
+
+    @Test
+    void testGetMiDataAllV2() {
+        Map<String, String> headerMap = new ConcurrentHashMap<>();
+        headerMap.putAll(bearer);
+        headerMap.put(USER_ID_HEADER, USER_ID);
+
+        Response responseCreateSubscription = doPostRequest(
+            SUBSCRIPTION_URL,
+            headerMap,
+            createTestSubscription(LOCATION_ID, USER_ID, LOCATION_NAME)
+        );
+
+        final String subscriptionId = responseCreateSubscription.asString().split(" ")[5];
+
+        final Response responseGetSubscriptionMetadata = doGetRequest(
+            MI_DATA_URL, headerMap
+        );
+
+        assertThat(responseGetSubscriptionMetadata.getStatusCode()).isEqualTo(OK.value());
+        List<AllSubscriptionMiData> returnedSubscriptions = Arrays.asList(responseGetSubscriptionMetadata.getBody()
+                                                                              .as(AllSubscriptionMiData[].class));
+
+        assertThat(returnedSubscriptions).anyMatch(
+            subscription -> subscriptionId.equals(subscription.getId().toString())
+        );
+    }
+
+    @Test
+    void testGetMiDataLocationSubscriptionV2() {
+        Map<String, String> headerMap = new ConcurrentHashMap<>();
+        headerMap.putAll(bearer);
+        headerMap.put(USER_ID_HEADER, USER_ID);
+
+        doPostRequest(
+            SUBSCRIPTION_URL,
+            headerMap,
+            createTestSubscription(LOCATION_ID, USER_ID, LOCATION_NAME)
+        );
+
+        final Response responseGetLocationSubscriptionMetadata = doGetRequest(
+            MI_DATA_LOCATION_URL, bearer
+        );
+
+        assertThat(responseGetLocationSubscriptionMetadata.getStatusCode())
+            .isEqualTo(OK.value());
+        List<LocationSubscriptionMiData> returnedLocationSubscriptions = Arrays
+            .asList(responseGetLocationSubscriptionMetadata.getBody()
+                        .as(LocationSubscriptionMiData[].class));
+
+        assertThat(returnedLocationSubscriptions).anyMatch(
+            locationSubscription -> LOCATION_ID.equals(locationSubscription.getSearchValue())
+        );
     }
 
     private Subscription createTestSubscription(String locationId, String userId, String locationName) {

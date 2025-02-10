@@ -9,9 +9,13 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.context.ActiveProfiles;
 import uk.gov.hmcts.reform.pip.account.management.model.subscription.Subscription;
+import uk.gov.hmcts.reform.pip.model.report.AllSubscriptionMiData;
+import uk.gov.hmcts.reform.pip.model.report.LocationSubscriptionMiData;
 import uk.gov.hmcts.reform.pip.model.subscription.Channel;
 import uk.gov.hmcts.reform.pip.model.subscription.SearchType;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -31,6 +35,7 @@ class SubscriptionRepositoryTest {
     private static final String LOCATION_NAME2 = "Test location name 2";
     private static final String LOCATION_NAME3 = "Test location name 3";
     private static final String CASE_NUMBER = "Test case number";
+    private static final LocalDateTime SUBSCRIPTION_CREATED_DATE = LocalDateTime.of(2025, 2, 5, 2, 2, 2);
 
     private static final String SUBSCRIPTION_MATCHED_MESSAGE = "Subscription does not match";
     private static final String SUBSCRIPTION_EMPTY_MESSAGE = "Subscription is not empty";
@@ -57,6 +62,8 @@ class SubscriptionRepositoryTest {
         subscription2.setSearchValue(LOCATION_ID2);
         subscription2.setChannel(Channel.EMAIL);
         subscription2.setLocationName(LOCATION_NAME2);
+        subscription2.setCreatedDate(SUBSCRIPTION_CREATED_DATE);
+
 
         Subscription savedSubscription = subscriptionRepository.save(subscription2);
         subscriptionId2 = savedSubscription.getId();
@@ -75,6 +82,7 @@ class SubscriptionRepositoryTest {
         subscription4.setSearchValue(CASE_NUMBER);
         subscription4.setChannel(Channel.EMAIL);
         subscription4.setCaseNumber(CASE_NUMBER);
+        subscription4.setCreatedDate(SUBSCRIPTION_CREATED_DATE);
 
         savedSubscription = subscriptionRepository.save(subscription4);
         subscriptionId4 = savedSubscription.getId();
@@ -99,6 +107,42 @@ class SubscriptionRepositoryTest {
             .hasSize(3)
             .matches(s -> s.stream()
                 .noneMatch(e -> e.contains(subscriptionId4.toString())));
+    }
+
+    @Test
+    void shouldGetAllSubscriptionDataForMiV2() {
+        List<AllSubscriptionMiData> subscriptionMiDataList = subscriptionRepository.getAllSubsDataForMiV2();
+
+        assertThat(subscriptionMiDataList)
+            .as(SUBSCRIPTION_MATCHED_MESSAGE)
+            .hasSize(4)
+            .anyMatch(subscription -> subscriptionId4.equals(subscription.getId())
+                && USER_ID1.equals(subscription.getUserId())
+                && subscription.getChannel().equals(Channel.EMAIL)
+                && subscription.getSearchType().equals(SearchType.CASE_ID)
+                && SUBSCRIPTION_CREATED_DATE.equals(subscription.getCreatedDate()))
+            .anyMatch(subscription -> subscriptionId2.equals(subscription.getId())
+                && subscription.getChannel().equals(Channel.EMAIL)
+                && subscription.getSearchType().equals(SearchType.LOCATION_ID)
+                && USER_ID1.equals(subscription.getUserId())
+                && LOCATION_NAME2.equals(subscription.getLocationName())
+                && SUBSCRIPTION_CREATED_DATE.equals(subscription.getCreatedDate()));
+    }
+
+    @Test
+    void shouldGetLocationSubscriptionDataForMiV2() {
+        List<LocationSubscriptionMiData> subscriptionMiDataList = subscriptionRepository.getLocationSubsDataForMiV2();
+
+        assertThat(subscriptionMiDataList)
+            .as(SUBSCRIPTION_MATCHED_MESSAGE)
+            .hasSize(3)
+            .anyMatch(subscription -> subscriptionId2.equals(subscription.getId())
+                && subscription.getChannel().equals(Channel.EMAIL)
+                && LOCATION_ID2.equals(subscription.getSearchValue())
+                && USER_ID1.equals(subscription.getUserId())
+                && LOCATION_NAME2.equals(subscription.getLocationName())
+                && SUBSCRIPTION_CREATED_DATE.equals(subscription.getCreatedDate()))
+            .noneMatch(subscription -> subscriptionId4.equals(subscription.getId()));
     }
 
     @Test
