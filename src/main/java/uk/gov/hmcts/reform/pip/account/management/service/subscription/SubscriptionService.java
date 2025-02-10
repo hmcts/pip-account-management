@@ -24,15 +24,15 @@ import static uk.gov.hmcts.reform.pip.model.subscription.SearchType.LOCATION_ID;
 @SuppressWarnings("PMD.TooManyMethods")
 public class SubscriptionService {
 
-    private final SubscriptionRepository repository;
+    private final SubscriptionRepository subscriptionRepository;
     private final SubscriptionListTypeService subscriptionListTypeService;
     private final SubscriptionLocationService subscriptionLocationService;
 
     @Autowired
-    public SubscriptionService(SubscriptionRepository repository,
+    public SubscriptionService(SubscriptionRepository subscriptionRepository,
                                SubscriptionListTypeService subscriptionListTypeService,
                                SubscriptionLocationService subscriptionLocationService) {
-        this.repository = repository;
+        this.subscriptionRepository = subscriptionRepository;
         this.subscriptionListTypeService = subscriptionListTypeService;
         this.subscriptionLocationService = subscriptionLocationService;
     }
@@ -44,23 +44,18 @@ public class SubscriptionService {
         duplicateSubscriptionHandler(subscription);
         subscription.setLastUpdatedDate(subscription.getCreatedDate());
 
-        return repository.save(subscription);
+        return subscriptionRepository.save(subscription);
     }
 
     public void deleteById(UUID id, String actioningUserId) {
-        Optional<Subscription> subscription = repository.findById(id);
-        if (subscription.isEmpty()) {
-            throw new SubscriptionNotFoundException(String.format(
-                "No subscription found with the subscription id %s",
-                id
-            ));
-        }
+        Subscription subscription = subscriptionRepository.findById(id)
+            .orElseThrow(() -> new SubscriptionNotFoundException(String.format(
+                "No subscription found with the subscription id %s", id
+            )));
+        subscriptionRepository.deleteById(id);
 
-        repository.deleteById(id);
-
-        if (subscription.get().getSearchType().equals(LOCATION_ID)) {
-            subscriptionLocationService
-                .deleteSubscriptionListTypeByUser(subscription.get().getUserId());
+        if (subscription.getSearchType().equals(LOCATION_ID)) {
+            subscriptionLocationService.deleteSubscriptionListTypeByUser(subscription.getUserId());
         }
 
         log.info(writeLog(actioningUserId, UserActions.DELETE_SUBSCRIPTION,
@@ -68,7 +63,7 @@ public class SubscriptionService {
     }
 
     public void bulkDeleteSubscriptions(List<UUID> ids) {
-        List<Subscription> subscriptions = repository.findByIdIn(ids);
+        List<Subscription> subscriptions = subscriptionRepository.findByIdIn(ids);
         if (ids.size() > subscriptions.size()) {
             List<UUID> missingIds = new ArrayList<>(ids);
             missingIds.removeAll(subscriptions.stream()
@@ -85,26 +80,26 @@ public class SubscriptionService {
             .filter(s -> s.getSearchType()
             .equals(LOCATION_ID)).toList();
 
-        List<Subscription> userLocationSubscriptions = repository
+        List<Subscription> userLocationSubscriptions = subscriptionRepository
             .findLocationSubscriptionsByUserId(subscriptions.get(0).getUserId());
 
         if (!userLocationSubscriptions.isEmpty()
             && bulkDeleteLocationSubscriptions.size()
-            == repository.findLocationSubscriptionsByUserId(subscriptions.get(0).getUserId()).size()) {
+            == subscriptionRepository.findLocationSubscriptionsByUserId(subscriptions.get(0).getUserId()).size()) {
             subscriptionListTypeService.deleteListTypesForSubscription(subscriptions.get(0).getUserId());
         }
 
-        repository.deleteByIdIn(ids);
+        subscriptionRepository.deleteByIdIn(ids);
         subscriptions.forEach(s -> log.info(writeLog(s.getUserId(), UserActions.DELETE_SUBSCRIPTION,
                                                      s.getId().toString())));
     }
 
     public List<Subscription> findAll() {
-        return repository.findAll();
+        return subscriptionRepository.findAll();
     }
 
     public Subscription findById(UUID subscriptionId) {
-        Optional<Subscription> subscription = repository.findById(subscriptionId);
+        Optional<Subscription> subscription = subscriptionRepository.findById(subscriptionId);
         if (subscription.isEmpty()) {
             throw new SubscriptionNotFoundException(String.format(
                 "No subscription found with the subscription id %s",
@@ -121,10 +116,10 @@ public class SubscriptionService {
      * @param subscription The new subscription that will be created
      */
     private void duplicateSubscriptionHandler(Subscription subscription) {
-        repository.findByUserId(subscription.getUserId()).forEach(existingSub -> {
+        subscriptionRepository.findByUserId(subscription.getUserId()).forEach(existingSub -> {
             if (existingSub.getSearchType().equals(subscription.getSearchType())
                 && existingSub.getSearchValue().equals(subscription.getSearchValue())) {
-                repository.delete(existingSub);
+                subscriptionRepository.delete(existingSub);
             }
         });
     }
@@ -132,7 +127,7 @@ public class SubscriptionService {
     public String getAllSubscriptionsDataForMiReporting() {
         StringBuilder builder = new StringBuilder(60);
         builder.append("id,channel,search_type,user_id,court_name,created_date").append(System.lineSeparator());
-        repository.getAllSubsDataForMi()
+        subscriptionRepository.getAllSubsDataForMi()
             .forEach(line -> builder.append(line).append(System.lineSeparator()));
         return builder.toString();
     }
@@ -140,7 +135,7 @@ public class SubscriptionService {
     public String getLocalSubscriptionsDataForMiReporting() {
         StringBuilder builder = new StringBuilder(60);
         builder.append("id,search_value,channel,user_id,court_name,created_date").append(System.lineSeparator());
-        repository.getLocalSubsDataForMi()
+        subscriptionRepository.getLocalSubsDataForMi()
             .forEach(line -> builder.append(line).append(System.lineSeparator()));
         return builder.toString();
     }

@@ -254,30 +254,24 @@ class AccountServiceTest {
     void testFindUserEmailsByIds() {
         when(userRepository.findByUserId(VALID_USER_ID)).thenReturn(Optional.of(PI_USER));
 
-        List<String> userIdsList = new ArrayList<>();
-        userIdsList.add(VALID_USER_ID.toString());
+        Map<String, String> expectedUserEmailMap = new ConcurrentHashMap<>();
+        expectedUserEmailMap.put(VALID_USER_ID.toString(), EMAIL);
 
-        Map<String, Optional<String>> expectedUserEmailMap = new ConcurrentHashMap<>();
-        expectedUserEmailMap.put(VALID_USER_ID.toString(), Optional.of(EMAIL));
-
-        assertEquals(expectedUserEmailMap, accountService.findUserEmailsByIds(userIdsList),
-                     "Returned map does not match with expected map"
-        );
+        assertEquals(expectedUserEmailMap, accountService.findUserEmailsByIds(List.of(VALID_USER_ID.toString())),
+                     "Returned map does not match with expected map");
     }
 
     @Test
     void testFindUserEmailsByIdsNoEmails() {
         when(userRepository.findByUserId(VALID_USER_ID)).thenReturn(Optional.empty());
+        when(userRepository.findByUserId(VALID_USER_ID)).thenReturn(Optional.of(PI_USER_SSO));
 
-        List<String> userIdsList = new ArrayList<>();
-        userIdsList.add(VALID_USER_ID.toString());
-
+        List<String> userIdsList = List.of(VALID_USER_ID.toString(), VALID_USER_ID_SSO.toString());
         Map<String, Optional<String>> expectedUserEmailMap = new ConcurrentHashMap<>();
         expectedUserEmailMap.put(VALID_USER_ID.toString(), Optional.empty());
 
-        assertEquals(expectedUserEmailMap, accountService.findUserEmailsByIds(userIdsList),
-                     "Returned map does not match with expected map"
-        );
+        assertTrue(accountService.findUserEmailsByIds(userIdsList).isEmpty(),
+                   "Returned map does not match with expected map");
     }
 
     @Test

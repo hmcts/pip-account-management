@@ -45,7 +45,6 @@ import static uk.gov.hmcts.reform.pip.model.account.UserProvenances.SSO;
 @ExtendWith({MockitoExtension.class})
 class SubscriptionLocationServiceTest {
 
-    private static final String COURT_NAME = "test court name";
     private static final LocalDateTime DATE_ADDED = LocalDateTime.now();
     private static final String EMAIL_ADDRESS = "test@test.com";
     private static final String LOCATION_ID = "1";
@@ -210,8 +209,6 @@ class SubscriptionLocationServiceTest {
 
     @Test
     void testDeleteSubscriptionListTypeByUser() {
-        when(subscriptionRepository.findLocationSubscriptionsByUserId(USER_ID.toString()))
-            .thenReturn(Collections.emptyList());
         when(subscriptionListTypeRepository.findByUserId(USER_ID.toString()))
             .thenReturn(Optional.of(mockSubscriptionListType.get(0)));
 
@@ -223,9 +220,6 @@ class SubscriptionLocationServiceTest {
 
     @Test
     void testDeleteSubscriptionListTypeByUserWitLocationSub() {
-        when(subscriptionRepository.findLocationSubscriptionsByUserId(USER_ID.toString()))
-            .thenReturn(mockSubscriptionList);
-
         subscriptionLocationService.deleteSubscriptionListTypeByUser(USER_ID.toString());
 
         verify(subscriptionListTypeRepository, never())
