@@ -10,12 +10,13 @@ import org.springframework.data.repository.query.Param;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
+import uk.gov.hmcts.reform.pip.model.report.AccountMiData;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-@SuppressWarnings("PMD.TooManyMethods")
+@SuppressWarnings({"PMD.TooManyMethods", "squid:S1133"})
 public interface UserRepository extends JpaRepository<PiUser, Long> {
     @Query(value = "SELECT * FROM pi_user WHERE provenance_user_id=:provUserId AND user_provenance=:userProv",
         nativeQuery = true)
@@ -24,10 +25,20 @@ public interface UserRepository extends JpaRepository<PiUser, Long> {
 
     Optional<PiUser> findByUserId(UUID userId);
 
+    /**
+     * Previous version of the MI Reporting repository method. No longer used and soon to be removed.
+     * @deprecated This method will be removed in the future in favour of the V2 equivalent.
+     */
     @Query(value = "SELECT cast(user_id as text), provenance_user_id, user_provenance, roles, created_date, "
         + "last_signed_in_date FROM pi_user",
         nativeQuery = true)
+    @Deprecated(since = "2")
     List<String> getAccManDataForMI();
+
+    @Query("SELECT new uk.gov.hmcts.reform.pip.model.report.AccountMiData("
+        + "userId, provenanceUserId, userProvenance, roles, createdDate, lastSignedInDate) "
+        + "FROM PiUser")
+    List<AccountMiData> getAccountDataForMi();
 
     @Query(value = "SELECT * FROM pi_user WHERE CAST(last_verified_date AS DATE) = CURRENT_DATE - (interval '1' day)"
         + " * :daysAgo AND user_provenance = 'PI_AAD' AND roles = 'VERIFIED'", nativeQuery = true)

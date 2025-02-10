@@ -26,6 +26,7 @@ import uk.gov.hmcts.reform.pip.account.management.service.AccountFilteringServic
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
 import uk.gov.hmcts.reform.pip.model.authentication.roles.IsAdmin;
+import uk.gov.hmcts.reform.pip.model.report.AccountMiData;
 
 import java.util.List;
 
@@ -37,6 +38,7 @@ import java.util.List;
 @Validated
 @IsAdmin
 @SecurityRequirement(name = "bearerAuth")
+@SuppressWarnings("squid:S1133")
 public class AccountFilteringController {
     private static final String OK_CODE = "200";
     private static final String NOT_FOUND_ERROR_CODE = "404";
@@ -50,6 +52,10 @@ public class AccountFilteringController {
         this.accountFilteringService = accountFilteringService;
     }
 
+    /**
+     * Previous version of the MI Reporting endpoint. No longer used and soon to be removed.
+     * @deprecated This endpoint will be removed in the future in favour of the V2 equivalent.
+     */
     @ApiResponse(responseCode = OK_CODE, description = "A CSV like structure which contains the data. "
         + "See example for headers ", content = {
             @Content(examples = {@ExampleObject("user_id,provenance_user_id,user_provenance,roles,"
@@ -61,8 +67,16 @@ public class AccountFilteringController {
     @Operation(summary = "Returns a list of (anonymized) account data for MI reporting. This endpoint will be "
         + "deprecated in the future, in favour of returning a JSON model")
     @GetMapping("/mi-data")
+    @Deprecated(since = "2")
     public ResponseEntity<String> getMiData() {
         return ResponseEntity.status(HttpStatus.OK).body(accountFilteringService.getAccManDataForMiReporting());
+    }
+
+    @ApiResponse(responseCode = OK_CODE, description = "List of Accounts MI Data")
+    @Operation(summary = "Returns anonymized account data for MI reporting")
+    @GetMapping("/v2/mi-data")
+    public ResponseEntity<List<AccountMiData>> getMiDataV2() {
+        return ResponseEntity.status(HttpStatus.OK).body(accountFilteringService.getAccountDataForMi());
     }
 
     @ApiResponse(responseCode = OK_CODE, description = "List of third party accounts")
