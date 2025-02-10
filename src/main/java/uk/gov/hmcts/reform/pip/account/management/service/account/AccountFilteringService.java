@@ -10,6 +10,7 @@ import uk.gov.hmcts.reform.pip.account.management.helpers.EmailHelper;
 import uk.gov.hmcts.reform.pip.account.management.model.account.PiUser;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
+import uk.gov.hmcts.reform.pip.model.report.AccountMiData;
 
 import java.util.List;
 
@@ -18,6 +19,7 @@ import static uk.gov.hmcts.reform.pip.model.account.Roles.ALL_NON_THIRD_PARTY_RO
 import static uk.gov.hmcts.reform.pip.model.account.UserProvenances.ALL_NON_THIRD_PARTY_PROVENANCES;
 
 @Service
+@SuppressWarnings("squid:S1133")
 public class AccountFilteringService {
     private final UserRepository userRepository;
 
@@ -26,6 +28,11 @@ public class AccountFilteringService {
         this.userRepository = userRepository;
     }
 
+    /**
+     * Previous version of the MI Reporting service method. No longer used and soon to be removed.
+     * @deprecated  This method will be removed in the future in favour of the V2 equivalent.
+     */
+    @Deprecated(since = "2")
     public String getAccManDataForMiReporting() {
         StringBuilder builder = new StringBuilder(85);
         builder.append("user_id,provenance_user_id,user_provenance,roles,created_date,last_signed_in_date")
@@ -33,6 +40,15 @@ public class AccountFilteringService {
         userRepository.getAccManDataForMI()
             .forEach(line -> builder.append(line).append(System.lineSeparator()));
         return builder.toString();
+    }
+
+    /**
+     * Method which will retrieve MI reporting data for all accounts.
+     *
+     * @return A list of MI Data objects for all accounts.
+     */
+    public List<AccountMiData> getAccountDataForMi() {
+        return userRepository.getAccountDataForMi();
     }
 
     /**

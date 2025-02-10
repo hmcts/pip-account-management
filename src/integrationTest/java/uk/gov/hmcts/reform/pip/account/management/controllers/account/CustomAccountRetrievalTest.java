@@ -17,15 +17,19 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.testcontainers.shaded.org.apache.commons.lang3.RandomUtils;
 import uk.gov.hmcts.reform.pip.account.management.model.account.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.account.PiUser;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
+import uk.gov.hmcts.reform.pip.model.report.AccountMiData;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.http.HttpStatus.FORBIDDEN;
@@ -38,7 +42,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @WithMockUser(username = "admin", authorities = {"APPROLE_api.request.admin"})
-@SuppressWarnings({"PMD.UnitTestShouldIncludeAssert"})
+@SuppressWarnings({"PMD.TooManyMethods","PMD.UnitTestShouldIncludeAssert"})
 class CustomAccountRetrievalTest {
     private static final String ROOT_URL = "/account";
     private static final String ADMIN_ROOT_URL = "/account/admin/";
@@ -46,6 +50,7 @@ class CustomAccountRetrievalTest {
     private static final String PI_URL = ROOT_URL + "/add/pi";
     private static final String GET_ALL_ACCOUNTS_EXCEPT_THIRD_PARTY = ROOT_URL + "/all";
     private static final String MI_REPORTING_ACCOUNT_DATA_URL = ROOT_URL + "/mi-data";
+    private static final String MI_REPORTING_ACCOUNT_DATA_URL_V2 = ROOT_URL + "/v2/mi-data";
 
     private static final String EMAIL = "test_account_admin@hmcts.net";
     private static final String INVALID_EMAIL = "ab";

@@ -14,8 +14,11 @@ import org.springframework.test.context.ActiveProfiles;
 import uk.gov.hmcts.reform.pip.account.management.model.account.PiUser;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
+import uk.gov.hmcts.reform.pip.model.report.AccountMiData;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -67,6 +70,7 @@ class UserRepositoryTest {
         user2.setUserProvenance(UserProvenances.PI_AAD);
         user2.setRoles(Roles.INTERNAL_ADMIN_CTSC);
         user2.setLastSignedInDate(TIMESTAMP_NOW.minusDays(DAYS));
+        user2.setCreatedDate(TIMESTAMP_NOW.minusDays(DAYS));
         userId2 = userRepository.save(user2).getUserId();
 
         PiUser user3 = new PiUser();
@@ -161,5 +165,21 @@ class UserRepositoryTest {
             .first()
             .extracting(PiUser::getUserId)
             .isEqualTo(userId1);
+    }
+
+    @Test
+    void shouldGetMiData() {
+        List<AccountMiData> accountMiData = userRepository.getAccountDataForMi();
+
+        assertThat(accountMiData)
+            .as("Returned account MI data must match user object")
+            .anyMatch(account -> userId2.equals(account.getUserId())
+                && PROVENANCE_USER_ID2.equals(account.getProvenanceUserId())
+                && UserProvenances.PI_AAD.equals(account.getUserProvenance())
+                && Roles.INTERNAL_ADMIN_CTSC.equals(account.getRoles())
+                && TIMESTAMP_NOW.minusDays(DAYS).truncatedTo(ChronoUnit.SECONDS)
+                .equals(account.getLastSignedInDate().truncatedTo(ChronoUnit.SECONDS))
+                && TIMESTAMP_NOW.minusDays(DAYS).truncatedTo(ChronoUnit.SECONDS)
+                .equals(account.getCreatedDate().truncatedTo(ChronoUnit.SECONDS)));
     }
 }
