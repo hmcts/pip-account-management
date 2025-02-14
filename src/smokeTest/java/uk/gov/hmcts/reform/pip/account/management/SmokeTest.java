@@ -27,7 +27,6 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -160,10 +159,5 @@ class SmokeTest extends SmokeTestBase {
         assertThat(response.getStatusCode())
             .as(STATUS_CODE_MATCH)
             .isEqualTo(CREATED.value());
-    }
-
-    private static String createRandomId() {
-        Integer randomNumber = 10_000 + new Random(System.currentTimeMillis()).nextInt(20_000);
-        return randomNumber.toString();
     }
 }

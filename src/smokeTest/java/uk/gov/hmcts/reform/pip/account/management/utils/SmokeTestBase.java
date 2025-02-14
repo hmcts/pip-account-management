@@ -12,6 +12,7 @@ import org.springframework.util.CollectionUtils;
 import java.io.File;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static io.restassured.RestAssured.given;
@@ -34,7 +35,6 @@ public class SmokeTestBase {
 
     @Autowired
     private OAuthClient authClient;
-
 
     @BeforeAll
     void startup() {
@@ -116,5 +116,10 @@ public class SmokeTestBase {
             headers.putAll(additionalHeaders);
         }
         return headers;
+    }
+
+    protected static String createRandomId() {
+        Integer randomNumber = 10_000 + new Random(System.currentTimeMillis()).nextInt(20_000);
+        return randomNumber.toString();
     }
 }
