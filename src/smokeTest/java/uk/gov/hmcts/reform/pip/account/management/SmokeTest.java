@@ -42,7 +42,7 @@ class SmokeTest extends SmokeTestBase {
     private static final String TESTING_SUPPORT_DELETE_ACCOUNT_URL = "/testing-support/account/";
     private static final String TESTING_SUPPORT_APPLICATION_URL = "/testing-support/application/";
 
-    private static final String ISSUER_ID_FIELD = "x-issuer-id";
+    private static final String ISSUER_ID_HEADER = "x-issuer-id";
     private static final String ISSUER_ID = UUID.randomUUID().toString();
     private static final String TEST_FIRST_NAME = "SmokeTestFirstName";
     private static final String TEST_SURNAME = "SmokeTestSurname";
@@ -92,7 +92,7 @@ class SmokeTest extends SmokeTestBase {
         azureAccount.setRole(Roles.VERIFIED);
         azureAccount.setEmail(TEST_EMAIL);
 
-        Response response = doPostRequest(CREATE_AZURE_ACCOUNT_URL, Map.of(ISSUER_ID_FIELD, ISSUER_ID),
+        Response response = doPostRequest(CREATE_AZURE_ACCOUNT_URL, Map.of(ISSUER_ID_HEADER, ISSUER_ID),
                                           OBJECT_MAPPER.writeValueAsString(List.of(azureAccount)));
 
         String azureAccountId = response.getBody().as(AZURE_ACCOUNT_RESPONSE_TYPE)
@@ -108,7 +108,7 @@ class SmokeTest extends SmokeTestBase {
         piUser.setUserProvenance(UserProvenances.PI_AAD);
         piUser.setProvenanceUserId(azureAccountId);
 
-        response = doPostRequest(CREATE_PI_ACCOUNT_URL, Map.of(ISSUER_ID_FIELD, ISSUER_ID),
+        response = doPostRequest(CREATE_PI_ACCOUNT_URL, Map.of(ISSUER_ID_HEADER, ISSUER_ID),
                                  OBJECT_MAPPER.writeValueAsString(List.of(piUser)));
 
         assertThat(response.getStatusCode())
