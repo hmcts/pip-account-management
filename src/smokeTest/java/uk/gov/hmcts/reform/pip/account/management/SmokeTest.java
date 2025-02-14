@@ -64,7 +64,7 @@ class SmokeTest extends SmokeTestBase {
     private static final String LOCATION_ID = createRandomId();
     private static final String LOCATION_NAME = "TestLocation" + LOCATION_ID;
 
-    private static final String MOCK_FILE = "test-image.png";
+    private static final String MOCK_FILE = "data/test-image.png";
     private static final TypeRef<Map<CreationEnum, List<? extends AzureAccount>>> AZURE_ACCOUNT_RESPONSE_TYPE
         = new TypeRef<>() {};
 
