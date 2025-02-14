@@ -21,18 +21,26 @@ import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
 @SpringBootTest(classes = {OAuthClient.class}, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class SmokeTestBase {
-    private String accessToken;
+    private static final String TESTING_SUPPORT_LOCATION_URL = "/testing-support/location/";
 
-    @Value("${TEST_URL:http://localhost:6969}")
+    private String accessToken;
+    private String dataManagementAccessToken;
+
+    @Value("${test-url}")
     private String testUrl;
+
+    @Value("${data-management-test-url}")
+    private String dataManagementUrl;
 
     @Autowired
     private OAuthClient authClient;
+
 
     @BeforeAll
     void startup() {
         RestAssured.baseURI = testUrl;
         accessToken = authClient.generateAccessToken();
+        dataManagementAccessToken = authClient.generateDataManagementAccessToken();
     }
 
     protected Response doGetRequest(final String path) {
@@ -44,7 +52,7 @@ public class SmokeTestBase {
     }
 
     protected Response doPostRequest(final String path, final Map<String, String> additionalHeaders,
-                                     final String body) {
+                                     final Object body) {
         return given()
             .relaxedHTTPSValidation()
             .headers(getRequestHeaders(additionalHeaders))
@@ -75,6 +83,27 @@ public class SmokeTestBase {
             .headers(getRequestHeaders(Collections.emptyMap()))
             .when()
             .delete(path)
+            .thenReturn();
+    }
+
+    protected Response createTestLocation(String locationId, String locationName) {
+        return given()
+            .relaxedHTTPSValidation()
+            .headers(getRequestHeaders(Map.of(AUTHORIZATION, "Bearer " + dataManagementAccessToken)))
+            .baseUri(dataManagementUrl)
+            .body(locationName)
+            .when()
+            .post(TESTING_SUPPORT_LOCATION_URL + "/" + locationId)
+            .thenReturn();
+    }
+
+    protected Response deleteTestLocation(String locationName) {
+        return given()
+            .relaxedHTTPSValidation()
+            .headers(getRequestHeaders(Map.of(AUTHORIZATION, "Bearer " + dataManagementAccessToken)))
+            .baseUri(dataManagementUrl)
+            .when()
+            .delete(TESTING_SUPPORT_LOCATION_URL + locationName)
             .thenReturn();
     }
 

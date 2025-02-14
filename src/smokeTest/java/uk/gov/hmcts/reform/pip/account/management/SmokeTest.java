@@ -14,15 +14,20 @@ import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 import uk.gov.hmcts.reform.pip.account.management.model.MediaApplicationStatus;
 import uk.gov.hmcts.reform.pip.account.management.model.account.AzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.account.CreationEnum;
+import uk.gov.hmcts.reform.pip.account.management.model.subscription.Subscription;
 import uk.gov.hmcts.reform.pip.account.management.utils.OAuthClient;
 import uk.gov.hmcts.reform.pip.account.management.utils.SmokeTestBase;
 import uk.gov.hmcts.reform.pip.model.account.PiUser;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
+import uk.gov.hmcts.reform.pip.model.subscription.Channel;
+import uk.gov.hmcts.reform.pip.model.subscription.SearchType;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -35,15 +40,21 @@ import static org.springframework.http.HttpStatus.OK;
 @ActiveProfiles("smoke")
 class SmokeTest extends SmokeTestBase {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
     private static final String BASE_ACCOUNT_URL = "/account";
     private static final String CREATE_PI_ACCOUNT_URL = BASE_ACCOUNT_URL + "/add/pi";
     private static final String CREATE_AZURE_ACCOUNT_URL = BASE_ACCOUNT_URL + "/add/azure";
     private static final String MEDIA_APPLICATION_URL = "/application";
+    private static final String SUBSCRIPTION_URL = "/subscription";
+
     private static final String TESTING_SUPPORT_DELETE_ACCOUNT_URL = "/testing-support/account/";
     private static final String TESTING_SUPPORT_APPLICATION_URL = "/testing-support/application/";
+    private static final String TESTING_SUPPORT_SUBSCRIPTION_URL = "/testing-support/subscription/";
 
-    private static final String ISSUER_ID_FIELD = "x-issuer-id";
+    private static final String ISSUER_ID_HEADER = "x-issuer-id";
+    private static final String USER_ID_HEADER = "x-user-id";
     private static final String ISSUER_ID = UUID.randomUUID().toString();
+    private static final String USER_ID = UUID.randomUUID().toString();
     private static final String TEST_FIRST_NAME = "SmokeTestFirstName";
     private static final String TEST_SURNAME = "SmokeTestSurname";
     private static final String TEST_DISPLAY_NAME = "SmokeTestName";
@@ -51,6 +62,8 @@ class SmokeTest extends SmokeTestBase {
     private static final String TEST_EMAIL_PREFIX = "SmokeTestEmail-"
         + ThreadLocalRandom.current().nextInt(1000, 9999);
     private static final String TEST_EMAIL = TEST_EMAIL_PREFIX + "@justice.gov.uk";
+    private static final String LOCATION_ID = createRandomId();
+    private static final String LOCATION_NAME = "TestLocation" + LOCATION_ID;
 
     private static final String MOCK_FILE = "test-image.png";
     private static final TypeRef<Map<CreationEnum, List<? extends AzureAccount>>> AZURE_ACCOUNT_RESPONSE_TYPE
@@ -62,12 +75,15 @@ class SmokeTest extends SmokeTestBase {
     @BeforeAll
     public void setup() {
         OBJECT_MAPPER.findAndRegisterModules();
+        createTestLocation(LOCATION_ID, LOCATION_NAME);
     }
 
     @AfterAll
     public void teardown() {
         doDeleteRequest(TESTING_SUPPORT_DELETE_ACCOUNT_URL + TEST_EMAIL_PREFIX);
         doDeleteRequest(TESTING_SUPPORT_APPLICATION_URL + TEST_EMAIL_PREFIX);
+        doDeleteRequest(TESTING_SUPPORT_SUBSCRIPTION_URL + LOCATION_NAME);
+        deleteTestLocation(LOCATION_NAME);
     }
 
     @Test
@@ -92,7 +108,7 @@ class SmokeTest extends SmokeTestBase {
         azureAccount.setRole(Roles.VERIFIED);
         azureAccount.setEmail(TEST_EMAIL);
 
-        Response response = doPostRequest(CREATE_AZURE_ACCOUNT_URL, Map.of(ISSUER_ID_FIELD, ISSUER_ID),
+        Response response = doPostRequest(CREATE_AZURE_ACCOUNT_URL, Map.of(ISSUER_ID_HEADER, ISSUER_ID),
                                           OBJECT_MAPPER.writeValueAsString(List.of(azureAccount)));
 
         String azureAccountId = response.getBody().as(AZURE_ACCOUNT_RESPONSE_TYPE)
@@ -108,7 +124,7 @@ class SmokeTest extends SmokeTestBase {
         piUser.setUserProvenance(UserProvenances.PI_AAD);
         piUser.setProvenanceUserId(azureAccountId);
 
-        response = doPostRequest(CREATE_PI_ACCOUNT_URL, Map.of(ISSUER_ID_FIELD, ISSUER_ID),
+        response = doPostRequest(CREATE_PI_ACCOUNT_URL, Map.of(ISSUER_ID_HEADER, ISSUER_ID),
                                  OBJECT_MAPPER.writeValueAsString(List.of(piUser)));
 
         assertThat(response.getStatusCode())
@@ -126,5 +142,28 @@ class SmokeTest extends SmokeTestBase {
         assertThat(response.getStatusCode())
             .as(STATUS_CODE_MATCH)
             .isEqualTo(OK.value());
+    }
+
+    @Test
+    void testCreateSubscription() {
+        Subscription subscription = new Subscription();
+        subscription.setUserId(USER_ID);
+        subscription.setSearchType(SearchType.LOCATION_ID);
+        subscription.setSearchValue(LOCATION_ID);
+        subscription.setChannel(Channel.EMAIL);
+        subscription.setCreatedDate(LocalDateTime.now());
+        subscription.setLocationName(LOCATION_NAME);
+        subscription.setLastUpdatedDate(LocalDateTime.now());
+
+        Response response = doPostRequest(SUBSCRIPTION_URL, Map.of(USER_ID_HEADER, USER_ID), subscription);
+
+        assertThat(response.getStatusCode())
+            .as(STATUS_CODE_MATCH)
+            .isEqualTo(CREATED.value());
+    }
+
+    private static String createRandomId() {
+        Integer randomNumber = 10_000 + new Random(System.currentTimeMillis()).nextInt(20_000);
+        return randomNumber.toString();
     }
 }
