@@ -20,6 +20,7 @@ import uk.gov.hmcts.reform.pip.model.subscription.Channel;
 import uk.gov.hmcts.reform.pip.model.subscription.SearchType;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.http.HttpStatus.FORBIDDEN;
@@ -35,7 +36,7 @@ class SubscriptionListTypeTest extends IntegrationTestBase {
 
     private static final String USER_ID_HEADER = "x-user-id";
     private static final String ACTIONING_USER_ID = "f54c9783-7f56-4a69-91bc-55b582c0206f";
-    private static final String VALID_USER_ID = "60e75e34-ad8e-4ac3-8f26-7de73e5c987b";
+    private static final UUID VALID_USER_ID = UUID.fromString("60e75e34-ad8e-4ac3-8f26-7de73e5c987b");
     private static final String CASE_ID = "T485913";
 
     private static final String SUBSCRIPTION_PATH = "/subscription";

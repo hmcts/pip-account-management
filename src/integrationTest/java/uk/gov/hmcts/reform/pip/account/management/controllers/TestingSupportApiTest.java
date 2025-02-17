@@ -105,7 +105,7 @@ class TestingSupportApiTest extends IntegrationTestBase {
     private static final String USER_ID_HEADER = "x-user-id";
     private static final String ACTIONING_USER_ID = "1234-1234";
 
-    private static final String USER_ID = UUID.randomUUID().toString();
+    private static final UUID USER_ID = UUID.randomUUID();
     private static final String CASE_ID = "T485913";
 
     private static final String AUDIT_URL = "/audit";

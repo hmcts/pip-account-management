@@ -3,7 +3,6 @@ package uk.gov.hmcts.reform.pip.account.management.service.subscription;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -22,8 +21,10 @@ import uk.gov.hmcts.reform.pip.model.subscription.SearchType;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
@@ -32,8 +33,8 @@ import static uk.gov.hmcts.reform.pip.account.management.helpers.SubscriptionUti
 
 @ExtendWith({MockitoExtension.class})
 class UserSubscriptionServiceTest {
-    private static final String USER_ID = "Ralph21";
-    private static final String USER_ID_NO_SUBS = "Tina21";
+    private static final UUID USER_ID = UUID.randomUUID();
+    private static final UUID USER_ID_NO_SUBS = UUID.randomUUID();
     private static final String SEARCH_VALUE = "193254";
     private static final String CASE_ID = "123";
 
@@ -220,11 +221,11 @@ class UserSubscriptionServiceTest {
 
     @Test
     void testDeleteAllByUserId() {
-        String testString = "testId";
-        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
-        doNothing().when(subscriptionRepository).deleteAllByUserId(captor.capture());
-        userSubscriptionService.deleteAllByUserId(testString);
-        assertEquals(testString, captor.getValue(),
-                     "The service layer failed to delete the correct user id subscriptions");
+        UUID userIdWithSubs = UUID.randomUUID();
+        doNothing().when(subscriptionRepository).deleteAllByUserId(userIdWithSubs);
+        String result = userSubscriptionService.deleteAllByUserId(userIdWithSubs.toString());
+        assertTrue(
+            result.contains(userIdWithSubs.toString()),
+            "The service layer failed to delete the correct user id subscriptions");
     }
 }

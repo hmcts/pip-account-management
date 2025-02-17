@@ -18,7 +18,7 @@ public final class SubscriptionUtils {
     private SubscriptionUtils() {
     }
 
-    public static Subscription createMockSubscription(String userId, String locationId, Channel channel,
+    public static Subscription createMockSubscription(UUID userId, String locationId, Channel channel,
                                                       LocalDateTime createdDate) {
         Subscription subscription = new Subscription();
         subscription.setId(UUID.randomUUID());
@@ -37,16 +37,16 @@ public final class SubscriptionUtils {
         final int caseUrnInterval = 6;
 
         List<Subscription> subs = new ArrayList<>();
-        Map<Integer, String> mockData = Map.of(
-            0, "Ralph",
-            1, "Ralph",
-            2, "Jenny",
-            3, "Thomas",
-            4, "Pauline",
-            5, "Cedric",
-            6, "Adrian",
-            7, "Cedric",
-            8, "Jonathan"
+        Map<Integer, UUID> mockData = Map.of(
+            0, UUID.randomUUID(),
+            1, UUID.randomUUID(),
+            2, UUID.randomUUID(),
+            3, UUID.randomUUID(),
+            4, UUID.randomUUID(),
+            5, UUID.randomUUID(),
+            6, UUID.randomUUID(),
+            7, UUID.randomUUID(),
+            8, UUID.randomUUID()
         );
 
         for (int i = 0; i < 8; i++) {
@@ -75,14 +75,14 @@ public final class SubscriptionUtils {
 
     public static Subscription findableSubscription() {
         Subscription subscription = new Subscription();
-        subscription.setUserId("Ralph");
+        subscription.setUserId(UUID.randomUUID());
         subscription.setId(UUID.randomUUID());
         subscription.setSearchType(SearchType.LOCATION_ID);
         subscription.setSearchValue("1");
         return subscription;
     }
 
-    public static List<SubscriptionListType> createMockSubscriptionListType(String userId) {
+    public static List<SubscriptionListType> createMockSubscriptionListType(UUID userId) {
         List<SubscriptionListType> subscriptionListTypes = new ArrayList<>();
         for (int i = 0; i < 6; i++) {
             subscriptionListTypes.add(new SubscriptionListType(userId,

@@ -17,3 +17,10 @@ CREATE TABLE IF NOT EXISTS subscription (
     last_updated_date timestamp,
     party_names varchar(255)
 );
+
+ALTER TABLE subscription
+ALTER COLUMN user_id TYPE UUID USING user_id::UUID;
+
+ALTER TABLE subscription
+  ADD CONSTRAINT fk_user_id FOREIGN KEY (user_id)
+    REFERENCES pi_user (user_id);

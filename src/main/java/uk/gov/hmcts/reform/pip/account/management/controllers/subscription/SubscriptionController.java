@@ -131,7 +131,7 @@ public class SubscriptionController {
     @Operation(summary = "Returns the list of relevant subscriptions associated with a given user id.")
     @GetMapping("/user/{userId}")
     public ResponseEntity<UserSubscription> findByUserId(@Parameter @PathVariable String userId) {
-        return ResponseEntity.ok(userSubscriptionService.findByUserId(userId));
+        return ResponseEntity.ok(userSubscriptionService.findByUserId(UUID.fromString(userId)));
     }
 
     @ApiResponse(responseCode = "202", description = "Subscriber request has been accepted")

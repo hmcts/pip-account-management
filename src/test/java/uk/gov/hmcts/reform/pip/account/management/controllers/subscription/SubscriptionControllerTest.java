@@ -46,7 +46,7 @@ class SubscriptionControllerTest {
     private static final List<String> LIST_TYPES = List.of(ListType.CIVIL_DAILY_CAUSE_LIST.name());
     private static final List<String> LIST_LANGUAGE = List.of("ENGLISH");
     private static final String ACTIONING_USER_ID = "1234-1234";
-    private static final String USER_ID = UUID.randomUUID().toString();
+    private static final UUID USER_ID = UUID.randomUUID();
 
     @Mock
     SubscriptionService subscriptionService;
@@ -164,7 +164,7 @@ class SubscriptionControllerTest {
     @Test
     void testFindByUserId() {
         when(userSubscriptionService.findByUserId(USER_ID)).thenReturn(userSubscription);
-        assertEquals(userSubscription, subscriptionController.findByUserId(USER_ID).getBody(),
+        assertEquals(userSubscription, subscriptionController.findByUserId(USER_ID.toString()).getBody(),
                      "Should return users subscriptions"
         );
     }
@@ -172,7 +172,7 @@ class SubscriptionControllerTest {
     @Test
     void testFindByUserIdReturnsOk() {
         when(userSubscriptionService.findByUserId(USER_ID)).thenReturn(userSubscription);
-        assertEquals(HttpStatus.OK, subscriptionController.findByUserId(USER_ID).getStatusCode(),
+        assertEquals(HttpStatus.OK, subscriptionController.findByUserId(USER_ID.toString()).getStatusCode(),
                      STATUS_CODE_MATCH
         );
     }

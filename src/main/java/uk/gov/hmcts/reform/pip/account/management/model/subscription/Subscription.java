@@ -45,7 +45,7 @@ public class Subscription {
     @Valid
     @NotNull
     @NotBlank
-    private String userId;
+    private UUID userId;
 
     @NotNull
     @Enumerated(EnumType.STRING)
