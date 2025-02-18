@@ -10,7 +10,3 @@ CREATE TABLE IF NOT EXISTS subscription_list_type (
 
 ALTER TABLE subscription_list_type
 ALTER COLUMN user_id TYPE UUID USING user_id::UUID;
-
-ALTER TABLE subscription_list_type
-  ADD CONSTRAINT fk_user_id FOREIGN KEY (user_id)
-    REFERENCES pi_user (user_id);
