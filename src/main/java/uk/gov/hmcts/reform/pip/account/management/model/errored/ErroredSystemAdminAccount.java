@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import uk.gov.hmcts.reform.pip.account.management.model.SystemAdminAccount;
+import uk.gov.hmcts.reform.pip.account.management.model.account.SystemAdminAccount;
 
 import java.util.List;
 
