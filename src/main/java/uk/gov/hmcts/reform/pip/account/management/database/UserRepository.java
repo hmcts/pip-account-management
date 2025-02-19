@@ -25,16 +25,6 @@ public interface UserRepository extends JpaRepository<PiUser, Long> {
 
     Optional<PiUser> findByUserId(UUID userId);
 
-    /**
-     * Previous version of the MI Reporting repository method. No longer used and soon to be removed.
-     * @deprecated This method will be removed in the future in favour of the V2 equivalent.
-     */
-    @Query(value = "SELECT cast(user_id as text), provenance_user_id, user_provenance, roles, created_date, "
-        + "last_signed_in_date FROM pi_user",
-        nativeQuery = true)
-    @Deprecated(since = "2")
-    List<String> getAccManDataForMI();
-
     @Query("SELECT new uk.gov.hmcts.reform.pip.model.report.AccountMiData("
         + "userId, provenanceUserId, userProvenance, roles, createdDate, lastSignedInDate) "
         + "FROM PiUser")

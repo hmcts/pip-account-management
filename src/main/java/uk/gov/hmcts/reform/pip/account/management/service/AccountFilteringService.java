@@ -19,27 +19,12 @@ import static uk.gov.hmcts.reform.pip.model.account.Roles.ALL_NON_THIRD_PARTY_RO
 import static uk.gov.hmcts.reform.pip.model.account.UserProvenances.ALL_NON_THIRD_PARTY_PROVENANCES;
 
 @Service
-@SuppressWarnings("squid:S1133")
 public class AccountFilteringService {
     private final UserRepository userRepository;
 
     @Autowired
     public AccountFilteringService(UserRepository userRepository) {
         this.userRepository = userRepository;
-    }
-
-    /**
-     * Previous version of the MI Reporting service method. No longer used and soon to be removed.
-     * @deprecated  This method will be removed in the future in favour of the V2 equivalent.
-     */
-    @Deprecated(since = "2")
-    public String getAccManDataForMiReporting() {
-        StringBuilder builder = new StringBuilder(85);
-        builder.append("user_id,provenance_user_id,user_provenance,roles,created_date,last_signed_in_date")
-            .append(System.lineSeparator());
-        userRepository.getAccManDataForMI()
-            .forEach(line -> builder.append(line).append(System.lineSeparator()));
-        return builder.toString();
     }
 
     /**
