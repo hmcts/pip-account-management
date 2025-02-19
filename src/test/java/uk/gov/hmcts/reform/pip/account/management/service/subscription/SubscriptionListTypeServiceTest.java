@@ -12,6 +12,7 @@ import uk.gov.hmcts.reform.pip.account.management.model.subscription.Subscriptio
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.never;
@@ -21,7 +22,8 @@ import static uk.gov.hmcts.reform.pip.model.publication.ListType.CIVIL_DAILY_CAU
 
 @ExtendWith(MockitoExtension.class)
 class SubscriptionListTypeServiceTest {
-    private static final String USER_ID = "Ralph21";
+    private static final UUID USER_ID = UUID.randomUUID();
+    private static final String ACTIONED_USER_ID = "actionId1";
     private static final String SUBSCRIPTION_CREATED_ERROR = "The returned subscription does "
         + "not match the expected subscription";
 
@@ -41,7 +43,7 @@ class SubscriptionListTypeServiceTest {
 
     @Test
     void testConfigureListTypesForLocationSubscription() {
-        subscriptionListTypeService.configureListTypesForSubscription(mockSubscriptionListType, USER_ID);
+        subscriptionListTypeService.configureListTypesForSubscription(mockSubscriptionListType, ACTIONED_USER_ID);
 
         assertEquals(USER_ID, mockSubscriptionListType.getUserId(),
                      SUBSCRIPTION_CREATED_ERROR
@@ -51,7 +53,7 @@ class SubscriptionListTypeServiceTest {
     @Test
     void testConfigureEmptyListTypesForLocationSubscription() {
         mockSubscriptionListType.setListType(new ArrayList<>());
-        subscriptionListTypeService.configureListTypesForSubscription(mockSubscriptionListType, USER_ID);
+        subscriptionListTypeService.configureListTypesForSubscription(mockSubscriptionListType, ACTIONED_USER_ID);
 
         assertEquals(USER_ID, mockSubscriptionListType.getUserId(),
                      SUBSCRIPTION_CREATED_ERROR
@@ -62,7 +64,7 @@ class SubscriptionListTypeServiceTest {
     void testAddListTypesForLocationSubscription() {
         when(subscriptionListTypeRepository.save(mockSubscriptionListType))
             .thenReturn(mockSubscriptionListType);
-        subscriptionListTypeService.addListTypesForSubscription(mockSubscriptionListType, USER_ID);
+        subscriptionListTypeService.addListTypesForSubscription(mockSubscriptionListType, USER_ID.toString());
 
         assertEquals(USER_ID, mockSubscriptionListType.getUserId(),
                      SUBSCRIPTION_CREATED_ERROR

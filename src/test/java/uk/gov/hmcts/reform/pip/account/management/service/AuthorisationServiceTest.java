@@ -757,7 +757,7 @@ class AuthorisationServiceTest {
     @Test
     void testAdminUserCannotDeleteSubscriptionIfUserMismatched() {
         user.setRoles(Roles.INTERNAL_ADMIN_LOCAL);
-        subscription.setUserId(ANOTHER_USER_ID.toString());
+        subscription.setUserId(ANOTHER_USER_ID);
         when(accountService.getUserById(USER_ID)).thenReturn(user);
         when(subscriptionRepository.findById(SUBSCRIPTION_ID)).thenReturn(Optional.of(subscription));
 
@@ -779,7 +779,7 @@ class AuthorisationServiceTest {
     @Test
     void testVerifiedUserCannotDeleteSubscriptionIfUserMismatched() {
         user.setRoles(Roles.VERIFIED);
-        subscription.setUserId(ANOTHER_USER_ID.toString());
+        subscription.setUserId(ANOTHER_USER_ID);
         when(accountService.getUserById(USER_ID)).thenReturn(user);
         when(subscriptionRepository.findById(SUBSCRIPTION_ID)).thenReturn(Optional.of(subscription));
 
@@ -801,7 +801,7 @@ class AuthorisationServiceTest {
     @Test
     void testUserCanDeleteSubscriptionIfUserMatchedInSingleSubscription() {
         user.setRoles(Roles.INTERNAL_ADMIN_LOCAL);
-        subscription.setUserId(USER_ID.toString());
+        subscription.setUserId(USER_ID);
         when(accountService.getUserById(USER_ID)).thenReturn(user);
         when(subscriptionRepository.findById(SUBSCRIPTION_ID)).thenReturn(Optional.of(subscription));
 
@@ -819,9 +819,9 @@ class AuthorisationServiceTest {
     @Test
     void testUserCanDeleteSubscriptionIfUserMatchedInAllSubscriptions() {
         user.setRoles(Roles.INTERNAL_ADMIN_LOCAL);
-        subscription.setUserId(USER_ID.toString());
-        subscription2.setUserId(USER_ID.toString());
-        subscription3.setUserId(USER_ID.toString());
+        subscription.setUserId(USER_ID);
+        subscription2.setUserId(USER_ID);
+        subscription3.setUserId(USER_ID);
 
         when(accountService.getUserById(USER_ID)).thenReturn(user);
         when(subscriptionRepository.findById(SUBSCRIPTION_ID)).thenReturn(Optional.of(subscription));
@@ -843,9 +843,9 @@ class AuthorisationServiceTest {
     @Test
     void testUserCannotDeleteSubscriptionIfUserMisMatchedInSomeOfTheSubscriptions() {
         user.setRoles(Roles.INTERNAL_ADMIN_LOCAL);
-        subscription.setUserId(USER_ID.toString());
-        subscription2.setUserId(ANOTHER_USER_ID.toString());
-        subscription3.setUserId(USER_ID.toString());
+        subscription.setUserId(USER_ID);
+        subscription2.setUserId(ANOTHER_USER_ID);
+        subscription3.setUserId(USER_ID);
 
         try (LogCaptor logCaptor = LogCaptor.forClass(AuthorisationService.class)) {
             when(accountService.getUserById(USER_ID)).thenReturn(user);

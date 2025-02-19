@@ -8,6 +8,7 @@ import uk.gov.hmcts.reform.pip.account.management.model.subscription.Subscriptio
 import uk.gov.hmcts.reform.pip.model.enums.UserActions;
 
 import java.util.Optional;
+import java.util.UUID;
 
 import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
 import static uk.gov.hmcts.reform.pip.model.subscription.SearchType.LOCATION_ID;
@@ -37,8 +38,9 @@ public class SubscriptionListTypeService {
         subscriptionListTypeRepository.save(subscriptionListType);
     }
 
-    public void deleteListTypesForSubscription(String userId) {
-        Optional<SubscriptionListType> subscriptionListTypes = subscriptionListTypeRepository.findByUserId(userId);
+    public void deleteListTypesForSubscription(UUID userId) {
+        Optional<SubscriptionListType> subscriptionListTypes =
+            subscriptionListTypeRepository.findByUserId(userId);
 
         subscriptionListTypes.ifPresent(subscriptionListType -> subscriptionListTypeRepository
             .deleteByUserId(subscriptionListType.getUserId()));

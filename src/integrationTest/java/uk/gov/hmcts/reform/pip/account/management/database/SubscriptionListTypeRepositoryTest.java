@@ -12,6 +12,7 @@ import uk.gov.hmcts.reform.pip.account.management.model.subscription.Subscriptio
 import uk.gov.hmcts.reform.pip.model.publication.ListType;
 
 import java.util.List;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -21,7 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class SubscriptionListTypeRepositoryTest {
 
-    private static final String USER_ID = "1";
+    private static final UUID USER_ID = UUID.randomUUID();
     private static final String LIST_LANGUAGE = "ENGLISH";
     private static final List<String> LIST_TYPE = List.of(
         ListType.CIVIL_DAILY_CAUSE_LIST.name(),
