@@ -3,12 +3,16 @@ package uk.gov.hmcts.reform.pip.account.management.service;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import uk.gov.hmcts.reform.pip.account.management.database.SubscriptionRepository;
 import uk.gov.hmcts.reform.pip.account.management.database.UserRepository;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.NotFoundException;
-import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
+import uk.gov.hmcts.reform.pip.account.management.model.account.PiUser;
+import uk.gov.hmcts.reform.pip.account.management.model.subscription.Subscription;
+import uk.gov.hmcts.reform.pip.account.management.service.account.AccountService;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -20,10 +24,15 @@ import static uk.gov.hmcts.reform.pip.model.account.Roles.ALL_NON_RESTRICTED_ADM
 @Slf4j
 public class AuthorisationService {
     private final UserRepository userRepository;
+    private final SubscriptionRepository subscriptionRepository;
+    private final AccountService accountService;
 
     @Autowired
-    public AuthorisationService(UserRepository userRepository) {
+    public AuthorisationService(UserRepository userRepository, SubscriptionRepository subscriptionRepository,
+                                AccountService accountService) {
         this.userRepository = userRepository;
+        this.subscriptionRepository = subscriptionRepository;
+        this.accountService = accountService;
     }
 
     public boolean userCanCreateAccount(UUID adminUserId, List<PiUser> users) {
@@ -83,6 +92,12 @@ public class AuthorisationService {
         return isSystemAdmin;
     }
 
+    public boolean userCanDeleteSubscriptions(UUID userId, UUID... subscriptionIds) {
+        return isSystemAdmin(userId) || Arrays.stream(subscriptionIds)
+            .allMatch(id -> isSubscriptionUserMatch(id, userId));
+
+    }
+
     private boolean isAuthorisedRole(UUID userId, UUID adminUserId) {
         PiUser user = getUser(userId);
         if (UserProvenances.SSO.equals(user.getUserProvenance())) {
@@ -107,5 +122,28 @@ public class AuthorisationService {
         return userRepository.findByUserId(userId)
             .orElseThrow(() -> new NotFoundException(
                 String.format("User with supplied user id: %s could not be found", userId)));
+    }
+
+    private boolean isSystemAdmin(UUID userId) {
+        PiUser user = accountService.getUserById(userId);
+        return user != null && user.getRoles() == Roles.SYSTEM_ADMIN;
+    }
+
+    private boolean isSubscriptionUserMatch(UUID subscriptionId, UUID userId) {
+        Optional<Subscription> subscription = subscriptionRepository.findById(subscriptionId);
+
+        if (subscription.isPresent()) {
+            if (userId.toString().equals(subscription.get().getUserId())) {
+                return true;
+            }
+            log.error(writeLog(
+                String.format("User %s is forbidden to remove subscription with ID %s belongs to another user %s",
+                              userId, subscriptionId, subscription.get().getUserId())
+            ));
+            return false;
+        }
+        // Return true if not subscription found. It will then go to the delete subscription method and return
+        // 404 HTTP status rather than a 403 forbidden status.
+        return true;
     }
 }

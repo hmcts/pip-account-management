@@ -7,7 +7,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.hmcts.reform.pip.account.management.database.UserRepository;
-import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
+import uk.gov.hmcts.reform.pip.account.management.model.account.PiUser;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
 
