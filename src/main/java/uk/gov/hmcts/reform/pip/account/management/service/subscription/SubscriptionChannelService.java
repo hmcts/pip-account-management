@@ -74,7 +74,8 @@ public class SubscriptionChannelService {
     Map<String, List<Subscription>> deduplicateSubscriptions(List<Subscription> listOfSubs) {
         Map<String, List<Subscription>> mapOfSubscriptions = new ConcurrentHashMap<>();
         listOfSubs.forEach(
-            subscription -> mapOfSubscriptions.computeIfAbsent(subscription.getUserId(), x -> new ArrayList<>())
+            subscription -> mapOfSubscriptions.computeIfAbsent(subscription.getUserId().toString(),
+                                                               x -> new ArrayList<>())
                 .add(subscription)
         );
         return mapOfSubscriptions;

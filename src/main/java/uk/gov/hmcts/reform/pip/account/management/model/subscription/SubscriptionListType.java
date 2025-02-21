@@ -39,7 +39,7 @@ public class SubscriptionListType {
      */
     @Valid
     @NotNull
-    private String userId;
+    private UUID userId;
 
     @Valid
     @Type(ListArrayType.class)
@@ -51,7 +51,7 @@ public class SubscriptionListType {
     @Column(name = "list_language", columnDefinition = "text[]")
     private List<String> listLanguage;
 
-    public SubscriptionListType(String userId, List<String> listType,
+    public SubscriptionListType(UUID userId, List<String> listType,
                                 List<String> listLanguage) {
         this.userId = userId;
         this.listType = listType;

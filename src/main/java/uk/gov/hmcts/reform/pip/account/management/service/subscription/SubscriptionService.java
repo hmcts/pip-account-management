@@ -92,7 +92,7 @@ public class SubscriptionService {
         }
 
         subscriptionRepository.deleteByIdIn(ids);
-        subscriptions.forEach(s -> log.info(writeLog(s.getUserId(), UserActions.DELETE_SUBSCRIPTION,
+        subscriptions.forEach(s -> log.info(writeLog(s.getUserId().toString(), UserActions.DELETE_SUBSCRIPTION,
                                                      s.getId().toString())));
     }
 

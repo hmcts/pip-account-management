@@ -25,7 +25,7 @@ class SubscriptionListTypeControllerTest {
         "Returned subscription does not match expected subscription";
     private static final List<String> LIST_TYPES = List.of(ListType.CIVIL_DAILY_CAUSE_LIST.name());
     private static final List<String> LIST_LANGUAGE = List.of("ENGLISH");
-    private static final String USER_ID = UUID.randomUUID().toString();
+    private static final UUID USER_ID = UUID.randomUUID();
 
     @Mock
     SubscriptionListTypeService subscriptionListTypeService;
@@ -42,28 +42,30 @@ class SubscriptionListTypeControllerTest {
 
     @Test
     void testAddListTypesForSubscription() {
-        doNothing().when(subscriptionListTypeService).addListTypesForSubscription(subscriptionListType, USER_ID);
+        doNothing().when(subscriptionListTypeService).addListTypesForSubscription(subscriptionListType,
+                                                                                  USER_ID.toString());
 
         assertEquals(
             new ResponseEntity<>(
                 String.format("Location list Type successfully added for user %s", USER_ID),
                 HttpStatus.CREATED
             ),
-            subscriptionListTypeController.addListTypesForSubscription(USER_ID, subscriptionListType),
+            subscriptionListTypeController.addListTypesForSubscription(USER_ID.toString(), subscriptionListType),
             RETURNED_SUBSCRIPTION_NOT_MATCHED
         );
     }
 
     @Test
     void testConfigureListTypesForSubscription() {
-        doNothing().when(subscriptionListTypeService).configureListTypesForSubscription(subscriptionListType, USER_ID);
+        doNothing().when(subscriptionListTypeService).configureListTypesForSubscription(subscriptionListType,
+                                                                                        USER_ID.toString());
 
         assertEquals(
             new ResponseEntity<>(
                 String.format("Location list Type successfully updated for user %s", USER_ID),
                 HttpStatus.OK
             ),
-            subscriptionListTypeController.configureListTypesForSubscription(USER_ID, subscriptionListType),
+            subscriptionListTypeController.configureListTypesForSubscription(USER_ID.toString(), subscriptionListType),
             RETURNED_SUBSCRIPTION_NOT_MATCHED
         );
     }

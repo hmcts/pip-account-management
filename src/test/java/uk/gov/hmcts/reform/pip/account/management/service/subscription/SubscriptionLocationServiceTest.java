@@ -82,7 +82,7 @@ class SubscriptionLocationServiceTest {
         mockSubscriptionIds = mockSubscriptionList.stream()
             .map(Subscription::getId).toList();
 
-        mockSubscriptionListType = createMockSubscriptionListType(USER_ID.toString());
+        mockSubscriptionListType = createMockSubscriptionListType(USER_ID);
 
         piUser = new PiUser();
         piUser.setEmail(EMAIL_ADDRESS);
@@ -209,10 +209,10 @@ class SubscriptionLocationServiceTest {
 
     @Test
     void testDeleteSubscriptionListTypeByUser() {
-        when(subscriptionListTypeRepository.findByUserId(USER_ID.toString()))
+        when(subscriptionListTypeRepository.findByUserId(USER_ID))
             .thenReturn(Optional.of(mockSubscriptionListType.get(0)));
 
-        subscriptionLocationService.deleteSubscriptionListTypeByUser(USER_ID.toString());
+        subscriptionLocationService.deleteSubscriptionListTypeByUser(USER_ID);
 
         verify(subscriptionListTypeRepository, times(1))
             .delete(mockSubscriptionListType.get(0));
@@ -220,7 +220,7 @@ class SubscriptionLocationServiceTest {
 
     @Test
     void testDeleteSubscriptionListTypeByUserWitLocationSub() {
-        subscriptionLocationService.deleteSubscriptionListTypeByUser(USER_ID.toString());
+        subscriptionLocationService.deleteSubscriptionListTypeByUser(USER_ID);
 
         verify(subscriptionListTypeRepository, never())
             .delete(any());

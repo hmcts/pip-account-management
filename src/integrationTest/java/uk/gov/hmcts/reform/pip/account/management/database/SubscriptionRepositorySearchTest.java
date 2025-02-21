@@ -24,7 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class SubscriptionRepositorySearchTest {
-    private static final String USER_ID = "1";
+    private static final UUID USER_ID = UUID.randomUUID();
     private static final String LOCATION_ID = "123";
     private static final String LOCATION_NAME = "Test location name";
     private static final String CASE_NUMBER = "Test case number";

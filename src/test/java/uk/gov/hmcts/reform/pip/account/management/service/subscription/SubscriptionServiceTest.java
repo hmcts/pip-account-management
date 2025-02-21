@@ -36,7 +36,7 @@ import static uk.gov.hmcts.reform.pip.account.management.helpers.SubscriptionUti
 @ActiveProfiles("non-async")
 @ExtendWith(MockitoExtension.class)
 class SubscriptionServiceTest {
-    private static final String USER_ID = "Ralph21";
+    private static final UUID USER_ID = UUID.randomUUID();
     private static final String SEARCH_VALUE = "193254";
     private static final Channel EMAIL = Channel.EMAIL;
     private static final String ACTIONING_USER_ID = "1234-1234";
