@@ -208,7 +208,7 @@ public class AccountService {
                                             userToDelete.getProvenanceUserId(), ex.getMessage())));
         }
 
-        userSubscriptionService.deleteAllByUserId(userToDelete.getUserId().toString());
+        userSubscriptionService.deleteAllByUserId(userToDelete.getUserId());
         userRepository.delete(userToDelete);
         return String.format("User with ID %s has been deleted", userToDelete.getUserId());
     }

@@ -50,9 +50,9 @@ public class UserSubscriptionService {
      * @param userId The user id to delete the subscriptions from.
      * @return A confirmation message.
      */
-    public String deleteAllByUserId(String userId) {
-        subscriptionListTypeRepository.deleteByUserId(UUID.fromString(userId));
-        subscriptionRepository.deleteAllByUserId(UUID.fromString(userId));
+    public String deleteAllByUserId(UUID userId) {
+        subscriptionListTypeRepository.deleteByUserId(userId);
+        subscriptionRepository.deleteAllByUserId(userId);
         String message = String.format("All subscriptions deleted for user id %s", userId);
         log.info(writeLog(message));
         return message;

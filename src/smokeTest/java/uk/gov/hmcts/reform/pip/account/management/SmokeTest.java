@@ -53,7 +53,7 @@ class SmokeTest extends SmokeTestBase {
     private static final String ISSUER_ID_HEADER = "x-issuer-id";
     private static final String USER_ID_HEADER = "x-user-id";
     private static final String ISSUER_ID = UUID.randomUUID().toString();
-    private static final String USER_ID = UUID.randomUUID().toString();
+    private static final UUID USER_ID = UUID.randomUUID();
     private static final String TEST_FIRST_NAME = "SmokeTestFirstName";
     private static final String TEST_SURNAME = "SmokeTestSurname";
     private static final String TEST_DISPLAY_NAME = "SmokeTestName";
@@ -154,7 +154,7 @@ class SmokeTest extends SmokeTestBase {
         subscription.setLocationName(LOCATION_NAME);
         subscription.setLastUpdatedDate(LocalDateTime.now());
 
-        Response response = doPostRequest(SUBSCRIPTION_URL, Map.of(USER_ID_HEADER, USER_ID), subscription);
+        Response response = doPostRequest(SUBSCRIPTION_URL, Map.of(USER_ID_HEADER, USER_ID.toString()), subscription);
 
         assertThat(response.getStatusCode())
             .as(STATUS_CODE_MATCH)
