@@ -164,7 +164,7 @@ class SubscriptionControllerTest {
     @Test
     void testFindByUserId() {
         when(userSubscriptionService.findByUserId(USER_ID)).thenReturn(userSubscription);
-        assertEquals(userSubscription, subscriptionController.findByUserId(USER_ID.toString()).getBody(),
+        assertEquals(userSubscription, subscriptionController.findByUserId(USER_ID).getBody(),
                      "Should return users subscriptions"
         );
     }
@@ -172,7 +172,7 @@ class SubscriptionControllerTest {
     @Test
     void testFindByUserIdReturnsOk() {
         when(userSubscriptionService.findByUserId(USER_ID)).thenReturn(userSubscription);
-        assertEquals(HttpStatus.OK, subscriptionController.findByUserId(USER_ID.toString()).getStatusCode(),
+        assertEquals(HttpStatus.OK, subscriptionController.findByUserId(USER_ID).getStatusCode(),
                      STATUS_CODE_MATCH
         );
     }
