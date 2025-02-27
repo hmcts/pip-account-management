@@ -15,7 +15,11 @@ import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.NotFo
 import uk.gov.hmcts.reform.pip.account.management.model.AuditLog;
 import uk.gov.hmcts.reform.pip.model.enums.AuditAction;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -38,6 +42,10 @@ class AuditServiceTest {
     @InjectMocks
     private AuditService auditService;
 
+    private static final String EMAIL = "a@b.com";
+    private static final String USER_ID = "123";
+    private static final List<AuditAction> AUDIT_ACTIONS = new ArrayList<>();
+    private static final String FILTER_DATE = "2024-11-01";
     private final AuditLog auditLogExample = new AuditLog();
 
     @BeforeEach
@@ -48,15 +56,41 @@ class AuditServiceTest {
         auditLogExample.setAction(AuditAction.MANAGE_USER);
         auditLogExample.setDetails("Test details for manage user");
         auditLogExample.setTimestamp(LocalDateTime.now());
+
+        AUDIT_ACTIONS.add(AuditAction.ADMIN_CREATION);
     }
 
     @Test
     void testGetAllAuditLogs() {
         Pageable pageable = PageRequest.of(0, 25);
         Page<AuditLog> page = new PageImpl<>(List.of(auditLogExample), pageable, List.of(auditLogExample).size());
-        when(auditRepository.findAllByOrderByTimestampDesc(pageable)).thenReturn(page);
+        when(auditRepository
+            .findAllByUserEmailLikeIgnoreCaseAndUserIdLikeAndActionInOrderByTimestampDesc(
+                "%" + EMAIL + "%", USER_ID, AUDIT_ACTIONS, pageable))
+            .thenReturn(page);
 
-        Page<AuditLog> returnedAuditLogs = auditService.getAllAuditLogs(pageable);
+        Page<AuditLog> returnedAuditLogs = auditService.getAllAuditLogs(pageable, EMAIL, USER_ID, AUDIT_ACTIONS,
+                                                                        "");
+
+        assertEquals(auditLogExample, returnedAuditLogs.getContent().get(0),
+                     "Returned audit log does not match the expected");
+    }
+
+    @Test
+    void testGetAllAuditLogsWithFilterDate() {
+        Pageable pageable = PageRequest.of(0, 25);
+        Page<AuditLog> page = new PageImpl<>(List.of(auditLogExample), pageable, List.of(auditLogExample).size());
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        LocalDateTime filterStartDate = LocalDate.parse(FILTER_DATE, formatter).atTime(LocalTime.MIN);
+        LocalDateTime filterEndDate = LocalDate.parse(FILTER_DATE, formatter).atTime(LocalTime.MAX);
+
+        when(auditRepository
+                 .findAllByUserEmailLikeIgnoreCaseAndUserIdLikeAndActionInAndTimestampBetweenOrderByTimestampDesc(
+                     "%" + EMAIL + "%", USER_ID, AUDIT_ACTIONS, filterStartDate, filterEndDate, pageable))
+            .thenReturn(page);
+
+        Page<AuditLog> returnedAuditLogs = auditService.getAllAuditLogs(pageable, EMAIL, USER_ID, AUDIT_ACTIONS,
+                                                                        FILTER_DATE);
 
         assertEquals(auditLogExample, returnedAuditLogs.getContent().get(0),
                      "Returned audit log does not match the expected");
@@ -98,5 +132,27 @@ class AuditServiceTest {
         assertEquals("Audit logs that met the max retention period have been deleted",
                      response, "Deletion response was not as expected");
         verify(auditRepository, times(1)).deleteAllByTimestampBefore(any());
+    }
+
+    @Test
+    void deleteAuditLogsByEmail() {
+        List<AuditLog> auditLogs = List.of(auditLogExample);
+        when(auditRepository.findAllByUserEmailStartingWithIgnoreCase(EMAIL)).thenReturn(auditLogs);
+
+        String response = auditService.deleteAllLogsWithUserEmailPrefix(EMAIL);
+
+        assertEquals("1 audit log(s) deleted with user email starting with " + EMAIL, response,
+                     "Deletion response was not as expected");
+        verify(auditRepository, times(1)).deleteByIdIn(any());
+    }
+
+    @Test
+    void updateAuditTimestampByAuditId() {
+        when(auditRepository.findById(ID)).thenReturn(Optional.of(auditLogExample));
+
+        String response = auditService.updateAuditTimestampWithAuditId(ID.toString());
+
+        assertEquals("1 audit log(s) updated with timestamp " + auditLogExample.getTimestamp(), response,
+                     "Update response was not as expected");
     }
 }

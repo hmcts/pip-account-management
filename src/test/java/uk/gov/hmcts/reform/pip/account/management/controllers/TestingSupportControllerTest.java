@@ -8,11 +8,15 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import uk.gov.hmcts.reform.pip.account.management.model.AuditLog;
 import uk.gov.hmcts.reform.pip.account.management.model.AzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
 import uk.gov.hmcts.reform.pip.account.management.service.AccountService;
+import uk.gov.hmcts.reform.pip.account.management.service.AuditService;
 import uk.gov.hmcts.reform.pip.account.management.service.MediaApplicationService;
+
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
@@ -32,6 +36,9 @@ class TestingSupportControllerTest {
 
     @Mock
     private MediaApplicationService mediaApplicationService;
+
+    @Mock
+    private AuditService auditService;
 
     @InjectMocks
     TestingSupportController testingSupportController;
@@ -110,5 +117,44 @@ class TestingSupportControllerTest {
         assertThat(response.getBody())
             .as(RESPONSE_BODY_MESSAGE)
             .isEqualTo(responseMessage);
+    }
+
+    @Test
+    void testDeleteAuditLogsWithEmailPrefixReturnsOk() {
+        AuditLog auditLog = new AuditLog();
+        auditLog.setUserEmail(EMAIL_PREFIX);
+
+        String responseMessage = "1 audit log(s) deleted with email starting with " + EMAIL_PREFIX;
+        when(auditService.deleteAllLogsWithUserEmailPrefix(EMAIL_PREFIX)).thenReturn(responseMessage);
+
+        ResponseEntity<String> response = testingSupportController.deleteAuditLogsWithEmailPrefix(EMAIL_PREFIX);
+
+        assertThat(response.getStatusCode())
+            .as(RESPONSE_STATUS_MESSAGE)
+            .isEqualTo(HttpStatus.OK);
+
+        assertThat(response.getBody())
+            .as(RESPONSE_BODY_MESSAGE)
+            .isEqualTo(responseMessage);
+    }
+
+    @Test
+    void testUpdateAuditLogTimestampWithIdReturnsOk() {
+        AuditLog auditLog = new AuditLog();
+        UUID auditId = UUID.randomUUID();
+        auditLog.setId(auditId);
+
+        String responseMessage = "1 audit log(s) updated with timestamp ";
+        when(auditService.updateAuditTimestampWithAuditId(auditId.toString())).thenReturn(responseMessage);
+
+        ResponseEntity<String> response = testingSupportController.updateAuditLogTimestampWithId(auditId.toString());
+
+        assertThat(response.getStatusCode())
+            .as(RESPONSE_STATUS_MESSAGE)
+            .isEqualTo(HttpStatus.OK);
+
+        assertThat(response.getBody())
+            .as(RESPONSE_BODY_MESSAGE)
+            .contains(responseMessage);
     }
 }

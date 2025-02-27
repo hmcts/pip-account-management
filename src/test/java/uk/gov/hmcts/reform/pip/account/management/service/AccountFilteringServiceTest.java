@@ -15,6 +15,7 @@ import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.NotFo
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
+import uk.gov.hmcts.reform.pip.model.report.AccountMiData;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,6 +36,7 @@ import static uk.gov.hmcts.reform.pip.model.account.UserProvenances.PI_AAD;
 import static uk.gov.hmcts.reform.pip.model.account.UserProvenances.SSO;
 
 @ExtendWith(MockitoExtension.class)
+@SuppressWarnings({"PMD.TooManyMethods", "squid:S1874"})
 class AccountFilteringServiceTest {
     private static final String EMAIL = "test@hmcts.net";
     private static final String ID = "1234";
@@ -83,6 +85,18 @@ class AccountFilteringServiceTest {
             .hasSizeGreaterThanOrEqualTo(2)
             .allSatisfy(
                 e -> assertThat(e.chars().filter(character -> character == ',').count()).isEqualTo(countLine1));
+    }
+
+    @Test
+    void testGetAccountsForMiV2() {
+        AccountMiData accountMiData = new AccountMiData();
+        accountMiData.setProvenanceUserId("1234");
+
+        when(userRepository.getAccountDataForMi()).thenReturn(List.of(accountMiData));
+
+        assertThat(accountFilteringService.getAccountDataForMi())
+            .as("Account data for MI does not match expected")
+            .contains(accountMiData);
     }
 
     @Test

@@ -64,7 +64,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<ExceptionResponse> handle(NotFoundException ex) {
-        log.error(writeLog("404, Unable to find requested account / application"));
+        log.error(writeLog("404, Unable to find requested account / application / audit"));
 
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
             .body(generateExceptionResponse(ex.getMessage()));
