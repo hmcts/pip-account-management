@@ -45,8 +45,8 @@ class SubscriptionTest extends AccountHelperBase {
     private static final String CONFIGURE_LIST_TYPE_URL = SUBSCRIPTION_URL + "/configure-list-types/";
     private static final String ADD_LIST_TYPE_URL = SUBSCRIPTION_URL + "/add-list-types/";
     private static final String SUBSCRIPTION_BY_LOCATION_URL = SUBSCRIPTION_URL + "/location/";
-    private static final String MI_DATA_URL = SUBSCRIPTION_URL + "/v2/mi-data-all";
-    private static final String MI_DATA_LOCATION_URL = SUBSCRIPTION_URL + "/v2/mi-data-location";
+    private static final String MI_DATA_URL = SUBSCRIPTION_URL + "/mi-data-all";
+    private static final String MI_DATA_LOCATION_URL = SUBSCRIPTION_URL + "/mi-data-location";
 
     private static final String TESTING_SUPPORT_SUBSCRIPTION_URL = "/testing-support/subscription/";
     private static final String TESTING_SUPPORT_LOCATION_URL = "/testing-support/location/";
@@ -253,7 +253,7 @@ class SubscriptionTest extends AccountHelperBase {
     }
 
     @Test
-    void testGetMiDataAllV2() {
+    void testGetMiDataAll() {
         Map<String, String> headerMap = new ConcurrentHashMap<>();
         headerMap.putAll(bearer);
         headerMap.put(USER_ID_HEADER, USER_ID);
@@ -280,7 +280,7 @@ class SubscriptionTest extends AccountHelperBase {
     }
 
     @Test
-    void testGetMiDataLocationSubscriptionV2() {
+    void testGetMiDataLocationSubscription() {
         Map<String, String> headerMap = new ConcurrentHashMap<>();
         headerMap.putAll(bearer);
         headerMap.put(USER_ID_HEADER, USER_ID);

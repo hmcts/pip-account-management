@@ -126,7 +126,7 @@ class SubscriptionControllerTest {
     }
 
     @Test
-    void testBulkDeleteSubscriptionsV2Success() {
+    void testBulkDeleteSubscriptionsSuccess() {
         UUID testId1 = UUID.randomUUID();
         UUID testId2 = UUID.randomUUID();
         UUID testId3 = UUID.randomUUID();
@@ -196,12 +196,10 @@ class SubscriptionControllerTest {
         AllSubscriptionMiData allSubscriptionMiData = new AllSubscriptionMiData();
         allSubscriptionMiData.setId(UUID.randomUUID());
 
-        when(subscriptionService.getAllSubscriptionsDataForMiReportingV2()).thenReturn(
-            List.of(allSubscriptionMiData)
-        );
+        when(subscriptionService.getAllSubscriptionsDataForMiReporting()).thenReturn(List.of(allSubscriptionMiData));
 
         ResponseEntity<List<AllSubscriptionMiData>> response =
-            subscriptionController.getSubscriptionDataForMiReportingAllV2();
+            subscriptionController.getSubscriptionDataForMiReportingAll();
 
         assertEquals(HttpStatus.OK, response.getStatusCode(), STATUS_CODE_MATCH);
         assertTrue(response.getBody().contains(allSubscriptionMiData),
@@ -213,12 +211,12 @@ class SubscriptionControllerTest {
         LocationSubscriptionMiData locationSubscriptionMiData = new LocationSubscriptionMiData();
         locationSubscriptionMiData.setId(UUID.randomUUID());
 
-        when(subscriptionService.getLocationSubscriptionsDataForMiReportingV2()).thenReturn(
+        when(subscriptionService.getLocationSubscriptionsDataForMiReporting()).thenReturn(
             List.of(locationSubscriptionMiData)
         );
 
         ResponseEntity<List<LocationSubscriptionMiData>> response =
-            subscriptionController.getSubscriptionDataForMiReportingLocationV2();
+            subscriptionController.getSubscriptionDataForMiReportingLocation();
 
         assertEquals(HttpStatus.OK, response.getStatusCode(), STATUS_CODE_MATCH);
         assertTrue(response.getBody().contains(locationSubscriptionMiData),

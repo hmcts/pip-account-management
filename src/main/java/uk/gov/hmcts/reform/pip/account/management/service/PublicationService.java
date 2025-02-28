@@ -39,7 +39,7 @@ import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
 public class PublicationService {
 
     private static final String WELCOME_EMAIL_URL = "/notify/welcome-email";
-    private static final String NOTIFY_SUBSCRIPTION_PATH = "notify/v2/subscription";
+    private static final String NOTIFY_SUBSCRIPTION_PATH = "notify/subscription";
     private static final String NOTIFY_API_PATH = "notify/api";
     private static final String NOTIFY_LOCATION_SUBSCRIPTION_PATH = "notify/location-subscription-delete";
 
@@ -59,7 +59,7 @@ public class PublicationService {
     }
 
     /**
-     * Method which sends a request to the publication-services microservice which will send an email to the user
+     * Method which sends a request to the publication-services microservice which will send email to the user
      * upon creation of a new admin account.
      * @param emailAddress - email address
      * @param forename - forename

@@ -44,12 +44,12 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Long
     @Query("SELECT new uk.gov.hmcts.reform.pip.model.report.AllSubscriptionMiData("
         + "id, channel, searchType, userId, locationName, createdDate) "
         + "FROM Subscription")
-    List<AllSubscriptionMiData> getAllSubsDataForMiV2();
+    List<AllSubscriptionMiData> getAllSubsDataForMi();
 
     @Query("SELECT new uk.gov.hmcts.reform.pip.model.report.LocationSubscriptionMiData("
         + "s.id, s.searchValue, s.channel, s.userId, s.locationName, s.createdDate) "
         + "FROM Subscription s WHERE s.searchType ='LOCATION_ID'")
-    List<LocationSubscriptionMiData> getLocationSubsDataForMiV2();
+    List<LocationSubscriptionMiData> getLocationSubsDataForMi();
 
     @Query(value = "SELECT s.* FROM Subscription s "
         + "INNER JOIN Subscription_List_Type sl "

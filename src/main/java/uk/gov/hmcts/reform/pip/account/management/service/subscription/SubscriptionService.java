@@ -125,11 +125,11 @@ public class SubscriptionService {
         });
     }
 
-    public List<AllSubscriptionMiData> getAllSubscriptionsDataForMiReportingV2() {
-        return subscriptionRepository.getAllSubsDataForMiV2();
+    public List<AllSubscriptionMiData> getAllSubscriptionsDataForMiReporting() {
+        return subscriptionRepository.getAllSubsDataForMi();
     }
 
-    public List<LocationSubscriptionMiData> getLocationSubscriptionsDataForMiReportingV2() {
-        return subscriptionRepository.getLocationSubsDataForMiV2();
+    public List<LocationSubscriptionMiData> getLocationSubscriptionsDataForMiReporting() {
+        return subscriptionRepository.getLocationSubsDataForMi();
     }
 }

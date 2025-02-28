@@ -183,29 +183,29 @@ class SubscriptionServiceTest {
     }
 
     @Test
-    void testMiServiceLocationV2() {
+    void testMiServiceLocation() {
         LocationSubscriptionMiData locationSubscriptionMiData = new LocationSubscriptionMiData();
         locationSubscriptionMiData.setId(UUID.randomUUID());
 
-        when(subscriptionRepository.getLocationSubsDataForMiV2())
+        when(subscriptionRepository.getLocationSubsDataForMi())
             .thenReturn(List.of(locationSubscriptionMiData));
 
         List<LocationSubscriptionMiData> locationSubscriptionsMiDataList = subscriptionService
-            .getLocationSubscriptionsDataForMiReportingV2();
+            .getLocationSubscriptionsDataForMiReporting();
 
         assertThat(locationSubscriptionsMiDataList).contains(locationSubscriptionMiData);
     }
 
     @Test
-    void testMiServiceAllV2() {
+    void testMiServiceAll() {
         AllSubscriptionMiData allSubscriptionMiData = new AllSubscriptionMiData();
         allSubscriptionMiData.setId(UUID.randomUUID());
 
-        when(subscriptionRepository.getAllSubsDataForMiV2())
+        when(subscriptionRepository.getAllSubsDataForMi())
             .thenReturn(List.of(allSubscriptionMiData));
 
         List<AllSubscriptionMiData> allSubscriptionsMiDataList = subscriptionService
-            .getAllSubscriptionsDataForMiReportingV2();
+            .getAllSubscriptionsDataForMiReporting();
 
         assertThat(allSubscriptionsMiDataList).contains(allSubscriptionMiData);
     }
