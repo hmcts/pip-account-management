@@ -41,28 +41,10 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Long
     List<Subscription> findSubscriptionsBySearchValue(@Param("search_type") String searchType,
                                                       @Param("search_value") String searchValue);
 
-    /**
-     * Previous version of the MI Reporting repository method. No longer used and soon to be removed.
-     * @deprecated This method will be removed in the future in favour of the V2 equivalent.
-     */
-    @Query(value = "SELECT cast(id as text), channel, search_type, user_id, location_name, created_date "
-        + "FROM Subscription", nativeQuery = true)
-    @Deprecated(since = "2")
-    List<String> getAllSubsDataForMi();
-
     @Query("SELECT new uk.gov.hmcts.reform.pip.model.report.AllSubscriptionMiData("
         + "id, channel, searchType, userId, locationName, createdDate) "
         + "FROM Subscription")
     List<AllSubscriptionMiData> getAllSubsDataForMiV2();
-
-    /**
-     * Previous version of the MI Reporting repository method. No longer used and soon to be removed.
-     * @deprecated This method will be removed in the future in favour of the V2 equivalent.
-     */
-    @Query(value = "SELECT cast(ID as text), search_value, channel, user_id, location_name, created_date "
-        + "FROM Subscription WHERE search_type ='LOCATION_ID'", nativeQuery = true)
-    @Deprecated(since = "2")
-    List<String> getLocalSubsDataForMi();
 
     @Query("SELECT new uk.gov.hmcts.reform.pip.model.report.LocationSubscriptionMiData("
         + "s.id, s.searchValue, s.channel, s.userId, s.locationName, s.createdDate) "
