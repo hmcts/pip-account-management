@@ -58,6 +58,9 @@ public class UserSubscriptionService {
         return message;
     }
 
+    // New version of PMD check that the default case should not be supplied for enum switch if all enum cases are
+    // supplied. However this will fail checkstyle if the default case is removed
+    @SuppressWarnings("PMD.ExhaustiveSwitchHasDefault")
     private UserSubscription collectSubscriptions(List<Subscription> subscriptions) {
         UserSubscription userSubscription = new UserSubscription();
         subscriptions.forEach(subscription -> {

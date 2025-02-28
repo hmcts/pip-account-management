@@ -106,8 +106,6 @@ class SubscriptionTest extends IntegrationTestBase {
 
     private static final String SUBSCRIPTION_BASE_URL = "/subscription/";
     private static final String SUBSCRIPTION_PATH = "/subscription";
-    private static final String MI_REPORTING_SUBSCRIPTION_DATA_ALL_URL = "/subscription/mi-data-all";
-    private static final String MI_REPORTING_SUBSCRIPTION_DATA_LOCAL_URL = "/subscription/mi-data-local";
     private static final String MI_REPORTING_SUBSCRIPTION_DATA_ALL_URL_V2 = "/subscription/v2/mi-data-all";
     private static final String MI_REPORTING_SUBSCRIPTION_DATA_LOCATION_URL_V2 = "/subscription/v2/mi-data-location";
     private static final String SUBSCRIPTION_USER_PATH = "/subscription/user/" + VALID_USER_ID;
@@ -122,9 +120,6 @@ class SubscriptionTest extends IntegrationTestBase {
     private static final String OPENING_BRACKET = "[\"";
     private static final String CLOSING_BRACKET = "\"]";
     private static final String DOUBLE_QUOTE_COMMA = "\",\"";
-    private static final String EXPECTED_MI_DATA_ALL_HEADERS = "id,channel,search_type,user_id,court_name,created_date";
-    private static final String EXPECTED_MI_DATA_LOCAL_HEADERS = "id,search_value,channel,user_id,court_name,"
-        + "created_date";
 
     private static final UUID ACTIONING_USER_ID = UUID.fromString("87f907d2-eb28-42cc-b6e1-ae2b03f7bba5");
     private static final String INVALID_ACTIONING_USER_ID = "87f907d2-eb28-42cc-b6e1-ae2b03f7bba6";

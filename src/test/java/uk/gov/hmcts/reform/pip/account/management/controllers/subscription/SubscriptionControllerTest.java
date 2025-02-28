@@ -69,7 +69,6 @@ class SubscriptionControllerTest {
         mockSubscription = SubscriptionUtils.createMockSubscription(USER_ID, SEARCH_VALUE, EMAIL, LocalDateTime.now());
         userSubscription = new UserSubscription();
         subscriptionListType = new SubscriptionListType(USER_ID, LIST_TYPES, LIST_LANGUAGE);
-
     }
 
     @Test
@@ -190,20 +189,6 @@ class SubscriptionControllerTest {
         doNothing().when(subscriptionNotificationService).collectThirdPartyForDeletion(any());
         assertEquals(HttpStatus.ACCEPTED, subscriptionController.buildDeletedArtefactSubscribers(new Artefact())
             .getStatusCode(), STATUS_CODE_MATCH);
-    }
-
-    @Test
-    void testMiDataReturnsOk() {
-        assertEquals(
-            HttpStatus.OK,
-            subscriptionController.getSubscriptionDataForMiReportingLocal().getStatusCode(),
-            STATUS_CODE_MATCH
-        );
-        assertEquals(
-            HttpStatus.OK,
-            subscriptionController.getSubscriptionDataForMiReportingAll().getStatusCode(),
-            STATUS_CODE_MATCH
-        );
     }
 
     @Test
