@@ -94,22 +94,6 @@ class SubscriptionRepositoryTest {
     }
 
     @Test
-    void shouldGetAllSubscriptionDataForMi() {
-        assertThat(subscriptionRepository.getAllSubsDataForMi())
-            .as(SUBSCRIPTION_MATCHED_MESSAGE)
-            .hasSize(4);
-    }
-
-    @Test
-    void shouldGetLocalSubscriptionDataForMi() {
-        assertThat(subscriptionRepository.getLocalSubsDataForMi())
-            .as(SUBSCRIPTION_MATCHED_MESSAGE)
-            .hasSize(3)
-            .matches(s -> s.stream()
-                .noneMatch(e -> e.contains(subscriptionId4.toString())));
-    }
-
-    @Test
     void shouldGetAllSubscriptionDataForMiV2() {
         List<AllSubscriptionMiData> subscriptionMiDataList = subscriptionRepository.getAllSubsDataForMiV2();
 
