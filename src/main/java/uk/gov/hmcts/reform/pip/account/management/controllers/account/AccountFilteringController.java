@@ -1,9 +1,6 @@
 package uk.gov.hmcts.reform.pip.account.management.controllers.account;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.ExampleObject;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -12,7 +9,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -50,26 +46,6 @@ public class AccountFilteringController {
     @Autowired
     public AccountFilteringController(AccountFilteringService accountFilteringService) {
         this.accountFilteringService = accountFilteringService;
-    }
-
-    /**
-     * Previous version of the MI Reporting endpoint. No longer used and soon to be removed.
-     * @deprecated This endpoint will be removed in the future in favour of the V2 equivalent.
-     */
-    @ApiResponse(responseCode = OK_CODE, description = "A CSV like structure which contains the data. "
-        + "See example for headers ", content = {
-            @Content(examples = {@ExampleObject("user_id,provenance_user_id,user_provenance,roles,"
-                    + "created_date,last_signed_in_date")},
-                    mediaType = MediaType.TEXT_PLAIN_VALUE,
-                    schema = @Schema(implementation = String.class))
-        }
-    )
-    @Operation(summary = "Returns a list of (anonymized) account data for MI reporting. This endpoint will be "
-        + "deprecated in the future, in favour of returning a JSON model")
-    @GetMapping("/mi-data")
-    @Deprecated(since = "2")
-    public ResponseEntity<String> getMiData() {
-        return ResponseEntity.status(HttpStatus.OK).body(accountFilteringService.getAccManDataForMiReporting());
     }
 
     @ApiResponse(responseCode = OK_CODE, description = "List of Accounts MI Data")
