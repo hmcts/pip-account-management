@@ -149,19 +149,19 @@ public class SubscriptionController {
 
     @ApiResponse(responseCode = OK_CODE, description = "List of All subscriptions MI data")
     @Operation(summary = "Returns a list of metadata for all existing subscriptions for MI reporting")
-    @GetMapping("/v2/mi-data-all")
+    @GetMapping("/mi-data-all")
     @IsAdmin
-    public ResponseEntity<List<AllSubscriptionMiData>> getSubscriptionDataForMiReportingAllV2() {
+    public ResponseEntity<List<AllSubscriptionMiData>> getSubscriptionDataForMiReportingAll() {
         return ResponseEntity.status(HttpStatus.OK)
-            .body(subscriptionService.getAllSubscriptionsDataForMiReportingV2());
+            .body(subscriptionService.getAllSubscriptionsDataForMiReporting());
     }
 
     @ApiResponse(responseCode = OK_CODE, description = "List of Location Subscription MI Data")
     @Operation(summary = "Returns a list of subscription data for location-based subscriptions for MI reporting")
-    @GetMapping("/v2/mi-data-location")
+    @GetMapping("/mi-data-location")
     @IsAdmin
-    public ResponseEntity<List<LocationSubscriptionMiData>> getSubscriptionDataForMiReportingLocationV2() {
+    public ResponseEntity<List<LocationSubscriptionMiData>> getSubscriptionDataForMiReportingLocation() {
         return ResponseEntity.status(HttpStatus.OK)
-            .body(subscriptionService.getLocationSubscriptionsDataForMiReportingV2());
+            .body(subscriptionService.getLocationSubscriptionsDataForMiReporting());
     }
 }

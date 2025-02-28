@@ -33,12 +33,12 @@ class AccountFilteringControllerTest {
     AccountFilteringController accountFilteringController;
 
     @Test
-    void testMiDataV2ReturnsOk() {
+    void testMiDataReturnsOk() {
         AccountMiData accountMiData = new AccountMiData();
         accountMiData.setProvenanceUserId("1234");
 
         when(accountFilteringService.getAccountDataForMi()).thenReturn(List.of(accountMiData));
-        ResponseEntity<List<AccountMiData>> listAccountMiData = accountFilteringController.getMiDataV2();
+        ResponseEntity<List<AccountMiData>> listAccountMiData = accountFilteringController.getMiData();
         assertEquals(HttpStatus.OK, listAccountMiData.getStatusCode(), STATUS_CODE_MATCH);
         assertTrue(listAccountMiData.getBody().contains(accountMiData), "Expected Account MI Data not found");
     }

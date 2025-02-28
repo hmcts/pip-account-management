@@ -61,7 +61,7 @@ class AccountFilteringServiceTest {
     }
 
     @Test
-    void testGetAccountsForMiV2() {
+    void testGetAccountsForMi() {
         AccountMiData accountMiData = new AccountMiData();
         accountMiData.setProvenanceUserId("1234");
 

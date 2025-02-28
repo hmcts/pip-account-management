@@ -94,8 +94,8 @@ class SubscriptionRepositoryTest {
     }
 
     @Test
-    void shouldGetAllSubscriptionDataForMiV2() {
-        List<AllSubscriptionMiData> subscriptionMiDataList = subscriptionRepository.getAllSubsDataForMiV2();
+    void shouldGetAllSubscriptionDataForMi() {
+        List<AllSubscriptionMiData> subscriptionMiDataList = subscriptionRepository.getAllSubsDataForMi();
 
         assertThat(subscriptionMiDataList)
             .as(SUBSCRIPTION_MATCHED_MESSAGE)
@@ -114,8 +114,8 @@ class SubscriptionRepositoryTest {
     }
 
     @Test
-    void shouldGetLocationSubscriptionDataForMiV2() {
-        List<LocationSubscriptionMiData> subscriptionMiDataList = subscriptionRepository.getLocationSubsDataForMiV2();
+    void shouldGetLocationSubscriptionDataForMi() {
+        List<LocationSubscriptionMiData> subscriptionMiDataList = subscriptionRepository.getLocationSubsDataForMi();
 
         assertThat(subscriptionMiDataList)
             .as(SUBSCRIPTION_MATCHED_MESSAGE)

@@ -37,7 +37,7 @@ class AccountFilteringTest extends AccountHelperBase {
     private static final String DELETE_ACCOUNT = "/account/delete/%s";
     private static final String GET_ADMIN_USER_BY_EMAIL_AND_PROVENANCE = "/account/admin/%s/%s";
     private static final String GET_ACCOUNTS_EXCEPT_THIRD_PARTY = "/account/all";
-    private static final String MI_DATA_URL = "/account/v2/mi-data";
+    private static final String MI_DATA_URL = "/account/mi-data";
 
     @BeforeAll
     public void startUp() throws JsonProcessingException {
@@ -162,7 +162,7 @@ class AccountFilteringTest extends AccountHelperBase {
     }
 
     @Test
-    void testGetMiDataV2() throws JsonProcessingException {
+    void testGetMiData() {
         Response response = doGetRequest(MI_DATA_URL, bearer);
 
         assertThat(response.getStatusCode()).isEqualTo(OK.value());

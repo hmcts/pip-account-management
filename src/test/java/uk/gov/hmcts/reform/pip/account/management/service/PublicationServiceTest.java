@@ -273,7 +273,7 @@ class PublicationServiceTest {
 
         RecordedRequest recordedRequest = mockPublicationServicesEndpoint.takeRequest();
         assertNotNull(recordedRequest.getRequestUrl(), "Request URL should not be null");
-        assertTrue(recordedRequest.getRequestUrl().toString().contains("/notify/v2/subscription"),
+        assertTrue(recordedRequest.getRequestUrl().toString().contains("/notify/subscription"),
                    "Request URL should be correct");
     }
 

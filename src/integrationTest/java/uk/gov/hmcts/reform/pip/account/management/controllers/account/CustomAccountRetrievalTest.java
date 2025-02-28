@@ -49,7 +49,7 @@ class CustomAccountRetrievalTest {
     private static final String THIRD_PARTY_URL = ROOT_URL + "/all/third-party";
     private static final String PI_URL = ROOT_URL + "/add/pi";
     private static final String GET_ALL_ACCOUNTS_EXCEPT_THIRD_PARTY = ROOT_URL + "/all";
-    private static final String MI_REPORTING_ACCOUNT_DATA_URL_V2 = ROOT_URL + "/v2/mi-data";
+    private static final String MI_REPORTING_ACCOUNT_DATA_URL = ROOT_URL + "/mi-data";
 
     private static final String EMAIL = "test_account_admin@hmcts.net";
     private static final String INVALID_EMAIL = "ab";
@@ -88,7 +88,7 @@ class CustomAccountRetrievalTest {
     }
 
     @Test
-    void testMiDataV2() throws Exception {
+    void testMiData() throws Exception {
         String provenanceId = UUID.randomUUID().toString();
         PiUser validUser = createUser(true, provenanceId);
         validUser.setEmail("test-account-am-" + RandomUtils.nextInt() + "@hmcts.net");
@@ -112,7 +112,7 @@ class CustomAccountRetrievalTest {
         String createdUserId = mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).get(0).toString();
 
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
-            .get(MI_REPORTING_ACCOUNT_DATA_URL_V2);
+            .get(MI_REPORTING_ACCOUNT_DATA_URL);
 
         MvcResult miDataResponse = mockMvc.perform(request).andExpect(status().isOk()).andReturn();
         List<AccountMiData> accountMiData =
@@ -131,9 +131,9 @@ class CustomAccountRetrievalTest {
 
     @Test
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
-    void testUnauthorizedGetMiDataV2() throws Exception {
+    void testUnauthorizedGetMiData() throws Exception {
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
-            .get(MI_REPORTING_ACCOUNT_DATA_URL_V2);
+            .get(MI_REPORTING_ACCOUNT_DATA_URL);
 
         MvcResult response = mockMvc.perform(request).andExpect(status().isForbidden()).andReturn();
         assertEquals(FORBIDDEN.value(), response.getResponse().getStatus(),
