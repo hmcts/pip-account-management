@@ -63,8 +63,8 @@ class SubscriptionTest extends IntegrationTestBase {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private static final String LOCATION_NAME = "Single Justice Procedure";
-    private static final String UUID_STRING = "f54c9783-7f56-4a69-91bc-55b582c0206f";
-    private static final String VALID_USER_ID = "60e75e34-ad8e-4ac3-8f26-7de73e5c987b";
+    private static final UUID UUID_STRING = UUID.fromString("f54c9783-7f56-4a69-91bc-55b582c0206f");
+    private static final UUID VALID_USER_ID = UUID.fromString("60e75e34-ad8e-4ac3-8f26-7de73e5c987b");
 
     private static final String VALIDATION_EMPTY_RESPONSE = "Returned response is empty";
     private static final String VALIDATION_CHANNEL_NAME = "Returned subscription channel "
@@ -121,7 +121,7 @@ class SubscriptionTest extends IntegrationTestBase {
     private static final String CLOSING_BRACKET = "\"]";
     private static final String DOUBLE_QUOTE_COMMA = "\",\"";
 
-    private static final String ACTIONING_USER_ID = "87f907d2-eb28-42cc-b6e1-ae2b03f7bba5";
+    private static final UUID ACTIONING_USER_ID = UUID.fromString("87f907d2-eb28-42cc-b6e1-ae2b03f7bba5");
     private static final String INVALID_ACTIONING_USER_ID = "87f907d2-eb28-42cc-b6e1-ae2b03f7bba6";
     private static final String SYSTEM_ADMIN_USER_ID = "87f907d2-eb28-42cc-b6e1-ae2b03f7bba4";
     private static final String USER_ID_HEADER = "x-user-id";
@@ -172,7 +172,7 @@ class SubscriptionTest extends IntegrationTestBase {
     }
 
     protected MockHttpServletRequestBuilder setupMockSubscription(String searchValue, SearchType searchType,
-                                                                  String userId)
+                                                                  UUID userId)
         throws JsonProcessingException {
 
         SUBSCRIPTION.setUserId(userId);
@@ -181,7 +181,7 @@ class SubscriptionTest extends IntegrationTestBase {
     }
 
     protected MockHttpServletRequestBuilder setupMockSubscription(String searchValue, SearchType searchType,
-                                                                  String userId, String caseNumber, String caseUrn)
+                                                                  UUID userId, String caseNumber, String caseUrn)
         throws JsonProcessingException {
 
         SUBSCRIPTION.setUserId(userId);
@@ -194,7 +194,7 @@ class SubscriptionTest extends IntegrationTestBase {
 
     protected MockHttpServletRequestBuilder setupMockSubscriptionWithListType(String searchValue,
                                                                               SearchType searchType,
-                                                                              String userId)
+                                                                              UUID userId)
         throws JsonProcessingException {
 
         SUBSCRIPTION.setUserId(userId);
