@@ -50,8 +50,8 @@ public class AccountFilteringController {
 
     @ApiResponse(responseCode = OK_CODE, description = "List of Accounts MI Data")
     @Operation(summary = "Returns anonymized account data for MI reporting")
-    @GetMapping("/v2/mi-data")
-    public ResponseEntity<List<AccountMiData>> getMiDataV2() {
+    @GetMapping("/mi-data")
+    public ResponseEntity<List<AccountMiData>> getMiData() {
         return ResponseEntity.status(HttpStatus.OK).body(accountFilteringService.getAccountDataForMi());
     }
 
