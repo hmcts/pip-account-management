@@ -223,7 +223,7 @@ class UserSubscriptionServiceTest {
     void testDeleteAllByUserId() {
         UUID userIdWithSubs = UUID.randomUUID();
         doNothing().when(subscriptionRepository).deleteAllByUserId(userIdWithSubs);
-        String result = userSubscriptionService.deleteAllByUserId(userIdWithSubs.toString());
+        String result = userSubscriptionService.deleteAllByUserId(userIdWithSubs);
         assertTrue(
             result.contains(userIdWithSubs.toString()),
             "The service layer failed to delete the correct user id subscriptions");

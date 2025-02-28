@@ -280,13 +280,13 @@ class AccountServiceTest {
 
         doNothing().when(userRepository).delete(PI_USER);
         doNothing().when(azureUserService).deleteUser(PI_USER.getProvenanceUserId());
-        when(userSubscriptionService.deleteAllByUserId(VALID_USER_ID.toString()))
+        when(userSubscriptionService.deleteAllByUserId(VALID_USER_ID))
             .thenReturn(SUBSCRIPTIONS_DELETED);
 
         accountService.deleteAccount(USER_UUID);
 
         verify(azureUserService).deleteUser(PI_USER.getProvenanceUserId());
-        verify(userSubscriptionService).deleteAllByUserId(VALID_USER_ID.toString());
+        verify(userSubscriptionService).deleteAllByUserId(VALID_USER_ID);
         verify(userRepository).delete(PI_USER);
     }
 
@@ -295,13 +295,13 @@ class AccountServiceTest {
         when(userRepository.findByUserId(VALID_USER_ID_SSO)).thenReturn(Optional.of(PI_USER_SSO));
 
         doNothing().when(userRepository).delete(PI_USER_SSO);
-        when(userSubscriptionService.deleteAllByUserId(VALID_USER_ID_SSO.toString()))
+        when(userSubscriptionService.deleteAllByUserId(VALID_USER_ID_SSO))
             .thenReturn(SUBSCRIPTIONS_DELETED);
 
         accountService.deleteAccount(VALID_USER_ID_SSO);
 
         verifyNoInteractions(azureUserService);
-        verify(userSubscriptionService).deleteAllByUserId(VALID_USER_ID_SSO.toString());
+        verify(userSubscriptionService).deleteAllByUserId(VALID_USER_ID_SSO);
         verify(userRepository).delete(PI_USER_SSO);
     }
 
@@ -310,13 +310,13 @@ class AccountServiceTest {
         when(userRepository.findByUserId(VALID_USER_ID_IDAM)).thenReturn(Optional.of(PI_USER_IDAM));
 
         doNothing().when(userRepository).delete(PI_USER_IDAM);
-        when(userSubscriptionService.deleteAllByUserId(VALID_USER_ID_IDAM.toString()))
+        when(userSubscriptionService.deleteAllByUserId(VALID_USER_ID_IDAM))
             .thenReturn(SUBSCRIPTIONS_DELETED);
 
         accountService.deleteAccount(VALID_USER_ID_IDAM);
 
         verifyNoInteractions(azureUserService);
-        verify(userSubscriptionService).deleteAllByUserId(VALID_USER_ID_IDAM.toString());
+        verify(userSubscriptionService).deleteAllByUserId(VALID_USER_ID_IDAM);
         verify(userRepository).delete(PI_USER_IDAM);
     }
 
@@ -338,7 +338,7 @@ class AccountServiceTest {
 
         doNothing().when(userRepository).delete(PI_USER);
         doThrow(new AzureCustomException(TEST)).when(azureUserService).deleteUser(PI_USER.getProvenanceUserId());
-        when(userSubscriptionService.deleteAllByUserId(VALID_USER_ID.toString()))
+        when(userSubscriptionService.deleteAllByUserId(VALID_USER_ID))
             .thenReturn(SUBSCRIPTIONS_DELETED);
 
         try (LogCaptor logCaptor = LogCaptor.forClass(AccountService.class)) {

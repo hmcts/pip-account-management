@@ -67,7 +67,7 @@ class SubscriptionTest extends AccountHelperBase {
         bearer = Map.of(AUTHORIZATION, BEARER + accessToken);
         systemAdminAccount = createSystemAdminAccount();
         String createdUserId = getCreatedAccountUserId(
-            createAccount("test-verfied-user@test.com", UUID.randomUUID().toString())
+            createAccount(generateEmail(), UUID.randomUUID().toString())
         );
 
         verifiedUserId = UUID.fromString(createdUserId);
