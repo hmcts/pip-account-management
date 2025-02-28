@@ -918,54 +918,6 @@ class SubscriptionTest extends IntegrationTestBase {
 
     @Test
     @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = ADD_VERIFIED_USERS_SCRIPT)
-    void testGetSubscriptionDataForMiReportingAll() throws Exception {
-        mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, VALID_USER_ID))
-            .andExpect(status().isCreated());
-        String response = mvc.perform(get(MI_REPORTING_SUBSCRIPTION_DATA_ALL_URL))
-            .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
-
-        assertEquals(EXPECTED_MI_DATA_ALL_HEADERS, response.split("\n")[0],
-                     "Should successfully retrieve MI data headers");
-        assertThat(response.contains(VALID_USER_ID.toString()));
-    }
-
-    @Test
-    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
-    void testGetSubscriptionDataForMiReportingAllUnauthorized() throws Exception {
-        MvcResult response = mvc.perform(get(MI_REPORTING_SUBSCRIPTION_DATA_ALL_URL))
-            .andExpect(status().isForbidden())
-            .andReturn();
-
-        assertEquals(FORBIDDEN.value(), response.getResponse().getStatus(),
-                     FORBIDDEN_STATUS_CODE);
-    }
-
-    @Test
-    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = ADD_VERIFIED_USERS_SCRIPT)
-    void testGetSubscriptionDataForMiReportingLocal() throws Exception {
-        mvc.perform(setupMockSubscription(LOCATION_ID, SearchType.LOCATION_ID, VALID_USER_ID))
-            .andExpect(status().isCreated());
-        String response = mvc.perform(get(MI_REPORTING_SUBSCRIPTION_DATA_LOCAL_URL))
-            .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
-
-        assertEquals(EXPECTED_MI_DATA_LOCAL_HEADERS, response.split("\n")[0],
-                     "Should successfully retrieve MI data headers");
-        assertThat(response.contains(VALID_USER_ID.toString()));
-    }
-
-    @Test
-    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
-    void testGetSubscriptionDataForMiReportingLocalUnauthorized() throws Exception {
-        MvcResult response = mvc.perform(get(MI_REPORTING_SUBSCRIPTION_DATA_LOCAL_URL))
-            .andExpect(status().isForbidden())
-            .andReturn();
-
-        assertEquals(FORBIDDEN.value(), response.getResponse().getStatus(),
-                     FORBIDDEN_STATUS_CODE);
-    }
-
-    @Test
-    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = ADD_VERIFIED_USERS_SCRIPT)
     void testGetSubscriptionDataForMiReportingAllV2() throws Exception {
         mvc.perform(setupMockSubscription(LOCATION_ID, SearchType.LOCATION_ID, VALID_USER_ID))
             .andExpect(status().isCreated());
