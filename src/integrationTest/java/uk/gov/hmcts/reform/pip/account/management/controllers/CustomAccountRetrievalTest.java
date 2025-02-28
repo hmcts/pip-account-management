@@ -41,14 +41,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("integration")
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
 @WithMockUser(username = "admin", authorities = {"APPROLE_api.request.admin"})
-@SuppressWarnings({"PMD.TooManyMethods","PMD.UnitTestShouldIncludeAssert"})
+@SuppressWarnings("PMD.TooManyMethods")
 class CustomAccountRetrievalTest {
     private static final String ROOT_URL = "/account";
     private static final String ADMIN_ROOT_URL = "/account/admin/";
     private static final String THIRD_PARTY_URL = ROOT_URL + "/all/third-party";
     private static final String PI_URL = ROOT_URL + "/add/pi";
     private static final String GET_ALL_ACCOUNTS_EXCEPT_THIRD_PARTY = ROOT_URL + "/all";
-    private static final String MI_REPORTING_ACCOUNT_DATA_URL = ROOT_URL + "/mi-data";
     private static final String MI_REPORTING_ACCOUNT_DATA_URL_V2 = ROOT_URL + "/v2/mi-data";
 
     private static final String EMAIL = "test_account_admin@hmcts.net";
@@ -64,8 +63,6 @@ class CustomAccountRetrievalTest {
 
     private static final String UNAUTHORIZED_ROLE = "APPROLE_unknown.authorized";
     private static final String UNAUTHORIZED_USERNAME = "unauthorized_isAuthorized";
-    private static final String EXPECTED_HEADERS = "user_id,provenance_user_id,user_provenance,roles,"
-        + "created_date,last_signed_in_date";
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final PiUser VALID_USER = createUser(true, UUID.randomUUID().toString());
@@ -88,56 +85,6 @@ class CustomAccountRetrievalTest {
     static void startup() {
         OBJECT_MAPPER.findAndRegisterModules();
     }
-
-    @Test
-    void testMiAccountDataRequestSuccess() throws Exception {
-        VALID_USER.setProvenanceUserId(UUID.randomUUID().toString());
-        MockHttpServletRequestBuilder createRequest =
-            MockMvcRequestBuilders
-                .post(PI_URL)
-                .content(OBJECT_MAPPER.writeValueAsString(List.of(VALID_USER)))
-                .header(ISSUER_HEADER, ISSUER_ID)
-                .contentType(MediaType.APPLICATION_JSON);
-
-        MvcResult responseCreateUser = mockMvc.perform(createRequest)
-            .andExpect(status().isCreated()).andReturn();
-        Map<CreationEnum, List<Object>> mappedResponse =
-            OBJECT_MAPPER.readValue(
-                responseCreateUser.getResponse().getContentAsString(),
-                new TypeReference<>() {
-                }
-            );
-
-        String createdUserId = mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).get(0).toString();
-
-        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
-            .get(MI_REPORTING_ACCOUNT_DATA_URL);
-
-        String responseMiData = mockMvc.perform(request).andExpect(status().isOk()).andReturn()
-            .getResponse().getContentAsString();
-
-        assertEquals(EXPECTED_HEADERS, responseMiData.split("\n")[0],
-                     "Should successfully retrieve MI data headers"
-        );
-
-        assertTrue(
-            responseMiData.contains(createdUserId),
-            "Should successfully retrieve MI data"
-        );
-    }
-
-    @Test
-    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
-    void testUnauthorizedGetMiData() throws Exception {
-        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
-            .get(MI_REPORTING_ACCOUNT_DATA_URL);
-
-        MvcResult response = mockMvc.perform(request).andExpect(status().isForbidden()).andReturn();
-        assertEquals(FORBIDDEN.value(), response.getResponse().getStatus(),
-                     FORBIDDEN_STATUS_CODE
-        );
-    }
-
 
     @Test
     void testMiDataV2() throws Exception {
