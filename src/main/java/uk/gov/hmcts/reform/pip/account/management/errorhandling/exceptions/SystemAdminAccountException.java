@@ -13,13 +13,10 @@ public class SystemAdminAccountException extends RuntimeException {
 
     private final transient ErroredSystemAdminAccount erroredSystemAdminAccount;
 
-
     public SystemAdminAccountException(ErroredSystemAdminAccount erroredSystemAdminAccount) {
 
         super();
         this.erroredSystemAdminAccount = erroredSystemAdminAccount;
 
     }
-
-
 }
