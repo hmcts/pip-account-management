@@ -84,13 +84,13 @@ public class SubscriptionLocationService {
     }
 
     private void deleteAllSubscriptionListTypeForLocation(List<Subscription> locationSubscriptions) {
-        List<String> uniqueUsers = locationSubscriptions.stream()
+        List<UUID> uniqueUsers = locationSubscriptions.stream()
             .map(Subscription::getUserId).distinct().toList();
 
         uniqueUsers.forEach(this::deleteSubscriptionListTypeByUser);
     }
 
-    public void deleteSubscriptionListTypeByUser(String userId) {
+    public void deleteSubscriptionListTypeByUser(UUID userId) {
         subscriptionListTypeRepository.findByUserId(userId)
             .ifPresent(subscriptionListTypeRepository::delete);
     }
@@ -128,7 +128,7 @@ public class SubscriptionLocationService {
 
     private List<String> getUserEmailsForAllSubscriptions(List<Subscription> subscriptions) {
         List<String> userIds = subscriptions.stream()
-            .map(Subscription::getUserId).toList();
+            .map(Subscription::getUserId).map(UUID::toString).toList();
         Map<String, String> usersInfo = accountService.findUserEmailsByIds(userIds);
 
         List<String> userEmails = new ArrayList<>();

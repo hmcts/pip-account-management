@@ -121,10 +121,10 @@ class SubscriptionNotificationServiceTest {
         publicArtefactMatches.setListType(ListType.MAGISTRATES_PUBLIC_LIST);
         publicArtefactMatches.setLanguage(Language.ENGLISH);
 
-        returnedSubscription.setUserId(ACCEPTED_USER_ID.toString());
-        restrictedSubscription.setUserId(FORBIDDEN_USER_ID.toString());
+        returnedSubscription.setUserId(ACCEPTED_USER_ID);
+        restrictedSubscription.setUserId(FORBIDDEN_USER_ID);
 
-        mockSubscription = createMockSubscription(USER_ID.toString(), SEARCH_VALUE, EMAIL, LocalDateTime.now());
+        mockSubscription = createMockSubscription(USER_ID, SEARCH_VALUE, EMAIL, LocalDateTime.now());
 
         mockSubscriptionsSummary.setEmail(TEST_USER_EMAIL);
         mockSubscription.setChannel(Channel.EMAIL);
@@ -361,11 +361,11 @@ class SubscriptionNotificationServiceTest {
     @Test
     void testCollectSubscribersRestrictsClassified() {
         returnedSubscription.setChannel(Channel.EMAIL);
-        returnedSubscription.setUserId(ACCEPTED_USER_ID.toString());
+        returnedSubscription.setUserId(ACCEPTED_USER_ID);
         returnedSubscription.setSearchType(SearchType.CASE_ID);
         returnedSubscription.setSearchValue(CASE_ID);
         restrictedSubscription.setChannel(Channel.EMAIL);
-        restrictedSubscription.setUserId(FORBIDDEN_USER_ID.toString());
+        restrictedSubscription.setUserId(FORBIDDEN_USER_ID);
         returnedSubscription.setSearchType(SearchType.CASE_ID);
         returnedSubscription.setSearchValue(CASE_ID);
 

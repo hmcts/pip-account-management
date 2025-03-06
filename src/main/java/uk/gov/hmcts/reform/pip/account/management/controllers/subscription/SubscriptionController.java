@@ -126,7 +126,7 @@ public class SubscriptionController {
         description = "No subscription found with the user id {userId}")
     @Operation(summary = "Returns the list of relevant subscriptions associated with a given user id.")
     @GetMapping("/user/{userId}")
-    public ResponseEntity<UserSubscription> findByUserId(@Parameter @PathVariable String userId) {
+    public ResponseEntity<UserSubscription> findByUserId(@Parameter @PathVariable UUID userId) {
         return ResponseEntity.ok(userSubscriptionService.findByUserId(userId));
     }
 

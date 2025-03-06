@@ -25,6 +25,7 @@ import uk.gov.hmcts.reform.pip.model.system.admin.ActionResult;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -50,7 +51,7 @@ class SubscriptionLocationTest extends IntegrationTestBase {
 
     private static final String LOCATION_ID = "9";
     private static final String LOCATION_NAME = "Single Justice Procedure";
-    private static final String USER_ID = "f54c9783-7f56-4a69-91bc-55b582c0206f";
+    private static final UUID USER_ID = UUID.fromString("87f907d2-eb28-42cc-b6e1-ae2b03f7bba7");
     private static final String ACTIONING_USER_ID = "87f907d2-eb28-42cc-b6e1-ae2b03f7bba5";
 
     private static final String VALIDATION_EMPTY_RESPONSE = "Returned response is empty";
@@ -82,6 +83,7 @@ class SubscriptionLocationTest extends IntegrationTestBase {
     }
 
     @Test
+    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = "classpath:add-verified-users.sql")
     void testFindSubscriptionsByLocationId() throws Exception {
         MockHttpServletRequestBuilder createSubscriptionRequest = MockMvcRequestBuilders.post(SUBSCRIPTION_PATH)
             .content(OBJECT_MAPPER.writeValueAsString(SUBSCRIPTION))
@@ -126,7 +128,8 @@ class SubscriptionLocationTest extends IntegrationTestBase {
     }
 
     @Test
-    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = "classpath:add-admin-users.sql")
+    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD,
+        scripts = { "classpath:add-admin-users.sql", "classpath:add-verified-users.sql"})
     void testDeleteSubscriptionByLocation() throws Exception {
         doNothing().when(publicationService)
             .sendLocationDeletionSubscriptionEmail(List.of(TEST_EMAIL), LOCATION_NAME);
