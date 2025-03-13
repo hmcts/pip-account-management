@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.CsvParseException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.NotFoundException;
+import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.SubscriptionNotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.SystemAdminAccountException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.UserWithProvenanceNotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredSystemAdminAccount;
@@ -73,6 +74,16 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(UserWithProvenanceNotFoundException.class)
     public ResponseEntity<ExceptionResponse> handle(UserWithProvenanceNotFoundException ex) {
         log.info(writeLog("404, " + ex.getMessage()));
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+            .body(generateExceptionResponse(ex.getMessage()));
+    }
+
+    @ExceptionHandler(SubscriptionNotFoundException.class)
+    public ResponseEntity<ExceptionResponse> handle(SubscriptionNotFoundException ex) {
+
+        log.error(writeLog(
+            "404, Subscription has not been found. Cause: " + ex.getMessage()));
 
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
             .body(generateExceptionResponse(ex.getMessage()));

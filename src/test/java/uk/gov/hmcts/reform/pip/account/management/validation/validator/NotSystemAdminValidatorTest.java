@@ -3,7 +3,7 @@ package uk.gov.hmcts.reform.pip.account.management.validation.validator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.hmcts.reform.pip.account.management.model.AzureAccount;
+import uk.gov.hmcts.reform.pip.account.management.model.account.AzureAccount;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;

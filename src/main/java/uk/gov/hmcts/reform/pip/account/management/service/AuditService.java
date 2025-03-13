@@ -7,7 +7,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import uk.gov.hmcts.reform.pip.account.management.database.AuditRepository;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.NotFoundException;
-import uk.gov.hmcts.reform.pip.account.management.model.AuditLog;
+import uk.gov.hmcts.reform.pip.account.management.model.account.AuditLog;
 import uk.gov.hmcts.reform.pip.model.enums.AuditAction;
 
 import java.time.LocalDate;
