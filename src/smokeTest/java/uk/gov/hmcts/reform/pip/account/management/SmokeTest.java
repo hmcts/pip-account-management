@@ -63,6 +63,7 @@ class SmokeTest extends SmokeTestBase {
     private static final String TEST_EMAIL = TEST_EMAIL_PREFIX + "@justice.gov.uk";
     private static final String LOCATION_ID = createRandomId();
     private static final String LOCATION_NAME = "TestLocation" + LOCATION_ID;
+    protected static final TypeRef<Map<CreationEnum, List<?>>> CREATED_RESPONSE_TYPE = new TypeRef<>() {};
 
     private static final String MOCK_FILE = "data/test-image.png";
     private static final TypeRef<Map<CreationEnum, List<? extends AzureAccount>>> AZURE_ACCOUNT_RESPONSE_TYPE
@@ -70,11 +71,29 @@ class SmokeTest extends SmokeTestBase {
 
     private static final String STATUS_CODE_MATCH = "Status code does not match";
     private static final String RESPONSE_BODY_MATCH = "Response body does not match";
+    private static String verifiedUserId;
 
     @BeforeAll
-    public void setup() {
+    public void setup() throws JsonProcessingException {
         OBJECT_MAPPER.findAndRegisterModules();
         createTestLocation(LOCATION_ID, LOCATION_NAME);
+
+        PiUser piUser = new PiUser();
+        piUser.setEmail(TEST_EMAIL_PREFIX + "-"
+                            + ThreadLocalRandom.current().nextInt(1000, 9999) + "@justice.gov.uk");
+        piUser.setRoles(Roles.VERIFIED);
+        piUser.setForenames("SmokeTestSubscription-Firstname");
+        piUser.setSurname("SmokeTestSubscription-Surname");
+        piUser.setUserProvenance(UserProvenances.PI_AAD);
+        piUser.setProvenanceUserId(UUID.randomUUID().toString());
+
+        verifiedUserId = (String)
+            doPostRequest(CREATE_PI_ACCOUNT_URL, Map.of(ISSUER_ID_HEADER, ISSUER_ID),
+                          OBJECT_MAPPER.writeValueAsString(List.of(piUser)))
+                .getBody()
+                .as(CREATED_RESPONSE_TYPE)
+                .get(CreationEnum.CREATED_ACCOUNTS)
+                .get(0);
     }
 
     @AfterAll
@@ -146,7 +165,7 @@ class SmokeTest extends SmokeTestBase {
     @Test
     void testCreateSubscription() {
         Subscription subscription = new Subscription();
-        subscription.setUserId(USER_ID);
+        subscription.setUserId(UUID.fromString(verifiedUserId));
         subscription.setSearchType(SearchType.LOCATION_ID);
         subscription.setSearchValue(LOCATION_ID);
         subscription.setChannel(Channel.EMAIL);
