@@ -9,7 +9,9 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
@@ -20,6 +22,7 @@ import uk.gov.hmcts.reform.pip.model.subscription.Channel;
 import uk.gov.hmcts.reform.pip.model.subscription.SearchType;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.http.HttpStatus.FORBIDDEN;
@@ -28,6 +31,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("integration")
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @WithMockUser(username = "admin", authorities = {"APPROLE_api.request.admin"})
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
 class SubscriptionListTypeTest extends IntegrationTestBase {
@@ -35,7 +39,7 @@ class SubscriptionListTypeTest extends IntegrationTestBase {
 
     private static final String USER_ID_HEADER = "x-user-id";
     private static final String ACTIONING_USER_ID = "f54c9783-7f56-4a69-91bc-55b582c0206f";
-    private static final String VALID_USER_ID = "60e75e34-ad8e-4ac3-8f26-7de73e5c987b";
+    private static final UUID VALID_USER_ID = UUID.fromString("87f907d2-eb28-42cc-b6e1-ae2b03f7bba5");
     private static final String CASE_ID = "T485913";
 
     private static final String SUBSCRIPTION_PATH = "/subscription";
@@ -47,8 +51,11 @@ class SubscriptionListTypeTest extends IntegrationTestBase {
     private static final String FORBIDDEN_STATUS_CODE = "Status code does not match forbidden";
     private static final String RESPONSE_MATCH = "Response should match";
 
+    private static final String ADD_VERIFIED_USERS_SCRIPT = "classpath:add-verified-users.sql";
+
     private static final String RAW_JSON_ADD_UPDATE_LIST_TYPE =
-        "{\"listType\": [\"FAMILY_DAILY_CAUSE_LIST\"], \"listLanguage\": [\"ENGLISH\"],\"userId\": \"3\"}";
+        "{\"listType\": [\"FAMILY_DAILY_CAUSE_LIST\"], "
+            + "\"listLanguage\": [\"ENGLISH\"],\"userId\": \"87f907d2-eb28-42cc-b6e1-ae2b03f7bba5\"}";
 
     @Autowired
     protected MockMvc mvc;
@@ -59,6 +66,7 @@ class SubscriptionListTypeTest extends IntegrationTestBase {
     }
 
     @Test
+    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = ADD_VERIFIED_USERS_SCRIPT)
     void testAddListTypesForSubscription() throws Exception {
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .post(ADD_LIST_TYPE_PATH)
@@ -71,6 +79,7 @@ class SubscriptionListTypeTest extends IntegrationTestBase {
     }
 
     @Test
+    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = ADD_VERIFIED_USERS_SCRIPT)
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testUnauthorizedAddListTypesForSubscription() throws Exception {
 
@@ -84,6 +93,7 @@ class SubscriptionListTypeTest extends IntegrationTestBase {
     }
 
     @Test
+    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = ADD_VERIFIED_USERS_SCRIPT)
     void testConfigureListTypesForSubscription() throws Exception {
         Subscription subscription = new Subscription();
         subscription.setChannel(Channel.API_COURTEL);
@@ -116,6 +126,7 @@ class SubscriptionListTypeTest extends IntegrationTestBase {
 
     @Test
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
+    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = ADD_VERIFIED_USERS_SCRIPT)
     void testUnauthorizedConfigureListTypesForSubscription() throws Exception {
 
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders

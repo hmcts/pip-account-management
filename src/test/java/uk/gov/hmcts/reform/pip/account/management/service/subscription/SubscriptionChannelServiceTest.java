@@ -14,6 +14,7 @@ import uk.gov.hmcts.reform.pip.model.subscription.Channel;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -29,8 +30,8 @@ class SubscriptionChannelServiceTest {
     private static final Subscription SUB1 = new Subscription();
     private static final Subscription SUB2 = new Subscription();
     private static final Subscription SUB3 = new Subscription();
-    private static final String USER1 = "testUser1";
-    private static final String USER2 = "testUser2";
+    private static final String USER1 = UUID.randomUUID().toString();
+    private static final String USER2 =  UUID.randomUUID().toString();
     private static final String TEST_EMAIL_1 = "test@user.com";
     private static final String TEST_EMAIL_2 = "dave@email.com";
 
@@ -65,8 +66,8 @@ class SubscriptionChannelServiceTest {
             USER1, TEST_EMAIL_1
         );
 
-        SUB1.setUserId(USER1);
-        SUB2.setUserId(USER2);
+        SUB1.setUserId(UUID.fromString(USER1));
+        SUB2.setUserId(UUID.fromString(USER2));
 
         Map<String, List<Subscription>> expectedMap = Map.of(
             TEST_EMAIL_1, List.of(SUB1),
@@ -103,8 +104,8 @@ class SubscriptionChannelServiceTest {
 
     @Test
     void testDeduplicateSubscriptionsWithNoDuplication() {
-        SUB1.setUserId(USER1);
-        SUB2.setUserId(USER2);
+        SUB1.setUserId(UUID.fromString(USER1));
+        SUB2.setUserId(UUID.fromString(USER2));
 
         Map<String, List<Subscription>> expectedResponse = Map.of(
             USER1, List.of(SUB1),
@@ -118,9 +119,9 @@ class SubscriptionChannelServiceTest {
 
     @Test
     void testDeduplicateSubscriptionsWithDuplications() {
-        SUB1.setUserId(USER1);
-        SUB2.setUserId(USER1);
-        SUB3.setUserId(USER2);
+        SUB1.setUserId(UUID.fromString(USER1));
+        SUB2.setUserId(UUID.fromString(USER1));
+        SUB3.setUserId(UUID.fromString(USER2));
 
         Map<String, List<Subscription>> expectedResponse = Map.of(
             USER1, List.of(SUB1, SUB2),
@@ -156,9 +157,9 @@ class SubscriptionChannelServiceTest {
     void testBuildApiSubscriptionsSuccess() {
         when(thirdPartyApi.getCourtel()).thenReturn(COURTEL_VALUE);
 
-        SUB1.setUserId(USER1);
+        SUB1.setUserId(UUID.fromString(USER1));
         SUB1.setChannel(Channel.API_COURTEL);
-        SUB2.setUserId(USER1);
+        SUB2.setUserId(UUID.fromString(USER1));
         SUB2.setChannel(Channel.API_COURTEL);
 
         Map<String, List<Subscription>> expected = Map.of(
@@ -176,9 +177,9 @@ class SubscriptionChannelServiceTest {
 
     @Test
     void testBuildApiSubscriptionsWithInvalidApiChannel() {
-        SUB1.setUserId(USER1);
+        SUB1.setUserId(UUID.fromString(USER1));
         SUB1.setChannel(Channel.API_COURTEL);
-        SUB2.setUserId(USER2);
+        SUB2.setUserId(UUID.fromString(USER2));
         SUB2.setChannel(Channel.EMAIL);
 
         when(thirdPartyApi.getCourtel()).thenReturn(COURTEL_VALUE);

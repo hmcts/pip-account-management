@@ -27,7 +27,7 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Long
 
     List<Subscription> findByIdIn(List<UUID> id);
 
-    List<Subscription> findByUserId(String userId);
+    List<Subscription> findByUserId(UUID userId);
 
     void deleteById(UUID id);
 
@@ -64,7 +64,7 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Long
                                                               @Param("list_language") String listLanguage);
 
     @Transactional
-    void deleteAllByUserId(String userId);
+    void deleteAllByUserId(UUID userId);
 
     @Query(value = "SELECT * FROM Subscription "
         + "WHERE search_value = :search_value "
@@ -76,7 +76,7 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Long
         + "WHERE user_id = :user_id "
         + "AND search_type = 'LOCATION_ID'",
         nativeQuery = true)
-    List<Subscription> findLocationSubscriptionsByUserId(@Param("user_id") String userId);
+    List<Subscription> findLocationSubscriptionsByUserId(@Param("user_id") UUID userId);
 
     List<Subscription> findAllByLocationNameStartingWithIgnoreCase(@Param("prefix") String prefix);
 

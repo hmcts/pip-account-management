@@ -19,6 +19,7 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
@@ -105,7 +106,7 @@ class TestingSupportApiTest extends IntegrationTestBase {
     private static final String USER_ID_HEADER = "x-user-id";
     private static final String ACTIONING_USER_ID = "1234-1234";
 
-    private static final String USER_ID = UUID.randomUUID().toString();
+    private static final UUID USER_ID = UUID.fromString("87f907d2-eb28-42cc-b6e1-ae2b03f7bba5");
     private static final String CASE_ID = "T485913";
 
     private static final String AUDIT_URL = "/audit";
@@ -309,6 +310,7 @@ class TestingSupportApiTest extends IntegrationTestBase {
     }
 
     @Test
+    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = "classpath:add-verified-users.sql")
     void testTestingSupportDeleteSubscriptionsWithLocationNamePrefix() throws Exception {
         Subscription subscription = createSubscription();
 

@@ -6,12 +6,13 @@ import org.springframework.transaction.annotation.Transactional;
 import uk.gov.hmcts.reform.pip.account.management.model.subscription.SubscriptionListType;
 
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
 public interface SubscriptionListTypeRepository extends JpaRepository<SubscriptionListType, Long> {
 
-    Optional<SubscriptionListType> findByUserId(String userId);
+    Optional<SubscriptionListType> findByUserId(UUID userId);
 
     @Transactional
-    void deleteByUserId(String userId);
+    void deleteByUserId(UUID userId);
 }

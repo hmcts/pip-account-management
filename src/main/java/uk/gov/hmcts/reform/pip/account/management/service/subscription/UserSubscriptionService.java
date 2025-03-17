@@ -14,6 +14,7 @@ import uk.gov.hmcts.reform.pip.account.management.model.subscription.usersubscri
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
 
@@ -36,7 +37,7 @@ public class UserSubscriptionService {
      * @param userId The user id to find the subscriptions for.
      * @return The list of subscriptions that have been found.
      */
-    public UserSubscription findByUserId(String userId) {
+    public UserSubscription findByUserId(UUID userId) {
         List<Subscription> subscriptions = subscriptionRepository.findByUserId(userId);
         if (subscriptions.isEmpty()) {
             return new UserSubscription();
@@ -49,7 +50,7 @@ public class UserSubscriptionService {
      * @param userId The user id to delete the subscriptions from.
      * @return A confirmation message.
      */
-    public String deleteAllByUserId(String userId) {
+    public String deleteAllByUserId(UUID userId) {
         subscriptionListTypeRepository.deleteByUserId(userId);
         subscriptionRepository.deleteAllByUserId(userId);
         String message = String.format("All subscriptions deleted for user id %s", userId);

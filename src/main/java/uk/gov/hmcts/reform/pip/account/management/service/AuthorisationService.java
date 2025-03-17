@@ -133,7 +133,7 @@ public class AuthorisationService {
         Optional<Subscription> subscription = subscriptionRepository.findById(subscriptionId);
 
         if (subscription.isPresent()) {
-            if (userId.toString().equals(subscription.get().getUserId())) {
+            if (userId.toString().equals(subscription.get().getUserId().toString())) {
                 return true;
             }
             log.error(writeLog(

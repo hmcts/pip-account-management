@@ -53,7 +53,6 @@ class SubscriptionTest extends AccountHelperBase {
 
     private static final String LOCATION_ID = randomLocationId();
     private static final String LOCATION_NAME = "TestLocation" + LOCATION_ID;
-    private static final String USER_ID = UUID.randomUUID().toString();
     private static final String USER_ID_HEADER = "x-user-id";
     private static final String BEARER = "Bearer ";
     private static final String LIST_LANGUAGE = "ENGLISH";
@@ -61,11 +60,17 @@ class SubscriptionTest extends AccountHelperBase {
     private static final ListType LIST_TYPE = ListType.CIVIL_DAILY_CAUSE_LIST;
 
     private PiUser systemAdminAccount;
+    private UUID verifiedUserId = UUID.randomUUID();
 
     @BeforeAll
     public void setup() throws JsonProcessingException {
         bearer = Map.of(AUTHORIZATION, BEARER + accessToken);
         systemAdminAccount = createSystemAdminAccount();
+        String createdUserId = getCreatedAccountUserId(
+            createAccount(generateEmail(), UUID.randomUUID().toString())
+        );
+
+        verifiedUserId = UUID.fromString(createdUserId);
 
         doDataManagementPostRequest(
             TESTING_SUPPORT_LOCATION_URL + LOCATION_ID,
@@ -93,19 +98,19 @@ class SubscriptionTest extends AccountHelperBase {
         Response responseCreateSubscription = doPostRequest(
             SUBSCRIPTION_URL,
             headerMap,
-            createTestSubscription(LOCATION_ID, USER_ID, LOCATION_NAME)
+            createTestSubscription(LOCATION_ID, verifiedUserId, LOCATION_NAME)
         );
         assertThat(responseCreateSubscription.getStatusCode()).isEqualTo(CREATED.value());
-        assertThat(responseCreateSubscription.asString().contains(USER_ID));
+        assertThat(responseCreateSubscription.asString().contains(verifiedUserId.toString()));
 
         String subscriptionId = responseCreateSubscription.asString().split(" ")[5];
         Response responseFindBySubId = doGetRequest(SUBSCRIPTION_URL + "/" + subscriptionId, bearer);
         assertThat(responseFindBySubId.getStatusCode()).isEqualTo(OK.value());
         Subscription returnedSubscriptionBySubId = responseFindBySubId.as(Subscription.class);
-        assertThat(returnedSubscriptionBySubId.getUserId()).isEqualTo(USER_ID);
+        assertThat(returnedSubscriptionBySubId.getUserId()).isEqualTo(verifiedUserId);
         assertThat(returnedSubscriptionBySubId.getLocationName()).isEqualTo(LOCATION_NAME);
 
-        Response responseFindByUserId = doGetRequest(FIND_SUBSCRIPTION_BY_USER_ID_URL + USER_ID, bearer);
+        Response responseFindByUserId = doGetRequest(FIND_SUBSCRIPTION_BY_USER_ID_URL + verifiedUserId, bearer);
         assertThat(responseFindByUserId.getStatusCode()).isEqualTo(OK.value());
         UserSubscription returnedSubscriptionByUserId = responseFindByUserId.as(UserSubscription.class);
         assertThat(returnedSubscriptionByUserId.getCaseSubscriptions().size()).isEqualTo(0);
@@ -133,17 +138,17 @@ class SubscriptionTest extends AccountHelperBase {
         doPostRequest(
             SUBSCRIPTION_URL,
             headerMap,
-            createTestSubscription(LOCATION_ID, USER_ID, LOCATION_NAME)
+            createTestSubscription(LOCATION_ID, verifiedUserId, LOCATION_NAME)
         );
 
         SubscriptionListType listType = new SubscriptionListType(
-            USER_ID,
+            verifiedUserId,
             List.of(LIST_TYPE.name()),
             List.of(LIST_LANGUAGE)
         );
 
         Response responseAddListType = doPostRequest(
-            ADD_LIST_TYPE_URL + USER_ID,
+            ADD_LIST_TYPE_URL + verifiedUserId,
             headerMap,
             listType
         );
@@ -151,17 +156,17 @@ class SubscriptionTest extends AccountHelperBase {
         assertThat(responseAddListType.asString()).isEqualTo(
             String.format(
                 "Location list Type successfully added for user %s",
-                USER_ID
+                verifiedUserId
             ));
 
         SubscriptionListType listTypeToConfigure = new SubscriptionListType(
-            USER_ID,
+            verifiedUserId,
             List.of(LIST_TYPE.name(), ListType.CIVIL_DAILY_CAUSE_LIST.name()),
             List.of(LIST_LANGUAGE_CONFIGURE)
         );
 
         Response responseConfigureListType = doPutRequestWithBody(
-            CONFIGURE_LIST_TYPE_URL + USER_ID,
+            CONFIGURE_LIST_TYPE_URL + verifiedUserId,
             headerMap,
             listTypeToConfigure
         );
@@ -169,7 +174,7 @@ class SubscriptionTest extends AccountHelperBase {
         assertThat(responseConfigureListType.asString()).isEqualTo(
             String.format(
                 "Location list Type successfully updated for user %s",
-                USER_ID
+                verifiedUserId
             ));
     }
 
@@ -183,7 +188,7 @@ class SubscriptionTest extends AccountHelperBase {
         Response responseCreateSubscription = doPostRequest(
             SUBSCRIPTION_URL,
             headerMap,
-            createTestSubscription(LOCATION_ID, USER_ID, LOCATION_NAME)
+            createTestSubscription(LOCATION_ID, verifiedUserId, LOCATION_NAME)
         );
         assertThat(responseCreateSubscription.getStatusCode()).isEqualTo(CREATED.value());
 
@@ -192,7 +197,7 @@ class SubscriptionTest extends AccountHelperBase {
         assertThat(responseFindByLocationId.getStatusCode()).isEqualTo(OK.value());
         List<Subscription> returnedSubscriptionsByLocationId = List.of(responseFindByLocationId.getBody().as(
             Subscription[].class));
-        assertThat(returnedSubscriptionsByLocationId.get(0).getUserId()).isEqualTo(USER_ID);
+        assertThat(returnedSubscriptionsByLocationId.get(0).getUserId()).isEqualTo(verifiedUserId);
         assertThat(returnedSubscriptionsByLocationId.get(0).getLocationName()).isEqualTo(LOCATION_NAME);
 
         headerMap.put("x-provenance-user-id", systemAdminProvenanceId);
@@ -204,7 +209,7 @@ class SubscriptionTest extends AccountHelperBase {
         assertThat(responseDeleteSubscriptionByLocationId.asString().contains(String.format(
             "Subscription created with the id %s for user %s",
             subscriptionId,
-            USER_ID
+            verifiedUserId
         )));
     }
 
@@ -218,7 +223,7 @@ class SubscriptionTest extends AccountHelperBase {
         Response responseCreateSubscription = doPostRequest(
             SUBSCRIPTION_URL,
             headerMap,
-            createTestSubscription(LOCATION_ID, USER_ID, LOCATION_NAME)
+            createTestSubscription(LOCATION_ID, verifiedUserId, LOCATION_NAME)
         );
         String subscriptionId = responseCreateSubscription.asString().split(" ")[5];
 
@@ -256,12 +261,12 @@ class SubscriptionTest extends AccountHelperBase {
     void testGetMiDataAll() {
         Map<String, String> headerMap = new ConcurrentHashMap<>();
         headerMap.putAll(bearer);
-        headerMap.put(USER_ID_HEADER, USER_ID);
+        headerMap.put(USER_ID_HEADER, verifiedUserId.toString());
 
         Response responseCreateSubscription = doPostRequest(
             SUBSCRIPTION_URL,
             headerMap,
-            createTestSubscription(LOCATION_ID, USER_ID, LOCATION_NAME)
+            createTestSubscription(LOCATION_ID, verifiedUserId, LOCATION_NAME)
         );
 
         final String subscriptionId = responseCreateSubscription.asString().split(" ")[5];
@@ -283,12 +288,12 @@ class SubscriptionTest extends AccountHelperBase {
     void testGetMiDataLocationSubscription() {
         Map<String, String> headerMap = new ConcurrentHashMap<>();
         headerMap.putAll(bearer);
-        headerMap.put(USER_ID_HEADER, USER_ID);
+        headerMap.put(USER_ID_HEADER, verifiedUserId.toString());
 
         doPostRequest(
             SUBSCRIPTION_URL,
             headerMap,
-            createTestSubscription(LOCATION_ID, USER_ID, LOCATION_NAME)
+            createTestSubscription(LOCATION_ID, verifiedUserId, LOCATION_NAME)
         );
 
         final Response responseGetLocationSubscriptionMetadata = doGetRequest(
@@ -306,7 +311,7 @@ class SubscriptionTest extends AccountHelperBase {
         );
     }
 
-    private Subscription createTestSubscription(String locationId, String userId, String locationName) {
+    private Subscription createTestSubscription(String locationId, UUID userId, String locationName) {
         Subscription subscription = new Subscription();
         subscription.setUserId(userId);
         subscription.setSearchType(SearchType.LOCATION_ID);

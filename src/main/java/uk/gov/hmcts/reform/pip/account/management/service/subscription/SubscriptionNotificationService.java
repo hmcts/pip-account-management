@@ -96,7 +96,7 @@ public class SubscriptionNotificationService {
         List<Subscription> filteredList = new ArrayList<>();
         subscriptions.forEach(subscription -> {
             if (Boolean.TRUE.equals(accountService.isUserAuthorisedForPublication(
-                UUID.fromString(subscription.getUserId()), artefact.getListType(), artefact.getSensitivity()
+                subscription.getUserId(), artefact.getListType(), artefact.getSensitivity()
             ))) {
                 filteredList.add(subscription);
             }
