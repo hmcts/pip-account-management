@@ -25,7 +25,7 @@ module "postgresql" {
   business_area = "sds"
   pgsql_version = "15"
 
-  force_user_permissions_trigger = "1"
+  force_user_permissions_trigger = "2"
 
   pgsql_server_configuration = [
     {
