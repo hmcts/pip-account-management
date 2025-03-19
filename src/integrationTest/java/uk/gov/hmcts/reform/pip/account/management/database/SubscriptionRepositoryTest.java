@@ -7,7 +7,9 @@ import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.jdbc.Sql;
 import uk.gov.hmcts.reform.pip.account.management.model.subscription.Subscription;
 import uk.gov.hmcts.reform.pip.model.report.AllSubscriptionMiData;
 import uk.gov.hmcts.reform.pip.model.report.LocationSubscriptionMiData;
@@ -19,14 +21,17 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @ActiveProfiles("integration-jpa")
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_CLASS, scripts = {"classpath:add-verified-users.sql"})
 class SubscriptionRepositoryTest {
-    private static final UUID USER_ID1 = UUID.randomUUID();
-    private static final UUID USER_ID2 = UUID.randomUUID();
+    private static UUID userId1 = UUID.fromString("87f907d2-eb28-42cc-b6e1-ae2b03f7bba5");
+    private static UUID userId2 = UUID.fromString("60e75e34-ad8e-4ac3-8f26-7de73e5c987b");
+    private static final UUID USER_ID3_UNKNOWN_USER = UUID.randomUUID();
     private static final String LOCATION_ID1 = "123";
     private static final String LOCATION_ID2 = "124";
     private static final String LOCATION_ID3 = "125";
@@ -46,10 +51,14 @@ class SubscriptionRepositoryTest {
     @Autowired
     SubscriptionRepository subscriptionRepository;
 
+    @Autowired
+    UserRepository userRepository;
+
     @BeforeAll
     void setup() {
+
         Subscription subscription1 = new Subscription();
-        subscription1.setUserId(USER_ID1);
+        subscription1.setUserId(userId1);
         subscription1.setSearchType(SearchType.LOCATION_ID);
         subscription1.setSearchValue(LOCATION_ID1);
         subscription1.setChannel(Channel.EMAIL);
@@ -57,19 +66,18 @@ class SubscriptionRepositoryTest {
         subscriptionRepository.save(subscription1);
 
         Subscription subscription2 = new Subscription();
-        subscription2.setUserId(USER_ID1);
+        subscription2.setUserId(userId1);
         subscription2.setSearchType(SearchType.LOCATION_ID);
         subscription2.setSearchValue(LOCATION_ID2);
         subscription2.setChannel(Channel.EMAIL);
         subscription2.setLocationName(LOCATION_NAME2);
         subscription2.setCreatedDate(SUBSCRIPTION_CREATED_DATE);
 
-
         Subscription savedSubscription = subscriptionRepository.save(subscription2);
         subscriptionId2 = savedSubscription.getId();
 
         Subscription subscription3 = new Subscription();
-        subscription3.setUserId(USER_ID2);
+        subscription3.setUserId(userId2);
         subscription3.setSearchType(SearchType.LOCATION_ID);
         subscription3.setSearchValue(LOCATION_ID3);
         subscription3.setChannel(Channel.EMAIL);
@@ -77,7 +85,7 @@ class SubscriptionRepositoryTest {
         subscriptionRepository.save(subscription3);
 
         Subscription subscription4 = new Subscription();
-        subscription4.setUserId(USER_ID1);
+        subscription4.setUserId(userId1);
         subscription4.setSearchType(SearchType.CASE_ID);
         subscription4.setSearchValue(CASE_NUMBER);
         subscription4.setChannel(Channel.EMAIL);
@@ -101,14 +109,14 @@ class SubscriptionRepositoryTest {
             .as(SUBSCRIPTION_MATCHED_MESSAGE)
             .hasSize(4)
             .anyMatch(subscription -> subscriptionId4.equals(subscription.getId())
-                && USER_ID1.equals(subscription.getUserId())
+                && userId1.equals(subscription.getUserId())
                 && subscription.getChannel().equals(Channel.EMAIL)
                 && subscription.getSearchType().equals(SearchType.CASE_ID)
                 && SUBSCRIPTION_CREATED_DATE.equals(subscription.getCreatedDate()))
             .anyMatch(subscription -> subscriptionId2.equals(subscription.getId())
                 && subscription.getChannel().equals(Channel.EMAIL)
                 && subscription.getSearchType().equals(SearchType.LOCATION_ID)
-                && USER_ID1.equals(subscription.getUserId())
+                && userId1.equals(subscription.getUserId())
                 && LOCATION_NAME2.equals(subscription.getLocationName())
                 && SUBSCRIPTION_CREATED_DATE.equals(subscription.getCreatedDate()));
     }
@@ -123,7 +131,7 @@ class SubscriptionRepositoryTest {
             .anyMatch(subscription -> subscriptionId2.equals(subscription.getId())
                 && subscription.getChannel().equals(Channel.EMAIL)
                 && LOCATION_ID2.equals(subscription.getSearchValue())
-                && USER_ID1.equals(subscription.getUserId())
+                && userId1.equals(subscription.getUserId())
                 && LOCATION_NAME2.equals(subscription.getLocationName())
                 && SUBSCRIPTION_CREATED_DATE.equals(subscription.getCreatedDate()))
             .noneMatch(subscription -> subscriptionId4.equals(subscription.getId()));
@@ -143,5 +151,18 @@ class SubscriptionRepositoryTest {
         assertThat(subscriptionRepository.findSubscriptionsByLocationId(INVALID_LOCATION_ID))
             .as(SUBSCRIPTION_EMPTY_MESSAGE)
             .isEmpty();
+    }
+
+    @Test
+    void shouldThrowExceptionIfForeignKeyConstraintViolated() {
+        Subscription unknownUserSubscription = new Subscription();
+        unknownUserSubscription.setUserId(USER_ID3_UNKNOWN_USER);
+        unknownUserSubscription.setSearchType(SearchType.LOCATION_ID);
+        unknownUserSubscription.setSearchValue(LOCATION_ID1);
+        unknownUserSubscription.setChannel(Channel.EMAIL);
+        unknownUserSubscription.setLocationName(LOCATION_NAME1);
+
+        assertThatThrownBy(() -> subscriptionRepository.saveAndFlush(unknownUserSubscription))
+            .isInstanceOf(DataIntegrityViolationException.class);
     }
 }
