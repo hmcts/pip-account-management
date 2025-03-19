@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.jdbc.Sql;
 import uk.gov.hmcts.reform.pip.account.management.model.subscription.Subscription;
 import uk.gov.hmcts.reform.pip.account.management.model.subscription.SubscriptionListType;
 import uk.gov.hmcts.reform.pip.model.publication.ListType;
@@ -23,8 +24,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_CLASS, scripts = {"classpath:add-verified-users.sql"})
 class SubscriptionRepositorySearchTest {
-    private static final UUID USER_ID = UUID.randomUUID();
+    private static final UUID USER_ID =  UUID.fromString("87f907d2-eb28-42cc-b6e1-ae2b03f7bba5");
     private static final String LOCATION_ID = "123";
     private static final String LOCATION_NAME = "Test location name";
     private static final String CASE_NUMBER = "Test case number";
@@ -43,6 +45,9 @@ class SubscriptionRepositorySearchTest {
 
     @Autowired
     SubscriptionListTypeRepository subscriptionListTypeRepository;
+
+    @Autowired
+    UserRepository userRepository;
 
     @BeforeAll
     void setup() {
@@ -95,6 +100,8 @@ class SubscriptionRepositorySearchTest {
     @AfterAll
     void shutdown() {
         subscriptionRepository.deleteAll();
+        subscriptionListTypeRepository.deleteAll();
+        userRepository.deleteAll();
     }
 
     @Test

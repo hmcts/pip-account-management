@@ -44,6 +44,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.http.HttpStatus.FORBIDDEN;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -286,6 +287,16 @@ class SubscriptionTest extends IntegrationTestBase {
         assertEquals(CASE_URN, returnedSubscription2.getUrn(), VALIDATION_CASE_URN);
         assertEquals(PARTY_NAMES, returnedSubscription2.getPartyNames(), VALIDATION_PARTY_NAMES);
         assertEquals(LOCATION_NAME, returnedSubscription2.getLocationName(), VALIDATION_LOCATION_NAME);
+    }
+
+    @Test
+    void checkErrorResponseIsReturnedWhenUserDoesNotExist() throws Exception {
+        SUBSCRIPTION.setUserId(UUID.randomUUID());
+        MockHttpServletRequestBuilder mappedSubscription = setupMockSubscription(LOCATION_ID);
+
+        MvcResult mvcResult = mvc.perform(mappedSubscription).andExpect(status().isNotFound()).andReturn();
+        assertTrue(mvcResult.getResponse().getContentAsString().contains(
+            "No user found with the userId: " + SUBSCRIPTION.getUserId()), "Error message is incorrect");
     }
 
     @DisplayName("Checks for bad request for invalid searchType enum.")

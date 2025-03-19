@@ -6,10 +6,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.context.ActiveProfiles;
 import uk.gov.hmcts.reform.pip.account.management.database.SubscriptionRepository;
+import uk.gov.hmcts.reform.pip.account.management.database.UserRepository;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.SubscriptionNotFoundException;
+import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.UserNotFoundException;
+import uk.gov.hmcts.reform.pip.account.management.model.account.PiUser;
 import uk.gov.hmcts.reform.pip.account.management.model.subscription.Subscription;
 import uk.gov.hmcts.reform.pip.model.report.AllSubscriptionMiData;
 import uk.gov.hmcts.reform.pip.model.report.LocationSubscriptionMiData;
@@ -37,6 +41,7 @@ import static uk.gov.hmcts.reform.pip.account.management.helpers.SubscriptionUti
 @ExtendWith(MockitoExtension.class)
 class SubscriptionServiceTest {
     private static final UUID USER_ID = UUID.randomUUID();
+    private static final UUID UNKNOWN_USER_ID = UUID.randomUUID();
     private static final String SEARCH_VALUE = "193254";
     private static final Channel EMAIL = Channel.EMAIL;
     private static final String ACTIONING_USER_ID = "1234-1234";
@@ -55,6 +60,9 @@ class SubscriptionServiceTest {
     @Mock
     SubscriptionRepository subscriptionRepository;
 
+    @Mock
+    UserRepository userRepository;
+
     @InjectMocks
     SubscriptionService subscriptionService;
 
@@ -64,6 +72,9 @@ class SubscriptionServiceTest {
         mockSubscriptionList = createMockSubscriptionList(DATE_ADDED);
         findableSubscription = findableSubscription();
         mockSubscription.setChannel(Channel.EMAIL);
+
+        Mockito.lenient().when(userRepository.findByUserId(USER_ID)).thenReturn(Optional.of(new PiUser()));
+        Mockito.lenient().when(userRepository.findByUserId(UNKNOWN_USER_ID)).thenReturn(Optional.empty());
     }
 
     @Test
@@ -80,6 +91,16 @@ class SubscriptionServiceTest {
         assertEquals(subscriptionService.createSubscription(mockSubscription, ACTIONING_USER_ID), mockSubscription,
                      SUBSCRIPTION_CREATED_ERROR
         );
+    }
+
+    @Test
+    void testCreateSubscriptionWhenUnknownUser() {
+        mockSubscription.setSearchType(SearchType.CASE_ID);
+        mockSubscription.setUserId(UNKNOWN_USER_ID);
+
+        assertThrows(UserNotFoundException.class, () ->
+            subscriptionService.createSubscription(mockSubscription, ACTIONING_USER_ID),
+                     "UserNotFoundException not thrown when user is not present");
     }
 
     @Test

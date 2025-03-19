@@ -4,7 +4,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.gov.hmcts.reform.pip.account.management.database.SubscriptionRepository;
+import uk.gov.hmcts.reform.pip.account.management.database.UserRepository;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.SubscriptionNotFoundException;
+import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.UserNotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.model.subscription.Subscription;
 import uk.gov.hmcts.reform.pip.model.enums.UserActions;
 import uk.gov.hmcts.reform.pip.model.report.AllSubscriptionMiData;
@@ -28,19 +30,26 @@ public class SubscriptionService {
     private final SubscriptionRepository subscriptionRepository;
     private final SubscriptionListTypeService subscriptionListTypeService;
     private final SubscriptionLocationService subscriptionLocationService;
+    private final UserRepository userRepository;
 
     @Autowired
     public SubscriptionService(SubscriptionRepository subscriptionRepository,
                                SubscriptionListTypeService subscriptionListTypeService,
-                               SubscriptionLocationService subscriptionLocationService) {
+                               SubscriptionLocationService subscriptionLocationService,
+                               UserRepository userRepository) {
         this.subscriptionRepository = subscriptionRepository;
         this.subscriptionListTypeService = subscriptionListTypeService;
         this.subscriptionLocationService = subscriptionLocationService;
+        this.userRepository = userRepository;
     }
 
     public Subscription createSubscription(Subscription subscription, String actioningUserId) {
         log.info(writeLog(actioningUserId, UserActions.CREATE_SUBSCRIPTION,
                           subscription.getSearchType().toString()));
+
+        if (userRepository.findByUserId(subscription.getUserId()).isEmpty()) {
+            throw new UserNotFoundException("userId", subscription.getUserId().toString());
+        }
 
         duplicateSubscriptionHandler(subscription);
         subscription.setLastUpdatedDate(subscription.getCreatedDate());
