@@ -100,6 +100,7 @@ class SubscriptionRepositorySearchTest {
     @AfterAll
     void shutdown() {
         subscriptionRepository.deleteAll();
+        subscriptionListTypeRepository.deleteAll();
         userRepository.deleteAll();
     }
 
