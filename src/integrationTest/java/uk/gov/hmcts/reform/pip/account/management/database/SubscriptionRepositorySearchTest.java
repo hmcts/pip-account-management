@@ -7,7 +7,6 @@ import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.jdbc.Sql;
 import uk.gov.hmcts.reform.pip.account.management.model.subscription.Subscription;
@@ -25,7 +24,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_CLASS, scripts = {"classpath:add-verified-users.sql"})
 class SubscriptionRepositorySearchTest {
     private static final UUID USER_ID =  UUID.fromString("87f907d2-eb28-42cc-b6e1-ae2b03f7bba5");
@@ -47,6 +45,9 @@ class SubscriptionRepositorySearchTest {
 
     @Autowired
     SubscriptionListTypeRepository subscriptionListTypeRepository;
+
+    @Autowired
+    UserRepository userRepository;
 
     @BeforeAll
     void setup() {
@@ -99,6 +100,7 @@ class SubscriptionRepositorySearchTest {
     @AfterAll
     void shutdown() {
         subscriptionRepository.deleteAll();
+        userRepository.deleteAll();
     }
 
     @Test
