@@ -216,7 +216,7 @@ dependencies {
   implementation group: 'org.springframework.boot', name: 'spring-boot-starter-data-jpa'
   implementation group: 'org.springframework.boot', name: 'spring-boot-starter-oauth2-client'
   implementation group: 'org.postgresql', name: 'postgresql', version: '42.7.5'
-  implementation group: 'com.azure.spring', name: 'spring-cloud-azure-starter-active-directory', version: '5.19.0'
+  implementation group: 'com.azure.spring', name: 'spring-cloud-azure-starter-active-directory', version: '5.21.0'
   implementation group: 'com.squareup.okhttp3', name: 'okhttp', version: '4.12.0'
   implementation group: 'com.opencsv', name: 'opencsv', version: '5.10'
   implementation group: 'commons-validator', name: 'commons-validator', version: '1.9.0'
@@ -229,7 +229,7 @@ dependencies {
   // Include the sdk as a dependency
   implementation group: 'com.microsoft.graph', name: 'microsoft-graph', version: '6.27.0'
   // Include Azure identity for authentication
-  implementation group: 'com.azure', name: 'azure-identity', version: '1.15.1'
+  implementation group: 'com.azure', name: 'azure-identity', version: '1.15.4'
 
   implementation group: 'org.springdoc', name: 'springdoc-openapi-starter-webmvc-ui', version: '2.8.4'
 
@@ -242,7 +242,7 @@ dependencies {
   implementation group: 'net.logstash.logback', name: 'logstash-logback-encoder', version: '8.0'
 
   // Include Azure storage blob for storing application images
-  implementation group: 'com.azure', name: 'azure-storage-blob', version: '12.29.0'
+  implementation group: 'com.azure', name: 'azure-storage-blob', version: '12.30.0'
 
   // Include Flyway for database migrations
   implementation group: 'org.flywaydb', name: 'flyway-core', version: '11.3.1'
