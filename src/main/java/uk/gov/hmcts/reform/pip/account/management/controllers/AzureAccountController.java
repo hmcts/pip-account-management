@@ -35,7 +35,7 @@ import java.util.Map;
 @AllArgsConstructor
 @SecurityRequirement(name = "bearerAuth")
 public class AzureAccountController {
-    private static final String REQUESTER_ID = "x-requester-id";
+    private static final String ISSUER_ID = "x-issuer-id";
 
     private static final String OK_CODE = "200";
     private static final String FORBIDDEN_ERROR_CODE = "401";
@@ -47,17 +47,17 @@ public class AzureAccountController {
      * POST endpoint to create a new azure account.
      * This will also trigger any welcome emails.
      *
-     * @param requesterId The id of the user creating the accounts.
+     * @param issuerId The id of the user creating the accounts.
      * @param azureAccounts The accounts to add.
      * @return A list containing details of any created and errored azureAccounts.
      */
     @ApiResponse(responseCode = OK_CODE, description = "{AzureAccount}")
     @ApiResponse(responseCode = FORBIDDEN_ERROR_CODE, description = "Action forbidden")
     @PostMapping("/add/azure")
-    @PreAuthorize("@authorisationService.userCanCreateAzureAccount(#requesterId)")
+    @PreAuthorize("@authorisationService.userCanCreateAzureAccount(#issuerId)")
     public ResponseEntity<Map<CreationEnum, List<? extends AzureAccount>>> createAzureAccount(//NOSONAR
-        @RequestHeader(REQUESTER_ID) String requesterId, @RequestBody List<AzureAccount> azureAccounts) {
-        return ResponseEntity.ok(azureAccountService.addAzureAccounts(azureAccounts, requesterId, false, false));
+        @RequestHeader(ISSUER_ID) String issuerId, @RequestBody List<AzureAccount> azureAccounts) {
+        return ResponseEntity.ok(azureAccountService.addAzureAccounts(azureAccounts, issuerId, false, false));
     }
 
     @ApiResponse(responseCode = OK_CODE, description = "P&I Azure User Information")

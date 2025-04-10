@@ -31,7 +31,7 @@ import java.util.Map;
 @AllArgsConstructor
 @SecurityRequirement(name = "bearerAuth")
 public class BulkAccountCreationController {
-    private static final String REQUESTER_ID = "x-requester-id";
+    private static final String ISSUER_ID = "x-issuer-id";
     private static final String OK_CODE = "200";
     private static final String ERROR_CODE = "400";
     private static final String FORBIDDEN_ERROR_CODE = "401";
@@ -43,10 +43,10 @@ public class BulkAccountCreationController {
     @ApiResponse(responseCode = ERROR_CODE, description = "Bad request")
     @ApiResponse(responseCode = FORBIDDEN_ERROR_CODE, description = "Action forbidden")
     @Operation(summary = "Create media accounts via CSV upload")
-    @PreAuthorize("@authorisationService.userCanBulkCreateMediaAccounts(#requesterId)")
+    @PreAuthorize("@authorisationService.userCanBulkCreateMediaAccounts(#issuerId)")
     @PostMapping("/media-bulk-upload")
     public ResponseEntity<Map<CreationEnum, List<?>>> createMediaAccountsBulk(//NOSONAR
-        @RequestHeader(REQUESTER_ID) String requesterId, @RequestPart MultipartFile mediaList) {
-        return ResponseEntity.ok(bulkAccountCreationService.uploadMediaFromCsv(mediaList, requesterId));
+        @RequestHeader(ISSUER_ID) String issuerId, @RequestPart MultipartFile mediaList) {
+        return ResponseEntity.ok(bulkAccountCreationService.uploadMediaFromCsv(mediaList, issuerId));
     }
 }
