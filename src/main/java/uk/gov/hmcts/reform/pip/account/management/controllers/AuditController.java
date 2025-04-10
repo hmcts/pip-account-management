@@ -10,11 +10,13 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -40,13 +42,19 @@ public class AuditController {
 
     private final AuditService auditService;
 
+    private static final String REQUESTER_ID = "x-requester-id";
+
     private static final String OK_ERROR_CODE = "200";
     private static final String NOT_FOUND_ERROR_CODE = "404";
+    private static final String FORBIDDEN_ERROR_CODE = "403";
 
     @ApiResponse(responseCode = OK_ERROR_CODE, description = "All audit logs returned as a page with filtering.")
+    @ApiResponse(responseCode = FORBIDDEN_ERROR_CODE, description = "Action forbidden")
     @Operation(summary = "Get all audit logs returned as a page")
     @GetMapping
+    @PreAuthorize("@authorisationService.userCanRequestAuditLogs(#requesterId)")
     public ResponseEntity<Page<AuditLog>> getAllAuditLogs(
+        @RequestHeader(REQUESTER_ID) String requesterId,
         @RequestParam(name = "pageNumber", defaultValue = "0") int pageNumber,
         @RequestParam(name = "pageSize", defaultValue = "25") int pageSize,
         @RequestParam(name = "email", defaultValue = "", required = false) String email,
@@ -60,9 +68,12 @@ public class AuditController {
 
     @ApiResponse(responseCode = OK_ERROR_CODE, description = "Audit log with id {id} returned.")
     @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description = "Audit log with id {id} could not be found.")
+    @ApiResponse(responseCode = FORBIDDEN_ERROR_CODE, description = "Action forbidden")
     @Operation(summary = "Get audit log with id")
     @GetMapping(value = "/{id}", produces = APPLICATION_JSON_VALUE)
-    public ResponseEntity<AuditLog> getAuditLogById(@PathVariable UUID id) {
+    @PreAuthorize("@authorisationService.userCanRequestAuditLogs(#requesterId)")
+    public ResponseEntity<AuditLog> getAuditLogById(@RequestHeader(REQUESTER_ID) String requesterId,
+                                                    @PathVariable UUID id) {
         return ResponseEntity.ok(auditService.getAuditLogById(id));
     }
 
