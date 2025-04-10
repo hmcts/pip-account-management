@@ -68,9 +68,10 @@ class AuthorisationServiceTest {
     }
 
     @ParameterizedTest
-    @EnumSource(Roles.class)
+    @EnumSource(value = Roles.class, names = { "VERIFIED" }, mode = EnumSource.Mode.EXCLUDE)
     void testSystemAdminCanCreateAnyRole(Roles role) {
         user.setRoles(role);
+        user.setUserProvenance(UserProvenances.PI_AAD);
         adminUser.setRoles(Roles.SYSTEM_ADMIN);
 
         lenient().when(userRepository.findByUserId(ADMIN_USER_ID)).thenReturn(Optional.of(adminUser));
@@ -319,7 +320,7 @@ class AuthorisationServiceTest {
     }
 
     @Test
-    void testSuperAdminUserCanUpdateAndDeleteSuperAdmin() {
+    void testSuperAdminUserCanUpdateSuperAdmin() {
         user.setRoles(Roles.INTERNAL_SUPER_ADMIN_CTSC);
         user.setUserProvenance(UserProvenances.PI_AAD);
         adminUser.setRoles(Roles.INTERNAL_SUPER_ADMIN_LOCAL);
@@ -329,10 +330,6 @@ class AuthorisationServiceTest {
 
         try (LogCaptor logCaptor = LogCaptor.forClass(AuthorisationService.class)) {
             SoftAssertions softly = new SoftAssertions();
-
-            softly.assertThat(authorisationService.userCanDeleteAccount(USER_ID, ADMIN_USER_ID))
-                .as(CAN_DELETE_ACCOUNT_MESSAGE)
-                .isTrue();
 
             softly.assertThat(authorisationService.userCanUpdateAccount(USER_ID, ADMIN_USER_ID))
                 .as(CAN_UPDATE_ACCOUNT_MESSAGE)
@@ -347,7 +344,7 @@ class AuthorisationServiceTest {
     }
 
     @Test
-    void testSuperAdminUserCanUpdateAndDeleteAdmin() {
+    void testSuperAdminUserCanUpdateAdmin() {
         user.setRoles(Roles.INTERNAL_ADMIN_LOCAL);
         user.setUserProvenance(UserProvenances.PI_AAD);
         adminUser.setRoles(Roles.INTERNAL_SUPER_ADMIN_LOCAL);
@@ -357,10 +354,6 @@ class AuthorisationServiceTest {
 
         try (LogCaptor logCaptor = LogCaptor.forClass(AuthorisationService.class)) {
             SoftAssertions softly = new SoftAssertions();
-
-            softly.assertThat(authorisationService.userCanDeleteAccount(USER_ID, ADMIN_USER_ID))
-                .as(CAN_DELETE_ACCOUNT_MESSAGE)
-                .isTrue();
 
             softly.assertThat(authorisationService.userCanUpdateAccount(USER_ID, ADMIN_USER_ID))
                 .as(CAN_UPDATE_ACCOUNT_MESSAGE)
@@ -398,7 +391,7 @@ class AuthorisationServiceTest {
                 .as(LOG_NOT_EMPTY_MESSAGE)
                 .hasSize(2);
 
-            softly.assertThat(logCaptor.getErrorLogs().get(0))
+            softly.assertThat(logCaptor.getErrorLogs().getFirst())
                 .as(LOG_MATCHED_MESSAGE)
                 .contains(String.format(DELETE_ERROR_LOG, ADMIN_USER_ID, USER_ID));
 
@@ -434,7 +427,7 @@ class AuthorisationServiceTest {
                 .as(LOG_NOT_EMPTY_MESSAGE)
                 .hasSize(2);
 
-            softly.assertThat(logCaptor.getErrorLogs().get(0))
+            softly.assertThat(logCaptor.getErrorLogs().getFirst())
                 .as(LOG_MATCHED_MESSAGE)
                 .contains(String.format(DELETE_ERROR_LOG, ADMIN_USER_ID, USER_ID));
 
@@ -470,7 +463,7 @@ class AuthorisationServiceTest {
                 .as(LOG_NOT_EMPTY_MESSAGE)
                 .hasSize(2);
 
-            softly.assertThat(logCaptor.getErrorLogs().get(0))
+            softly.assertThat(logCaptor.getErrorLogs().getFirst())
                 .as(LOG_MATCHED_MESSAGE)
                 .contains(String.format(DELETE_ERROR_LOG, ADMIN_USER_ID, USER_ID));
 
@@ -506,7 +499,7 @@ class AuthorisationServiceTest {
                 .as(LOG_NOT_EMPTY_MESSAGE)
                 .hasSize(2);
 
-            softly.assertThat(logCaptor.getErrorLogs().get(0))
+            softly.assertThat(logCaptor.getErrorLogs().getFirst())
                 .as(LOG_MATCHED_MESSAGE)
                 .contains(String.format(DELETE_ERROR_LOG, ADMIN_USER_ID, USER_ID));
 
@@ -542,7 +535,7 @@ class AuthorisationServiceTest {
                 .as(LOG_NOT_EMPTY_MESSAGE)
                 .hasSize(2);
 
-            softly.assertThat(logCaptor.getErrorLogs().get(0))
+            softly.assertThat(logCaptor.getErrorLogs().getFirst())
                 .as(LOG_MATCHED_MESSAGE)
                 .contains(String.format(DELETE_ERROR_LOG, ADMIN_USER_ID, USER_ID));
 
@@ -578,7 +571,7 @@ class AuthorisationServiceTest {
                 .as(LOG_NOT_EMPTY_MESSAGE)
                 .hasSize(2);
 
-            softly.assertThat(logCaptor.getErrorLogs().get(0))
+            softly.assertThat(logCaptor.getErrorLogs().getFirst())
                 .as(LOG_MATCHED_MESSAGE)
                 .contains(String.format(DELETE_ERROR_LOG, ADMIN_USER_ID, USER_ID));
 
@@ -591,7 +584,7 @@ class AuthorisationServiceTest {
     }
 
     @Test
-    void testSsoUserCanBeUpdatedAndDeleted() {
+    void testSsoUserCanBeUpdated() {
         user.setRoles(Roles.INTERNAL_ADMIN_LOCAL);
         user.setUserProvenance(UserProvenances.SSO);
 
@@ -599,10 +592,6 @@ class AuthorisationServiceTest {
 
         try (LogCaptor logCaptor = LogCaptor.forClass(AuthorisationService.class)) {
             SoftAssertions softly = new SoftAssertions();
-
-            softly.assertThat(authorisationService.userCanDeleteAccount(USER_ID, null))
-                .as(CAN_DELETE_ACCOUNT_MESSAGE)
-                .isTrue();
 
             softly.assertThat(authorisationService.userCanUpdateAccount(USER_ID, null))
                 .as(CAN_UPDATE_ACCOUNT_MESSAGE)
@@ -621,7 +610,6 @@ class AuthorisationServiceTest {
         user.setRoles(Roles.INTERNAL_SUPER_ADMIN_LOCAL);
         user.setUserProvenance(UserProvenances.PI_AAD);
 
-        PiUser adminUser = new PiUser();
         adminUser.setUserId(USER_ID);
         adminUser.setRoles(Roles.INTERNAL_SUPER_ADMIN_LOCAL);
 
@@ -636,7 +624,7 @@ class AuthorisationServiceTest {
                 .as(LOG_NOT_EMPTY_MESSAGE)
                 .hasSize(1);
 
-            softly.assertThat(logCaptor.getErrorLogs().get(0))
+            softly.assertThat(logCaptor.getErrorLogs().getFirst())
                 .as(LOG_MATCHED_MESSAGE)
                 .contains(String.format(UPDATE_OWN_ACCOUNT_ERROR_LOG, USER_ID));
 
@@ -671,42 +659,308 @@ class AuthorisationServiceTest {
 
     @Test
     void testUserCanCreateSystemAdmin() {
-        UUID userId = UUID.randomUUID();
-        PiUser user = new PiUser();
         user.setRoles(Roles.SYSTEM_ADMIN);
 
-        when(userRepository.findByUserId(userId)).thenReturn(Optional.of(user));
+        when(userRepository.findByUserId(USER_ID)).thenReturn(Optional.of(user));
 
-        assertThat(authorisationService.userCanCreateSystemAdmin(userId)).isTrue();
+        assertThat(authorisationService.userCanCreateSystemAdmin(USER_ID)).isTrue();
     }
 
     @Test
     void testUserCannotCreateSystemAdminIfAccountNotFound() {
-        UUID userId = UUID.randomUUID();
-
-        when(userRepository.findByUserId(userId)).thenReturn(Optional.empty());
+        when(userRepository.findByUserId(USER_ID)).thenReturn(Optional.empty());
 
         try (LogCaptor logCaptor = LogCaptor.forClass(AuthorisationService.class)) {
-            assertThat(authorisationService.userCanCreateSystemAdmin(userId)).isFalse();
+            assertThat(authorisationService.userCanCreateSystemAdmin(USER_ID)).isFalse();
 
-            assertThat(logCaptor.getErrorLogs().get(0)).contains(
-                String.format("User with ID %s is forbidden to create a B2C system admin", userId));
+            assertThat(logCaptor.getErrorLogs().getFirst()).contains(
+                String.format("User with ID %s is forbidden to create a B2C system admin", USER_ID));
         }
     }
 
     @Test
     void testUserCannotCreateSystemAdminIfUserIsNotSystemAdmin() {
-        UUID userId = UUID.randomUUID();
-        PiUser user = new PiUser();
         user.setRoles(Roles.INTERNAL_ADMIN_LOCAL);
 
-        when(userRepository.findByUserId(userId)).thenReturn(Optional.of(user));
+        when(userRepository.findByUserId(USER_ID)).thenReturn(Optional.of(user));
 
         try (LogCaptor logCaptor = LogCaptor.forClass(AuthorisationService.class)) {
-            assertThat(authorisationService.userCanCreateSystemAdmin(userId)).isFalse();
+            assertThat(authorisationService.userCanCreateSystemAdmin(USER_ID)).isFalse();
 
-            assertThat(logCaptor.getErrorLogs().get(0)).contains(
-                String.format("User with ID %s is forbidden to create a B2C system admin", userId));
+            assertThat(logCaptor.getErrorLogs().getFirst()).contains(
+                String.format("User with ID %s is forbidden to create a B2C system admin", USER_ID));
         }
     }
+
+    @Test
+    void testUserIsSystemAdminShouldReturnTrue() {
+        user.setUserId(USER_ID);
+        user.setRoles(Roles.SYSTEM_ADMIN);
+
+        when(userRepository.findByUserId(USER_ID)).thenReturn(Optional.of(user));
+
+        assertThat(authorisationService.userIsSystemAdmin(USER_ID)).isTrue();
+    }
+
+    @Test
+    void testUserIsSystemAdminShouldReturnFalse() {
+        user.setUserId(USER_ID);
+        user.setRoles(Roles.VERIFIED);
+
+        when(userRepository.findByUserId(USER_ID)).thenReturn(Optional.of(user));
+
+        assertThat(authorisationService.userIsSystemAdmin(USER_ID)).isFalse();
+    }
+
+    @Test
+    void testUserIsCtscAdminShouldReturnTrue() {
+        user.setUserId(USER_ID);
+        user.setRoles(Roles.INTERNAL_ADMIN_CTSC);
+
+        when(userRepository.findByUserId(USER_ID)).thenReturn(Optional.of(user));
+
+        assertThat(authorisationService.userIsAdminCTSC(USER_ID)).isTrue();
+    }
+
+    @Test
+    void testUserIsCtscAdminShouldReturnFalse() {
+        user.setUserId(USER_ID);
+        user.setRoles(Roles.INTERNAL_SUPER_ADMIN_LOCAL);
+
+        when(userRepository.findByUserId(USER_ID)).thenReturn(Optional.of(user));
+
+        assertThat(authorisationService.userIsAdminCTSC(USER_ID)).isFalse();
+    }
+
+    @Test
+    void testUserForbiddenToUpdateMediaApplications() {
+        user.setUserId(USER_ID);
+        user.setRoles(Roles.SYSTEM_ADMIN);
+
+        when(userRepository.findByUserId(USER_ID)).thenReturn(Optional.of(user));
+
+        try (LogCaptor logCaptor = LogCaptor.forClass(AuthorisationService.class)) {
+            assertThat(authorisationService.userCanUpdateMediaApplications(USER_ID)).isFalse();
+
+            assertThat(logCaptor.getErrorLogs().getFirst()).contains(
+                String.format("User with ID %s is not authorised to update media applications", USER_ID));
+        }
+    }
+
+    @Test
+    void testUserForbiddenToViewMediaApplications() {
+        user.setUserId(USER_ID);
+        user.setRoles(Roles.SYSTEM_ADMIN);
+
+        when(userRepository.findByUserId(USER_ID)).thenReturn(Optional.of(user));
+
+        try (LogCaptor logCaptor = LogCaptor.forClass(AuthorisationService.class)) {
+            assertThat(authorisationService.userCanViewMediaApplications(USER_ID)).isFalse();
+
+            assertThat(logCaptor.getErrorLogs().getFirst()).contains(
+                String.format("User with ID %s is not authorised to view media applications", USER_ID));
+        }
+    }
+
+    @Test
+    void testUserForbiddenToCreateAzureAccounts() {
+        user.setUserId(USER_ID);
+        user.setRoles(Roles.SYSTEM_ADMIN);
+
+        when(userRepository.findByUserId(USER_ID)).thenReturn(Optional.of(user));
+
+        try (LogCaptor logCaptor = LogCaptor.forClass(AuthorisationService.class)) {
+            assertThat(authorisationService.userCanCreateAzureAccount(USER_ID)).isFalse();
+
+            assertThat(logCaptor.getErrorLogs().getFirst()).contains(
+                String.format("User with ID %s is not authorised to create accounts", USER_ID));
+        }
+    }
+
+    @Test
+    void testUserForbiddenToBulkCreateMediaAccounts() {
+        user.setUserId(USER_ID);
+        user.setRoles(Roles.INTERNAL_SUPER_ADMIN_LOCAL);
+
+        when(userRepository.findByUserId(USER_ID)).thenReturn(Optional.of(user));
+
+        try (LogCaptor logCaptor = LogCaptor.forClass(AuthorisationService.class)) {
+            assertThat(authorisationService.userCanBulkCreateMediaAccounts(USER_ID)).isFalse();
+
+            assertThat(logCaptor.getErrorLogs().getFirst()).contains(
+                String.format("User with ID %s is not authorised to create media accounts", USER_ID));
+        }
+    }
+
+    @Test
+    void testUserForbiddenToViewAccountDetails() {
+        user.setUserId(USER_ID);
+        user.setRoles(Roles.INTERNAL_SUPER_ADMIN_LOCAL);
+
+        when(userRepository.findByUserId(USER_ID)).thenReturn(Optional.of(user));
+
+        try (LogCaptor logCaptor = LogCaptor.forClass(AuthorisationService.class)) {
+            assertThat(authorisationService.userCanViewAccountDetails(USER_ID)).isFalse();
+
+            assertThat(logCaptor.getErrorLogs().getFirst()).contains(
+                String.format("User with ID %s is not authorised to view account details", USER_ID));
+        }
+    }
+
+    @Test
+    void testUserForbiddenToViewAuditLogs() {
+        user.setUserId(USER_ID);
+        user.setRoles(Roles.INTERNAL_SUPER_ADMIN_LOCAL);
+
+        when(userRepository.findByUserId(USER_ID)).thenReturn(Optional.of(user));
+
+        try (LogCaptor logCaptor = LogCaptor.forClass(AuthorisationService.class)) {
+            assertThat(authorisationService.userCanRequestAuditLogs(USER_ID)).isFalse();
+
+            assertThat(logCaptor.getErrorLogs().getFirst()).contains(
+                String.format("User with ID %s is not authorised to view audit logs", USER_ID));
+        }
+    }
+
+    @Test
+    void testSystemAdminUserCannotDeleteTheirOwnAccount() {
+        user.setUserId(USER_ID);
+        user.setRoles(Roles.SYSTEM_ADMIN);
+        user.setUserProvenance(UserProvenances.PI_AAD);
+
+        when(userRepository.findByUserId(USER_ID)).thenReturn(Optional.of(user));
+
+        try (LogCaptor logCaptor = LogCaptor.forClass(AuthorisationService.class)) {
+            SoftAssertions softly = new SoftAssertions();
+
+            softly.assertThat(authorisationService.userCanDeleteAccount(user.getUserId(), user.getUserId()))
+                .isFalse();
+
+            softly.assertThat(logCaptor.getErrorLogs())
+                .as(LOG_NOT_EMPTY_MESSAGE)
+                .hasSize(1);
+
+            softly.assertThat(logCaptor.getErrorLogs().getFirst())
+                .as(LOG_MATCHED_MESSAGE)
+                .contains(String.format(DELETE_ERROR_LOG, USER_ID, USER_ID));
+
+            softly.assertAll();
+        }
+    }
+
+    @Test
+    void testCtscAdminCanCreatePiAadVerifiedRole() {
+        user.setRoles(Roles.VERIFIED);
+        user.setUserProvenance(UserProvenances.PI_AAD);
+        adminUser.setRoles(Roles.INTERNAL_ADMIN_CTSC);
+
+        when(userRepository.findByUserId(ADMIN_USER_ID)).thenReturn(Optional.of(adminUser));
+
+        try (LogCaptor logCaptor = LogCaptor.forClass(AuthorisationService.class)) {
+            SoftAssertions softly = new SoftAssertions();
+
+            softly.assertThat(authorisationService.userCanCreateAccount(ADMIN_USER_ID, List.of(user)))
+                .as(CAN_CREATE_ACCOUNT_MESSAGE)
+                .isTrue();
+
+            softly.assertThat(logCaptor.getErrorLogs())
+                .as(LOG_MATCHED_MESSAGE)
+                .isEmpty();
+
+            softly.assertAll();
+        }
+    }
+
+    @Test
+    void testSuperAdminCannotCreatePiAadVerifiedRole() {
+        user.setRoles(Roles.VERIFIED);
+        user.setUserProvenance(UserProvenances.PI_AAD);
+        adminUser.setRoles(Roles.INTERNAL_SUPER_ADMIN_LOCAL);
+
+        when(userRepository.findByUserId(ADMIN_USER_ID)).thenReturn(Optional.of(adminUser));
+
+        try (LogCaptor logCaptor = LogCaptor.forClass(AuthorisationService.class)) {
+            SoftAssertions softly = new SoftAssertions();
+
+            softly.assertThat(authorisationService.userCanCreateAccount(ADMIN_USER_ID, List.of(user)))
+                .as(CANNOT_CREATE_ACCOUNT_MESSAGE)
+                .isFalse();
+
+            softly.assertThat(logCaptor.getErrorLogs())
+                .as(LOG_NOT_EMPTY_MESSAGE)
+                .hasSize(1);
+
+            softly.assertAll();
+        }
+    }
+
+    @Test
+    void testSystemAdminCannotCreatePiAadVerifiedRole() {
+        user.setRoles(Roles.VERIFIED);
+        user.setUserProvenance(UserProvenances.PI_AAD);
+        adminUser.setRoles(Roles.SYSTEM_ADMIN);
+
+        when(userRepository.findByUserId(ADMIN_USER_ID)).thenReturn(Optional.of(adminUser));
+
+        try (LogCaptor logCaptor = LogCaptor.forClass(AuthorisationService.class)) {
+            SoftAssertions softly = new SoftAssertions();
+
+            softly.assertThat(authorisationService.userCanCreateAccount(ADMIN_USER_ID, List.of(user)))
+                .as(CANNOT_CREATE_ACCOUNT_MESSAGE)
+                .isFalse();
+
+            softly.assertThat(logCaptor.getErrorLogs())
+                .as(LOG_NOT_EMPTY_MESSAGE)
+                .hasSize(1);
+
+            softly.assertAll();
+        }
+    }
+
+    @Test
+    void testVerifiedUserCannotCreatePiAadVerifiedRole() {
+        user.setRoles(Roles.VERIFIED);
+        user.setUserProvenance(UserProvenances.PI_AAD);
+        adminUser.setRoles(Roles.VERIFIED);
+
+        when(userRepository.findByUserId(ADMIN_USER_ID)).thenReturn(Optional.of(adminUser));
+
+        try (LogCaptor logCaptor = LogCaptor.forClass(AuthorisationService.class)) {
+            SoftAssertions softly = new SoftAssertions();
+
+            softly.assertThat(authorisationService.userCanCreateAccount(ADMIN_USER_ID, List.of(user)))
+                .as(CANNOT_CREATE_ACCOUNT_MESSAGE)
+                .isFalse();
+
+            softly.assertThat(logCaptor.getErrorLogs())
+                .as(LOG_NOT_EMPTY_MESSAGE)
+                .hasSize(1);
+
+            softly.assertAll();
+        }
+    }
+
+    @Test
+    void testThirdPartyUserCannotCreatePiAadVerifiedRole() {
+        user.setRoles(Roles.VERIFIED);
+        user.setUserProvenance(UserProvenances.PI_AAD);
+        adminUser.setRoles(Roles.VERIFIED_THIRD_PARTY_PRESS);
+
+        when(userRepository.findByUserId(ADMIN_USER_ID)).thenReturn(Optional.of(adminUser));
+
+        try (LogCaptor logCaptor = LogCaptor.forClass(AuthorisationService.class)) {
+            SoftAssertions softly = new SoftAssertions();
+
+            softly.assertThat(authorisationService.userCanCreateAccount(ADMIN_USER_ID, List.of(user)))
+                .as(CANNOT_CREATE_ACCOUNT_MESSAGE)
+                .isFalse();
+
+            softly.assertThat(logCaptor.getErrorLogs())
+                .as(LOG_NOT_EMPTY_MESSAGE)
+                .hasSize(1);
+
+            softly.assertAll();
+        }
+    }
+
 }
