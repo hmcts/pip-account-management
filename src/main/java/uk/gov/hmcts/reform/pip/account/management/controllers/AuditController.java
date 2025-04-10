@@ -38,6 +38,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 @IsAdmin
 @AllArgsConstructor
 @SecurityRequirement(name = "bearerAuth")
+@SuppressWarnings("PMD.UseObjectForClearerAPI")
 public class AuditController {
 
     private final AuditService auditService;

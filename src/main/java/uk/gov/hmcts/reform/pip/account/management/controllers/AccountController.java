@@ -51,6 +51,7 @@ public class AccountController {
     private static final String NOT_FOUND_ERROR_CODE = "404";
 
     private static final String PI_USER = "{piUser}";
+    private static final String ACTION_FORBIDDEN = "Action forbidden";
 
     private final AccountService accountService;
 
@@ -63,7 +64,7 @@ public class AccountController {
      */
     @ApiResponse(responseCode = "201",
             description = "CREATED_ACCOUNTS: [{Created User UUID's}]")
-    @ApiResponse(responseCode = FORBIDDEN_ERROR_CODE, description = "Action forbidden")
+    @ApiResponse(responseCode = FORBIDDEN_ERROR_CODE, description = ACTION_FORBIDDEN)
     @Operation(summary = "Add a user to the P&I postgres database")
     @PostMapping("/add/pi")
     @PreAuthorize("@authorisationService.userCanCreateAccount(#issuerId, #users)")
@@ -76,7 +77,7 @@ public class AccountController {
     @ApiResponse(responseCode = OK_CODE, description = PI_USER)
     @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description = "No user found with the "
             + "user Id: {userId}")
-    @ApiResponse(responseCode = FORBIDDEN_ERROR_CODE, description = "Action forbidden")
+    @ApiResponse(responseCode = FORBIDDEN_ERROR_CODE, description = ACTION_FORBIDDEN)
     @Operation(summary = "Get a user based on their user ID")
     @PreAuthorize("@authorisationService.userCanViewAccountDetails(#requesterId)")
     @GetMapping("/{userId}")
@@ -142,7 +143,7 @@ public class AccountController {
     @DeleteMapping("/v2/{userId}")
     @PreAuthorize("@authorisationService.userCanDeleteAccount(#userId, #adminUserId)")
     public ResponseEntity<String> deleteAccountV2(@PathVariable UUID userId,
-                                                  @RequestHeader(value = "x-admin-id") UUID adminUserId) {
+                                                  @RequestHeader("x-admin-id") UUID adminUserId) {
         accountService.deleteAccount(userId);
         return ResponseEntity.ok("User deleted");
     }
@@ -156,7 +157,7 @@ public class AccountController {
     @PreAuthorize("@authorisationService.userCanUpdateAccount(#userId, #adminUserId)")
     public ResponseEntity<String> updateAccountRoleById(@PathVariable UUID userId,
                                                         @PathVariable Roles role,
-                                                        @RequestHeader(value = "x-admin-id") UUID adminUserId) {
+                                                        @RequestHeader("x-admin-id") UUID adminUserId) {
         return ResponseEntity.ok(accountService.updateAccountRole(userId, role));
     }
 }

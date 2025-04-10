@@ -54,6 +54,7 @@ public class MediaApplicationController {
     private final MediaApplicationService mediaApplicationService;
 
     private static final String NO_CONTENT_MESSAGE = "The request has been successfully fulfilled";
+    private static final String ACTION_FORBIDDEN = "Action forbidden";
     private static final String OK_ERROR_CODE = "200";
     private static final String FORBIDDEN_ERROR_CODE = "401";
     private static final String NOT_FOUND_ERROR_CODE = "404";
@@ -67,7 +68,7 @@ public class MediaApplicationController {
     }
 
     @ApiResponse(responseCode = OK_ERROR_CODE, description = "List<{MediaApplication}>")
-    @ApiResponse(responseCode = FORBIDDEN_ERROR_CODE, description = "Action forbidden")
+    @ApiResponse(responseCode = FORBIDDEN_ERROR_CODE, description = ACTION_FORBIDDEN)
     @Operation(summary = "Get all application by the status")
     @GetMapping(value = "/status/{status}", produces = APPLICATION_JSON_VALUE)
     @PreAuthorize("@authorisationService.userCanViewMediaApplications(#requesterId)")
@@ -79,7 +80,7 @@ public class MediaApplicationController {
 
     @ApiResponse(responseCode = OK_ERROR_CODE, description = MEDIA_APPLICATION)
     @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description = NO_MEDIA_APPLICATION_FOUND_WITH_ID)
-    @ApiResponse(responseCode = FORBIDDEN_ERROR_CODE, description = "Action forbidden")
+    @ApiResponse(responseCode = FORBIDDEN_ERROR_CODE, description = ACTION_FORBIDDEN)
     @GetMapping(value = "/{id}", produces = APPLICATION_JSON_VALUE)
     @PreAuthorize("@authorisationService.userCanViewMediaApplications(#requesterId)")
     public ResponseEntity<MediaApplication> getApplicationById(@RequestHeader(REQUESTER_ID) String requesterId,
@@ -89,7 +90,7 @@ public class MediaApplicationController {
 
     @ApiResponse(responseCode = OK_ERROR_CODE, description = "Image with id: {id} is returned")
     @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description = "No image found with id: {id}")
-    @ApiResponse(responseCode = FORBIDDEN_ERROR_CODE, description = "Action forbidden")
+    @ApiResponse(responseCode = FORBIDDEN_ERROR_CODE, description = ACTION_FORBIDDEN)
     @GetMapping("/image/{id}")
     @PreAuthorize("@authorisationService.userCanViewMediaApplications(#requesterId)")
     public ResponseEntity<Resource> getImageById(@RequestHeader(REQUESTER_ID) String requesterId,
@@ -121,7 +122,7 @@ public class MediaApplicationController {
 
     @ApiResponse(responseCode = OK_ERROR_CODE, description = MEDIA_APPLICATION)
     @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description = NO_MEDIA_APPLICATION_FOUND_WITH_ID)
-    @ApiResponse(responseCode = FORBIDDEN_ERROR_CODE, description = "Action forbidden")
+    @ApiResponse(responseCode = FORBIDDEN_ERROR_CODE, description = ACTION_FORBIDDEN)
     @Operation(summary = "Update a media application, sending an update email alongside")
     @PutMapping(value = "/{id}/{status}/reasons", consumes = APPLICATION_JSON_VALUE)
     @PreAuthorize("@authorisationService.userCanUpdateMediaApplications(#requesterId)")

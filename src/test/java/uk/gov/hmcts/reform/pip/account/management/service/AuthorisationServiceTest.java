@@ -719,7 +719,7 @@ class AuthorisationServiceTest {
 
         when(userRepository.findByUserId(USER_ID)).thenReturn(Optional.of(user));
 
-        assertThat(authorisationService.userIsAdminCTSC(USER_ID)).isTrue();
+        assertThat(authorisationService.userIsAdminCtsc(USER_ID)).isTrue();
     }
 
     @Test
@@ -729,7 +729,7 @@ class AuthorisationServiceTest {
 
         when(userRepository.findByUserId(USER_ID)).thenReturn(Optional.of(user));
 
-        assertThat(authorisationService.userIsAdminCTSC(USER_ID)).isFalse();
+        assertThat(authorisationService.userIsAdminCtsc(USER_ID)).isFalse();
     }
 
     @Test

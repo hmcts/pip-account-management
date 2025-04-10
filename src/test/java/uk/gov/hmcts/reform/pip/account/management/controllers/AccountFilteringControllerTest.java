@@ -62,8 +62,8 @@ class AccountFilteringControllerTest {
     @Test
     void testGetAllAccountsExceptThirdParty() {
         assertThat(accountFilteringController.getAllAccountsExceptThirdParty(
-            USER_ID, 0, 25, "test", "1234",
-            List.of(UserProvenances.PI_AAD), List.of(Roles.VERIFIED), "1234").getStatusCode())
+            USER_ID, 0, 25, EMAIL, "1234",
+            List.of(UserProvenances.PI_AAD), List.of(Roles.VERIFIED), USER_ID).getStatusCode())
             .as(STATUS_CODE_MATCH)
             .isEqualTo(HttpStatus.OK);
     }

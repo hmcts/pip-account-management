@@ -38,6 +38,7 @@ class MediaApplicationControllerTest {
 
     private static final String STATUS_CODE_MATCH = "Status code responses should match";
 
+
     @Test
     void testGetApplications() {
         List<MediaApplication> applicationList = createApplicationList(5);
@@ -146,7 +147,9 @@ class MediaApplicationControllerTest {
             .thenReturn(mediaApplication);
 
         ResponseEntity<MediaApplication> response =
-            mediaApplicationController.updateApplicationRejection(USER_ID, reasons, MediaApplicationStatus.REJECTED, testUuid);
+            mediaApplicationController.updateApplicationRejection(
+                USER_ID, reasons, MediaApplicationStatus.REJECTED, testUuid
+            );
 
         assertEquals(HttpStatus.OK, response.getStatusCode(), STATUS_CODE_MATCH);
         assertEquals(mediaApplication, response.getBody(), "Returned media application does not match");

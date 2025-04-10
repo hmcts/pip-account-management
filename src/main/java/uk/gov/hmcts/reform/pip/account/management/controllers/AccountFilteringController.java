@@ -37,7 +37,7 @@ import java.util.List;
 @IsAdmin
 @AllArgsConstructor
 @SecurityRequirement(name = "bearerAuth")
-@SuppressWarnings("squid:S1133")
+@SuppressWarnings({"PMD.UseObjectForClearerAPI", "squid:S1133"})
 public class AccountFilteringController {
     private static final String REQUESTER_ID = "x-requester-id";
 
