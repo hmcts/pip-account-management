@@ -46,7 +46,7 @@ public class AuditController {
 
     private static final String OK_ERROR_CODE = "200";
     private static final String NOT_FOUND_ERROR_CODE = "404";
-    private static final String FORBIDDEN_ERROR_CODE = "403";
+    private static final String FORBIDDEN_ERROR_CODE = "401";
 
     @ApiResponse(responseCode = OK_ERROR_CODE, description = "All audit logs returned as a page with filtering.")
     @ApiResponse(responseCode = FORBIDDEN_ERROR_CODE, description = "Action forbidden")
