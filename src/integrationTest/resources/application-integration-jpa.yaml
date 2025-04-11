@@ -4,6 +4,6 @@ spring:
     url: jdbc:tc:postgresql://localhost/pip
   jpa:
     hibernate:
-      ddl-auto: create
+      ddl-auto: update
   flyway:
     enabled: true

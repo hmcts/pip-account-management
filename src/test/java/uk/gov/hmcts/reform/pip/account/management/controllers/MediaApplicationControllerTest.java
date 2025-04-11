@@ -20,11 +20,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
-import static uk.gov.hmcts.reform.pip.account.management.helper.MediaApplicationHelper.FILE;
-import static uk.gov.hmcts.reform.pip.account.management.helper.MediaApplicationHelper.STATUS;
-import static uk.gov.hmcts.reform.pip.account.management.helper.MediaApplicationHelper.TEST_ID;
-import static uk.gov.hmcts.reform.pip.account.management.helper.MediaApplicationHelper.createApplication;
-import static uk.gov.hmcts.reform.pip.account.management.helper.MediaApplicationHelper.createApplicationList;
+import static uk.gov.hmcts.reform.pip.account.management.helpers.MediaApplicationHelper.FILE;
+import static uk.gov.hmcts.reform.pip.account.management.helpers.MediaApplicationHelper.STATUS;
+import static uk.gov.hmcts.reform.pip.account.management.helpers.MediaApplicationHelper.TEST_ID;
+import static uk.gov.hmcts.reform.pip.account.management.helpers.MediaApplicationHelper.createApplication;
+import static uk.gov.hmcts.reform.pip.account.management.helpers.MediaApplicationHelper.createApplicationList;
 
 @ExtendWith(MockitoExtension.class)
 class MediaApplicationControllerTest {

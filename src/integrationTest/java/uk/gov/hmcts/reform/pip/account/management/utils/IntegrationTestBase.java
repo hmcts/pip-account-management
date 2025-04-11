@@ -5,16 +5,12 @@ import com.azure.storage.blob.BlobContainerClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import uk.gov.hmcts.reform.pip.account.management.service.PublicationService;
-import uk.gov.hmcts.reform.pip.account.management.service.SubscriptionService;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 public class IntegrationTestBase {
     private static final String BLOB_IMAGE_URL = "https://localhost";
-
-    @MockitoBean
-    protected SubscriptionService subscriptionService;
 
     @MockitoBean
     protected PublicationService publicationService;
