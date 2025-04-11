@@ -15,9 +15,16 @@ import java.util.UUID;
 
 import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
 import static uk.gov.hmcts.reform.pip.model.account.Roles.ALL_NON_RESTRICTED_ADMIN_ROLES;
+import static uk.gov.hmcts.reform.pip.model.account.Roles.INTERNAL_ADMIN_CTSC;
+import static uk.gov.hmcts.reform.pip.model.account.Roles.INTERNAL_SUPER_ADMIN_CTSC;
+import static uk.gov.hmcts.reform.pip.model.account.Roles.INTERNAL_SUPER_ADMIN_LOCAL;
+import static uk.gov.hmcts.reform.pip.model.account.Roles.SYSTEM_ADMIN;
+import static uk.gov.hmcts.reform.pip.model.account.Roles.VERIFIED;
+import static uk.gov.hmcts.reform.pip.model.account.UserProvenances.PI_AAD;
 
 @Service("authorisationService")
 @Slf4j
+@SuppressWarnings("PMD.TooManyMethods")
 public class AuthorisationService {
     private final UserRepository userRepository;
 
@@ -27,30 +34,38 @@ public class AuthorisationService {
     }
 
     public boolean userCanCreateAccount(UUID adminUserId, List<PiUser> users) {
+        Roles adminUserRole = getUser(adminUserId).getRoles();
         for (PiUser user : users) {
             // Restrict third party user creation to SYSTEM_ADMIN only
-            if (Roles.getAllThirdPartyRoles().contains(user.getRoles())) {
-                Roles adminUserRole = getUser(adminUserId).getRoles();
-                if (!Roles.SYSTEM_ADMIN.equals(adminUserRole)) {
-                    log.error(writeLog(
-                        String.format("User with ID %s is forbidden to create third party user", adminUserId)
-                    ));
-                    return false;
-                }
+            if (Roles.getAllThirdPartyRoles().contains(user.getRoles()) && !SYSTEM_ADMIN.equals(adminUserRole)) {
+                log.error(writeLog(
+                    String.format("User with ID %s is forbidden to create third party user", adminUserId)
+                ));
+                return false;
             }
+
+            // Restrict PI_AAD Verified user creation to INTERNAL_ADMIN_CTSC only
+            if (user.getUserProvenance() == PI_AAD && user.getRoles() == VERIFIED
+                && !INTERNAL_ADMIN_CTSC.equals(adminUserRole)) {
+                log.error(writeLog(
+                    String.format("User with ID %s is forbidden to create a verified user", adminUserId)
+                ));
+                return false;
+            }
+
         }
         return true;
     }
 
-    public boolean userCanDeleteAccount(UUID userId, UUID adminUserId) {
-        boolean isAuthorised = isAuthorisedRole(userId, adminUserId);
-
-        if (!isAuthorised) {
+    public boolean userCanDeleteAccount(UUID userId, UUID requesterId) {
+        boolean isisAuthorisedUser = userIsSystemAdmin(requesterId);
+        if (!isisAuthorisedUser || requesterId.equals(userId)) {
             log.error(writeLog(
-                String.format("User with ID %s is forbidden to remove user with ID %s", adminUserId, userId)
+                String.format("User with ID %s is forbidden to remove user with ID %s", requesterId, userId)
             ));
+            return false;
         }
-        return isAuthorised;
+        return true;
     }
 
     public boolean userCanUpdateAccount(UUID userId, UUID adminUserId) {
@@ -73,7 +88,7 @@ public class AuthorisationService {
 
     public boolean userCanCreateSystemAdmin(UUID userId) {
         Optional<PiUser> adminUser = userRepository.findByUserId(userId);
-        boolean isSystemAdmin = adminUser.isPresent() && adminUser.get().getRoles().equals(Roles.SYSTEM_ADMIN);
+        boolean isSystemAdmin = adminUser.isPresent() && adminUser.get().getRoles().equals(SYSTEM_ADMIN);
 
         if (!isSystemAdmin) {
             log.error(writeLog(
@@ -94,10 +109,10 @@ public class AuthorisationService {
         }
         PiUser adminUser = getUser(adminUserId);
 
-        if (adminUser.getRoles() == Roles.SYSTEM_ADMIN) {
+        if (adminUser.getRoles() == SYSTEM_ADMIN) {
             return true;
-        } else if (adminUser.getRoles() == Roles.INTERNAL_SUPER_ADMIN_LOCAL
-            || adminUser.getRoles() == Roles.INTERNAL_SUPER_ADMIN_CTSC) {
+        } else if (adminUser.getRoles() == INTERNAL_SUPER_ADMIN_LOCAL
+            || adminUser.getRoles() == INTERNAL_SUPER_ADMIN_CTSC) {
             return ALL_NON_RESTRICTED_ADMIN_ROLES.contains(user.getRoles());
         }
         return false;
@@ -107,5 +122,73 @@ public class AuthorisationService {
         return userRepository.findByUserId(userId)
             .orElseThrow(() -> new NotFoundException(
                 String.format("User with supplied user id: %s could not be found", userId)));
+    }
+
+    public boolean userCanRequestAuditLogs(UUID requesterId) {
+        boolean isAuthorisedUser = userIsSystemAdmin(requesterId);
+        if (!isAuthorisedUser) {
+            log.error(writeLog(
+                String.format("User with ID %s is not authorised to view audit logs", requesterId)
+            ));
+        }
+        return isAuthorisedUser;
+    }
+
+    public boolean userCanViewAccountDetails(UUID requesterId) {
+        boolean isAuthorisedUser = userIsSystemAdmin(requesterId);
+        if (!isAuthorisedUser) {
+            log.error(writeLog(
+                String.format("User with ID %s is not authorised to view account details", requesterId)
+            ));
+        }
+        return isAuthorisedUser;
+    }
+
+    public boolean userCanBulkCreateMediaAccounts(UUID requesterId) {
+        boolean isAuthorisedUser = userIsSystemAdmin(requesterId);
+        if (!isAuthorisedUser) {
+            log.error(writeLog(
+                String.format("User with ID %s is not authorised to create media accounts", requesterId)
+            ));
+        }
+        return isAuthorisedUser;
+    }
+
+    public boolean userCanCreateAzureAccount(UUID requesterId) {
+        boolean isAuthorisedUser = userIsAdminCtsc(requesterId);
+        if (!isAuthorisedUser) {
+            log.error(writeLog(
+                String.format("User with ID %s is not authorised to create accounts", requesterId)
+            ));
+        }
+        return isAuthorisedUser;
+    }
+
+    public boolean userCanViewMediaApplications(UUID requesterId) {
+        boolean isAuthorisedUser = userIsAdminCtsc(requesterId);
+        if (!isAuthorisedUser) {
+            log.error(writeLog(
+                String.format("User with ID %s is not authorised to view media applications", requesterId)
+            ));
+        }
+        return isAuthorisedUser;
+    }
+
+    public boolean userCanUpdateMediaApplications(UUID requesterId) {
+        boolean isAuthorisedUser = userIsAdminCtsc(requesterId);
+        if (!isAuthorisedUser) {
+            log.error(writeLog(
+                String.format("User with ID %s is not authorised to update media applications", requesterId)
+            ));
+        }
+        return isAuthorisedUser;
+    }
+
+    public boolean userIsSystemAdmin(UUID requesterId) {
+        return getUser(requesterId).getRoles().equals(SYSTEM_ADMIN);
+    }
+
+    public boolean userIsAdminCtsc(UUID requesterId) {
+        return getUser(requesterId).getRoles().equals(INTERNAL_ADMIN_CTSC);
     }
 }
