@@ -9,11 +9,13 @@ import org.junit.jupiter.api.TestInstance;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.testcontainers.shaded.com.fasterxml.jackson.core.JsonProcessingException;
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 import uk.gov.hmcts.reform.pip.account.management.model.AzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.MediaApplicationStatus;
+import uk.gov.hmcts.reform.pip.account.management.service.AuthorisationService;
 import uk.gov.hmcts.reform.pip.account.management.utils.OAuthClient;
 import uk.gov.hmcts.reform.pip.account.management.utils.SmokeTestBase;
 import uk.gov.hmcts.reform.pip.model.account.PiUser;
@@ -27,6 +29,7 @@ import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
 import static org.springframework.http.HttpStatus.CREATED;
 import static org.springframework.http.HttpStatus.OK;
 
@@ -43,7 +46,7 @@ class SmokeTest extends SmokeTestBase {
     private static final String TESTING_SUPPORT_APPLICATION_URL = "/testing-support/application/";
 
     private static final String ISSUER_ID_HEADER = "x-issuer-id";
-    private static final String ISSUER_ID = UUID.randomUUID().toString();
+    private static final UUID ISSUER_ID = UUID.randomUUID();
     private static final String TEST_FIRST_NAME = "SmokeTestFirstName";
     private static final String TEST_SURNAME = "SmokeTestSurname";
     private static final String TEST_DISPLAY_NAME = "SmokeTestName";
@@ -58,6 +61,9 @@ class SmokeTest extends SmokeTestBase {
 
     private static final String STATUS_CODE_MATCH = "Status code does not match";
     private static final String RESPONSE_BODY_MATCH = "Response body does not match";
+
+    @MockitoBean
+    private AuthorisationService authorisationService;
 
     @BeforeAll
     public void setup() {
@@ -92,12 +98,14 @@ class SmokeTest extends SmokeTestBase {
         azureAccount.setRole(Roles.VERIFIED);
         azureAccount.setEmail(TEST_EMAIL);
 
-        Response response = doPostRequest(CREATE_AZURE_ACCOUNT_URL, Map.of(ISSUER_ID_HEADER, ISSUER_ID),
+        when(authorisationService.userCanCreateAzureAccount(ISSUER_ID)).thenReturn(true);
+
+        Response response = doPostRequest(CREATE_AZURE_ACCOUNT_URL, Map.of(ISSUER_ID_HEADER, ISSUER_ID.toString()),
                                           OBJECT_MAPPER.writeValueAsString(List.of(azureAccount)));
 
         String azureAccountId = response.getBody().as(AZURE_ACCOUNT_RESPONSE_TYPE)
             .get(CreationEnum.CREATED_ACCOUNTS)
-            .get(0)
+            .getFirst()
             .getAzureAccountId();
 
         PiUser piUser = new PiUser();
@@ -108,7 +116,7 @@ class SmokeTest extends SmokeTestBase {
         piUser.setUserProvenance(UserProvenances.PI_AAD);
         piUser.setProvenanceUserId(azureAccountId);
 
-        response = doPostRequest(CREATE_PI_ACCOUNT_URL, Map.of(ISSUER_ID_HEADER, ISSUER_ID),
+        response = doPostRequest(CREATE_PI_ACCOUNT_URL, Map.of(ISSUER_ID_HEADER, ISSUER_ID.toString()),
                                  OBJECT_MAPPER.writeValueAsString(List.of(piUser)));
 
         assertThat(response.getStatusCode())
