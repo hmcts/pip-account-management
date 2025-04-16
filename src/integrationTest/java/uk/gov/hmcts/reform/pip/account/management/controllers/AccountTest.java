@@ -799,28 +799,6 @@ class AccountTest extends IntegrationTestBase {
 
     @Test
     void testUpdateAccountRoleByIdWithoutAdminIdReturnsForbidden() throws Exception {
-//        validUser.setUserProvenance(UserProvenances.CFT_IDAM);
-//
-//        when(authorisationService.userCanCreateAccount(REQUESTER_ID, List.of(validUser))).thenReturn(true);
-//
-//        MockHttpServletRequestBuilder createRequest =
-//            MockMvcRequestBuilders
-//                .post(PI_URL)
-//                .content(OBJECT_MAPPER.writeValueAsString(List.of(validUser)))
-//                .header(ISSUER_HEADER, REQUESTER_ID)
-//                .contentType(MediaType.APPLICATION_JSON);
-//
-//        MvcResult responseCreateUser = mockMvc.perform(createRequest)
-//            .andExpect(status().isCreated()).andReturn();
-//        Map<CreationEnum, List<Object>> mappedResponse =
-//            OBJECT_MAPPER.readValue(
-//                responseCreateUser.getResponse().getContentAsString(),
-//                new TypeReference<>() {
-//                }
-//            );
-//
-//        UUID createdUserId = (UUID) mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).getFirst();
-
         UUID userId = UUID.randomUUID();
 
         when(authorisationService.userCanUpdateAccount(userId, REQUESTER_ID)).thenReturn(false);
