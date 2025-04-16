@@ -166,7 +166,7 @@ class AccountControllerTest {
 
         when(accountService.getUserById(uuid)).thenReturn(piUser);
 
-        ResponseEntity<PiUser> response = accountController.getUserById(uuid);
+        ResponseEntity<PiUser> response = accountController.getUserById(ISSUER_ID, uuid);
 
         assertEquals(HttpStatus.OK, response.getStatusCode(), "Expected status code does not match");
 

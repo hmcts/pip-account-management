@@ -31,6 +31,7 @@ import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.MediaApplication;
 import uk.gov.hmcts.reform.pip.account.management.model.MediaApplicationStatus;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
+import uk.gov.hmcts.reform.pip.account.management.service.AuthorisationService;
 import uk.gov.hmcts.reform.pip.account.management.utils.IntegrationTestBase;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
@@ -77,6 +78,8 @@ class TestingSupportApiTest extends IntegrationTestBase {
 
     private static final String ISSUER_HEADER = "x-issuer-id";
     private static final String ISSUER_ID = "87f907d2-eb28-42cc-b6e1-ae2b03f7bba2";
+    private static final String REQUESTER_HEADER = "x-requester-id";
+    private static final UUID REQUESTER_ID = UUID.randomUUID();
 
     private static final String EMAIL_PREFIX = "TEST_789_";
     private static final String EMAIL = EMAIL_PREFIX + "user123@test.com";
@@ -105,6 +108,9 @@ class TestingSupportApiTest extends IntegrationTestBase {
 
     @MockitoBean
     GraphServiceClient graphClient;
+
+    @MockitoBean
+    private AuthorisationService authorisationService;
 
     @Mock
     private UsersRequestBuilder usersRequestBuilder;
@@ -161,8 +167,11 @@ class TestingSupportApiTest extends IntegrationTestBase {
         when(usersRequestBuilder.byUserId(any())).thenReturn(userItemRequestBuilder);
         when(userItemRequestBuilder.get()).thenReturn(new User());
 
+        when(authorisationService.userCanViewAccountDetails(REQUESTER_ID)).thenReturn(true);
+
         //Check whether account is created in Pi user table
-        MockHttpServletRequestBuilder getPiUserRequest = get(ACCOUNT_URL + createdAccount.getUserId());
+        MockHttpServletRequestBuilder getPiUserRequest = get(ACCOUNT_URL + createdAccount.getUserId())
+            .header(REQUESTER_HEADER, REQUESTER_ID);
 
         MvcResult responseGetUser = mockMvc.perform(getPiUserRequest).andExpect(status().isOk()).andReturn();
 
@@ -182,7 +191,7 @@ class TestingSupportApiTest extends IntegrationTestBase {
             .isEqualTo("1 account(s) deleted with email starting with " + EMAIL_PREFIX);
 
         //Check whether the user deleted in Pi user table
-        mockMvc.perform(get(ACCOUNT_URL + createdAccount.getUserId()))
+        mockMvc.perform(get(ACCOUNT_URL + createdAccount.getUserId()).header(REQUESTER_HEADER, REQUESTER_ID))
             .andExpect(status().isNotFound());
     }
 
@@ -239,10 +248,12 @@ class TestingSupportApiTest extends IntegrationTestBase {
 
         PiUser user = createUser();
 
+        when(authorisationService.userCanCreateAccount(REQUESTER_ID, List.of(user))).thenReturn(true);
+
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(ACCOUNT_ADD_USER_URL)
             .content(OBJECT_MAPPER.writeValueAsString(List.of(user)))
-            .header(ISSUER_HEADER, ISSUER_ID)
+            .header(ISSUER_HEADER, REQUESTER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult postResponse = mockMvc.perform(mockHttpServletRequestBuilder)
@@ -258,8 +269,10 @@ class TestingSupportApiTest extends IntegrationTestBase {
             .as("No account created")
             .hasSize(1);
 
+        when(authorisationService.userCanViewAccountDetails(REQUESTER_ID)).thenReturn(true);
+
         String userId = mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).get(0);
-        mockMvc.perform(get(ACCOUNT_URL + userId))
+        mockMvc.perform(get(ACCOUNT_URL + userId).header(REQUESTER_HEADER, REQUESTER_ID))
             .andExpect(status().isOk());
 
         MvcResult deleteResponse = mockMvc.perform(delete(TESTING_SUPPORT_ACCOUNT_URL + EMAIL_PREFIX))
@@ -270,7 +283,7 @@ class TestingSupportApiTest extends IntegrationTestBase {
             .as("Media application delete response does not match")
             .isEqualTo("1 account(s) deleted with email starting with " + EMAIL_PREFIX);
 
-        mockMvc.perform(get(ACCOUNT_URL + userId))
+        mockMvc.perform(get(ACCOUNT_URL + userId).header(REQUESTER_HEADER, REQUESTER_ID))
             .andExpect(status().isNotFound());
     }
 
@@ -278,7 +291,10 @@ class TestingSupportApiTest extends IntegrationTestBase {
     void testTestingSupportDeleteApplicationsWithEmailPrefix() throws Exception {
         MediaApplication application = createApplication();
 
-        mockMvc.perform(get(APPLICATION_URL + "/" + application.getId()))
+        when(authorisationService.userCanViewMediaApplications(REQUESTER_ID)).thenReturn(true);
+
+        mockMvc.perform(get(APPLICATION_URL + "/" + application.getId())
+            .header(REQUESTER_HEADER, REQUESTER_ID))
             .andExpect(status().isOk());
 
         MvcResult deleteResponse = mockMvc.perform(delete(TESTING_SUPPORT_APPLICATION_URL + EMAIL_PREFIX))
@@ -289,7 +305,8 @@ class TestingSupportApiTest extends IntegrationTestBase {
             .as("Media application delete response does not match")
             .isEqualTo("1 media application(s) deleted with email starting with " + EMAIL_PREFIX);
 
-        mockMvc.perform(get(APPLICATION_URL + "/" + application.getId()))
+        mockMvc.perform(get(APPLICATION_URL + "/" + application.getId())
+            .header(REQUESTER_HEADER, REQUESTER_ID))
             .andExpect(status().isNotFound());
     }
 
@@ -297,7 +314,9 @@ class TestingSupportApiTest extends IntegrationTestBase {
     void testTestingSupportDeleteAuditLogsWithEmailPrefix() throws Exception {
         AuditLog auditLog = createAuditLog();
 
-        mockMvc.perform(get(AUDIT_URL + "/" + auditLog.getId()))
+        when(authorisationService.userCanRequestAuditLogs(REQUESTER_ID)).thenReturn(true);
+
+        mockMvc.perform(get(AUDIT_URL + "/" + auditLog.getId()).header(REQUESTER_HEADER, REQUESTER_ID))
             .andExpect(status().isOk());
 
         MvcResult deleteResponse = mockMvc.perform(delete(TESTING_SUPPORT_AUDIT_URL + EMAIL_PREFIX))
@@ -308,7 +327,7 @@ class TestingSupportApiTest extends IntegrationTestBase {
             .as("Audit Log delete response does not match")
             .isEqualTo("2 audit log(s) deleted with user email starting with " + EMAIL_PREFIX);
 
-        mockMvc.perform(get(AUDIT_URL + "/" + auditLog.getId()))
+        mockMvc.perform(get(AUDIT_URL + "/" + auditLog.getId()).header(REQUESTER_HEADER, REQUESTER_ID))
             .andExpect(status().isNotFound());
     }
 
@@ -317,7 +336,9 @@ class TestingSupportApiTest extends IntegrationTestBase {
         AuditLog auditLog = createAuditLog();
         LocalDate expiredDate = auditLog.getTimestamp().minusDays(200).toLocalDate();
 
-        mockMvc.perform(get(AUDIT_URL + "/" + auditLog.getId()))
+        when(authorisationService.userCanRequestAuditLogs(REQUESTER_ID)).thenReturn(true);
+
+        mockMvc.perform(get(AUDIT_URL + "/" + auditLog.getId()).header(REQUESTER_HEADER, REQUESTER_ID))
             .andExpect(status().isOk());
 
         MvcResult updateAudit = mockMvc.perform(put(TESTING_SUPPORT_AUDIT_URL + auditLog.getId()))
