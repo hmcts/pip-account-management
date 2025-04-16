@@ -12,6 +12,7 @@ import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -20,6 +21,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import uk.gov.hmcts.reform.pip.account.management.Application;
 import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
+import uk.gov.hmcts.reform.pip.account.management.service.AuthorisationService;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
 import uk.gov.hmcts.reform.pip.model.publication.ListType;
@@ -32,6 +34,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.mockito.Mockito.when;
 
 @SpringBootTest(classes = {Application.class}, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
@@ -45,9 +48,12 @@ class SensitivityTest {
     @Autowired
     private MockMvc mockMvc;
 
+    @MockitoBean
+    private AuthorisationService authorisationService;
+
     private static final String ROOT_URL = "/account";
     private static final String PI_URL = ROOT_URL + "/add/pi";
-    private static final String ISSUER_ID = "87f907d2-eb28-42cc-b6e1-ae2b03f7bba2";
+    private static final UUID ISSUER_ID = UUID.randomUUID();
     private static final String ISSUER_HEADER = "x-issuer-id";
     private static final String EMAIL = "a@b.com";
     private static final String URL_FORMAT = "%s/isAuthorised/%s/%s/%s";
@@ -62,12 +68,12 @@ class SensitivityTest {
 
     @SuppressWarnings("PMD.SignatureDeclareThrowsException")
     private String createUserAndGetId(PiUser validUser) throws Exception {
+        when(authorisationService.userCanCreateAccount(ISSUER_ID, List.of(validUser))).thenReturn(true);
         MockHttpServletRequestBuilder setupRequest = MockMvcRequestBuilders
             .post(PI_URL)
             .content(objectMapper.writeValueAsString(List.of(validUser)))
             .header(ISSUER_HEADER, ISSUER_ID)
             .contentType(MediaType.APPLICATION_JSON);
-
         MvcResult userResponse = mockMvc.perform(setupRequest).andExpect(status().isCreated()).andReturn();
         Map<CreationEnum, List<Object>> mappedResponse =
             objectMapper.readValue(userResponse.getResponse().getContentAsString(),

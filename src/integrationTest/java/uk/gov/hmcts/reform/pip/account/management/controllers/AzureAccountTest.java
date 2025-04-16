@@ -20,6 +20,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
@@ -31,6 +32,7 @@ import uk.gov.hmcts.reform.pip.account.management.model.AzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
 import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredAzureAccount;
+import uk.gov.hmcts.reform.pip.account.management.service.AuthorisationService;
 import uk.gov.hmcts.reform.pip.account.management.utils.IntegrationTestBase;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
@@ -67,7 +69,7 @@ class AzureAccountTest extends IntegrationTestBase {
     private static final String INVALID_EMAIL = "ab";
     private static final String FIRST_NAME = "First name";
     private static final String SURNAME = "Surname";
-    private static final String ISSUER_ID = "1234-1234-1234-1234";
+    private static final UUID ISSUER_ID = UUID.randomUUID();
     private static final String ISSUER_HEADER = "x-issuer-id";
     private static final String GIVEN_NAME = "Given Name";
     private static final String ID = "1234";
@@ -112,6 +114,9 @@ class AzureAccountTest extends IntegrationTestBase {
     @Mock
     private ClientConfiguration clientConfiguration;
 
+    @MockitoBean
+    private AuthorisationService authorisationService;
+
     private static PiUser createUser(boolean valid, String id) {
         PiUser user = new PiUser();
         user.setEmail(valid ? EMAIL : INVALID_EMAIL);
@@ -153,6 +158,8 @@ class AzureAccountTest extends IntegrationTestBase {
 
         when(graphClient.users()).thenReturn(usersRequestBuilder);
         when(usersRequestBuilder.post(any())).thenReturn(userToReturn);
+
+        when(authorisationService.userCanCreateAzureAccount(ISSUER_ID)).thenReturn(true);
     }
 
     @AfterEach
@@ -682,6 +689,8 @@ class AzureAccountTest extends IntegrationTestBase {
     @Test
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testUnauthorizedCreateAccount() throws Exception {
+        when(authorisationService.userCanCreateAzureAccount(ISSUER_ID)).thenReturn(false);
+
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(AZURE_URL)
             .content("[]")
@@ -712,7 +721,7 @@ class AzureAccountTest extends IntegrationTestBase {
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testUnauthorizedGetAzureUserInfo() throws Exception {
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
-            .get(ROOT_URL + "/azure/" + VALID_USER.getProvenanceUserId());
+            .get(ROOT_URL + AZURE_PATH + VALID_USER.getProvenanceUserId());
 
         MvcResult mvcResult = mockMvc.perform(request).andExpect(status().isForbidden()).andReturn();
 

@@ -184,11 +184,11 @@ public class AuthorisationService {
         return isAuthorisedUser;
     }
 
-    public boolean userIsSystemAdmin(UUID requesterId) {
+    boolean userIsSystemAdmin(UUID requesterId) {
         return getUser(requesterId).getRoles().equals(SYSTEM_ADMIN);
     }
 
-    public boolean userIsAdminCtsc(UUID requesterId) {
+    boolean userIsAdminCtsc(UUID requesterId) {
         return getUser(requesterId).getRoles().equals(INTERNAL_ADMIN_CTSC);
     }
 }
