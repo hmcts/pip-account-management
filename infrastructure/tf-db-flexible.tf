@@ -30,7 +30,7 @@ module "postgresql" {
   pgsql_server_configuration = [
     {
       name  = "azure.extensions"
-      value = "plpgsql, pg_stat_statements, pg_buffercache, dblink"
+      value = "pg_stat_statements, pg_buffercache, dblink"
     }
   ]
 
