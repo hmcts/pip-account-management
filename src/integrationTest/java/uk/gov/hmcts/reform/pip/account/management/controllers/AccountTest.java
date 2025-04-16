@@ -799,66 +799,34 @@ class AccountTest extends IntegrationTestBase {
 
     @Test
     void testUpdateAccountRoleByIdWithoutAdminIdReturnsForbidden() throws Exception {
-        validUser.setUserProvenance(UserProvenances.CFT_IDAM);
+//        validUser.setUserProvenance(UserProvenances.CFT_IDAM);
+//
+//        when(authorisationService.userCanCreateAccount(REQUESTER_ID, List.of(validUser))).thenReturn(true);
+//
+//        MockHttpServletRequestBuilder createRequest =
+//            MockMvcRequestBuilders
+//                .post(PI_URL)
+//                .content(OBJECT_MAPPER.writeValueAsString(List.of(validUser)))
+//                .header(ISSUER_HEADER, REQUESTER_ID)
+//                .contentType(MediaType.APPLICATION_JSON);
+//
+//        MvcResult responseCreateUser = mockMvc.perform(createRequest)
+//            .andExpect(status().isCreated()).andReturn();
+//        Map<CreationEnum, List<Object>> mappedResponse =
+//            OBJECT_MAPPER.readValue(
+//                responseCreateUser.getResponse().getContentAsString(),
+//                new TypeReference<>() {
+//                }
+//            );
+//
+//        UUID createdUserId = (UUID) mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).getFirst();
 
-        when(authorisationService.userCanCreateAccount(REQUESTER_ID, List.of(validUser))).thenReturn(true);
+        UUID userId = UUID.randomUUID();
 
-        MockHttpServletRequestBuilder createRequest =
-            MockMvcRequestBuilders
-                .post(PI_URL)
-                .content(OBJECT_MAPPER.writeValueAsString(List.of(validUser)))
-                .header(ISSUER_HEADER, REQUESTER_ID)
-                .contentType(MediaType.APPLICATION_JSON);
-
-        MvcResult responseCreateUser = mockMvc.perform(createRequest)
-            .andExpect(status().isCreated()).andReturn();
-        Map<CreationEnum, List<Object>> mappedResponse =
-            OBJECT_MAPPER.readValue(
-                responseCreateUser.getResponse().getContentAsString(),
-                new TypeReference<>() {
-                }
-            );
-
-        UUID createdUserId = (UUID) mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).getFirst();
-
-        when(authorisationService.userCanUpdateAccount(createdUserId, REQUESTER_ID)).thenReturn(false);
-
-        MockHttpServletRequestBuilder updateRequest = MockMvcRequestBuilders
-            .put(ROOT_URL + UPDATE_PATH + createdUserId + "/" + Roles.INTERNAL_ADMIN_LOCAL)
-            .header(ADMIN_HEADER, REQUESTER_ID);
-
-        mockMvc.perform(updateRequest)
-            .andExpect(status().isForbidden());
-    }
-
-    @Test
-    void testUpdateAccountRoleByIdWithForbiddenAdminRole() throws Exception {
-        validUser.setUserProvenance(UserProvenances.CFT_IDAM);
-
-        when(authorisationService.userCanCreateAccount(REQUESTER_ID, List.of(validUser))).thenReturn(true);
-
-        MockHttpServletRequestBuilder createRequest =
-            MockMvcRequestBuilders
-                .post(PI_URL)
-                .content(OBJECT_MAPPER.writeValueAsString(List.of(validUser)))
-                .header(ISSUER_HEADER, REQUESTER_ID)
-                .contentType(MediaType.APPLICATION_JSON);
-
-        MvcResult responseCreateUser = mockMvc.perform(createRequest)
-            .andExpect(status().isCreated()).andReturn();
-        Map<CreationEnum, List<Object>> mappedResponse =
-            OBJECT_MAPPER.readValue(
-                responseCreateUser.getResponse().getContentAsString(),
-                new TypeReference<>() {
-                }
-            );
-
-        UUID createdUserId = (UUID) mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).getFirst();
-
-        when(authorisationService.userCanUpdateAccount(createdUserId, REQUESTER_ID)).thenReturn(false);
+        when(authorisationService.userCanUpdateAccount(userId, REQUESTER_ID)).thenReturn(false);
 
         MockHttpServletRequestBuilder updateRequest = MockMvcRequestBuilders
-            .put(ROOT_URL + UPDATE_PATH + createdUserId + "/" + Roles.INTERNAL_ADMIN_LOCAL)
+            .put(ROOT_URL + UPDATE_PATH + userId + "/" + Roles.INTERNAL_ADMIN_LOCAL)
             .header(ADMIN_HEADER, REQUESTER_ID);
 
         mockMvc.perform(updateRequest)
