@@ -10,9 +10,12 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.hmcts.reform.pip.account.management.database.SubscriptionRepository;
 import uk.gov.hmcts.reform.pip.account.management.database.UserRepository;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.NotFoundException;
-import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
+import uk.gov.hmcts.reform.pip.account.management.model.account.PiUser;
+import uk.gov.hmcts.reform.pip.account.management.model.subscription.Subscription;
+import uk.gov.hmcts.reform.pip.account.management.service.account.AccountService;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
 
@@ -23,15 +26,20 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-@SuppressWarnings({"PMD.TooManyMethods", "PMD.JUnitTestsShouldIncludeAssert"})
 class AuthorisationServiceTest {
     private static final UUID USER_ID = UUID.randomUUID();
+    private static final UUID ANOTHER_USER_ID = UUID.randomUUID();
     private static final UUID ADMIN_USER_ID = UUID.randomUUID();
+    private static final UUID SUBSCRIPTION_ID = UUID.randomUUID();
+    private static final UUID SUBSCRIPTION_ID2 = UUID.randomUUID();
+    private static final UUID SUBSCRIPTION_ID3 = UUID.randomUUID();
 
     private static final String DELETE_ERROR_LOG = "User with ID %s is forbidden to remove user with ID %s";
     private static final String UPDATE_ERROR_LOG = "User with ID %s is forbidden to update user with ID %s";
@@ -47,6 +55,11 @@ class AuthorisationServiceTest {
     private static final String CAN_CREATE_ACCOUNT_MESSAGE = "User should be able to create account";
     private static final String CANNOT_CREATE_ACCOUNT_MESSAGE = "User should not be able to create account";
 
+    private static final String CAN_DELETE_SUBSCRIPTION_MESSAGE = "User should be able to delete subscription";
+    private static final String CANNOT_DELETE_SUBSCRIPTION_MESSAGE = "User should not be able to delete subscription";
+    private static final String ERROR_LOG = "User %s is forbidden to remove subscription with ID %s belongs to "
+        + "another user %s";
+
     private static final String LOG_EMPTY_MESSAGE = "Error log should be empty";
     private static final String LOG_NOT_EMPTY_MESSAGE = "Error log should not be empty";
     private static final String LOG_MATCHED_MESSAGE = "Error log message does not match";
@@ -55,16 +68,30 @@ class AuthorisationServiceTest {
     private static PiUser user = new PiUser();
     private static PiUser adminUser = new PiUser();
 
+    private static Subscription subscription = new Subscription();
+    private static Subscription subscription2 = new Subscription();
+    private static Subscription subscription3 = new Subscription();
+
     @Mock
-    UserRepository userRepository;
+    private UserRepository userRepository;
+
+    @Mock
+    private SubscriptionRepository subscriptionRepository;
+
+    @Mock
+    private AccountService accountService;
 
     @InjectMocks
-    AuthorisationService authorisationService;
+    private AuthorisationService authorisationService;
 
     @BeforeAll
     static void setup() {
         user.setUserId(USER_ID);
         adminUser.setUserId(ADMIN_USER_ID);
+
+        subscription.setId(SUBSCRIPTION_ID);
+        subscription2.setId(SUBSCRIPTION_ID2);
+        subscription3.setId(SUBSCRIPTION_ID3);
     }
 
     @ParameterizedTest
@@ -707,6 +734,156 @@ class AuthorisationServiceTest {
 
             assertThat(logCaptor.getErrorLogs().get(0)).contains(
                 String.format("User with ID %s is forbidden to create a B2C system admin", userId));
+        }
+    }
+
+    @Test
+    void testSystemAdminUserCanDeleteSubscription() {
+        user.setRoles(Roles.SYSTEM_ADMIN);
+        when(accountService.getUserById(USER_ID)).thenReturn(user);
+
+        try (LogCaptor logCaptor = LogCaptor.forClass(AuthorisationService.class)) {
+            assertThat(authorisationService.userCanDeleteSubscriptions(USER_ID, SUBSCRIPTION_ID))
+                .as(CAN_DELETE_SUBSCRIPTION_MESSAGE)
+                .isTrue();
+
+            verifyNoInteractions(subscriptionRepository);
+            assertThat(logCaptor.getErrorLogs())
+                .as(LOG_EMPTY_MESSAGE)
+                .isEmpty();
+        }
+    }
+
+    @Test
+    void testAdminUserCannotDeleteSubscriptionIfUserMismatched() {
+        user.setRoles(Roles.INTERNAL_ADMIN_LOCAL);
+        subscription.setUserId(ANOTHER_USER_ID);
+        when(accountService.getUserById(USER_ID)).thenReturn(user);
+        when(subscriptionRepository.findById(SUBSCRIPTION_ID)).thenReturn(Optional.of(subscription));
+
+        try (LogCaptor logCaptor = LogCaptor.forClass(AuthorisationService.class)) {
+            assertThat(authorisationService.userCanDeleteSubscriptions(USER_ID, SUBSCRIPTION_ID))
+                .as(CANNOT_DELETE_SUBSCRIPTION_MESSAGE)
+                .isFalse();
+
+            assertThat(logCaptor.getErrorLogs())
+                .as(LOG_NOT_EMPTY_MESSAGE)
+                .hasSize(1);
+
+            assertThat(logCaptor.getErrorLogs().get(0))
+                .as(LOG_MATCHED_MESSAGE)
+                .contains(String.format(ERROR_LOG, USER_ID, SUBSCRIPTION_ID, ANOTHER_USER_ID));
+        }
+    }
+
+    @Test
+    void testVerifiedUserCannotDeleteSubscriptionIfUserMismatched() {
+        user.setRoles(Roles.VERIFIED);
+        subscription.setUserId(ANOTHER_USER_ID);
+        when(accountService.getUserById(USER_ID)).thenReturn(user);
+        when(subscriptionRepository.findById(SUBSCRIPTION_ID)).thenReturn(Optional.of(subscription));
+
+        try (LogCaptor logCaptor = LogCaptor.forClass(AuthorisationService.class)) {
+            assertThat(authorisationService.userCanDeleteSubscriptions(USER_ID, SUBSCRIPTION_ID))
+                .as(CANNOT_DELETE_SUBSCRIPTION_MESSAGE)
+                .isFalse();
+
+            assertThat(logCaptor.getErrorLogs())
+                .as(LOG_NOT_EMPTY_MESSAGE)
+                .hasSize(1);
+
+            assertThat(logCaptor.getErrorLogs().get(0))
+                .as(LOG_MATCHED_MESSAGE)
+                .contains(String.format(ERROR_LOG, USER_ID, SUBSCRIPTION_ID, ANOTHER_USER_ID));
+        }
+    }
+
+    @Test
+    void testUserCanDeleteSubscriptionIfUserMatchedInSingleSubscription() {
+        user.setRoles(Roles.INTERNAL_ADMIN_LOCAL);
+        subscription.setUserId(USER_ID);
+        when(accountService.getUserById(USER_ID)).thenReturn(user);
+        when(subscriptionRepository.findById(SUBSCRIPTION_ID)).thenReturn(Optional.of(subscription));
+
+        try (LogCaptor logCaptor = LogCaptor.forClass(AuthorisationService.class)) {
+            assertThat(authorisationService.userCanDeleteSubscriptions(USER_ID, SUBSCRIPTION_ID))
+                .as(CAN_DELETE_SUBSCRIPTION_MESSAGE)
+                .isTrue();
+
+            assertThat(logCaptor.getErrorLogs())
+                .as(LOG_EMPTY_MESSAGE)
+                .isEmpty();
+        }
+    }
+
+    @Test
+    void testUserCanDeleteSubscriptionIfUserMatchedInAllSubscriptions() {
+        user.setRoles(Roles.INTERNAL_ADMIN_LOCAL);
+        subscription.setUserId(USER_ID);
+        subscription2.setUserId(USER_ID);
+        subscription3.setUserId(USER_ID);
+
+        when(accountService.getUserById(USER_ID)).thenReturn(user);
+        when(subscriptionRepository.findById(SUBSCRIPTION_ID)).thenReturn(Optional.of(subscription));
+        when(subscriptionRepository.findById(SUBSCRIPTION_ID2)).thenReturn(Optional.of(subscription2));
+        when(subscriptionRepository.findById(SUBSCRIPTION_ID3)).thenReturn(Optional.of(subscription3));
+
+        try (LogCaptor logCaptor = LogCaptor.forClass(AuthorisationService.class)) {
+            assertThat(authorisationService.userCanDeleteSubscriptions(USER_ID, SUBSCRIPTION_ID, SUBSCRIPTION_ID2,
+                                                                       SUBSCRIPTION_ID3))
+                .as(CAN_DELETE_SUBSCRIPTION_MESSAGE)
+                .isTrue();
+
+            assertThat(logCaptor.getErrorLogs())
+                .as(LOG_EMPTY_MESSAGE)
+                .isEmpty();
+        }
+    }
+
+    @Test
+    void testUserCannotDeleteSubscriptionIfUserMisMatchedInSomeOfTheSubscriptions() {
+        user.setRoles(Roles.INTERNAL_ADMIN_LOCAL);
+        subscription.setUserId(USER_ID);
+        subscription2.setUserId(ANOTHER_USER_ID);
+        subscription3.setUserId(USER_ID);
+
+        try (LogCaptor logCaptor = LogCaptor.forClass(AuthorisationService.class)) {
+            when(accountService.getUserById(USER_ID)).thenReturn(user);
+            when(subscriptionRepository.findById(SUBSCRIPTION_ID)).thenReturn(Optional.of(subscription));
+            when(subscriptionRepository.findById(SUBSCRIPTION_ID2)).thenReturn(Optional.of(subscription2));
+
+            assertThat(authorisationService.userCanDeleteSubscriptions(USER_ID, SUBSCRIPTION_ID, SUBSCRIPTION_ID2,
+                                                                       SUBSCRIPTION_ID3
+            ))
+                .as(CANNOT_DELETE_SUBSCRIPTION_MESSAGE)
+                .isFalse();
+
+            assertThat(logCaptor.getErrorLogs())
+                .as(LOG_NOT_EMPTY_MESSAGE)
+                .hasSize(1);
+
+            assertThat(logCaptor.getErrorLogs().get(0))
+                .as(LOG_MATCHED_MESSAGE)
+                .contains(String.format(ERROR_LOG, USER_ID, SUBSCRIPTION_ID2, ANOTHER_USER_ID));
+
+            verify(subscriptionRepository, never()).findById(SUBSCRIPTION_ID3);
+        }
+    }
+
+    @Test
+    void testUserCanDeleteSubscriptionReturnsTrueIfSubscriptionNotFound() {
+        user.setRoles(Roles.INTERNAL_ADMIN_LOCAL);
+        when(accountService.getUserById(USER_ID)).thenReturn(user);
+        when(subscriptionRepository.findById(SUBSCRIPTION_ID)).thenReturn(Optional.empty());
+
+        try (LogCaptor logCaptor = LogCaptor.forClass(AuthorisationService.class)) {
+            assertThat(authorisationService.userCanDeleteSubscriptions(USER_ID, SUBSCRIPTION_ID))
+                .as(CAN_DELETE_SUBSCRIPTION_MESSAGE)
+                .isTrue();
+
+            assertThat(logCaptor.getErrorLogs())
+                .as(LOG_EMPTY_MESSAGE)
+                .isEmpty();
         }
     }
 }

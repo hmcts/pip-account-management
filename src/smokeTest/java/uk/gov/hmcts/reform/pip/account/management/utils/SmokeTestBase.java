@@ -12,6 +12,7 @@ import org.springframework.util.CollectionUtils;
 import java.io.File;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static io.restassured.RestAssured.given;
@@ -21,10 +22,16 @@ import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
 @SpringBootTest(classes = {OAuthClient.class}, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class SmokeTestBase {
-    private String accessToken;
+    private static final String TESTING_SUPPORT_LOCATION_URL = "/testing-support/location/";
 
-    @Value("${TEST_URL:http://localhost:6969}")
+    private String accessToken;
+    private String dataManagementAccessToken;
+
+    @Value("${test-url}")
     private String testUrl;
+
+    @Value("${data-management-test-url}")
+    private String dataManagementUrl;
 
     @Autowired
     private OAuthClient authClient;
@@ -33,6 +40,7 @@ public class SmokeTestBase {
     void startup() {
         RestAssured.baseURI = testUrl;
         accessToken = authClient.generateAccessToken();
+        dataManagementAccessToken = authClient.generateDataManagementAccessToken();
     }
 
     protected Response doGetRequest(final String path) {
@@ -44,7 +52,7 @@ public class SmokeTestBase {
     }
 
     protected Response doPostRequest(final String path, final Map<String, String> additionalHeaders,
-                                     final String body) {
+                                     final Object body) {
         return given()
             .relaxedHTTPSValidation()
             .headers(getRequestHeaders(additionalHeaders))
@@ -78,6 +86,27 @@ public class SmokeTestBase {
             .thenReturn();
     }
 
+    protected Response createTestLocation(String locationId, String locationName) {
+        return given()
+            .relaxedHTTPSValidation()
+            .headers(getRequestHeaders(Map.of(AUTHORIZATION, "Bearer " + dataManagementAccessToken)))
+            .baseUri(dataManagementUrl)
+            .body(locationName)
+            .when()
+            .post(TESTING_SUPPORT_LOCATION_URL + "/" + locationId)
+            .thenReturn();
+    }
+
+    protected Response deleteTestLocation(String locationName) {
+        return given()
+            .relaxedHTTPSValidation()
+            .headers(getRequestHeaders(Map.of(AUTHORIZATION, "Bearer " + dataManagementAccessToken)))
+            .baseUri(dataManagementUrl)
+            .when()
+            .delete(TESTING_SUPPORT_LOCATION_URL + locationName)
+            .thenReturn();
+    }
+
     private Map<String, String> getRequestHeaders(final Map<String, String> additionalHeaders) {
         final Map<String, String> headers = new ConcurrentHashMap<>();
         headers.put(AUTHORIZATION, "bearer " + accessToken);
@@ -87,5 +116,10 @@ public class SmokeTestBase {
             headers.putAll(additionalHeaders);
         }
         return headers;
+    }
+
+    protected static String createRandomId() {
+        Integer randomNumber = 10_000 + new Random(System.currentTimeMillis()).nextInt(20_000);
+        return randomNumber.toString();
     }
 }

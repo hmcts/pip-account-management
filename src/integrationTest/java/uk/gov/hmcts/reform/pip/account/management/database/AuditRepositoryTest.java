@@ -8,7 +8,7 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.test.context.ActiveProfiles;
-import uk.gov.hmcts.reform.pip.account.management.model.AuditLog;
+import uk.gov.hmcts.reform.pip.account.management.model.account.AuditLog;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
 import uk.gov.hmcts.reform.pip.model.enums.AuditAction;

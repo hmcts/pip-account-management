@@ -20,12 +20,35 @@ public class OAuthClient {
     @Value("${APP_URI}")
     private String scope;
 
+    @Value("${DATA_MANAGEMENT_AZ_API}")
+    private String scopeDataManagement;
+
     public String generateAccessToken() {
         String token = given()
             .relaxedHTTPSValidation()
             .header("content-type", "application/x-www-form-urlencoded")
             .formParam("client_id", clientId)
             .formParam("scope", scope + "/.default")
+            .formParam("client_secret", clientSecret)
+            .formParam("grant_type", "client_credentials")
+            .baseUri("https://login.microsoftonline.com/" + tenantId + "/oauth2/v2.0/token")
+            .post()
+            .body()
+            .jsonPath()
+            .get("access_token");
+
+        if (token == null) {
+            throw new AuthException("Unable to generate access token for the API");
+        }
+        return token;
+    }
+
+    public String generateDataManagementAccessToken() {
+        String token = given()
+            .relaxedHTTPSValidation()
+            .header("content-type", "application/x-www-form-urlencoded")
+            .formParam("client_id", clientId)
+            .formParam("scope", scopeDataManagement + "/.default")
             .formParam("client_secret", clientSecret)
             .formParam("grant_type", "client_credentials")
             .baseUri("https://login.microsoftonline.com/" + tenantId + "/oauth2/v2.0/token")

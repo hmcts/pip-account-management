@@ -1,0 +1,49 @@
+{
+  "artefactId": "3a2ae055-8f57-4e9c-bedb-5e3190da74b4",
+  "provenance": "CFT",
+  "sourceArtefactId": "123445d",
+  "type": "LIST",
+  "sensitivity": "CLASSIFIED",
+  "language": "ENGLISH",
+  "search": {
+    "cases": [
+      {
+        "caseNumber": "TC1",
+        "caseName": "A1 Vs B1",
+        "caseUrn": null
+      },
+      {
+        "caseNumber": "112233445",
+        "caseName": "A2 Vs B2",
+        "caseUrn": null
+      },
+      {
+        "caseNumber": "12345678",
+        "caseName": "A1 Vs B1",
+        "caseUrn": "N363N6R4OG"
+      },
+      {
+        "caseNumber": "112233445",
+        "caseName": "A2 Vs B2",
+        "caseUrn": null
+      },
+      {
+        "caseNumber": "T485914",
+        "caseName": "A1 Vs B1",
+        "caseUrn": null
+      },
+      {
+        "caseNumber": "112233445",
+        "caseName": "A2 Vs B2",
+        "caseUrn": null
+      }
+    ]
+  },
+  "displayFrom": "2022-02-24T07:36:35",
+  "displayTo": "2022-03-20T07:36:35",
+  "listType": "CIVIL_DAILY_CAUSE_LIST",
+  "locationId": "9",
+  "contentDate": "2022-01-18T07:36:35",
+  "isFlatFile": false,
+  "payload": "https://pipsssastg.blob.core.windows.net/artefact/123445d-CFT"
+}
