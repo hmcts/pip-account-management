@@ -8,7 +8,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import uk.gov.hmcts.reform.pip.account.management.model.AuditLog;
+import uk.gov.hmcts.reform.pip.account.management.model.account.AuditLog;
 import uk.gov.hmcts.reform.pip.account.management.service.AuditService;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;

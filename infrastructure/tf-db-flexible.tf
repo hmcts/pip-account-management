@@ -25,12 +25,12 @@ module "postgresql" {
   business_area = "sds"
   pgsql_version = "15"
 
-  force_user_permissions_trigger = "1"
+  force_user_permissions_trigger = "2"
 
   pgsql_server_configuration = [
     {
       name  = "azure.extensions"
-      value = "plpgsql, pg_stat_statements, pg_buffercache"
+      value = "pg_stat_statements, pg_buffercache, dblink"
     }
   ]
 
@@ -56,5 +56,5 @@ resource "postgresql_grant" "readonly_mv-flexible" {
   schema      = "public"
   object_type = "table"
   privileges  = ["SELECT"]
-  objects     = ["sdp_mat_view_pi_user"]
+  objects     = ["sdp_mat_view_pi_user", "sdp_mat_view_subscription"]
 }

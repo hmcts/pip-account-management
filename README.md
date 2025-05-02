@@ -5,12 +5,18 @@
 - [Overview](#overview)
 - [Features and Functionality](#features-and-functionality)
 - [Azure B2C Integration](#azure-b2c-integration)
-- [System Admin Accounts](#system-admin-accounts)
+- [User Accounts](#user-accounts)
+  - [System Admin Accounts](#system-admin-accounts)
+  - [Account Application Process](#account-application-process)
+  - [Expired / Inactive Accounts](#expired--inactive-accounts)
 - [List Sensitivity Checking](#list-sensitivity-checking)
   - [Verified Users](#verified-users)
   - [Third Party Users](#third-party-users)
-- [Account Application Process](#account-application-process)
-- [Expired / Inactive Accounts](#expired--inactive-accounts)
+- [Subscription Breakdown](#subscription-breakdown)
+  - [Third Party - List Type Subscriptions](#third-party---list-type-subscription)
+  - [Third Party - Artefact deletion](#third-party---artefact-deletion)
+  - [Verified - Configure by List Type](#verified---configure-by-list-type)
+  - [Subscription Channels](#subscription-channels)
 - [Roles](#roles)
 - [Architecture Diagram](#architecture-diagram)
 - [Getting Started](#getting-started)
@@ -44,25 +50,36 @@
 - [License](#license)
 
 ## Overview
-`pip-account-management` is a microservice that deals with operations related to accounts, including interaction with Azure B2C for PI_AAD users. It also manages the audit functionality.
+`pip-account-management` is a microservice that deals with operations related to accounts and user subscriptions, including interaction with Azure B2C for PI_AAD users. It also manages the audit functionality.
 
-It sits within the Court and Tribunal Hearings Service (CaTH hereafter), written with Spring Boot/Java.
+It handles all subscription CRUD operations and the triggering of the subscription fulfilment process. It does not do the fulfilment itself - this is the responsibility of the publication service.
+
+For context, a subscription is something a user can set up in order to be notified when a new publication is received. There are also third party subscriptions which are set up by administrators, which notify selected third party APIs.
+
+This service sits within the Court and Tribunal Hearings Service (CaTH hereafter), written with Spring Boot/Java.
 
 In practice, the service is usually containerized within a hosted kubernetes environment within Azure.
 
 All interactions with `pip-account-management` are performed through the API (specified in [API Documentation](#api-documentation)) either as a standalone service or via connections to other microservices.
 
 ## Features and Functionality
-
-- Creation of new verified PI_AAD users in Azure B2C and in the PiUser postgres table.
-- Creation of new system admin accounts in Azure B2C and in the PiUser postgres table, and ensures the limit is not breached.
-- For third parties and other IDAMs (e.g. CFT IDAM), creation of the user in the PiUser postgres database.
-- Maintenance of the above users, such as updating roles and deletion of account and subscriptions when expired.
-- Provides functionality to check if a user has permission to see a list based on the sensitivity and list type.
+- User account management
+  - Creation of new verified PI_AAD users in Azure B2C and in the PiUser postgres table.
+  - Creation of new system admin accounts in Azure B2C and in the PiUser postgres table, and ensures the limit is not breached.
+  - For third parties and other IDAMs (e.g. CFT IDAM), creation of the user in the PiUser postgres database.
+  - Maintenance of the above users, such as updating roles and deletion of account and subscriptions when expired.
+  - Provides functionality to check if a user has permission to see a list based on the sensitivity and list type.
+  - Provides the ability to bulk create verified users (follows the same process as point 1)
+  - Manages the account application process for PI_AAD users.
+  - Triggers the sending of emails to users under various conditions (e.g New user, expiring, audit actions).
+- User subscription management
+  - Creation and deletion (including bulk deletion) of subscriptions for a user or third party.
+  - Configuration of which list types a user would like to receive for a subscription.
+  - Ensures that subscriptions are only fulfilled if the user has permission to see the publication.
+  - Provides the ability to delete all subscriptions for a location. This is used when deleting a location from CaTH.
+  - The ability to retrieve all subscription channels, which is used in our Frontend when setting up third party subscriptions.
+  - Triggers a system admin and user email to be sent when subscriptions are deleted due to a location being deleted.
 - Allows the creation of an audit log to log admin activities.
-- Provides the ability to bulk create verified users (follows the same process as point 1)
-- Triggers the sending of emails to users under various conditions (e.g New user, expiring, audit actions).
-- Manages the account application process for PI_AAD users.
 - Provides MI reporting endpoints, which are used to produce the MI report.
 - Flyway for database modifications via SQL ingestion.
 - Secure/Insecure Mode: Use of bearer tokens for authentication with the secure instance (if desired)
@@ -75,11 +92,29 @@ PI_AAD users, excluding third parties, will be stored in Azure B2C. Azure B2C pr
 
 Account management interacts with Azure B2C - storing the user when they are created, updating them when their role changes, or deleting them if they have expired.
 
-## System Admin Accounts
+## User Accounts
+
+### System Admin Accounts
 
 There is a limit to the number of system admin accounts that can be created. This is set using an environment variable: MAX_SYSTEM_ADMIN_ACCOUNTS.
 
 If this is not set, the default maximum number of accounts is 4. The request will be rejected if an attempt is made that causes it to go over this limit.
+
+### Account Application Process
+
+When a user applies for a new PI_AAD verified account they go through an approval process. Account management deals with all CRUD operations associated with this process.
+
+On Approval / Rejection, the uploaded ID file will be deleted.
+
+### Expired / Inactive Accounts
+
+For all users except for third party, there is an inactive account process to ensure accounts are deleted when they are no longer used.
+
+For IDAM and Admin users, this uses the sign in date. For internal, this will use the verified date.
+
+Users will be sent a reminder to login / re-verify 14 days before their account is due to expire.
+
+If they do not complete this process within 14 days, their account will be deleted.
 
 ## List Sensitivity Checking
 
@@ -95,21 +130,41 @@ For CLASSIFIED, rules are applied based on the List Type and Provenance of the u
 
 For third party users, a similar process is applied however is based on List Type + Third Party role. This is also defined in: [enum file](./src/main/java/uk/gov/hmcts/reform/pip/account/management/model/ListType.java)
 
-## Account Application Process
+## Subscription Breakdown
 
-When a user applies for a new PI_AAD verified account they go through an approval process. Account management deals with all CRUD operations associated with this process.
+Each subscription is associated with a user. The user can be a verified user (a person) or a third party.
 
-On Approval / Rejection, the uploaded ID file will be deleted.
+A verified user can subscribe by case number, case URN or a location. It's worth noting that users can subscribe by Case Name in the frontend, however it is mapped to a number or URN in the database.
 
-## Expired / Inactive Accounts
+When a publication comes in via data management, it is checked to see if any subscriptions match any of the above subscription types.
 
-For all users except for third party, there is an inactive account process to ensure accounts are deleted when they are no longer used.
+If it does, and as long as the user has permission to see that publication, a notification is sent to 'pip-publication-services' which will fulfil that subscription.
 
-For IDAM and Admin users, this uses the sign in date. For internal, this will use the verified date.
+### Third Party - List Type Subscription
 
-Users will be sent a reminder to login / re-verify 14 days before their account is due to expire.
+Third party subscriptions are set up by administrators. Third party's can only subscribe by List Type.
 
-If they do not complete this process within 14 days, their account will be deleted.
+In this scenario, as long as the publication matches the list type and the third party has permission to see it, the notification will be sent to 'pip-publication-services' to fulfil the subscription.
+
+### Third Party - Artefact deletion
+
+When an artefact is deleted, 'pip-data-management' will inform 'pip-account-management'.
+
+If any third party subscriptions exist for the deleted artefact, it will trigger an empty artefact deletion request to 'pip-publication-services.
+
+### Verified - Configure by List Type
+
+When a verified user subscribes by location, they also have the ability to configure which list types they would like to receive for that location.
+
+If the user does not configure their list types, then by default all list types are taken into account (following the normal rules of permissions)
+
+If the user does configure which list types they would like to receive, then this will be applied to all location subscriptions that the user has. There is no ability in the frontend for a user to configure list types per location, however if there was a need this service would handle it without any changes.
+
+### Subscription Channels
+
+Each subscription has a channel. For verified users, this is always EMAIL.
+
+For third parties, there can be a number of different API channels. This is selected by the administrator in the frontend when setting up a third party subscription.
 
 ## Roles
 
@@ -117,7 +172,7 @@ Any endpoint that should require authentication, needs to be annotated either at
 
 ## Architecture Diagram
 
-![Architecture Diagram for pip-account-management](./account-man-arch.png)
+![Architecture Diagram for pip-account-management](service-diagram.png)
 
 The above diagram is somewhat simplified for readability (e.g. it does not include secure/insecure communications, but those are covered elsewhere).
 
@@ -166,42 +221,42 @@ Python scripts to quickly grab all environment variables (subject to Azure permi
 
 Below is a table of currently used environment variables for starting the service, along with a descriptor of their purpose and whether they are optional or required.
 
-| Variable                       | Description                                                                                                                                                                                                                                                            | Required? |
-|:-------------------------------|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------|
-| SPRING_PROFILES_ACTIVE         | If set equal to `dev`, the application will run in insecure mode (i.e. no bearer token authentication required for incoming requests.) *Note - if you wish to communicate with other services, you will need to set them all to run in insecure mode in the same way.* | No        |
-| DB_HOST                        | Postgres Hostname                                                                                                                                                                                                                                                      | Yes       |
-| DB_PORT                        | Postgres Port                                                                                                                                                                                                                                                          | Yes       |
-| DB_NAME                        | Postgres Db name                                                                                                                                                                                                                                                       | Yes       |
-| DB_USER                        | Postgres Username                                                                                                                                                                                                                                                      | Yes       |
-| DB_PASS                        | Postgres Password                                                                                                                                                                                                                                                      | Yes       |
-| APP_URI                        | Uniform Resource Identifier - the location where the application expects to receive bearer tokens after a successful authentication process. The application then validates received bearer tokens using the AUD parameter in the token.                               | No        |
-| CLIENT_ID                      | Unique ID for the application within Azure AD. Used to identify the application during authentication.                                                                                                                                                                 | No        |
-| TENANT_ID                      | Directory unique ID assigned to our Azure AD tenant. Represents the organisation that owns and manages the Azure AD instance.                                                                                                                                          | No        |
-| CLIENT_SECRET                  | Secret key for authentication requests to the service.                                                                                                                                                                                                                 | No        |
-| SUBSCRIPTION_MANAGEMENT_URL    | URL used for connecting to the pip-subscription-management service. Defaults to staging if not provided.                                                                                                                                                               | No        |
-| PUBLICATION_SERVICES_URL       | URL used for connecting to the pip-publication-services service. Defaults to staging if not provided.                                                                                                                                                                  | No        |
-| SUBSCRIPTION_MANAGEMENT_AZ_API | Used as part of the `scope` parameter when requesting a token from Azure. Used for service-to-service communication with the pip-subscription-management service.                                                                                                      | No        |
-| PUBLICATION_SERVICES_AZ_API    | Used as part of the `scope` parameter when requesting a token from Azure. Used for service-to-service communication with the pip-publication-services service.                                                                                                         | No        |                                                                                                                                                                                      | No        |
-| CLIENT_ID_B2C                  | The client id to use when authenticating with the Azure B2C instance.                                                                                                                                                                                                  | Yes       |
-| CLIENT_SECRET_B2C              | The client secret to use when authenticating with the Azure B2C instance.                                                                                                                                                                                              | Yes       |
-| TENANT_GUID_B2C                | The tenant id of the Azure B2C instance                                                                                                                                                                                                                                | Yes       |
-| EXTENSION_ID                   | The extension ID for the users. This is used to store the role against a user.                                                                                                                                                                                         | Yes       |
-| IDENTITY_ISSUER                | The identity issue of the Azure B2C instance.                                                                                                                                                                                                                          | Yes       |
-| CONNECTION_STRING              | Connection string for connecting to the Azure Blob Storage service. Only required when running the application locally via Azurite.                                                                                                                                    | Yes       |
-| STORAGE_ACCOUNT_NAME           | Azure storage account name used to construct the storage account endpoint. Not required when running the application locally.                                                                                                                                          | No        |
-| MAX_SYSTEM_ADMIN_ACCOUNTS      | The max number of system admin accounts that can exist. Default is 4.                                                                                                                                                                                                  | No        |
-| ENABLE_TESTING_SUPPORT_API     | Used to conditionally enable testing support API. Default to `false` for the production environment only.                                                                                                                                                              | No        |
+| Variable                      | Description                                                                                                                                                                                                                                                            | Required? |
+|:------------------------------|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------|
+| SPRING_PROFILES_ACTIVE        | If set equal to `dev`, the application will run in insecure mode (i.e. no bearer token authentication required for incoming requests.) *Note - if you wish to communicate with other services, you will need to set them all to run in insecure mode in the same way.* | No        |
+| DB_HOST                       | Postgres Hostname                                                                                                                                                                                                                                                      | Yes       |
+| DB_PORT                       | Postgres Port                                                                                                                                                                                                                                                          | Yes       |
+| DB_NAME                       | Postgres Db name                                                                                                                                                                                                                                                       | Yes       |
+| DB_USER                       | Postgres Username                                                                                                                                                                                                                                                      | Yes       |
+| DB_PASS                       | Postgres Password                                                                                                                                                                                                                                                      | Yes       |
+| APP_URI                       | Uniform Resource Identifier - the location where the application expects to receive bearer tokens after a successful authentication process. The application then validates received bearer tokens using the AUD parameter in the token.                               | No        |
+| CLIENT_ID                     | Unique ID for the application within Azure AD. Used to identify the application during authentication.                                                                                                                                                                 | No        |
+| TENANT_ID                     | Directory unique ID assigned to our Azure AD tenant. Represents the organisation that owns and manages the Azure AD instance.                                                                                                                                          | No        |
+| CLIENT_SECRET                 | Secret key for authentication requests to the service.                                                                                                                                                                                                                 | No        |
+| PUBLICATION_SERVICES_URL      | URL used for connecting to the pip-publication-services service. Defaults to staging if not provided.                                                                                                                                                                  | No        |
+| PUBLICATION_SERVICES_AZ_API   | Used as part of the `scope` parameter when requesting a token from Azure. Used for service-to-service communication with the pip-publication-services service.                                                                                                         | No        |                                                                                                                                                                                      | No        |
+| CLIENT_ID_B2C                 | The client id to use when authenticating with the Azure B2C instance.                                                                                                                                                                                                  | Yes       |
+| CLIENT_SECRET_B2C             | The client secret to use when authenticating with the Azure B2C instance.                                                                                                                                                                                              | Yes       |
+| TENANT_GUID_B2C               | The tenant id of the Azure B2C instance                                                                                                                                                                                                                                | Yes       |
+| EXTENSION_ID                  | The extension ID for the users. This is used to store the role against a user.                                                                                                                                                                                         | Yes       |
+| IDENTITY_ISSUER               | The identity issue of the Azure B2C instance.                                                                                                                                                                                                                          | Yes       |
+| CONNECTION_STRING             | Connection string for connecting to the Azure Blob Storage service. Only required when running the application locally via Azurite.                                                                                                                                    | Yes       |
+| STORAGE_ACCOUNT_NAME          | Azure storage account name used to construct the storage account endpoint. Not required when running the application locally.                                                                                                                                          | No        |
+| MAX_SYSTEM_ADMIN_ACCOUNTS     | The max number of system admin accounts that can exist. Default is 4.                                                                                                                                                                                                  | No        |
+| COURTEL_API                   | API value for third party                                                                                                                                                                                                                                              | No        |
+| ENABLE_TESTING_SUPPORT_API    | Used to conditionally enable testing support API. Default to `false` for the production environment only.                                                                                                                                                              | No        |
 
 ##### Additional Test secrets
 
 Secrets required for getting tests to run correctly can be found in the below table:
 
-| Variable                       | Description                                                                                                                                                                                                                              |
-|:-------------------------------|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| APP_URI                        | Uniform Resource Identifier - the location where the application expects to receive bearer tokens after a successful authentication process. The application then validates received bearer tokens using the AUD parameter in the token. |
-| TENANT_ID                      | Directory unique ID assigned to our Azure AD tenant. Represents the organisation that owns and manages the Azure AD instance.                                                                                                            |
-| CLIENT_ID_FT                   | Client ID of external service used for authentication with account-management application in the functional tests.                                                                                                                       |
-| CLIENT_SECRET_FT               | Client secret of external service.used for authentication with account-management application in the functional tests.                                                                                                                   |
+| Variable               | Description                                                                                                                                                                                                                              |
+|:-----------------------|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| APP_URI                | Uniform Resource Identifier - the location where the application expects to receive bearer tokens after a successful authentication process. The application then validates received bearer tokens using the AUD parameter in the token. |
+| DATA_MANAGEMENT_AZ_API | Used as part of the `scope` parameter when requesting a token from Azure. Used for service-to-service communication with the pip-data-management service                                                                                 |
+| TENANT_ID              | Directory unique ID assigned to our Azure AD tenant. Represents the organisation that owns and manages the Azure AD instance.                                                                                                            |
+| CLIENT_ID_FT           | Client ID of external service used for authentication with account-management application in the functional tests.                                                                                                                       |
+| CLIENT_SECRET_FT       | Client secret of external service.used for authentication with account-management application in the functional tests.                                                                                                                   |
 
 #### Application.yaml files
 The service can also be adapted using the yaml files found in the following locations:
@@ -241,7 +296,7 @@ curl --request POST \
 ```
 You can copy the above curl command into either Postman or Insomnia and they will automatically be converted to the relevant formats for those programs.
 
-*Note - the `_FOR_ANOTHER_SERVICE` variables need to be extracted from another registered microservice within the broader CaTH umbrella (e.g. [pip-data-management](https://github.com/hmcts/pip-data-management))*
+*Note - the `_FOR_ANOTHER_SERVICE` variables need to be extracted from another registered microservice within the broader CaTH umbrella (e.g. [pip-publication-services](https://github.com/hmcts/pip-publication-services))*
 
 ### Using the bearer token
 You can use the bearer token in the Authorization header when making requests. Here is an example using the create PI user endpoint:

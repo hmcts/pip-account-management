@@ -8,13 +8,14 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import uk.gov.hmcts.reform.pip.account.management.model.AuditLog;
-import uk.gov.hmcts.reform.pip.account.management.model.AzureAccount;
-import uk.gov.hmcts.reform.pip.account.management.model.CreationEnum;
-import uk.gov.hmcts.reform.pip.account.management.model.PiUser;
-import uk.gov.hmcts.reform.pip.account.management.service.AccountService;
+import uk.gov.hmcts.reform.pip.account.management.model.account.AuditLog;
+import uk.gov.hmcts.reform.pip.account.management.model.account.AzureAccount;
+import uk.gov.hmcts.reform.pip.account.management.model.account.CreationEnum;
+import uk.gov.hmcts.reform.pip.account.management.model.account.PiUser;
 import uk.gov.hmcts.reform.pip.account.management.service.AuditService;
 import uk.gov.hmcts.reform.pip.account.management.service.MediaApplicationService;
+import uk.gov.hmcts.reform.pip.account.management.service.account.AccountService;
+import uk.gov.hmcts.reform.pip.account.management.service.subscription.SubscriptionLocationService;
 
 import java.util.UUID;
 
@@ -24,6 +25,7 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class TestingSupportControllerTest {
     private static final String EMAIL_PREFIX = "TEST_PIP_1234_";
+    private static final String LOCATION_NAME_PREFIX = "TEST_PIP_1235_";
     private static final String EMAIL = "test@test.com";
     private static final String ISSUER_ID = "TESTING-SUPPORT";
     private static final String MESSAGE = "Failed to create user";
@@ -38,10 +40,13 @@ class TestingSupportControllerTest {
     private MediaApplicationService mediaApplicationService;
 
     @Mock
+    private SubscriptionLocationService subscriptionLocationService;
+
+    @Mock
     private AuditService auditService;
 
     @InjectMocks
-    TestingSupportController testingSupportController;
+    private TestingSupportController testingSupportController;
 
     @Test
     void testCreateAccountReturnsCreated() {
@@ -116,6 +121,25 @@ class TestingSupportControllerTest {
 
         assertThat(response.getBody())
             .as(RESPONSE_BODY_MESSAGE)
+            .isEqualTo(responseMessage);
+    }
+
+    @Test
+    void testDeleteSubscriptionsWithLocationNamePrefixReturnsOk() {
+        String responseMessage = "5 subscription(s) deleted for location name starting with " + LOCATION_NAME_PREFIX;
+        when(subscriptionLocationService.deleteAllSubscriptionsWithLocationNamePrefix(LOCATION_NAME_PREFIX))
+            .thenReturn(responseMessage);
+
+        ResponseEntity<String> response = testingSupportController.deleteSubscriptionsWithLocationNamePrefix(
+            LOCATION_NAME_PREFIX
+        );
+
+        assertThat(response.getStatusCode())
+            .as("Response status does not match")
+            .isEqualTo(HttpStatus.OK);
+
+        assertThat(response.getBody())
+            .as("Response body does not match")
             .isEqualTo(responseMessage);
     }
 
