@@ -257,7 +257,6 @@ dependencies {
 
   testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
-  testImplementation(platform('org.junit:junit-bom:5.12.2'))
   testImplementation group: 'org.springframework.boot', name: 'spring-boot-starter-test'
   testImplementation group: 'org.springframework.security', name: 'spring-security-test'
   testImplementation group: 'com.squareup.okhttp3', name: 'mockwebserver', version: '4.12.0'
