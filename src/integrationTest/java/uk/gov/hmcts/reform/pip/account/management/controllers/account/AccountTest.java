@@ -1032,7 +1032,8 @@ class AccountTest extends IntegrationTestBase {
     }
 
     @Test
-    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = {ADD_USERS_SCRIPT, ADD_VERIFIED_USERS_SCRIPT})
+    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD,
+        scripts = {ADD_USERS_SCRIPT, ADD_VERIFIED_USERS_SCRIPT})
     void testUnauthorizedDeleteAccountV2WhenNoUserId() throws Exception {
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .delete(ROOT_URL + DELETE_PATH_V2 + VERIFIED_USER_ID);

@@ -72,6 +72,8 @@ class AuthorisationServiceTest {
     private static final String LOG_MATCHED_MESSAGE = "Error log message does not match";
     private static final String EXCEPTION_MATCHED_MESSAGE = "Exception message does not match";
 
+    private static final String UNAUTHORIZED_MESSAGE = "User should not be able to perform action when unauthorised";
+
     private static PiUser user = new PiUser();
     private static PiUser adminUser = new PiUser();
 
@@ -80,6 +82,7 @@ class AuthorisationServiceTest {
     private static Subscription subscription3 = new Subscription();
 
     private static final String ADMIN_ROLE = "APPROLE_api.request.admin";
+    private static final String UNKNOWN_ROLE = "APPROLE_api.request.unknown";
     private static final String TEST_USER_ID = "123";
 
     @Mock
@@ -125,6 +128,16 @@ class AuthorisationServiceTest {
         lenient().when(securityContext.getAuthentication()).thenReturn(auth);
     }
 
+    private void setupWithoutAuth() {
+        List<GrantedAuthority> authorities = List.of(
+            new SimpleGrantedAuthority(UNKNOWN_ROLE)
+        );
+
+        Authentication auth = new TestingAuthenticationToken(TEST_USER_ID, null, authorities);
+        SecurityContextHolder.getContext().setAuthentication(auth);
+        lenient().when(securityContext.getAuthentication()).thenReturn(auth);
+    }
+
     @ParameterizedTest
     @EnumSource(Roles.class)
     void testSystemAdminCanCreateAnyRole(Roles role) {
@@ -147,6 +160,20 @@ class AuthorisationServiceTest {
 
             softly.assertAll();
         }
+    }
+
+    @ParameterizedTest
+    @EnumSource(Roles.class)
+    void testSystemAdminCannotCreateAnyRoleWhenUnauthorized(Roles role) {
+        setupWithoutAuth();
+        user.setRoles(role);
+        adminUser.setRoles(Roles.SYSTEM_ADMIN);
+
+        lenient().when(userRepository.findByUserId(ADMIN_USER_ID)).thenReturn(Optional.of(adminUser));
+
+        assertThat(authorisationService.userCanCreateAccount(ADMIN_USER_ID, List.of(user)))
+            .as(UNAUTHORIZED_MESSAGE)
+            .isFalse();
     }
 
     @Test
@@ -268,6 +295,26 @@ class AuthorisationServiceTest {
 
             softly.assertAll();
         }
+    }
+
+    @Test
+    void testSystemAdminUserCannotUpdateAndDeleteSystemAdminWhenUnauthorized() {
+        setupWithoutAuth();
+        user.setRoles(Roles.SYSTEM_ADMIN);
+        user.setUserProvenance(UserProvenances.PI_AAD);
+        adminUser.setRoles(Roles.SYSTEM_ADMIN);
+
+        SoftAssertions softly = new SoftAssertions();
+
+        softly.assertThat(authorisationService.userCanDeleteAccount(USER_ID, ADMIN_USER_ID))
+            .as(UNAUTHORIZED_MESSAGE)
+            .isFalse();
+
+        softly.assertThat(authorisationService.userCanUpdateAccount(USER_ID, ADMIN_USER_ID))
+            .as(UNAUTHORIZED_MESSAGE)
+            .isFalse();
+
+        softly.assertAll();
     }
 
     @Test
@@ -762,6 +809,13 @@ class AuthorisationServiceTest {
     }
 
     @Test
+    void testUserCannotCreateSystemAdminWhenUnauthorized() {
+        setupWithoutAuth();
+        UUID userId = UUID.randomUUID();
+        assertThat(authorisationService.userCanCreateSystemAdmin(userId)).isFalse();
+    }
+
+    @Test
     void testUserCannotCreateSystemAdminIfAccountNotFound() {
         setupWithAuth();
         UUID userId = UUID.randomUUID();
@@ -809,6 +863,18 @@ class AuthorisationServiceTest {
                 .as(LOG_EMPTY_MESSAGE)
                 .isEmpty();
         }
+    }
+
+    @Test
+    void testSystemAdminUserCannotDeleteSubscriptionWhenUnauthorized() {
+        setupWithoutAuth();
+        user.setRoles(Roles.SYSTEM_ADMIN);
+
+        assertThat(authorisationService.userCanDeleteSubscriptions(USER_ID, SUBSCRIPTION_ID))
+            .as(UNAUTHORIZED_MESSAGE)
+            .isFalse();
+
+        verifyNoInteractions(subscriptionRepository);
     }
 
     @Test
