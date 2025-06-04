@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
@@ -45,8 +46,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.FORBIDDEN;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -710,13 +713,62 @@ class SubscriptionTest extends IntegrationTestBase {
     }
 
     @Test
-    @WithMockUser(username = "unauthorized_delete", authorities = {"APPROLE_unknown.delete"})
     void testUnauthorizedDeleteById() throws Exception {
-        MvcResult mvcResult = mvc.perform(getSubscriptionByUuid(UUID.randomUUID().toString())
-        ).andExpect(status().isForbidden()).andReturn();
+        MockHttpServletRequestBuilder mappedSubscription = setupMockSubscription(LOCATION_ID, SearchType.LOCATION_ID,
+                                                                                 ACTIONING_USER_ID
+        );
+
+        MvcResult response = mvc.perform(mappedSubscription).andExpect(status().isCreated()).andReturn();
+        assertNotNull(response.getResponse().getContentAsString(), VALIDATION_EMPTY_RESPONSE);
+
+        String subscriptionResponse = response.getResponse().getContentAsString();
+        String ourUuid =
+            Arrays.stream(subscriptionResponse.split(" ")).max(Comparator.comparingInt(String::length))
+                .orElse(null);
+
+        MvcResult getResponse = mvc.perform(getSubscriptionByUuid(ourUuid)).andReturn();
+        Subscription returnedSubscription = OBJECT_MAPPER.readValue(
+            getResponse.getResponse().getContentAsString(),
+            Subscription.class
+        );
+
+        MvcResult mvcResult = mvc.perform(delete(SUBSCRIPTION_BASE_URL + returnedSubscription.getId())
+                                              .header(USER_ID_HEADER, SYSTEM_ADMIN_USER_ID)
+                                              .with(user(UNAUTHORIZED_USERNAME).authorities(
+                                                  new SimpleGrantedAuthority(UNAUTHORIZED_ROLE))))
+            .andExpect(status().isForbidden()).andReturn();
 
         assertEquals(FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
                      FORBIDDEN_STATUS_CODE);
+    }
+
+    @Test
+    void testBadRequestIfHeaderNotProvidedForDeleteById() throws Exception {
+        MockHttpServletRequestBuilder mappedSubscription = setupMockSubscription(LOCATION_ID, SearchType.LOCATION_ID,
+                                                                                 ACTIONING_USER_ID
+        );
+
+        MvcResult response = mvc.perform(mappedSubscription).andExpect(status().isCreated()).andReturn();
+        assertNotNull(response.getResponse().getContentAsString(), VALIDATION_EMPTY_RESPONSE);
+
+        String subscriptionResponse = response.getResponse().getContentAsString();
+        String ourUuid =
+            Arrays.stream(subscriptionResponse.split(" ")).max(Comparator.comparingInt(String::length))
+                .orElse(null);
+
+        MvcResult getResponse = mvc.perform(getSubscriptionByUuid(ourUuid)).andReturn();
+        Subscription returnedSubscription = OBJECT_MAPPER.readValue(
+            getResponse.getResponse().getContentAsString(),
+            Subscription.class
+        );
+
+        MvcResult mvcResult = mvc.perform(delete(SUBSCRIPTION_BASE_URL + returnedSubscription.getId())
+                                              .with(user(UNAUTHORIZED_USERNAME).authorities(
+                                                  new SimpleGrantedAuthority(UNAUTHORIZED_ROLE))))
+            .andExpect(status().isBadRequest()).andReturn();
+
+        assertEquals(BAD_REQUEST.value(), mvcResult.getResponse().getStatus(),
+                     VALIDATION_BAD_REQUEST);
     }
 
     @Test
@@ -878,7 +930,6 @@ class SubscriptionTest extends IntegrationTestBase {
 
     @Test
     void testBulkDeleteSubscriptionReturnsNotFound() throws Exception {
-
         String subscriptionIdRequest = OPENING_BRACKET + UUID_STRING + CLOSING_BRACKET;
 
         MvcResult response = mvc.perform(delete(DELETE_BULK_SUBSCRIPTION_PATH)
@@ -890,6 +941,36 @@ class SubscriptionTest extends IntegrationTestBase {
         assertEquals(NOT_FOUND.value(), response.getResponse().getStatus(),
                      NOT_FOUND_STATUS_CODE);
     }
+
+    @Test
+    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
+    void testUnauthorizedBulkDeleteSubscription() throws Exception {
+        String subscriptionIdRequest = OPENING_BRACKET + UUID_STRING + CLOSING_BRACKET;
+
+        MvcResult response = mvc.perform(delete(DELETE_BULK_SUBSCRIPTION_PATH)
+                                             .contentType(MediaType.APPLICATION_JSON)
+                                             .content(subscriptionIdRequest)
+                                             .header(USER_ID_HEADER, ACTIONING_USER_ID))
+            .andExpect(status().isForbidden()).andReturn();
+
+        assertEquals(FORBIDDEN.value(), response.getResponse().getStatus(),
+                     FORBIDDEN_STATUS_CODE);
+    }
+
+    @Test
+    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
+    void testBadRequestIfHeaderNotProvidedForBulkDelete() throws Exception {
+        String subscriptionIdRequest = OPENING_BRACKET + UUID_STRING + CLOSING_BRACKET;
+
+        MvcResult response = mvc.perform(delete(DELETE_BULK_SUBSCRIPTION_PATH)
+                                             .contentType(MediaType.APPLICATION_JSON)
+                                             .content(subscriptionIdRequest))
+            .andExpect(status().isBadRequest()).andReturn();
+
+        assertEquals(BAD_REQUEST.value(), response.getResponse().getStatus(),
+                     VALIDATION_BAD_REQUEST);
+    }
+
 
     @Test
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})

@@ -3,6 +3,7 @@ package uk.gov.hmcts.reform.pip.account.management.service;
 import nl.altindag.log.LogCaptor;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -10,6 +11,12 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.authentication.TestingAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import uk.gov.hmcts.reform.pip.account.management.database.SubscriptionRepository;
 import uk.gov.hmcts.reform.pip.account.management.database.UserRepository;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.NotFoundException;
@@ -72,6 +79,9 @@ class AuthorisationServiceTest {
     private static Subscription subscription2 = new Subscription();
     private static Subscription subscription3 = new Subscription();
 
+    private static final String ADMIN_ROLE = "APPROLE_api.request.admin";
+    private static final String TEST_USER_ID = "123";
+
     @Mock
     private UserRepository userRepository;
 
@@ -81,8 +91,19 @@ class AuthorisationServiceTest {
     @Mock
     private AccountService accountService;
 
+    @Mock
+    private SecurityContext securityContext;
+
+    @Mock
+    private Authentication authentication;
+
     @InjectMocks
     private AuthorisationService authorisationService;
+
+    @BeforeEach
+    void beforeEachSetup() {
+        SecurityContextHolder.setContext(securityContext);
+    }
 
     @BeforeAll
     static void setup() {
@@ -94,9 +115,20 @@ class AuthorisationServiceTest {
         subscription3.setId(SUBSCRIPTION_ID3);
     }
 
+    private void setupWithAuth() {
+        List<GrantedAuthority> authorities = List.of(
+            new SimpleGrantedAuthority(ADMIN_ROLE)
+        );
+
+        Authentication auth = new TestingAuthenticationToken(TEST_USER_ID, null, authorities);
+        SecurityContextHolder.getContext().setAuthentication(auth);
+        lenient().when(securityContext.getAuthentication()).thenReturn(auth);
+    }
+
     @ParameterizedTest
     @EnumSource(Roles.class)
     void testSystemAdminCanCreateAnyRole(Roles role) {
+        setupWithAuth();
         user.setRoles(role);
         adminUser.setRoles(Roles.SYSTEM_ADMIN);
 
@@ -119,6 +151,7 @@ class AuthorisationServiceTest {
 
     @Test
     void testSuperAdminCannotCreateThirdPartyRole() {
+        setupWithAuth();
         user.setRoles(Roles.GENERAL_THIRD_PARTY);
         adminUser.setRoles(Roles.INTERNAL_SUPER_ADMIN_CTSC);
 
@@ -141,6 +174,7 @@ class AuthorisationServiceTest {
 
     @Test
     void testAdminCannotCreateThirdPartyRole() {
+        setupWithAuth();
         user.setRoles(Roles.VERIFIED_THIRD_PARTY_ALL);
         adminUser.setRoles(Roles.INTERNAL_ADMIN_CTSC);
 
@@ -163,6 +197,7 @@ class AuthorisationServiceTest {
 
     @Test
     void testVerifiedUserCannotCreateThirdPartyRole() {
+        setupWithAuth();
         user.setRoles(Roles.VERIFIED_THIRD_PARTY_CFT);
         adminUser.setRoles(Roles.VERIFIED);
 
@@ -185,6 +220,7 @@ class AuthorisationServiceTest {
 
     @Test
     void testThirdPartyUserCannotCreateThirdPartyRole() {
+        setupWithAuth();
         user.setRoles(Roles.VERIFIED_THIRD_PARTY_PRESS);
         adminUser.setRoles(Roles.VERIFIED_THIRD_PARTY_PRESS);
 
@@ -207,6 +243,7 @@ class AuthorisationServiceTest {
 
     @Test
     void testSystemAdminUserCanUpdateAndDeleteSystemAdmin() {
+        setupWithAuth();
         user.setRoles(Roles.SYSTEM_ADMIN);
         user.setUserProvenance(UserProvenances.PI_AAD);
         adminUser.setRoles(Roles.SYSTEM_ADMIN);
@@ -235,6 +272,7 @@ class AuthorisationServiceTest {
 
     @Test
     void testSystemAdminUserCanUpdateAndDeleteSuperAdmin() {
+        setupWithAuth();
         user.setRoles(Roles.INTERNAL_SUPER_ADMIN_LOCAL);
         user.setUserProvenance(UserProvenances.PI_AAD);
         adminUser.setRoles(Roles.SYSTEM_ADMIN);
@@ -263,6 +301,7 @@ class AuthorisationServiceTest {
 
     @Test
     void testSystemAdminUserCanUpdateAndDeleteAdmin() {
+        setupWithAuth();
         user.setRoles(Roles.INTERNAL_ADMIN_CTSC);
         user.setUserProvenance(UserProvenances.PI_AAD);
         adminUser.setRoles(Roles.SYSTEM_ADMIN);
@@ -291,6 +330,7 @@ class AuthorisationServiceTest {
 
     @Test
     void testSystemAdminUserCanUpdateAndDeleteVerifiedAccount() {
+        setupWithAuth();
         user.setRoles(Roles.VERIFIED);
         user.setUserProvenance(UserProvenances.PI_AAD);
         adminUser.setRoles(Roles.SYSTEM_ADMIN);
@@ -319,6 +359,7 @@ class AuthorisationServiceTest {
 
     @Test
     void testSystemAdminUserCanUpdateAndDeleteThirdPartyAccount() {
+        setupWithAuth();
         user.setRoles(Roles.VERIFIED_THIRD_PARTY_ALL);
         user.setUserProvenance(UserProvenances.PI_AAD);
         adminUser.setRoles(Roles.SYSTEM_ADMIN);
@@ -347,6 +388,7 @@ class AuthorisationServiceTest {
 
     @Test
     void testSuperAdminUserCanUpdateAndDeleteSuperAdmin() {
+        setupWithAuth();
         user.setRoles(Roles.INTERNAL_SUPER_ADMIN_CTSC);
         user.setUserProvenance(UserProvenances.PI_AAD);
         adminUser.setRoles(Roles.INTERNAL_SUPER_ADMIN_LOCAL);
@@ -375,6 +417,7 @@ class AuthorisationServiceTest {
 
     @Test
     void testSuperAdminUserCanUpdateAndDeleteAdmin() {
+        setupWithAuth();
         user.setRoles(Roles.INTERNAL_ADMIN_LOCAL);
         user.setUserProvenance(UserProvenances.PI_AAD);
         adminUser.setRoles(Roles.INTERNAL_SUPER_ADMIN_LOCAL);
@@ -403,6 +446,7 @@ class AuthorisationServiceTest {
 
     @Test
     void testSuperAdminUserCannotUpdateAndDeleteSystemAdmin() {
+        setupWithAuth();
         user.setRoles(Roles.SYSTEM_ADMIN);
         user.setUserProvenance(UserProvenances.PI_AAD);
         adminUser.setRoles(Roles.INTERNAL_SUPER_ADMIN_LOCAL);
@@ -439,6 +483,7 @@ class AuthorisationServiceTest {
 
     @Test
     void testSuperAdminUserCannotUpdateAndDeleteVerifiedAccount() {
+        setupWithAuth();
         user.setRoles(Roles.VERIFIED);
         user.setUserProvenance(UserProvenances.PI_AAD);
         adminUser.setRoles(Roles.INTERNAL_SUPER_ADMIN_LOCAL);
@@ -475,6 +520,7 @@ class AuthorisationServiceTest {
 
     @Test
     void testSuperAdminUserCannotUpdateAndDeleteThirdPartyAccount() {
+        setupWithAuth();
         user.setRoles(Roles.GENERAL_THIRD_PARTY);
         user.setUserProvenance(UserProvenances.PI_AAD);
         adminUser.setRoles(Roles.INTERNAL_SUPER_ADMIN_LOCAL);
@@ -511,6 +557,7 @@ class AuthorisationServiceTest {
 
     @Test
     void testAdminUserCannotUpdateAndDeleteAccount() {
+        setupWithAuth();
         user.setRoles(Roles.INTERNAL_ADMIN_LOCAL);
         user.setUserProvenance(UserProvenances.PI_AAD);
         adminUser.setRoles(Roles.INTERNAL_ADMIN_LOCAL);
@@ -547,6 +594,7 @@ class AuthorisationServiceTest {
 
     @Test
     void testVerifiedUserCannotUpdateAndDeleteAccount() {
+        setupWithAuth();
         user.setRoles(Roles.INTERNAL_ADMIN_LOCAL);
         user.setUserProvenance(UserProvenances.PI_AAD);
         adminUser.setRoles(Roles.VERIFIED);
@@ -583,6 +631,7 @@ class AuthorisationServiceTest {
 
     @Test
     void testThirdPartyUserCannotUpdateAndDeleteAccount() {
+        setupWithAuth();
         user.setRoles(Roles.INTERNAL_ADMIN_LOCAL);
         user.setUserProvenance(UserProvenances.PI_AAD);
         adminUser.setRoles(Roles.GENERAL_THIRD_PARTY);
@@ -619,6 +668,7 @@ class AuthorisationServiceTest {
 
     @Test
     void testSsoUserCanBeUpdatedAndDeleted() {
+        setupWithAuth();
         user.setRoles(Roles.INTERNAL_ADMIN_LOCAL);
         user.setUserProvenance(UserProvenances.SSO);
 
@@ -645,6 +695,7 @@ class AuthorisationServiceTest {
 
     @Test
     void testUserCannotUpdateTheirOwnAccount() {
+        setupWithAuth();
         user.setRoles(Roles.INTERNAL_SUPER_ADMIN_LOCAL);
         user.setUserProvenance(UserProvenances.PI_AAD);
 
@@ -675,6 +726,7 @@ class AuthorisationServiceTest {
 
     @Test
     void testExceptionThrowIfUserNotFound() {
+        setupWithAuth();
         when(userRepository.findByUserId(USER_ID)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> authorisationService.userCanUpdateAccount(USER_ID, ADMIN_USER_ID))
@@ -687,6 +739,7 @@ class AuthorisationServiceTest {
 
     @Test
     void testExceptionThrowIfAdminUserNotFound() {
+        setupWithAuth();
         when(userRepository.findByUserId(USER_ID)).thenReturn(Optional.of(user));
         when(userRepository.findByUserId(ADMIN_USER_ID)).thenReturn(Optional.empty());
 
@@ -698,6 +751,7 @@ class AuthorisationServiceTest {
 
     @Test
     void testUserCanCreateSystemAdmin() {
+        setupWithAuth();
         UUID userId = UUID.randomUUID();
         PiUser user = new PiUser();
         user.setRoles(Roles.SYSTEM_ADMIN);
@@ -709,6 +763,7 @@ class AuthorisationServiceTest {
 
     @Test
     void testUserCannotCreateSystemAdminIfAccountNotFound() {
+        setupWithAuth();
         UUID userId = UUID.randomUUID();
 
         when(userRepository.findByUserId(userId)).thenReturn(Optional.empty());
@@ -723,6 +778,7 @@ class AuthorisationServiceTest {
 
     @Test
     void testUserCannotCreateSystemAdminIfUserIsNotSystemAdmin() {
+        setupWithAuth();
         UUID userId = UUID.randomUUID();
         PiUser user = new PiUser();
         user.setRoles(Roles.INTERNAL_ADMIN_LOCAL);
@@ -739,6 +795,7 @@ class AuthorisationServiceTest {
 
     @Test
     void testSystemAdminUserCanDeleteSubscription() {
+        setupWithAuth();
         user.setRoles(Roles.SYSTEM_ADMIN);
         when(accountService.getUserById(USER_ID)).thenReturn(user);
 
@@ -756,6 +813,7 @@ class AuthorisationServiceTest {
 
     @Test
     void testAdminUserCannotDeleteSubscriptionIfUserMismatched() {
+        setupWithAuth();
         user.setRoles(Roles.INTERNAL_ADMIN_LOCAL);
         subscription.setUserId(ANOTHER_USER_ID);
         when(accountService.getUserById(USER_ID)).thenReturn(user);
@@ -778,6 +836,7 @@ class AuthorisationServiceTest {
 
     @Test
     void testVerifiedUserCannotDeleteSubscriptionIfUserMismatched() {
+        setupWithAuth();
         user.setRoles(Roles.VERIFIED);
         subscription.setUserId(ANOTHER_USER_ID);
         when(accountService.getUserById(USER_ID)).thenReturn(user);
@@ -800,6 +859,7 @@ class AuthorisationServiceTest {
 
     @Test
     void testUserCanDeleteSubscriptionIfUserMatchedInSingleSubscription() {
+        setupWithAuth();
         user.setRoles(Roles.INTERNAL_ADMIN_LOCAL);
         subscription.setUserId(USER_ID);
         when(accountService.getUserById(USER_ID)).thenReturn(user);
@@ -818,6 +878,7 @@ class AuthorisationServiceTest {
 
     @Test
     void testUserCanDeleteSubscriptionIfUserMatchedInAllSubscriptions() {
+        setupWithAuth();
         user.setRoles(Roles.INTERNAL_ADMIN_LOCAL);
         subscription.setUserId(USER_ID);
         subscription2.setUserId(USER_ID);
@@ -842,6 +903,7 @@ class AuthorisationServiceTest {
 
     @Test
     void testUserCannotDeleteSubscriptionIfUserMisMatchedInSomeOfTheSubscriptions() {
+        setupWithAuth();
         user.setRoles(Roles.INTERNAL_ADMIN_LOCAL);
         subscription.setUserId(USER_ID);
         subscription2.setUserId(ANOTHER_USER_ID);
@@ -872,6 +934,7 @@ class AuthorisationServiceTest {
 
     @Test
     void testUserCanDeleteSubscriptionReturnsTrueIfSubscriptionNotFound() {
+        setupWithAuth();
         user.setRoles(Roles.INTERNAL_ADMIN_LOCAL);
         when(accountService.getUserById(USER_ID)).thenReturn(user);
         when(subscriptionRepository.findById(SUBSCRIPTION_ID)).thenReturn(Optional.empty());
