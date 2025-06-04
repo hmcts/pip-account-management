@@ -1017,13 +1017,13 @@ class AccountTest extends IntegrationTestBase {
     @Test
     @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD,
         scripts = {ADD_USERS_SCRIPT, ADD_VERIFIED_USERS_SCRIPT})
+    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testUnauthorizedDeleteAccountV2() throws Exception {
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .delete(ROOT_URL + DELETE_PATH_V2 + VERIFIED_USER_ID)
-            .header(ADMIN_HEADER, getSystemAdminUserId(SYSTEM_ADMIN_EMAIL));
+            .header(ADMIN_HEADER, SYSTEM_ADMIN_ISSUER_ID);
 
-        MvcResult mvcResult = mockMvc.perform(request.with(user(UNAUTHORIZED_USERNAME).authorities(
-                new SimpleGrantedAuthority(UNAUTHORIZED_ROLE))))
+        MvcResult mvcResult = mockMvc.perform(request)
             .andExpect(status().isForbidden()).andReturn();
 
         assertEquals(FORBIDDEN.value(), mvcResult.getResponse().getStatus(),

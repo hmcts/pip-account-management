@@ -762,9 +762,7 @@ class SubscriptionTest extends IntegrationTestBase {
             Subscription.class
         );
 
-        MvcResult mvcResult = mvc.perform(delete(SUBSCRIPTION_BASE_URL + returnedSubscription.getId())
-                                              .with(user(UNAUTHORIZED_USERNAME).authorities(
-                                                  new SimpleGrantedAuthority(UNAUTHORIZED_ROLE))))
+        MvcResult mvcResult = mvc.perform(delete(SUBSCRIPTION_BASE_URL + returnedSubscription.getId()))
             .andExpect(status().isBadRequest()).andReturn();
 
         assertEquals(BAD_REQUEST.value(), mvcResult.getResponse().getStatus(),
@@ -958,7 +956,6 @@ class SubscriptionTest extends IntegrationTestBase {
     }
 
     @Test
-    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testBadRequestIfHeaderNotProvidedForBulkDelete() throws Exception {
         String subscriptionIdRequest = OPENING_BRACKET + UUID_STRING + CLOSING_BRACKET;
 
