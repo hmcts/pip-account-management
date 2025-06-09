@@ -30,7 +30,6 @@ import uk.gov.hmcts.reform.pip.account.management.utils.IntegrationTestBase;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -59,6 +58,10 @@ class SystemAdminB2CAccountTest extends IntegrationTestBase {
     private static final String TEST_SYS_ADMIN_FIRSTNAME = "testSysAdminFirstname";
     private static final String TEST_SYS_ADMIN_EMAIL = "testSysAdminEmail@justice.gov.uk";
     private static final String FORBIDDEN_STATUS_CODE = "Status code does not match forbidden";
+    private static final String UNAUTHORIZED_ROLE = "APPROLE_unknown.authorized";
+    private static final String UNAUTHORIZED_USERNAME = "unauthorized_isAuthorized";
+
+    private static final String ADD_USERS_SCRIPT = "classpath:add-admin-users.sql";
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
@@ -95,7 +98,7 @@ class SystemAdminB2CAccountTest extends IntegrationTestBase {
     }
 
     @Test
-    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = "classpath:add-admin-users.sql")
+    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = ADD_USERS_SCRIPT)
     void testCreateSystemAdminAccount() throws Exception {
         SystemAdminAccount systemAdmin = new SystemAdminAccount();
         systemAdmin.setFirstName(TEST_SYS_ADMIN_FIRSTNAME);
@@ -138,7 +141,7 @@ class SystemAdminB2CAccountTest extends IntegrationTestBase {
     }
 
     @Test
-    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = "classpath:add-admin-users.sql")
+    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = ADD_USERS_SCRIPT)
     void testCreateSystemAdminAccountRequestExceeded() throws Exception {
         SystemAdminAccount systemAdmin1 = new SystemAdminAccount();
         systemAdmin1.setFirstName("testSysAdminFirstname1");
@@ -176,8 +179,8 @@ class SystemAdminB2CAccountTest extends IntegrationTestBase {
     }
 
     @Test
-    @WithMockUser(username = "unauthroized_user", authorities = {"APPROLE_unknown.user"})
-    void testUnauthorizedCreateSystemAdminAccount() throws Exception {
+    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = ADD_USERS_SCRIPT)
+    void testBadRequestCreateSystemAdminAccountIfNoAdminHeaderProvided() throws Exception {
         SystemAdminAccount systemAdmin = new SystemAdminAccount();
         systemAdmin.setFirstName(TEST_SYS_ADMIN_FIRSTNAME);
         systemAdmin.setSurname(TEST_SYS_ADMIN_SURNAME);
@@ -187,7 +190,30 @@ class SystemAdminB2CAccountTest extends IntegrationTestBase {
             MockMvcRequestBuilders
                 .post(CREATE_SYSTEM_ADMIN_URL)
                 .content(OBJECT_MAPPER.writeValueAsString(systemAdmin))
-                .header(ISSUER_HEADER, UUID.randomUUID().toString())
+                .contentType(MediaType.APPLICATION_JSON);
+
+        MvcResult responseCreateSystemAdminUser = mockMvc.perform(createRequest)
+            .andExpect(status().isBadRequest()).andReturn();
+
+        assertEquals(BAD_REQUEST.value(), responseCreateSystemAdminUser.getResponse().getStatus(),
+                     "No header admin header provided"
+        );
+    }
+
+    @Test
+    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = ADD_USERS_SCRIPT)
+    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
+    void testUnauthorisedRequestCreateSystemAdmin() throws Exception {
+        SystemAdminAccount systemAdmin = new SystemAdminAccount();
+        systemAdmin.setFirstName(TEST_SYS_ADMIN_FIRSTNAME);
+        systemAdmin.setSurname(TEST_SYS_ADMIN_SURNAME);
+        systemAdmin.setEmail(TEST_SYS_ADMIN_EMAIL);
+
+        MockHttpServletRequestBuilder createRequest =
+            MockMvcRequestBuilders
+                .post(CREATE_SYSTEM_ADMIN_URL)
+                .content(OBJECT_MAPPER.writeValueAsString(systemAdmin))
+                .header(ISSUER_HEADER, SYSTEM_ADMIN_ISSUER_ID)
                 .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult responseCreateSystemAdminUser = mockMvc.perform(createRequest)

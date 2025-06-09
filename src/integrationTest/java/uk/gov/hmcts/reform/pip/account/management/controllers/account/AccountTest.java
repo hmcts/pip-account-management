@@ -57,6 +57,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WithMockUser(username = "admin", authorities = {"APPROLE_api.request.admin"})
 @SuppressWarnings({"PMD.ExcessiveImports", "PMD.UnitTestShouldIncludeAssert"})
 class AccountTest extends IntegrationTestBase {
+
     @Autowired
     private MockMvc mockMvc;
 
@@ -105,6 +106,8 @@ class AccountTest extends IntegrationTestBase {
     private static final String DELETE_USER_FAILURE = "Failed to delete user account";
     private static final String DELETE_USER_SUCCESS = "User deleted";
     private static final String ADD_USERS_SCRIPT = "classpath:add-admin-users.sql";
+    private static final String ADD_VERIFIED_USERS_SCRIPT = "classpath:add-verified-users.sql";
+    private static final String VERIFIED_USER_ID = "87f907d2-eb28-42cc-b6e1-ae2b03f7bba5";
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
@@ -597,11 +600,9 @@ class AccountTest extends IntegrationTestBase {
             );
 
         String createdUserId = mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).get(0).toString();
-        String systemAdminUserId = getSystemAdminUserId(SYSTEM_ADMIN_EMAIL);
-
         MockHttpServletRequestBuilder deleteRequest = MockMvcRequestBuilders
             .delete(ROOT_URL + DELETE_PATH_V2 + createdUserId)
-            .header(ADMIN_HEADER, systemAdminUserId);
+            .header(ADMIN_HEADER, SYSTEM_ADMIN_ISSUER_ID);
 
         MvcResult mvcResult = mockMvc.perform(deleteRequest).andExpect(status().isOk()).andReturn();
         assertEquals(DELETE_USER_SUCCESS, mvcResult.getResponse().getContentAsString(),
@@ -905,6 +906,23 @@ class AccountTest extends IntegrationTestBase {
 
     @Test
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
+    void testUnauthorizedCreateAccount() throws Exception {
+        MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
+            .post(PI_URL)
+            .content(OBJECT_MAPPER.writeValueAsString(List.of(validUser)))
+            .header(ISSUER_HEADER, SYSTEM_ADMIN_ISSUER_ID)
+            .contentType(MediaType.APPLICATION_JSON);
+
+        MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder)
+            .andExpect(status().isForbidden()).andReturn();
+
+        assertEquals(FORBIDDEN.value(), response.getResponse().getStatus(),
+                     FORBIDDEN_STATUS_CODE
+        );
+    }
+
+    @Test
+    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testUnauthorizedGetUserByProvenanceId() throws Exception {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .get(String.format("%s/%s/%s", GET_PROVENANCE_USER_URL, UserProvenances.CFT_IDAM, ID))
@@ -952,6 +970,23 @@ class AccountTest extends IntegrationTestBase {
 
     @Test
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
+    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD,
+        scripts = {ADD_USERS_SCRIPT, ADD_VERIFIED_USERS_SCRIPT})
+    void testUnauthorizedUpdateAccountRole() throws Exception {
+        MockHttpServletRequestBuilder updateRequest = MockMvcRequestBuilders
+            .put(ROOT_URL + UPDATE_PATH + VERIFIED_USER_ID + "/" + Roles.INTERNAL_ADMIN_LOCAL)
+            .header(ADMIN_HEADER, SUPER_ADMIN_ISSUER_ID);
+
+        MvcResult responseUpdatedUser = mockMvc.perform(updateRequest)
+            .andExpect(status().isForbidden()).andReturn();
+
+        assertEquals(FORBIDDEN.value(), responseUpdatedUser.getResponse().getStatus(),
+                     FORBIDDEN_STATUS_CODE
+        );
+    }
+
+    @Test
+    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testUnauthorizedGetUserById() throws Exception {
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .get(ROOT_URL + "/" + UUID.randomUUID());
@@ -969,7 +1004,40 @@ class AccountTest extends IntegrationTestBase {
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .delete(ROOT_URL + "/delete/" + UUID.randomUUID());
 
-        MvcResult mvcResult = mockMvc.perform(request).andExpect(status().isForbidden()).andReturn();
+        MvcResult mvcResult = mockMvc.perform(request)
+            .andExpect(status().isForbidden()).andReturn();
+
+        assertEquals(FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
+                     FORBIDDEN_STATUS_CODE
+        );
+    }
+
+    @Test
+    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD,
+        scripts = {ADD_USERS_SCRIPT, ADD_VERIFIED_USERS_SCRIPT})
+    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
+    void testUnauthorizedDeleteAccountV2() throws Exception {
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+            .delete(ROOT_URL + DELETE_PATH_V2 + VERIFIED_USER_ID)
+            .header(ADMIN_HEADER, SYSTEM_ADMIN_ISSUER_ID);
+
+        MvcResult mvcResult = mockMvc.perform(request)
+            .andExpect(status().isForbidden()).andReturn();
+
+        assertEquals(FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
+                     FORBIDDEN_STATUS_CODE
+        );
+    }
+
+    @Test
+    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD,
+        scripts = {ADD_USERS_SCRIPT, ADD_VERIFIED_USERS_SCRIPT})
+    void testUnauthorizedDeleteAccountV2WhenNoUserId() throws Exception {
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+            .delete(ROOT_URL + DELETE_PATH_V2 + VERIFIED_USER_ID);
+
+        MvcResult mvcResult = mockMvc.perform(request)
+            .andExpect(status().isForbidden()).andReturn();
 
         assertEquals(FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
                      FORBIDDEN_STATUS_CODE
