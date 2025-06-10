@@ -2,6 +2,8 @@ package uk.gov.hmcts.reform.pip.account.management.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import uk.gov.hmcts.reform.pip.account.management.database.SubscriptionRepository;
 import uk.gov.hmcts.reform.pip.account.management.database.UserRepository;
@@ -36,6 +38,10 @@ public class AuthorisationService {
     }
 
     public boolean userCanCreateAccount(UUID adminUserId, List<PiUser> users) {
+        if (!isAdmin()) {
+            return false;
+        }
+
         for (PiUser user : users) {
             // Restrict third party user creation to SYSTEM_ADMIN only
             if (Roles.getAllThirdPartyRoles().contains(user.getRoles())) {
@@ -52,6 +58,10 @@ public class AuthorisationService {
     }
 
     public boolean userCanDeleteAccount(UUID userId, UUID adminUserId) {
+        if (!isAdmin()) {
+            return false;
+        }
+
         boolean isAuthorised = isAuthorisedRole(userId, adminUserId);
 
         if (!isAuthorised) {
@@ -63,6 +73,10 @@ public class AuthorisationService {
     }
 
     public boolean userCanUpdateAccount(UUID userId, UUID adminUserId) {
+        if (!isAdmin()) {
+            return false;
+        }
+
         if (adminUserId != null && adminUserId.equals(userId)) {
             log.error(writeLog(
                 String.format("User with ID %s is forbidden to update their own account", userId)
@@ -81,6 +95,10 @@ public class AuthorisationService {
     }
 
     public boolean userCanCreateSystemAdmin(UUID userId) {
+        if (!isAdmin()) {
+            return false;
+        }
+
         Optional<PiUser> adminUser = userRepository.findByUserId(userId);
         boolean isSystemAdmin = adminUser.isPresent() && adminUser.get().getRoles().equals(Roles.SYSTEM_ADMIN);
 
@@ -93,8 +111,8 @@ public class AuthorisationService {
     }
 
     public boolean userCanDeleteSubscriptions(UUID userId, UUID... subscriptionIds) {
-        return isSystemAdmin(userId) || Arrays.stream(subscriptionIds)
-            .allMatch(id -> isSubscriptionUserMatch(id, userId));
+        return isAdmin() && (isSystemAdmin(userId) || Arrays.stream(subscriptionIds)
+            .allMatch(id -> isSubscriptionUserMatch(id, userId)));
 
     }
 
@@ -145,5 +163,15 @@ public class AuthorisationService {
         // Return true if not subscription found. It will then go to the delete subscription method and return
         // 404 HTTP status rather than a 403 forbidden status.
         return true;
+    }
+
+    private boolean isAdmin() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return hasAuthority(authentication, "APPROLE_api.request.admin");
+    }
+
+    private boolean hasAuthority(Authentication authentication, String role) {
+        return authentication.getAuthorities().stream()
+            .anyMatch(granted -> granted.getAuthority().equals(role));
     }
 }
