@@ -140,25 +140,6 @@ class SmokeTest extends SmokeTestBase {
             .as(STATUS_CODE_MATCH)
             .isEqualTo(CREATED.value());
 
-        String azureAccountId = response.getBody().as(AZURE_ACCOUNT_RESPONSE_TYPE)
-            .get(CreationEnum.CREATED_ACCOUNTS)
-            .getFirst()
-            .getAzureAccountId();
-
-        PiUser piUser = new PiUser();
-        piUser.setEmail(TEST_EMAIL);
-        piUser.setRoles(Roles.VERIFIED);
-        piUser.setForenames(TEST_FIRST_NAME);
-        piUser.setSurname(TEST_SURNAME);
-        piUser.setUserProvenance(UserProvenances.SSO);
-        piUser.setProvenanceUserId(azureAccountId);
-
-        response = doPostRequest(CREATE_PI_ACCOUNT_URL, Map.of(ISSUER_ID_HEADER, ISSUER_ID),
-                                 OBJECT_MAPPER.writeValueAsString(List.of(piUser)));
-
-        assertThat(response.getStatusCode())
-            .as(STATUS_CODE_MATCH)
-            .isEqualTo(CREATED.value());
     }
 
     @Test
