@@ -52,6 +52,7 @@ class SmokeTest extends SmokeTestBase {
     private static final String TESTING_SUPPORT_SUBSCRIPTION_URL = "/testing-support/subscription/";
 
     private static final String ISSUER_ID_HEADER = "x-issuer-id";
+    private static final String ISSUER_ID = UUID.randomUUID().toString();
     private static final String USER_ID_HEADER = "x-user-id";
     private static final UUID USER_ID = UUID.randomUUID();
     private static final String TEST_FIRST_NAME = "SmokeTestFirstName";
@@ -73,9 +74,6 @@ class SmokeTest extends SmokeTestBase {
     private static final String RESPONSE_BODY_MATCH = "Response body does not match";
     private static String verifiedUserId;
 
-    @Value("${test-system-admin-id}")
-    private String systemAdminUserId;
-
     @BeforeAll
     public void setup() throws JsonProcessingException {
         OBJECT_MAPPER.findAndRegisterModules();
@@ -87,11 +85,11 @@ class SmokeTest extends SmokeTestBase {
         piUser.setRoles(Roles.VERIFIED);
         piUser.setForenames("SmokeTestSubscription-Firstname");
         piUser.setSurname("SmokeTestSubscription-Surname");
-        piUser.setUserProvenance(UserProvenances.PI_AAD);
+        piUser.setUserProvenance(UserProvenances.SSO);
         piUser.setProvenanceUserId(UUID.randomUUID().toString());
 
         verifiedUserId = (String)
-            doPostRequest(CREATE_PI_ACCOUNT_URL, Map.of(ISSUER_ID_HEADER, systemAdminUserId),
+            doPostRequest(CREATE_PI_ACCOUNT_URL, Map.of(ISSUER_ID_HEADER, ISSUER_ID),
                           OBJECT_MAPPER.writeValueAsString(List.of(piUser)))
                 .getBody()
                 .as(CREATED_RESPONSE_TYPE)
@@ -129,7 +127,7 @@ class SmokeTest extends SmokeTestBase {
         azureAccount.setRole(Roles.VERIFIED);
         azureAccount.setEmail(TEST_EMAIL);
 
-        Response response = doPostRequest(CREATE_AZURE_ACCOUNT_URL, Map.of(ISSUER_ID_HEADER, systemAdminUserId),
+        Response response = doPostRequest(CREATE_AZURE_ACCOUNT_URL, Map.of(ISSUER_ID_HEADER, ISSUER_ID),
                                           OBJECT_MAPPER.writeValueAsString(List.of(azureAccount)));
 
         String azureAccountId = response.getBody().as(AZURE_ACCOUNT_RESPONSE_TYPE)
@@ -145,7 +143,7 @@ class SmokeTest extends SmokeTestBase {
         piUser.setUserProvenance(UserProvenances.PI_AAD);
         piUser.setProvenanceUserId(azureAccountId);
 
-        response = doPostRequest(CREATE_PI_ACCOUNT_URL, Map.of(ISSUER_ID_HEADER, systemAdminUserId),
+        response = doPostRequest(CREATE_PI_ACCOUNT_URL, Map.of(ISSUER_ID_HEADER, ISSUER_ID),
                                  OBJECT_MAPPER.writeValueAsString(List.of(piUser)));
 
         assertThat(response.getStatusCode())
@@ -155,7 +153,7 @@ class SmokeTest extends SmokeTestBase {
 
     @Test
     void testCreateMediaApplication() throws IOException {
-        Response response = doPostMultipartForApplication(MEDIA_APPLICATION_URL, systemAdminUserId,
+        Response response = doPostMultipartForApplication(MEDIA_APPLICATION_URL, ISSUER_ID,
                                                           new ClassPathResource(MOCK_FILE).getFile(),
                                                           TEST_DISPLAY_NAME, TEST_EMAIL, TEST_EMPLOYER,
                                                           MediaApplicationStatus.PENDING.toString());
