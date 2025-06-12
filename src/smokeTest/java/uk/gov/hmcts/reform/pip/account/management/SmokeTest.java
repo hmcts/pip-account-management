@@ -43,7 +43,6 @@ class SmokeTest extends SmokeTestBase {
     private static final String BASE_ACCOUNT_URL = "/account";
     private static final String CREATE_PI_ACCOUNT_URL = BASE_ACCOUNT_URL + "/add/pi";
     private static final String CREATE_AZURE_ACCOUNT_URL = BASE_ACCOUNT_URL + "/add/azure";
-    private static final String CREATE_SYSTEM_ADMIN_ACCOUNT_URL = BASE_ACCOUNT_URL + "/system-admin";
     private static final String MEDIA_APPLICATION_URL = "/application";
     private static final String SUBSCRIPTION_URL = "/subscription";
 
@@ -129,6 +128,10 @@ class SmokeTest extends SmokeTestBase {
 
         Response response = doPostRequest(CREATE_AZURE_ACCOUNT_URL, Map.of(ISSUER_ID_HEADER, ISSUER_ID),
                                           OBJECT_MAPPER.writeValueAsString(List.of(azureAccount)));
+
+        assertThat(response.getStatusCode())
+            .as(STATUS_CODE_MATCH)
+            .isEqualTo(CREATED.value());
 
         String azureAccountId = response.getBody().as(AZURE_ACCOUNT_RESPONSE_TYPE)
             .get(CreationEnum.CREATED_ACCOUNTS)
