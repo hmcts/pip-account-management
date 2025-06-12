@@ -79,13 +79,6 @@ class SmokeTest extends SmokeTestBase {
         OBJECT_MAPPER.findAndRegisterModules();
         createTestLocation(LOCATION_ID, LOCATION_NAME);
 
-        PiUser systemAdmin = new PiUser();
-        systemAdmin.setUserId(ISSUER_ID);
-        systemAdmin.setRoles(Roles.SYSTEM_ADMIN);
-
-        doPostRequest(CREATE_SYSTEM_ADMIN_ACCOUNT_URL, Map.of(ISSUER_ID_HEADER, ISSUER_ID),
-                                          OBJECT_MAPPER.writeValueAsString(List.of(systemAdmin)));
-
         PiUser piUser = new PiUser();
         piUser.setEmail(TEST_EMAIL_PREFIX + "-"
                             + ThreadLocalRandom.current().nextInt(1000, 9999) + "@justice.gov.uk");
@@ -147,7 +140,7 @@ class SmokeTest extends SmokeTestBase {
         piUser.setRoles(Roles.VERIFIED);
         piUser.setForenames(TEST_FIRST_NAME);
         piUser.setSurname(TEST_SURNAME);
-        piUser.setUserProvenance(UserProvenances.PI_AAD);
+        piUser.setUserProvenance(UserProvenances.SSO);
         piUser.setProvenanceUserId(azureAccountId);
 
         response = doPostRequest(CREATE_PI_ACCOUNT_URL, Map.of(ISSUER_ID_HEADER, ISSUER_ID),
