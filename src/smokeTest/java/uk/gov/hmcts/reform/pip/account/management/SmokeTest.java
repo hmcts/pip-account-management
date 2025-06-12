@@ -53,7 +53,6 @@ class SmokeTest extends SmokeTestBase {
 
     private static final String ISSUER_ID_HEADER = "x-issuer-id";
     private static final String USER_ID_HEADER = "x-user-id";
-//    private static final String ISSUER_ID = UUID.randomUUID().toString();
     private static final UUID USER_ID = UUID.randomUUID();
     private static final String TEST_FIRST_NAME = "SmokeTestFirstName";
     private static final String TEST_SURNAME = "SmokeTestSurname";
