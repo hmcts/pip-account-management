@@ -119,8 +119,6 @@ class AccountTest extends IntegrationTestBase {
 
     private PiUser validUser;
     private PiUser superAdminUser;
-    private PiUser invalidUser;
-    private PiUser thirdPartyUser;
 
     private PiUser createUser(boolean valid) {
         return createUser(valid, ROLE);
@@ -308,7 +306,7 @@ class AccountTest extends IntegrationTestBase {
 
     @Test
     void testCreateSingleErroredUser() throws Exception {
-        invalidUser = createUser(false);
+        PiUser invalidUser = createUser(false);
 
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(PI_URL)
@@ -355,7 +353,7 @@ class AccountTest extends IntegrationTestBase {
 
     @Test
     void testCreateMultipleUsersCreateAndErrored() throws Exception {
-        invalidUser = createUser(false);
+        PiUser invalidUser = createUser(false);
 
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(PI_URL)
@@ -625,7 +623,7 @@ class AccountTest extends IntegrationTestBase {
     @Test
     @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = ADD_USERS_SCRIPT)
     void testV2SystemAdminDeletesThirdPartyUser() throws Exception {
-        thirdPartyUser = createThirdPartyUser();
+        PiUser thirdPartyUser = createThirdPartyUser();
         MockHttpServletRequestBuilder createRequest = MockMvcRequestBuilders
             .post(PI_URL)
             .content(OBJECT_MAPPER.writeValueAsString(List.of(thirdPartyUser)))
@@ -829,7 +827,7 @@ class AccountTest extends IntegrationTestBase {
     @Test
     @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = ADD_USERS_SCRIPT)
     void testCreateThirdPartyUser() throws Exception {
-        thirdPartyUser = createThirdPartyUser();
+        PiUser thirdPartyUser = createThirdPartyUser();
 
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(PI_URL)
@@ -853,7 +851,7 @@ class AccountTest extends IntegrationTestBase {
     @Test
     @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = ADD_USERS_SCRIPT)
     void testUnauthorizedCreateThirdPartyUser() throws Exception {
-        thirdPartyUser = createUser(true, Roles.GENERAL_THIRD_PARTY);
+        PiUser thirdPartyUser = createUser(true, Roles.GENERAL_THIRD_PARTY);
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(PI_URL)
             .content(OBJECT_MAPPER.writeValueAsString(List.of(thirdPartyUser)))

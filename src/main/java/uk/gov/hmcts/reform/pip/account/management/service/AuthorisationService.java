@@ -28,6 +28,7 @@ import static uk.gov.hmcts.reform.pip.model.account.UserProvenances.PI_AAD;
 @Service("authorisationService")
 @AllArgsConstructor()
 @Slf4j
+@SuppressWarnings({"PMD.GodClass", "PMD.TooManyMethods"})
 public class AuthorisationService {
     private final UserRepository userRepository;
     private final SubscriptionRepository subscriptionRepository;
@@ -150,7 +151,8 @@ public class AuthorisationService {
 
     public boolean userCanUpdateMediaApplications(UUID userId) {
         if (!isAdmin() || !isAdminCtsc(userId)) {
-            log.error(writeLog(String.format("User with ID %s is not authorised to update media applications", userId)));
+            log.error(writeLog(String.format("User with ID %s is not authorised to update media "
+                                                 + "applications", userId)));
             return false;
         }
         return true;

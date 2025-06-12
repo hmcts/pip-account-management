@@ -36,7 +36,7 @@ class AccountFilteringControllerTest {
     @Test
     void testMiDataReturnsOk() {
         AccountMiData accountMiData = new AccountMiData();
-        accountMiData.setProvenanceUserId("1234");
+        accountMiData.setProvenanceUserId("5678");
 
         when(accountFilteringService.getAccountDataForMi()).thenReturn(List.of(accountMiData));
         ResponseEntity<List<AccountMiData>> listAccountMiData = accountFilteringController.getMiData();
@@ -62,8 +62,8 @@ class AccountFilteringControllerTest {
     @Test
     void testGetAllAccountsExceptThirdParty() {
         assertThat(accountFilteringController.getAllAccountsExceptThirdParty(USER_ID,
-            0, 25, "test", "1234",
-            List.of(UserProvenances.PI_AAD), List.of(Roles.VERIFIED), "1234").getStatusCode())
+            0, 25, "test", "5678",
+            List.of(UserProvenances.PI_AAD), List.of(Roles.VERIFIED), USER_ID).getStatusCode())
             .as(STATUS_CODE_MATCH)
             .isEqualTo(HttpStatus.OK);
     }

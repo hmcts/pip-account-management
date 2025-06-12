@@ -52,6 +52,7 @@ import static uk.gov.hmcts.reform.pip.model.account.Roles.VERIFIED_THIRD_PARTY_A
 import static uk.gov.hmcts.reform.pip.model.account.Roles.VERIFIED_THIRD_PARTY_PRESS;
 
 @ExtendWith(MockitoExtension.class)
+@SuppressWarnings({"PMD.ExcessiveImports", "PMD.UnitTestAssertionsShouldIncludeMessage"})
 class AuthorisationServiceTest {
     private static final UUID USER_ID = UUID.randomUUID();
     private static final UUID ANOTHER_USER_ID = UUID.randomUUID();
@@ -59,6 +60,8 @@ class AuthorisationServiceTest {
     private static final UUID SUBSCRIPTION_ID = UUID.randomUUID();
     private static final UUID SUBSCRIPTION_ID2 = UUID.randomUUID();
     private static final UUID SUBSCRIPTION_ID3 = UUID.randomUUID();
+    private static final String SYSTEM_ADMIN_ROLE = "SYSTEM_ADMIN";
+    private static final String INTERNAL_ADMIN_CTSC_ROLE = "INTERNAL_ADMIN_CTSC";
 
     private static final String DELETE_ERROR_LOG = "User with ID %s is not authorised to delete this account";
     private static final String UPDATE_ERROR_LOG = "User with ID %s is forbidden to update user with ID %s";
@@ -85,12 +88,12 @@ class AuthorisationServiceTest {
 
     private static final String UNAUTHORIZED_MESSAGE = "User should not be able to perform action when unauthorised";
 
-    private static final PiUser user = new PiUser();
-    private static final PiUser adminUser = new PiUser();
+    private static PiUser user = new PiUser();
+    private static PiUser adminUser = new PiUser();
 
-    private static final Subscription subscription = new Subscription();
-    private static final Subscription subscription2 = new Subscription();
-    private static final Subscription subscription3 = new Subscription();
+    private static Subscription subscription = new Subscription();
+    private static Subscription subscription2 = new Subscription();
+    private static Subscription subscription3 = new Subscription();
 
     private static final String ADMIN_ROLE = "APPROLE_api.request.admin";
     private static final String UNKNOWN_ROLE = "APPROLE_api.request.unknown";
@@ -158,7 +161,7 @@ class AuthorisationServiceTest {
     }
 
     @ParameterizedTest
-    @EnumSource(value = Roles.class, names = { "SYSTEM_ADMIN" }, mode = EnumSource.Mode.EXCLUDE)
+    @EnumSource(value = Roles.class, names = { SYSTEM_ADMIN_ROLE }, mode = EnumSource.Mode.EXCLUDE)
     void testUserCanNotDeleteAccountWhenNotSystemAdmin(Roles role) {
         setupWithAuth();
         adminUser.setRoles(role);
@@ -199,7 +202,7 @@ class AuthorisationServiceTest {
     }
 
     @ParameterizedTest
-    @EnumSource(value = Roles.class, names = { "SYSTEM_ADMIN" }, mode = EnumSource.Mode.EXCLUDE)
+    @EnumSource(value = Roles.class, names = { SYSTEM_ADMIN_ROLE }, mode = EnumSource.Mode.EXCLUDE)
     void testUserCanNotViewAuditLogsWhenNotSystemAdmin(Roles role) {
         setupWithAuth();
         user.setRoles(role);
@@ -227,7 +230,7 @@ class AuthorisationServiceTest {
     }
 
     @ParameterizedTest
-    @EnumSource(value = Roles.class, names = { "SYSTEM_ADMIN" }, mode = EnumSource.Mode.EXCLUDE)
+    @EnumSource(value = Roles.class, names = { SYSTEM_ADMIN_ROLE }, mode = EnumSource.Mode.EXCLUDE)
     void testUserCanNotViewAccountsWhenNotSystemAdmin(Roles role) {
         setupWithAuth();
         user.setRoles(role);
@@ -255,7 +258,7 @@ class AuthorisationServiceTest {
     }
 
     @ParameterizedTest
-    @EnumSource(value = Roles.class, names = { "SYSTEM_ADMIN" }, mode = EnumSource.Mode.EXCLUDE)
+    @EnumSource(value = Roles.class, names = { SYSTEM_ADMIN_ROLE }, mode = EnumSource.Mode.EXCLUDE)
     void testUserCanNotBulkCreateMediaAccountsWhenNotSystemAdmin(Roles role) {
         setupWithAuth();
         user.setRoles(role);
@@ -283,7 +286,7 @@ class AuthorisationServiceTest {
     }
 
     @ParameterizedTest
-    @EnumSource(value = Roles.class, names = { "INTERNAL_ADMIN_CTSC" }, mode = EnumSource.Mode.EXCLUDE)
+    @EnumSource(value = Roles.class, names = { INTERNAL_ADMIN_CTSC_ROLE }, mode = EnumSource.Mode.EXCLUDE)
     void testUserCanNotViewMediaApplicationsWhenNotAdminCtsc(Roles role) {
         setupWithAuth();
         user.setRoles(role);
@@ -311,7 +314,7 @@ class AuthorisationServiceTest {
     }
 
     @ParameterizedTest
-    @EnumSource(value = Roles.class, names = { "INTERNAL_ADMIN_CTSC" }, mode = EnumSource.Mode.EXCLUDE)
+    @EnumSource(value = Roles.class, names = { INTERNAL_ADMIN_CTSC_ROLE }, mode = EnumSource.Mode.EXCLUDE)
     void testUserCanNotUpdateMediaApplicationsWhenNotAdminCtsc(Roles role) {
         setupWithAuth();
         user.setRoles(role);
@@ -339,7 +342,7 @@ class AuthorisationServiceTest {
     }
 
     @ParameterizedTest
-    @EnumSource(value = Roles.class, names = { "INTERNAL_ADMIN_CTSC" }, mode = EnumSource.Mode.EXCLUDE)
+    @EnumSource(value = Roles.class, names = { INTERNAL_ADMIN_CTSC_ROLE }, mode = EnumSource.Mode.EXCLUDE)
     void testUserCanNotCreateAzureAccountWhenNotAdminCtsc(Roles role) {
         setupWithAuth();
         user.setRoles(role);
@@ -371,7 +374,7 @@ class AuthorisationServiceTest {
     }
 
     @ParameterizedTest
-    @EnumSource(value = Roles.class, names = { "SYSTEM_ADMIN" }, mode = EnumSource.Mode.EXCLUDE)
+    @EnumSource(value = Roles.class, names = { SYSTEM_ADMIN_ROLE }, mode = EnumSource.Mode.EXCLUDE)
     void testUserCanNotCreateThirdPartyUserWhenNotSystemAdmin(Roles role) {
         setupWithAuth();
         adminUser.setRoles(role);
@@ -403,7 +406,7 @@ class AuthorisationServiceTest {
     }
 
     @ParameterizedTest
-    @EnumSource(value = Roles.class, names = { "INTERNAL_ADMIN_CTSC" }, mode = EnumSource.Mode.EXCLUDE)
+    @EnumSource(value = Roles.class, names = { INTERNAL_ADMIN_CTSC_ROLE }, mode = EnumSource.Mode.EXCLUDE)
     void testUserCanNotCreatePiAadVerifiedUserWhenNotAdminCtsc(Roles role) {
         setupWithAuth();
         adminUser.setRoles(role);
