@@ -94,6 +94,10 @@ class SmokeTest extends SmokeTestBase {
                 .as(CREATED_RESPONSE_TYPE)
                 .get(CreationEnum.CREATED_ACCOUNTS)
                 .getFirst();
+
+        PiUser adminCtscUser = new PiUser();
+        adminCtscUser.setUserId(ISSUER_ID);
+        adminCtscUser.setRoles(Roles.INTERNAL_ADMIN_CTSC);
     }
 
     @AfterAll
