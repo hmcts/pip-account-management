@@ -93,7 +93,7 @@ class SmokeTest extends SmokeTestBase {
                 .getBody()
                 .as(CREATED_RESPONSE_TYPE)
                 .get(CreationEnum.CREATED_ACCOUNTS)
-                .get(0);
+                .getFirst();
     }
 
     @AfterAll
@@ -131,7 +131,7 @@ class SmokeTest extends SmokeTestBase {
 
         String azureAccountId = response.getBody().as(AZURE_ACCOUNT_RESPONSE_TYPE)
             .get(CreationEnum.CREATED_ACCOUNTS)
-            .get(0)
+            .getFirst()
             .getAzureAccountId();
 
         PiUser piUser = new PiUser();
@@ -152,7 +152,7 @@ class SmokeTest extends SmokeTestBase {
 
     @Test
     void testCreateMediaApplication() throws IOException {
-        Response response = doPostMultipartForApplication(MEDIA_APPLICATION_URL,
+        Response response = doPostMultipartForApplication(MEDIA_APPLICATION_URL, ISSUER_ID,
                                                           new ClassPathResource(MOCK_FILE).getFile(),
                                                           TEST_DISPLAY_NAME, TEST_EMAIL, TEST_EMPLOYER,
                                                           MediaApplicationStatus.PENDING.toString());
