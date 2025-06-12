@@ -98,6 +98,9 @@ class SmokeTest extends SmokeTestBase {
         PiUser adminCtscUser = new PiUser();
         adminCtscUser.setUserId(ISSUER_ID);
         adminCtscUser.setRoles(Roles.INTERNAL_ADMIN_CTSC);
+
+        doPostRequest(CREATE_PI_ACCOUNT_URL, Map.of(ISSUER_ID_HEADER, ISSUER_ID),
+                      OBJECT_MAPPER.writeValueAsString(List.of(adminCtscUser)));
     }
 
     @AfterAll
