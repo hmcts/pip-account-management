@@ -72,6 +72,7 @@ class SmokeTest extends SmokeTestBase {
     private static final String STATUS_CODE_MATCH = "Status code does not match";
     private static final String RESPONSE_BODY_MATCH = "Response body does not match";
     private static String verifiedUserId;
+    private static String adminCtscUserId;
 
     @BeforeAll
     public void setup() throws JsonProcessingException {
@@ -96,11 +97,21 @@ class SmokeTest extends SmokeTestBase {
                 .getFirst();
 
         PiUser adminCtscUser = new PiUser();
-        adminCtscUser.setUserId(ISSUER_ID);
-        adminCtscUser.setRoles(Roles.INTERNAL_ADMIN_CTSC);
+        adminCtscUser.setEmail(TEST_EMAIL_PREFIX + "-"
+                            + ThreadLocalRandom.current().nextInt(1000, 9999) + "@justice.gov.uk");
+        adminCtscUser.setRoles(Roles.VERIFIED);
+        adminCtscUser.setForenames("SmokeTestSubscription-Firstname");
+        adminCtscUser.setSurname("SmokeTestSubscription-Surname");
+        adminCtscUser.setUserProvenance(UserProvenances.SSO);
+        adminCtscUser.setProvenanceUserId(UUID.randomUUID().toString());
 
-        doPostRequest(CREATE_PI_ACCOUNT_URL, Map.of(ISSUER_ID_HEADER, ISSUER_ID),
-                      OBJECT_MAPPER.writeValueAsString(List.of(adminCtscUser)));
+        adminCtscUserId = (String)
+            doPostRequest(CREATE_PI_ACCOUNT_URL, Map.of(ISSUER_ID_HEADER, ISSUER_ID),
+                          OBJECT_MAPPER.writeValueAsString(List.of(adminCtscUser)))
+                .getBody()
+                .as(CREATED_RESPONSE_TYPE)
+                .get(CreationEnum.CREATED_ACCOUNTS)
+                .getFirst();
     }
 
     @AfterAll
@@ -133,7 +144,7 @@ class SmokeTest extends SmokeTestBase {
         azureAccount.setRole(Roles.VERIFIED);
         azureAccount.setEmail(TEST_EMAIL);
 
-        Response response = doPostRequest(CREATE_AZURE_ACCOUNT_URL, Map.of(ISSUER_ID_HEADER, ISSUER_ID),
+        Response response = doPostRequest(CREATE_AZURE_ACCOUNT_URL, Map.of(ISSUER_ID_HEADER, adminCtscUserId),
                                           OBJECT_MAPPER.writeValueAsString(List.of(azureAccount)));
 
         assertThat(response.getStatusCode())
