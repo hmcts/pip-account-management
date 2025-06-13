@@ -55,7 +55,6 @@ public class SmokeTestBase {
                                      final Object body) {
         return given()
             .relaxedHTTPSValidation()
-            .headers(Map.of(AUTHORIZATION, "bearer " + accessToken))
             .headers(getRequestHeaders(additionalHeaders))
             .body(body)
             .when()
