@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -39,6 +40,7 @@ public class BulkAccountCreationController {
         description = "CREATED_ACCOUNTS:[{Created user ids}], ERRORED_ACCOUNTS: [{failed accounts}]")
     @ApiResponse(responseCode = "400", description = "Bad request")
     @Operation(summary = "Create media accounts via CSV upload")
+    @PreAuthorize("@authorisationService.userCanBulkCreateMediaAccounts(#issuerId)")
     @PostMapping("/media-bulk-upload")
     public ResponseEntity<Map<CreationEnum, List<?>>> createMediaAccountsBulk(//NOSONAR
         @RequestHeader(ISSUER_ID) String issuerId, @RequestPart MultipartFile mediaList) {
