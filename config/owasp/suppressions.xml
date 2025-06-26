@@ -14,4 +14,8 @@
     <notes>Brought in by Spring. To be fixed on upgrade to springboot 3.4.7</notes>
     <cve>CVE-2025-48988</cve>
   </suppress>
+  <suppress>
+    <notes>Brought in Azure dependencies. Currently on latest version</notes>
+    <cve>CVE-2024-35255</cve>
+  </suppress>
 </suppressions>
