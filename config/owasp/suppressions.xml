@@ -11,7 +11,7 @@
     <cve>CVE-2023-36415</cve>
   </suppress>
   <suppress>
-    <notes>Vulnerability pulled in by azure-identity</notes>
-    <cve>CVE-2024-35255</cve>
+    <notes>Brought in by Spring. To be fixed on upgrade to springboot 3.4.7</notes>
+    <cve>CVE-2025-48988</cve>
   </suppress>
 </suppressions>
