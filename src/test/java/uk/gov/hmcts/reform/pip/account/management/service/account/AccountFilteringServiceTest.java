@@ -36,7 +36,7 @@ import static uk.gov.hmcts.reform.pip.model.account.UserProvenances.PI_AAD;
 import static uk.gov.hmcts.reform.pip.model.account.UserProvenances.SSO;
 
 @ExtendWith(MockitoExtension.class)
-@SuppressWarnings({"PMD.TooManyMethods", "squid:S1874"})
+@SuppressWarnings({"squid:S1874"})
 class AccountFilteringServiceTest {
     private static final String EMAIL = "test@hmcts.net";
     private static final String ID = "1234";
