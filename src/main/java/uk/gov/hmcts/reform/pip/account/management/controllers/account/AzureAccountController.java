@@ -4,9 +4,10 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -25,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
+@AllArgsConstructor
 @Tag(name = "Account Management - API for managing Azure accounts")
 @RequestMapping("/account")
 @ApiResponse(responseCode = "401", description = "Invalid access credential")
@@ -40,11 +42,6 @@ public class AzureAccountController {
 
     private final AzureAccountService azureAccountService;
 
-    @Autowired
-    public AzureAccountController(AzureAccountService azureAccountService) {
-        this.azureAccountService = azureAccountService;
-    }
-
     /**
      * POST endpoint to create a new azure account.
      * This will also trigger any welcome emails.
@@ -54,6 +51,7 @@ public class AzureAccountController {
      * @return A list containing details of any created and errored azureAccounts.
      */
     @ApiResponse(responseCode = OK_CODE, description = "{AzureAccount}")
+    @PreAuthorize("@authorisationService.userCanCreateAzureAccount(#issuerId)")
     @PostMapping("/add/azure")
     public ResponseEntity<Map<CreationEnum, List<? extends AzureAccount>>> createAzureAccount(//NOSONAR
         @RequestHeader(ISSUER_ID) String issuerId, @RequestBody List<AzureAccount> azureAccounts) {

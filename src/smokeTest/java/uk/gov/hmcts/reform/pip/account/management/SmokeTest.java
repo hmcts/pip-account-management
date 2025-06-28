@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.testcontainers.shaded.com.fasterxml.jackson.core.JsonProcessingException;
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
@@ -36,6 +37,7 @@ import static org.springframework.http.HttpStatus.OK;
 
 @SpringBootTest(classes = {OAuthClient.class})
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@WithMockUser(username = "admin", authorities = {"APPROLE_api.request.admin"})
 @ActiveProfiles("smoke")
 class SmokeTest extends SmokeTestBase {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
@@ -51,8 +53,8 @@ class SmokeTest extends SmokeTestBase {
     private static final String TESTING_SUPPORT_SUBSCRIPTION_URL = "/testing-support/subscription/";
 
     private static final String ISSUER_ID_HEADER = "x-issuer-id";
-    private static final String USER_ID_HEADER = "x-user-id";
     private static final String ISSUER_ID = UUID.randomUUID().toString();
+    private static final String USER_ID_HEADER = "x-user-id";
     private static final UUID USER_ID = UUID.randomUUID();
     private static final String TEST_FIRST_NAME = "SmokeTestFirstName";
     private static final String TEST_SURNAME = "SmokeTestSurname";
@@ -72,6 +74,7 @@ class SmokeTest extends SmokeTestBase {
     private static final String STATUS_CODE_MATCH = "Status code does not match";
     private static final String RESPONSE_BODY_MATCH = "Response body does not match";
     private static String verifiedUserId;
+    private static String adminCtscUserId;
 
     @BeforeAll
     public void setup() throws JsonProcessingException {
@@ -84,7 +87,7 @@ class SmokeTest extends SmokeTestBase {
         piUser.setRoles(Roles.VERIFIED);
         piUser.setForenames("SmokeTestSubscription-Firstname");
         piUser.setSurname("SmokeTestSubscription-Surname");
-        piUser.setUserProvenance(UserProvenances.PI_AAD);
+        piUser.setUserProvenance(UserProvenances.SSO);
         piUser.setProvenanceUserId(UUID.randomUUID().toString());
 
         verifiedUserId = (String)
@@ -93,7 +96,24 @@ class SmokeTest extends SmokeTestBase {
                 .getBody()
                 .as(CREATED_RESPONSE_TYPE)
                 .get(CreationEnum.CREATED_ACCOUNTS)
-                .get(0);
+                .getFirst();
+
+        PiUser adminCtscUser = new PiUser();
+        adminCtscUser.setEmail(TEST_EMAIL_PREFIX + "-"
+                            + ThreadLocalRandom.current().nextInt(1000, 9999) + "@justice.gov.uk");
+        adminCtscUser.setRoles(Roles.VERIFIED);
+        adminCtscUser.setForenames("SmokeTestSubscription-Firstname");
+        adminCtscUser.setSurname("SmokeTestSubscription-Surname");
+        adminCtscUser.setUserProvenance(UserProvenances.SSO);
+        adminCtscUser.setProvenanceUserId(UUID.randomUUID().toString());
+
+        adminCtscUserId = (String)
+            doPostRequest(CREATE_PI_ACCOUNT_URL, Map.of(ISSUER_ID_HEADER, ISSUER_ID),
+                          OBJECT_MAPPER.writeValueAsString(List.of(adminCtscUser)))
+                .getBody()
+                .as(CREATED_RESPONSE_TYPE)
+                .get(CreationEnum.CREATED_ACCOUNTS)
+                .getFirst();
     }
 
     @AfterAll
@@ -126,12 +146,16 @@ class SmokeTest extends SmokeTestBase {
         azureAccount.setRole(Roles.VERIFIED);
         azureAccount.setEmail(TEST_EMAIL);
 
-        Response response = doPostRequest(CREATE_AZURE_ACCOUNT_URL, Map.of(ISSUER_ID_HEADER, ISSUER_ID),
+        Response response = doPostRequest(CREATE_AZURE_ACCOUNT_URL, Map.of(ISSUER_ID_HEADER, adminCtscUserId),
                                           OBJECT_MAPPER.writeValueAsString(List.of(azureAccount)));
+
+        assertThat(response.getStatusCode())
+            .as(STATUS_CODE_MATCH)
+            .isEqualTo(CREATED.value());
 
         String azureAccountId = response.getBody().as(AZURE_ACCOUNT_RESPONSE_TYPE)
             .get(CreationEnum.CREATED_ACCOUNTS)
-            .get(0)
+            .getFirst()
             .getAzureAccountId();
 
         PiUser piUser = new PiUser();
@@ -139,7 +163,7 @@ class SmokeTest extends SmokeTestBase {
         piUser.setRoles(Roles.VERIFIED);
         piUser.setForenames(TEST_FIRST_NAME);
         piUser.setSurname(TEST_SURNAME);
-        piUser.setUserProvenance(UserProvenances.PI_AAD);
+        piUser.setUserProvenance(UserProvenances.SSO);
         piUser.setProvenanceUserId(azureAccountId);
 
         response = doPostRequest(CREATE_PI_ACCOUNT_URL, Map.of(ISSUER_ID_HEADER, ISSUER_ID),
@@ -152,7 +176,7 @@ class SmokeTest extends SmokeTestBase {
 
     @Test
     void testCreateMediaApplication() throws IOException {
-        Response response = doPostMultipartForApplication(MEDIA_APPLICATION_URL,
+        Response response = doPostMultipartForApplication(MEDIA_APPLICATION_URL, ISSUER_ID,
                                                           new ClassPathResource(MOCK_FILE).getFile(),
                                                           TEST_DISPLAY_NAME, TEST_EMAIL, TEST_EMPLOYER,
                                                           MediaApplicationStatus.PENDING.toString());
