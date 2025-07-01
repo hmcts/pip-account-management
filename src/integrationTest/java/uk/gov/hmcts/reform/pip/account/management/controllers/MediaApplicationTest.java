@@ -20,7 +20,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import uk.gov.hmcts.reform.pip.account.management.model.MediaApplication;
 import uk.gov.hmcts.reform.pip.account.management.model.MediaApplicationStatus;
-import uk.gov.hmcts.reform.pip.account.management.service.AuthorisationService;
+import uk.gov.hmcts.reform.pip.account.management.service.authorisation.AccountAuthorisationService;
 import uk.gov.hmcts.reform.pip.account.management.utils.IntegrationTestBase;
 
 import java.io.InputStream;
@@ -86,7 +86,7 @@ class MediaApplicationTest extends IntegrationTestBase {
     private static final Map<String, List<String>> REASONS = new ConcurrentHashMap<>();
 
     @MockitoBean
-    private AuthorisationService authorisationService;
+    private AccountAuthorisationService accountAuthorisationService;
 
     @BeforeAll
     static void beforeAllSetup() {
@@ -97,8 +97,8 @@ class MediaApplicationTest extends IntegrationTestBase {
     void setup() {
         objectMapper = new ObjectMapper();
         objectMapper.findAndRegisterModules();
-        when(authorisationService.userCanViewMediaApplications(any())).thenReturn(true);
-        when(authorisationService.userCanUpdateMediaApplications(any())).thenReturn(true);
+        when(accountAuthorisationService.userCanViewMediaApplications(any())).thenReturn(true);
+        when(accountAuthorisationService.userCanUpdateMediaApplications(any())).thenReturn(true);
     }
 
     @SuppressWarnings("PMD.SignatureDeclareThrowsException")
@@ -260,7 +260,7 @@ class MediaApplicationTest extends IntegrationTestBase {
     @Test
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testGetApplicationsByStatusUnauthorised() throws Exception {
-        when(authorisationService.userCanViewMediaApplications(any())).thenReturn(false);
+        when(accountAuthorisationService.userCanViewMediaApplications(any())).thenReturn(false);
         mockMvc.perform(get(GET_STATUS_URL, PENDING_STATUS).header(REQUESTER_HEADER, TEST_ID))
             .andExpect(status().isForbidden());
     }
@@ -297,7 +297,7 @@ class MediaApplicationTest extends IntegrationTestBase {
     @Test
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testGetApplicationByIdUnauthorised() throws Exception {
-        when(authorisationService.userCanViewMediaApplications(any())).thenReturn(false);
+        when(accountAuthorisationService.userCanViewMediaApplications(any())).thenReturn(false);
         mockMvc.perform(get(GET_BY_ID_URL, TEST_ID).header(REQUESTER_HEADER, TEST_ID))
             .andExpect(status().isForbidden());
     }
@@ -335,7 +335,7 @@ class MediaApplicationTest extends IntegrationTestBase {
     @Test
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testGetImageByIdUnauthorised() throws Exception {
-        when(authorisationService.userCanViewMediaApplications(any())).thenReturn(false);
+        when(accountAuthorisationService.userCanViewMediaApplications(any())).thenReturn(false);
         mockMvc.perform(get(GET_IMAGE_BY_ID_URL, TEST_ID).header(REQUESTER_HEADER, TEST_ID))
             .andExpect(status().isForbidden());
     }
@@ -417,7 +417,7 @@ class MediaApplicationTest extends IntegrationTestBase {
     @Test
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testUpdateApplicationRejectionUnauthorised() throws Exception {
-        when(authorisationService.userCanUpdateMediaApplications(any())).thenReturn(false);
+        when(accountAuthorisationService.userCanUpdateMediaApplications(any())).thenReturn(false);
         mockMvc.perform(put(UPDATE_APPLICATION_REJECTION_URL, TEST_ID,
                             MediaApplicationStatus.REJECTED
             ).content(objectMapper.writeValueAsString(REASONS)).contentType(MediaType.APPLICATION_JSON)

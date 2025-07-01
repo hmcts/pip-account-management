@@ -20,7 +20,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import uk.gov.hmcts.reform.pip.account.management.model.account.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.account.PiUser;
-import uk.gov.hmcts.reform.pip.account.management.service.AuthorisationService;
+import uk.gov.hmcts.reform.pip.account.management.service.authorisation.AccountAuthorisationService;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
 import uk.gov.hmcts.reform.pip.model.publication.ListType;
@@ -48,7 +48,7 @@ class SensitivityTest {
     private MockMvc mockMvc;
 
     @MockitoBean
-    private AuthorisationService authorisationService;
+    private AccountAuthorisationService accountAuthorisationService;
 
     private static final String ROOT_URL = "/account";
     private static final String PI_URL = ROOT_URL + "/add/pi";
@@ -73,7 +73,7 @@ class SensitivityTest {
             .header(ISSUER_HEADER, ISSUER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
-        when(authorisationService.userCanCreateAccount(any(), any())).thenReturn(true);
+        when(accountAuthorisationService.userCanCreateAccount(any(), any())).thenReturn(true);
 
         MvcResult userResponse = mockMvc.perform(setupRequest).andExpect(status().isCreated()).andReturn();
         Map<CreationEnum, List<Object>> mappedResponse =

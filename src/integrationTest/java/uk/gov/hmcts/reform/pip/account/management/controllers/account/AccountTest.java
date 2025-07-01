@@ -27,7 +27,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import uk.gov.hmcts.reform.pip.account.management.model.account.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.account.PiUser;
 import uk.gov.hmcts.reform.pip.account.management.model.account.SystemAdminAccount;
-import uk.gov.hmcts.reform.pip.account.management.service.AuthorisationService;
+import uk.gov.hmcts.reform.pip.account.management.service.authorisation.AccountAuthorisationService;
 import uk.gov.hmcts.reform.pip.account.management.utils.IntegrationTestBase;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
@@ -72,7 +72,7 @@ class AccountTest extends IntegrationTestBase {
     private UserItemRequestBuilder userItemRequestBuilder;
 
     @MockitoBean
-    private AuthorisationService authorisationService;
+    private AccountAuthorisationService accountAuthorisationService;
 
     private static final String ROOT_URL = "/account";
     private static final String PI_URL = ROOT_URL + "/add/pi";
@@ -169,9 +169,9 @@ class AccountTest extends IntegrationTestBase {
         when(graphClient.users()).thenReturn(usersRequestBuilder);
         when(usersRequestBuilder.post(any())).thenReturn(userToReturn, additionalUser);
 
-        when(authorisationService.userCanCreateAccount(any(), any())).thenReturn(true);
-        when(authorisationService.userCanViewAccounts(any())).thenReturn(true);
-        when(authorisationService.userCanDeleteAccount(any(), any())).thenReturn(true);
+        when(accountAuthorisationService.userCanCreateAccount(any(), any())).thenReturn(true);
+        when(accountAuthorisationService.userCanViewAccounts(any())).thenReturn(true);
+        when(accountAuthorisationService.userCanDeleteAccount(any(), any())).thenReturn(true);
     }
 
     @Test
@@ -656,7 +656,7 @@ class AccountTest extends IntegrationTestBase {
     void testV2SystemAdminDeletesSuperAdminUser() throws Exception {
         superAdminUser.setUserProvenance(UserProvenances.CFT_IDAM);
         String superAdminUserId = getSuperAdminUserId(superAdminUser);
-        String systemAdminUserId = getSystemAdminUserId("test_account_system-admin2@hmcts.net");
+        String systemAdminUserId = getSystemAdminUserId();
 
         MockHttpServletRequestBuilder deleteRequest = MockMvcRequestBuilders
             .delete(ROOT_URL + DELETE_PATH_V2 + superAdminUserId)
@@ -708,7 +708,7 @@ class AccountTest extends IntegrationTestBase {
             .put(ROOT_URL + UPDATE_PATH + createdUserId + "/" + Roles.INTERNAL_ADMIN_LOCAL)
             .header(ADMIN_HEADER, superAdminUserId);
 
-        when(authorisationService.userCanUpdateAccount(any(), any())).thenReturn(true);
+        when(accountAuthorisationService.userCanUpdateAccount(any(), any())).thenReturn(true);
         MvcResult responseUpdatedUser = mockMvc.perform(updateRequest)
             .andExpect(status().isOk()).andReturn();
 
@@ -814,7 +814,7 @@ class AccountTest extends IntegrationTestBase {
             .put(ROOT_URL + UPDATE_PATH + UUID.randomUUID() + "/" + Roles.INTERNAL_ADMIN_LOCAL)
             .header(ADMIN_HEADER, superAdminUserId);
 
-        when(authorisationService.userCanUpdateAccount(any(), any())).thenReturn(true);
+        when(accountAuthorisationService.userCanUpdateAccount(any(), any())).thenReturn(true);
         MvcResult mvcResult = mockMvc.perform(request)
             .andExpect(status().isNotFound())
             .andReturn();
@@ -858,7 +858,7 @@ class AccountTest extends IntegrationTestBase {
             .header(ISSUER_HEADER, SYSTEM_ADMIN_ISSUER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
-        when(authorisationService.userCanCreateAccount(any(), any())).thenReturn(false);
+        when(accountAuthorisationService.userCanCreateAccount(any(), any())).thenReturn(false);
         MvcResult mvcResult =
             mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isForbidden()).andReturn();
 
@@ -876,7 +876,7 @@ class AccountTest extends IntegrationTestBase {
             .header(ISSUER_HEADER, SYSTEM_ADMIN_ISSUER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
-        when(authorisationService.userCanCreateAccount(any(), any())).thenReturn(false);
+        when(accountAuthorisationService.userCanCreateAccount(any(), any())).thenReturn(false);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder)
             .andExpect(status().isForbidden()).andReturn();
@@ -890,7 +890,7 @@ class AccountTest extends IntegrationTestBase {
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testUnauthorizedGetUserByProvenanceId() throws Exception {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
-            .get(String.format("%s/%s/%s", GET_PROVENANCE_USER_URL, UserProvenances.CFT_IDAM, ID))
+            .get(String.format(REPLACE_STRING, GET_PROVENANCE_USER_URL, UserProvenances.CFT_IDAM, ID))
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult mvcResult =
@@ -956,7 +956,7 @@ class AccountTest extends IntegrationTestBase {
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .get(ROOT_URL + "/" + UUID.randomUUID()).header(REQUESTER_HEADER, SUPER_ADMIN_ISSUER_ID);
 
-        when(authorisationService.userCanViewAccounts(any())).thenReturn(false);
+        when(accountAuthorisationService.userCanViewAccounts(any())).thenReturn(false);
         MvcResult mvcResult = mockMvc.perform(request).andExpect(status().isForbidden()).andReturn();
 
         assertEquals(FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
@@ -968,9 +968,9 @@ class AccountTest extends IntegrationTestBase {
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testUnauthorizedDeleteAccount() throws Exception {
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
-            .delete(ROOT_URL + "/delete/" + USER_ID).header(ADMIN_HEADER, USER_ID);
+            .delete(ROOT_URL + DELETE_PATH + USER_ID).header(ADMIN_HEADER, USER_ID);
 
-        when(authorisationService.userCanDeleteAccount(any(), any())).thenReturn(false);
+        when(accountAuthorisationService.userCanDeleteAccount(any(), any())).thenReturn(false);
 
         MvcResult mvcResult = mockMvc.perform(request)
             .andExpect(status().isForbidden()).andReturn();
@@ -989,7 +989,7 @@ class AccountTest extends IntegrationTestBase {
             .delete(ROOT_URL + DELETE_PATH_V2 + USER_ID)
             .header(ADMIN_HEADER, SYSTEM_ADMIN_ISSUER_ID);
 
-        when(authorisationService.userCanDeleteAccount(any(), any())).thenReturn(false);
+        when(accountAuthorisationService.userCanDeleteAccount(any(), any())).thenReturn(false);
         MvcResult mvcResult = mockMvc.perform(request)
             .andExpect(status().isForbidden()).andReturn();
 
@@ -1002,7 +1002,7 @@ class AccountTest extends IntegrationTestBase {
     @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD,
         scripts = {ADD_USERS_SCRIPT, ADD_VERIFIED_USERS_SCRIPT})
     void testUnauthorizedDeleteAccountV2WhenNoUserId() throws Exception {
-        when(authorisationService.userCanDeleteAccount(any(), any())).thenReturn(false);
+        when(accountAuthorisationService.userCanDeleteAccount(any(), any())).thenReturn(false);
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .delete(ROOT_URL + DELETE_PATH_V2 + USER_ID).header(ADMIN_HEADER, SYSTEM_ADMIN_ISSUER_ID);
 
@@ -1037,11 +1037,11 @@ class AccountTest extends IntegrationTestBase {
     }
 
     @SuppressWarnings("PMD.SignatureDeclareThrowsException")
-    private String getSystemAdminUserId(String email) throws Exception {
+    private String getSystemAdminUserId() throws Exception {
         SystemAdminAccount systemAdmin = new SystemAdminAccount();
         systemAdmin.setFirstName(FIRST_NAME);
         systemAdmin.setSurname(SURNAME);
-        systemAdmin.setEmail(email);
+        systemAdmin.setEmail("test_account_system-admin2@hmcts.net");
 
         MockHttpServletRequestBuilder createRequest =
             MockMvcRequestBuilders
@@ -1050,7 +1050,7 @@ class AccountTest extends IntegrationTestBase {
                 .header(ISSUER_HEADER, SYSTEM_ADMIN_ID)
                 .contentType(MediaType.APPLICATION_JSON);
 
-        when(authorisationService.userCanCreateSystemAdmin(any())).thenReturn(true);
+        when(accountAuthorisationService.userCanCreateSystemAdmin(any())).thenReturn(true);
 
         MvcResult responseCreateSystemAdminUser = mockMvc.perform(createRequest)
             .andExpect(status().isOk()).andReturn();

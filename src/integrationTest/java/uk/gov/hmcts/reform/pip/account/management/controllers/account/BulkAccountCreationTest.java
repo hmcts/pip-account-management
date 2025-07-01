@@ -24,7 +24,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.testcontainers.shaded.org.apache.commons.io.IOUtils;
 import uk.gov.hmcts.reform.pip.account.management.model.account.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredAzureAccount;
-import uk.gov.hmcts.reform.pip.account.management.service.AuthorisationService;
+import uk.gov.hmcts.reform.pip.account.management.service.authorisation.AccountAuthorisationService;
 import uk.gov.hmcts.reform.pip.account.management.utils.IntegrationTestBase;
 
 import java.io.InputStream;
@@ -74,7 +74,7 @@ class BulkAccountCreationTest extends IntegrationTestBase {
     private UsersRequestBuilder usersRequestBuilder;
 
     @MockitoBean
-    private AuthorisationService authorisationService;
+    private AccountAuthorisationService accountAuthorisationService;
 
     @BeforeEach
     void setup() {
@@ -94,7 +94,7 @@ class BulkAccountCreationTest extends IntegrationTestBase {
 
         when(usersRequestBuilder.get(any())).thenReturn(userCollectionResponse);
 
-        when(authorisationService.userCanBulkCreateMediaAccounts(any())).thenReturn(true);
+        when(accountAuthorisationService.userCanBulkCreateMediaAccounts(any())).thenReturn(true);
     }
 
     @Test

@@ -22,7 +22,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.testcontainers.shaded.org.apache.commons.lang3.RandomUtils;
 import uk.gov.hmcts.reform.pip.account.management.model.account.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.account.PiUser;
-import uk.gov.hmcts.reform.pip.account.management.service.AuthorisationService;
+import uk.gov.hmcts.reform.pip.account.management.service.authorisation.AccountAuthorisationService;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
 import uk.gov.hmcts.reform.pip.model.report.AccountMiData;
@@ -73,17 +73,17 @@ class CustomAccountRetrievalTest {
     private static final String UNAUTHORIZED_USERNAME = "unauthorized_isAuthorized";
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-    private static final PiUser VALID_USER = createUser(true, UUID.randomUUID().toString());
+    private static final PiUser VALID_USER = createUser(UUID.randomUUID().toString());
 
     @Autowired
     private MockMvc mockMvc;
 
     @MockitoBean
-    private AuthorisationService authorisationService;
+    private AccountAuthorisationService accountAuthorisationService;
 
-    private static PiUser createUser(boolean valid, String id) {
+    private static PiUser createUser(String id) {
         PiUser user = new PiUser();
-        user.setEmail(valid ? EMAIL : INVALID_EMAIL);
+        user.setEmail(EMAIL);
         user.setProvenanceUserId(id);
         user.setUserProvenance(UserProvenances.PI_AAD);
         user.setRoles(Roles.INTERNAL_ADMIN_CTSC);
@@ -99,14 +99,14 @@ class CustomAccountRetrievalTest {
 
     @BeforeEach
     void beforeEachSetUp() {
-        when(authorisationService.userCanCreateAccount(any(), any())).thenReturn(true);
-        when(authorisationService.userCanViewAccounts(any())).thenReturn(true);
+        when(accountAuthorisationService.userCanCreateAccount(any(), any())).thenReturn(true);
+        when(accountAuthorisationService.userCanViewAccounts(any())).thenReturn(true);
     }
 
     @Test
     void testMiData() throws Exception {
         String provenanceId = UUID.randomUUID().toString();
-        PiUser validUser = createUser(true, provenanceId);
+        PiUser validUser = createUser(provenanceId);
         validUser.setEmail("test-account-am-" + RandomUtils.nextInt() + "@hmcts.net");
 
         MockHttpServletRequestBuilder createRequest =
@@ -200,7 +200,7 @@ class CustomAccountRetrievalTest {
     @Test
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testUnauthorizedGetAllThirdPartyAccounts() throws Exception {
-        when(authorisationService.userCanViewAccounts(any())).thenReturn(false);
+        when(accountAuthorisationService.userCanViewAccounts(any())).thenReturn(false);
 
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .get(THIRD_PARTY_URL).header(REQUESTER_HEADER, REQUESTER_ID);
@@ -215,8 +215,8 @@ class CustomAccountRetrievalTest {
 
     @Test
     void testGetAllAccountsExceptThirdParty() throws Exception {
-        PiUser validUser1 = createUser(true, UUID.randomUUID().toString());
-        PiUser validUser2 = createUser(true, UUID.randomUUID().toString());
+        PiUser validUser1 = createUser(UUID.randomUUID().toString());
+        PiUser validUser2 = createUser(UUID.randomUUID().toString());
 
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder =
             MockMvcRequestBuilders
@@ -251,7 +251,7 @@ class CustomAccountRetrievalTest {
     @Test
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testUnauthorizedGetAllAccountsExceptThirdParty() throws Exception {
-        when(authorisationService.userCanViewAccounts(any())).thenReturn(false);
+        when(accountAuthorisationService.userCanViewAccounts(any())).thenReturn(false);
 
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .get(GET_ALL_ACCOUNTS_EXCEPT_THIRD_PARTY)

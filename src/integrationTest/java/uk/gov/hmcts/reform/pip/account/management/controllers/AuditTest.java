@@ -20,7 +20,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import uk.gov.hmcts.reform.pip.account.management.model.CustomPageImpl;
 import uk.gov.hmcts.reform.pip.account.management.model.account.AuditLog;
-import uk.gov.hmcts.reform.pip.account.management.service.AuthorisationService;
+import uk.gov.hmcts.reform.pip.account.management.service.authorisation.AccountAuthorisationService;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
 import uk.gov.hmcts.reform.pip.model.enums.AuditAction;
@@ -60,6 +60,7 @@ class AuditTest {
     private static final String UNAUTHORIZED_USERNAME = "unauthorized_isAuthorized";
     private static final String FORBIDDEN_STATUS_CODE = "Status code does not match forbidden";
     private static final String GET_AUDIT_LOG_FAILED = "Failed to retrieve audit log";
+    private static final String CREATE_AUDIT_LOG_FAILED = "Failed to create audit log";
     private static final AuditAction AUDIT_ACTION = AuditAction.MANAGE_THIRD_PARTY_USER_VIEW;
     private static final AuditAction ADDITIONAL_USER_AUDIT_ACTION = AuditAction.MANAGE_USER;
     private static final String ADDITIONAL_USER_AUDIT_DETAILS = "Manage user";
@@ -67,7 +68,7 @@ class AuditTest {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     @MockitoBean
-    private AuthorisationService authorisationService;
+    private AccountAuthorisationService accountAuthorisationService;
 
     @BeforeAll
     static void startup() {
@@ -76,7 +77,7 @@ class AuditTest {
 
     @BeforeEach
     void beforeEach() {
-        when(authorisationService.userCanViewAuditLogs(any())).thenReturn(true);
+        when(accountAuthorisationService.userCanViewAuditLogs(any())).thenReturn(true);
     }
 
     private AuditLog createAuditLog() {
@@ -298,7 +299,7 @@ class AuditTest {
         AuditLog auditLog1 = pageResponse.getContent().getFirst();
 
 
-        assertEquals(pageResponse.getContent().size(), 1, GET_AUDIT_LOG_FAILED);
+        assertEquals(1, pageResponse.getContent().size(), GET_AUDIT_LOG_FAILED);
         assertEquals(ADDITIONAL_USER_EMAIL, auditLog1.getUserEmail(), GET_AUDIT_LOG_FAILED);
         assertEquals(ADDITIONAL_USER_ID, auditLog1.getUserId(), GET_AUDIT_LOG_FAILED);
         assertEquals(ADDITIONAL_USER_AUDIT_DETAILS, auditLog1.getDetails(), GET_AUDIT_LOG_FAILED);
@@ -401,7 +402,7 @@ class AuditTest {
     @Test
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testUnauthorizedGetAllAuditLogs() throws Exception {
-        when(authorisationService.userCanViewAuditLogs(REQUESTER_ID)).thenReturn(false);
+        when(accountAuthorisationService.userCanViewAuditLogs(REQUESTER_ID)).thenReturn(false);
 
         MvcResult mvcResult = mockMvc.perform(get(ROOT_URL).header(REQUESTER_HEADER, REQUESTER_ID))
             .andExpect(status().isForbidden()).andReturn();
@@ -425,9 +426,9 @@ class AuditTest {
             AuditLog.class
         );
 
-        assertEquals(EMAIL, auditLog.getUserEmail(), "Failed to create audit log");
-        assertEquals(USER_ID, auditLog.getUserId(), "Failed to create audit log");
-        assertEquals(AUDIT_DETAILS, auditLog.getDetails(), "Failed to create audit log");
+        assertEquals(EMAIL, auditLog.getUserEmail(), CREATE_AUDIT_LOG_FAILED);
+        assertEquals(USER_ID, auditLog.getUserId(), CREATE_AUDIT_LOG_FAILED);
+        assertEquals(AUDIT_DETAILS, auditLog.getDetails(), CREATE_AUDIT_LOG_FAILED);
     }
 
     @Test
