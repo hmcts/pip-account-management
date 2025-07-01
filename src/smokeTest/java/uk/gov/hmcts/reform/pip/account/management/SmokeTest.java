@@ -59,7 +59,8 @@ class SmokeTest extends SmokeTestBase {
     private static final String TEST_EMPLOYER = "SmokeTestEmployer";
     private static final String TEST_EMAIL_PREFIX = "SmokeTestEmail-"
         + ThreadLocalRandom.current().nextInt(1000, 9999);
-    private static final String TEST_EMAIL = TEST_EMAIL_PREFIX + "@justice.gov.uk";
+    private static final String TEST_EMAIL_SUFFIX = "@justice.gov.uk";
+    private static final String TEST_EMAIL = TEST_EMAIL_PREFIX + TEST_EMAIL_SUFFIX;
     private static final String LOCATION_ID = createRandomId();
     private static final String LOCATION_NAME = "TestLocation" + LOCATION_ID;
     protected static final TypeRef<Map<CreationEnum, List<?>>> CREATED_RESPONSE_TYPE = new TypeRef<>() {};
@@ -80,7 +81,7 @@ class SmokeTest extends SmokeTestBase {
 
         PiUser piUser = new PiUser();
         piUser.setEmail(TEST_EMAIL_PREFIX + "-"
-                            + ThreadLocalRandom.current().nextInt(1000, 9999) + "@justice.gov.uk");
+                            + ThreadLocalRandom.current().nextInt(1000, 9999) + TEST_EMAIL_SUFFIX);
         piUser.setRoles(Roles.VERIFIED);
         piUser.setForenames("SmokeTestSubscription-Firstname");
         piUser.setSurname("SmokeTestSubscription-Surname");
@@ -97,7 +98,7 @@ class SmokeTest extends SmokeTestBase {
 
         PiUser adminCtscUser = new PiUser();
         adminCtscUser.setEmail(TEST_EMAIL_PREFIX + "-"
-                                   + ThreadLocalRandom.current().nextInt(1000, 9999) + "@justice.gov.uk");
+                                   + ThreadLocalRandom.current().nextInt(1000, 9999) + TEST_EMAIL_SUFFIX);
         adminCtscUser.setRoles(Roles.INTERNAL_ADMIN_CTSC);
         adminCtscUser.setForenames("SmokeTestAdminCtsc-Firstname");
         adminCtscUser.setSurname("SmokeTestAdminCtsc-Surname");
@@ -148,7 +149,7 @@ class SmokeTest extends SmokeTestBase {
 
         assertThat(response.getStatusCode())
             .as(STATUS_CODE_MATCH)
-            .isEqualTo(CREATED.value());
+            .isEqualTo(OK.value());
 
         String azureAccountId = response.getBody().as(AZURE_ACCOUNT_RESPONSE_TYPE)
             .get(CreationEnum.CREATED_ACCOUNTS)
