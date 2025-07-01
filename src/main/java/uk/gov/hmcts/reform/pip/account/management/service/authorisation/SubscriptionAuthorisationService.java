@@ -10,6 +10,7 @@ import uk.gov.hmcts.reform.pip.account.management.service.account.AccountService
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -65,9 +66,9 @@ public class SubscriptionAuthorisationService {
         return false;
     }
 
-    public boolean userCanBulkDeleteSubscriptions(UUID requesterId, UUID... subscriptionIds) {
-        if (isVerifiedUser(requesterId) && Arrays.stream(subscriptionIds)
-            .allMatch(id -> isSubscriptionUserMatch(id, requesterId))) {
+    public boolean userCanBulkDeleteSubscriptions(UUID requesterId, List<UUID> subscriptionIds) {
+        if (isVerifiedUser(requesterId)
+            && subscriptionIds.stream().allMatch(id -> isSubscriptionUserMatch(id, requesterId))) {
             return true;
         }
         log.error(writeLog(String.format("User with ID %s is not authorised to remove these subscriptions",
