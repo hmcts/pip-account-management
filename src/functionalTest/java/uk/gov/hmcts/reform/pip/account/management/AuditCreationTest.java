@@ -1,23 +1,26 @@
 package uk.gov.hmcts.reform.pip.account.management;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.dockerjava.zerodep.shaded.org.apache.hc.core5.http.HttpHeaders;
 import io.restassured.response.Response;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import uk.gov.hmcts.reform.pip.account.management.model.account.AuditLog;
-import uk.gov.hmcts.reform.pip.account.management.utils.FunctionalTestBase;
+import uk.gov.hmcts.reform.pip.account.management.utils.AccountHelperBase;
+import uk.gov.hmcts.reform.pip.model.account.PiUser;
 
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.HttpStatus.OK;
 
-class AuditCreationTest extends FunctionalTestBase {
+class AuditCreationTest extends AccountHelperBase {
     private static final UUID USER_ID = UUID.randomUUID();
     private static final String TEST_EMAIL_PREFIX = String.format(
         "pip-am-test-email-%s", ThreadLocalRandom.current().nextInt(1000, 9999));
@@ -32,19 +35,29 @@ class AuditCreationTest extends FunctionalTestBase {
     private static final String AUDIT_URL = "/audit";
     private static final String GET_AUDIT_URL = "/audit/%s";
     private static final String TESTING_SUPPORT_AUDIT_URL = "/testing-support/audit/";
-    private static final String BEARER = "Bearer ";
     private static final String CONTENT = "content";
+    private static final String REQUESTER_HEADER = "x-requester-id";
 
-    private Map<String, String> bearer;
+    private PiUser systemAdminUser;
+    private Map<String, String> headers = addAuthHeader();
 
     @BeforeAll
-    public void startUp() {
-        bearer = Map.of(HttpHeaders.AUTHORIZATION, BEARER + accessToken);
+    public void startUp() throws JsonProcessingException {
+        systemAdminUser = createSystemAdminAccount();
+    }
+
+    private Map<String, String> addAuthHeader() {
+        Map<String, String> bearer = Map.of(HttpHeaders.AUTHORIZATION, "bearer" + accessToken);
+
+        Map<String, String> headers = new ConcurrentHashMap<>(bearer);
+        headers.put(REQUESTER_HEADER, systemAdminUser.getUserId());
+
+        return headers;
     }
 
     @AfterAll
     public void teardown() {
-        doDeleteRequest(TESTING_SUPPORT_AUDIT_URL + TEST_EMAIL_PREFIX, bearer);
+        doDeleteRequest(TESTING_SUPPORT_AUDIT_URL + TEST_EMAIL_PREFIX, headers);
     }
 
     private AuditLog createAuditLog() {
@@ -78,7 +91,7 @@ class AuditCreationTest extends FunctionalTestBase {
     void shouldBeAbleToCreateAndGetAnAuditRecord() {
         AuditLog auditLog = createAuditLog();
 
-        Response getResponse = doGetRequest(String.format(GET_AUDIT_URL, auditLog.getId()), bearer);
+        Response getResponse = doGetRequest(String.format(GET_AUDIT_URL, auditLog.getId()), headers);
         assertThat(getResponse.getStatusCode()).isEqualTo(OK.value());
 
         AuditLog retrievedAuditLog = getResponse.getBody().as(AuditLog.class);
@@ -90,7 +103,7 @@ class AuditCreationTest extends FunctionalTestBase {
     void shouldBeAbleToGetAllAuditLogsUsingDefaultDisplayParameters() {
         AuditLog auditLog = createAuditLog();
 
-        Response getResponse = doGetRequestWithQueryParameters(String.format(AUDIT_URL), bearer,
+        Response getResponse = doGetRequestWithQueryParameters(String.format(AUDIT_URL), headers,
                                                                "", "", TEST_EMAIL_PREFIX);
 
         assertThat(getResponse.getStatusCode()).isEqualTo(OK.value());
@@ -108,7 +121,7 @@ class AuditCreationTest extends FunctionalTestBase {
     void shouldBeAbleToGetAllAuditLogsUsingCustomDisplayParameters() {
         AuditLog auditLog = createAuditLog();
 
-        Response getResponse = doGetRequestWithQueryParameters(String.format(AUDIT_URL), bearer,
+        Response getResponse = doGetRequestWithQueryParameters(String.format(AUDIT_URL), headers,
                                                    PAGE_NUMBER.toString(), PAGE_SIZE.toString(), TEST_EMAIL_PREFIX);
 
         assertThat(getResponse.getStatusCode()).isEqualTo(OK.value());
@@ -126,7 +139,7 @@ class AuditCreationTest extends FunctionalTestBase {
 
     @Test
     void shouldReturnErrorWhenAuditRecordDoesNotExist() {
-        Response getResponse = doGetRequest(String.format(GET_AUDIT_URL, USER_ID), bearer);
+        Response getResponse = doGetRequest(String.format(GET_AUDIT_URL, USER_ID), headers);
 
         assertThat(getResponse.getStatusCode()).isEqualTo(NOT_FOUND.value());
     }
@@ -137,7 +150,7 @@ class AuditCreationTest extends FunctionalTestBase {
 
         deleteAuditLog();
 
-        Response getResponse = doGetRequestWithQueryParameters(String.format(AUDIT_URL), bearer,
+        Response getResponse = doGetRequestWithQueryParameters(String.format(AUDIT_URL), headers,
                                                                "", "", TEST_EMAIL_PREFIX);
 
         List<AuditLog> retrievedAuditLogs = getResponse.jsonPath().getList(CONTENT, AuditLog.class);
@@ -149,7 +162,7 @@ class AuditCreationTest extends FunctionalTestBase {
 
     @Test
     void shouldBeAbleToDeleteAnOutOfDateAudit() {
-        Response getResponse = doGetRequestWithQueryParameters(String.format(AUDIT_URL), bearer,
+        Response getResponse = doGetRequestWithQueryParameters(String.format(AUDIT_URL), headers,
                                                                "", "", TEST_EMAIL_PREFIX);
         List<AuditLog> retrievedAuditLogs = getResponse.jsonPath().getList(CONTENT, AuditLog.class);
         assertThat(retrievedAuditLogs.size()).isEqualTo(4);
@@ -157,13 +170,13 @@ class AuditCreationTest extends FunctionalTestBase {
         AuditLog auditLog = createAuditLog();
         doPutRequest(TESTING_SUPPORT_AUDIT_URL + auditLog.getId(), bearer);
 
-        getResponse = doGetRequestWithQueryParameters(String.format(AUDIT_URL), bearer, "", "", TEST_EMAIL_PREFIX);
+        getResponse = doGetRequestWithQueryParameters(String.format(AUDIT_URL), headers, "", "", TEST_EMAIL_PREFIX);
         retrievedAuditLogs = getResponse.jsonPath().getList(CONTENT, AuditLog.class);
         assertThat(retrievedAuditLogs.size()).isEqualTo(5);
 
         deleteAuditLog();
 
-        getResponse = doGetRequestWithQueryParameters(String.format(AUDIT_URL), bearer, "", "", TEST_EMAIL_PREFIX);
+        getResponse = doGetRequestWithQueryParameters(String.format(AUDIT_URL), headers, "", "", TEST_EMAIL_PREFIX);
         retrievedAuditLogs = getResponse.jsonPath().getList(CONTENT, AuditLog.class);
         assertThat(retrievedAuditLogs.size()).isEqualTo(4);
     }
