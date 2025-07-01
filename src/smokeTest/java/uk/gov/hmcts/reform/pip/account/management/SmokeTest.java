@@ -71,6 +71,7 @@ class SmokeTest extends SmokeTestBase {
     private static final String STATUS_CODE_MATCH = "Status code does not match";
     private static final String RESPONSE_BODY_MATCH = "Response body does not match";
     private String verifiedUserId;
+    private String adminUserId;
 
     @BeforeAll
     public void setup() throws JsonProcessingException {
@@ -95,11 +96,21 @@ class SmokeTest extends SmokeTestBase {
                 .getFirst();
 
         PiUser adminCtscUser = new PiUser();
-        adminCtscUser.setUserId(ISSUER_ID);
+        adminCtscUser.setEmail(TEST_EMAIL_PREFIX + "-"
+                                   + ThreadLocalRandom.current().nextInt(1000, 9999) + "@justice.gov.uk");
         adminCtscUser.setRoles(Roles.INTERNAL_ADMIN_CTSC);
+        adminCtscUser.setForenames("SmokeTestAdminCtsc-Firstname");
+        adminCtscUser.setSurname("SmokeTestAdminCtsc-Surname");
+        adminCtscUser.setUserProvenance(UserProvenances.SSO);
+        adminCtscUser.setProvenanceUserId(UUID.randomUUID().toString());
 
-        doPostRequest(CREATE_PI_ACCOUNT_URL, Map.of(ISSUER_ID_HEADER, ISSUER_ID),
-                      OBJECT_MAPPER.writeValueAsString(List.of(adminCtscUser)));
+        adminUserId = (String)
+            doPostRequest(CREATE_PI_ACCOUNT_URL, Map.of(ISSUER_ID_HEADER, ISSUER_ID),
+                          OBJECT_MAPPER.writeValueAsString(List.of(adminCtscUser)))
+                .getBody()
+                .as(CREATED_RESPONSE_TYPE)
+                .get(CreationEnum.CREATED_ACCOUNTS)
+                .getFirst();
     }
 
     @AfterAll
@@ -132,7 +143,7 @@ class SmokeTest extends SmokeTestBase {
         azureAccount.setRole(Roles.VERIFIED);
         azureAccount.setEmail(TEST_EMAIL);
 
-        Response response = doPostRequest(CREATE_AZURE_ACCOUNT_URL, Map.of(ISSUER_ID_HEADER, ISSUER_ID),
+        Response response = doPostRequest(CREATE_AZURE_ACCOUNT_URL, Map.of(ISSUER_ID_HEADER, adminUserId),
                                           OBJECT_MAPPER.writeValueAsString(List.of(azureAccount)));
 
         assertThat(response.getStatusCode())
@@ -149,10 +160,10 @@ class SmokeTest extends SmokeTestBase {
         piUser.setRoles(Roles.VERIFIED);
         piUser.setForenames(TEST_FIRST_NAME);
         piUser.setSurname(TEST_SURNAME);
-        piUser.setUserProvenance(UserProvenances.SSO);
+        piUser.setUserProvenance(UserProvenances.PI_AAD);
         piUser.setProvenanceUserId(azureAccountId);
 
-        response = doPostRequest(CREATE_PI_ACCOUNT_URL, Map.of(ISSUER_ID_HEADER, ISSUER_ID),
+        response = doPostRequest(CREATE_PI_ACCOUNT_URL, Map.of(ISSUER_ID_HEADER, adminUserId),
                                  OBJECT_MAPPER.writeValueAsString(List.of(piUser)));
 
         assertThat(response.getStatusCode())
