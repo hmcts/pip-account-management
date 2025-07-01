@@ -203,20 +203,20 @@ class SubscriptionTest extends IntegrationTestBase {
     protected MockHttpServletRequestBuilder setupMockSubscription(String caseNumber, String caseUrn)
         throws JsonProcessingException {
 
-        SUBSCRIPTION.setUserId(SubscriptionTest.VALID_USER_ID);
+        SUBSCRIPTION.setUserId(VALID_USER_ID);
         SUBSCRIPTION.setSearchType(SearchType.CASE_ID);
         SUBSCRIPTION.setCaseNumber(caseNumber);
         SUBSCRIPTION.setUrn(caseUrn);
-        return setupMockSubscription(SubscriptionTest.CASE_ID);
+        return setupMockSubscription(CASE_ID);
 
     }
 
     protected MockHttpServletRequestBuilder setupMockSubscriptionWithListType()
         throws JsonProcessingException {
 
-        SUBSCRIPTION.setUserId(SubscriptionTest.VALID_USER_ID);
+        SUBSCRIPTION.setUserId(VALID_USER_ID);
         SUBSCRIPTION.setSearchType(SearchType.LOCATION_ID);
-        return setupMockSubscription(SubscriptionTest.LOCATION_ID);
+        return setupMockSubscription(LOCATION_ID);
     }
 
     protected MockHttpServletRequestBuilder getSubscriptionByUuid(String searchValue) {
