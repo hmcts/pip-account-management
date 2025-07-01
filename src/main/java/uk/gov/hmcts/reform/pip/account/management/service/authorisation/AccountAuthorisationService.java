@@ -1,20 +1,15 @@
-package uk.gov.hmcts.reform.pip.account.management.service;
+package uk.gov.hmcts.reform.pip.account.management.service.authorisation;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import uk.gov.hmcts.reform.pip.account.management.database.SubscriptionRepository;
 import uk.gov.hmcts.reform.pip.account.management.database.UserRepository;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.NotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.model.account.PiUser;
-import uk.gov.hmcts.reform.pip.account.management.model.subscription.Subscription;
 import uk.gov.hmcts.reform.pip.account.management.service.account.AccountService;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -25,17 +20,23 @@ import static uk.gov.hmcts.reform.pip.model.account.Roles.INTERNAL_ADMIN_CTSC;
 import static uk.gov.hmcts.reform.pip.model.account.Roles.SYSTEM_ADMIN;
 import static uk.gov.hmcts.reform.pip.model.account.UserProvenances.PI_AAD;
 
-@Service("authorisationService")
-@AllArgsConstructor()
+@Service
+@AllArgsConstructor
 @Slf4j
-@SuppressWarnings({"PMD.GodClass", "PMD.TooManyMethods"})
-public class AuthorisationService {
+@SuppressWarnings("PMD.TooManyMethods")
+public class AccountAuthorisationService {
+
     private final UserRepository userRepository;
-    private final SubscriptionRepository subscriptionRepository;
     private final AccountService accountService;
+    private final AuthorisationCommonService authorisationCommonService;
+
+    private boolean isAdminCtsc(UUID userId) {
+        PiUser user = accountService.getUserById(userId);
+        return user != null && user.getRoles() == INTERNAL_ADMIN_CTSC;
+    }
 
     public boolean userCanCreateAccount(UUID adminUserId, List<PiUser> users) {
-        if (!isAdmin()) {
+        if (!authorisationCommonService.isAdmin()) {
             return false;
         }
 
@@ -66,7 +67,9 @@ public class AuthorisationService {
     }
 
     public boolean userCanDeleteAccount(UUID userId, UUID adminUserId) {
-        if (!isAdmin() || !isSystemAdmin(adminUserId) || adminUserId.equals(userId)) {
+        if (!authorisationCommonService.isAdmin()
+            || !authorisationCommonService.isSystemAdmin(adminUserId)
+            || adminUserId.equals(userId)) {
             log.error(writeLog(String.format("User with ID %s is not authorised to delete this account", adminUserId)));
             return false;
         }
@@ -74,7 +77,8 @@ public class AuthorisationService {
     }
 
     public boolean userCanUpdateAccount(UUID userId, UUID adminUserId) {
-        if (!isAdmin()) {
+
+        if (!authorisationCommonService.isAdmin()) {
             return false;
         }
 
@@ -96,7 +100,7 @@ public class AuthorisationService {
     }
 
     public boolean userCanCreateSystemAdmin(UUID userId) {
-        if (!isAdmin()) {
+        if (!authorisationCommonService.isAdmin()) {
             return false;
         }
 
@@ -111,22 +115,8 @@ public class AuthorisationService {
         return isSystemAdmin;
     }
 
-    public boolean userCanDeleteSubscriptions(UUID userId, UUID... subscriptionIds) {
-        return isAdmin() && (isSystemAdmin(userId) || Arrays.stream(subscriptionIds)
-            .allMatch(id -> isSubscriptionUserMatch(id, userId)));
-
-    }
-
-    public boolean userCanViewAuditLogs(UUID userId) {
-        if (!isAdmin() || !isSystemAdmin(userId)) {
-            log.error(writeLog(String.format("User with ID %s is not authorised to view audit logs", userId)));
-            return false;
-        }
-        return true;
-    }
-
     public boolean userCanViewAccounts(UUID userId) {
-        if (!isAdmin() || !isSystemAdmin(userId)) {
+        if (!authorisationCommonService.isAdmin() || !authorisationCommonService.isSystemAdmin(userId)) {
             log.error(writeLog(String.format("User with ID %s is not authorised to view accounts", userId)));
             return false;
         }
@@ -134,7 +124,7 @@ public class AuthorisationService {
     }
 
     public boolean userCanBulkCreateMediaAccounts(UUID userId) {
-        if (!isAdmin() || !isSystemAdmin(userId)) {
+        if (!authorisationCommonService.isAdmin() || !authorisationCommonService.isSystemAdmin(userId)) {
             log.error(writeLog(String.format("User with ID %s is not authorised to create these accounts", userId)));
             return false;
         }
@@ -142,7 +132,7 @@ public class AuthorisationService {
     }
 
     public boolean userCanViewMediaApplications(UUID userId) {
-        if (!isAdmin() || !isAdminCtsc(userId)) {
+        if (!authorisationCommonService.isAdmin() || !isAdminCtsc(userId)) {
             log.error(writeLog(String.format("User with ID %s is not authorised to view media applications", userId)));
             return false;
         }
@@ -150,7 +140,7 @@ public class AuthorisationService {
     }
 
     public boolean userCanUpdateMediaApplications(UUID userId) {
-        if (!isAdmin() || !isAdminCtsc(userId)) {
+        if (!authorisationCommonService.isAdmin() || !isAdminCtsc(userId)) {
             log.error(writeLog(String.format("User with ID %s is not authorised to update media "
                                                  + "applications", userId)));
             return false;
@@ -159,14 +149,23 @@ public class AuthorisationService {
     }
 
     public boolean userCanCreateAzureAccount(UUID userId) {
-        if (!isAdmin() || !isAdminCtsc(userId)) {
+        if (!authorisationCommonService.isAdmin() || !isAdminCtsc(userId)) {
             log.error(writeLog(String.format("User with ID %s is not authorised to create azure accounts", userId)));
             return false;
         }
         return true;
     }
 
+    public boolean userCanViewAuditLogs(UUID userId) {
+        if (!authorisationCommonService.isAdmin() || !authorisationCommonService.isSystemAdmin(userId)) {
+            log.error(writeLog(String.format("User with ID %s is not authorised to view audit logs", userId)));
+            return false;
+        }
+        return true;
+    }
+
     private boolean isAuthorisedRole(UUID userId, UUID adminUserId) {
+
         PiUser user = getUser(userId);
         if (UserProvenances.SSO.equals(user.getUserProvenance())) {
             return true;
@@ -191,43 +190,4 @@ public class AuthorisationService {
             .orElseThrow(() -> new NotFoundException(
                 String.format("User with supplied user id: %s could not be found", userId)));
     }
-
-    private boolean isSystemAdmin(UUID userId) {
-        PiUser user = accountService.getUserById(userId);
-        return user != null && user.getRoles() == SYSTEM_ADMIN;
-    }
-
-    private boolean isAdminCtsc(UUID userId) {
-        PiUser user = accountService.getUserById(userId);
-        return user != null && user.getRoles() == INTERNAL_ADMIN_CTSC;
-    }
-
-    private boolean isAdmin() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        return hasAuthority(authentication, "APPROLE_api.request.admin");
-    }
-
-    private boolean hasAuthority(Authentication authentication, String role) {
-        return authentication.getAuthorities().stream()
-            .anyMatch(granted -> granted.getAuthority().equals(role));
-    }
-
-    private boolean isSubscriptionUserMatch(UUID subscriptionId, UUID userId) {
-        Optional<Subscription> subscription = subscriptionRepository.findById(subscriptionId);
-
-        if (subscription.isPresent()) {
-            if (userId.toString().equals(subscription.get().getUserId().toString())) {
-                return true;
-            }
-            log.error(writeLog(
-                String.format("User %s is forbidden to remove subscription with ID %s belongs to another user %s",
-                              userId, subscriptionId, subscription.get().getUserId())
-            ));
-            return false;
-        }
-        // Return true if not subscription found. It will then go to the delete subscription method and return
-        // 404 HTTP status rather than a 403 forbidden status.
-        return true;
-    }
-
 }
