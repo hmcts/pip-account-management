@@ -8,10 +8,12 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import uk.gov.hmcts.reform.pip.account.management.model.subscription.SubscriptionListType;
@@ -29,17 +31,21 @@ import uk.gov.hmcts.reform.pip.model.authentication.roles.IsAdmin;
 public class SubscriptionListTypeController {
     private final SubscriptionListTypeService subscriptionListTypeService;
 
+    private static final String X_USER_ID_HEADER = "x-user-id";
+
     @Autowired
     public SubscriptionListTypeController(SubscriptionListTypeService subscriptionListTypeService) {
         this.subscriptionListTypeService = subscriptionListTypeService;
     }
 
     @PostMapping("/add-list-types/{userId}")
+    @PreAuthorize("@subscriptionAuthorisationService.userCanUpdateSubscriptions(#requesterId, #userId)")
     @Operation(summary = "Endpoint to add list type for existing subscription")
     @ApiResponse(responseCode = "201", description = "Subscription successfully updated for user: {userId}")
     @ApiResponse(responseCode = "400", description =
         "This request object has an invalid format. Please check again.")
-    public ResponseEntity<String> addListTypesForSubscription(@PathVariable String userId,
+    public ResponseEntity<String> addListTypesForSubscription(@RequestHeader(X_USER_ID_HEADER) String requesterId,
+                                                              @PathVariable String userId,
                                                               @RequestBody SubscriptionListType subscriptionListType) {
         subscriptionListTypeService.addListTypesForSubscription(subscriptionListType, userId);
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -50,12 +56,15 @@ public class SubscriptionListTypeController {
     }
 
     @PutMapping("/configure-list-types/{userId}")
+    @PreAuthorize("@subscriptionAuthorisationService.userCanUpdateSubscriptions(#requesterId, #userId)")
     @Operation(summary = "Endpoint to update list type for existing subscription")
     @ApiResponse(responseCode = "200", description = "Subscription successfully updated for user: {userId}")
     @ApiResponse(responseCode = "400", description =
         "This request object has an invalid format. Please check again.")
     public ResponseEntity<String> configureListTypesForSubscription(
-        @PathVariable String userId, @RequestBody SubscriptionListType subscriptionListType
+        @RequestHeader(X_USER_ID_HEADER) String requesterId,
+        @PathVariable String userId,
+        @RequestBody SubscriptionListType subscriptionListType
     ) {
         subscriptionListTypeService.configureListTypesForSubscription(subscriptionListType, userId);
         return ResponseEntity.status(HttpStatus.OK)
