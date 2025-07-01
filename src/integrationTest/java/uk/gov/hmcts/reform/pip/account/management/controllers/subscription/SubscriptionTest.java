@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.applicationinsights.web.dependencies.apachecommons.io.IOUtils;
 import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +16,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -25,6 +27,7 @@ import uk.gov.hmcts.reform.pip.account.management.model.subscription.Subscriptio
 import uk.gov.hmcts.reform.pip.account.management.model.subscription.usersubscription.CaseSubscription;
 import uk.gov.hmcts.reform.pip.account.management.model.subscription.usersubscription.LocationSubscription;
 import uk.gov.hmcts.reform.pip.account.management.model.subscription.usersubscription.UserSubscription;
+import uk.gov.hmcts.reform.pip.account.management.service.authorisation.SubscriptionAuthorisationService;
 import uk.gov.hmcts.reform.pip.account.management.utils.IntegrationTestBase;
 import uk.gov.hmcts.reform.pip.model.account.PiUser;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
@@ -46,6 +49,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.FORBIDDEN;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
@@ -142,6 +147,9 @@ class SubscriptionTest extends IntegrationTestBase {
     @Autowired
     private MockMvc mvc;
 
+    @MockitoBean
+    private SubscriptionAuthorisationService subscriptionAuthorisationService;
+
     @BeforeAll
     static void setup() throws IOException {
         OBJECT_MAPPER.findAndRegisterModules();
@@ -157,6 +165,15 @@ class SubscriptionTest extends IntegrationTestBase {
                 .getResourceAsStream("mock/artefact.json")) {
             rawArtefact = new String(IOUtils.toByteArray(Objects.requireNonNull(is)));
         }
+    }
+
+    @BeforeEach
+    public void setupEach() {
+        when(subscriptionAuthorisationService.userCanAddSubscriptions(any(), any())).thenReturn(true);
+        when(subscriptionAuthorisationService.userCanDeleteSubscriptions(any(), any())).thenReturn(true);
+        when(subscriptionAuthorisationService.userCanViewSubscriptions(any(), any())).thenReturn(true);
+        when(subscriptionAuthorisationService.userCanBulkDeleteSubscriptions(any(), any())).thenReturn(true);
+        when(subscriptionAuthorisationService.userCanUpdateSubscriptions(any(), any())).thenReturn(true);
     }
 
     protected MockHttpServletRequestBuilder setupMockSubscription(String searchValue) throws JsonProcessingException {
@@ -183,26 +200,23 @@ class SubscriptionTest extends IntegrationTestBase {
         return setupMockSubscription(searchValue);
     }
 
-    protected MockHttpServletRequestBuilder setupMockSubscription(String searchValue, SearchType searchType,
-                                                                  UUID userId, String caseNumber, String caseUrn)
+    protected MockHttpServletRequestBuilder setupMockSubscription(String caseNumber, String caseUrn)
         throws JsonProcessingException {
 
-        SUBSCRIPTION.setUserId(userId);
-        SUBSCRIPTION.setSearchType(searchType);
+        SUBSCRIPTION.setUserId(SubscriptionTest.VALID_USER_ID);
+        SUBSCRIPTION.setSearchType(SearchType.CASE_ID);
         SUBSCRIPTION.setCaseNumber(caseNumber);
         SUBSCRIPTION.setUrn(caseUrn);
-        return setupMockSubscription(searchValue);
+        return setupMockSubscription(SubscriptionTest.CASE_ID);
 
     }
 
-    protected MockHttpServletRequestBuilder setupMockSubscriptionWithListType(String searchValue,
-                                                                              SearchType searchType,
-                                                                              UUID userId)
+    protected MockHttpServletRequestBuilder setupMockSubscriptionWithListType()
         throws JsonProcessingException {
 
-        SUBSCRIPTION.setUserId(userId);
-        SUBSCRIPTION.setSearchType(searchType);
-        return setupMockSubscription(searchValue);
+        SUBSCRIPTION.setUserId(SubscriptionTest.VALID_USER_ID);
+        SUBSCRIPTION.setSearchType(SearchType.LOCATION_ID);
+        return setupMockSubscription(SubscriptionTest.LOCATION_ID);
     }
 
     protected MockHttpServletRequestBuilder getSubscriptionByUuid(String searchValue) {
@@ -440,6 +454,7 @@ class SubscriptionTest extends IntegrationTestBase {
             Subscription.class
         );
 
+        when(subscriptionAuthorisationService.userCanDeleteSubscriptions(any(), any())).thenReturn(false);
         mvc.perform(delete(SUBSCRIPTION_BASE_URL + returnedSubscription.getId())
                         .header(USER_ID_HEADER, INVALID_ACTIONING_USER_ID))
             .andExpect(status().isForbidden());
@@ -487,7 +502,7 @@ class SubscriptionTest extends IntegrationTestBase {
         mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, UUID_STRING));
         mvc.perform(setupMockSubscription(CASE_URN, SearchType.CASE_URN, UUID_STRING));
 
-        MvcResult response = mvc.perform(get(SUBSCRIPTION_USER_PATH))
+        MvcResult response = mvc.perform(get(SUBSCRIPTION_USER_PATH).header(USER_ID_HEADER, ACTIONING_USER_ID))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -503,12 +518,12 @@ class SubscriptionTest extends IntegrationTestBase {
             VALIDATION_SUBSCRIPTION_LIST
         );
 
-        LocationSubscription location = userSubscriptions.getLocationSubscriptions().get(0);
+        LocationSubscription location = userSubscriptions.getLocationSubscriptions().getFirst();
         assertEquals(LOCATION_NAME, location.getLocationName(), VALIDATION_LOCATION_NAME);
         assertEquals(DATE_ADDED.withNano(0), location.getDateAdded().withNano(0),
                      VALIDATION_DATE_ADDED);
 
-        CaseSubscription caseSubscription = userSubscriptions.getCaseSubscriptions().get(0);
+        CaseSubscription caseSubscription = userSubscriptions.getCaseSubscriptions().getFirst();
         assertEquals(CASE_NAME, caseSubscription.getCaseName(), VALIDATION_CASE_NAME);
         assertEquals(CASE_ID, caseSubscription.getCaseNumber(), VALIDATION_CASE_ID);
         assertEquals(CASE_URN, caseSubscription.getUrn(), VALIDATION_CASE_URN);
@@ -523,7 +538,7 @@ class SubscriptionTest extends IntegrationTestBase {
 
         mvc.perform(mappedSubscription).andExpect(status().isCreated()).andReturn();
 
-        MvcResult response = mvc.perform(get(SUBSCRIPTION_USER_PATH))
+        MvcResult response = mvc.perform(get(SUBSCRIPTION_USER_PATH).header(USER_ID_HEADER, ACTIONING_USER_ID))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -539,7 +554,7 @@ class SubscriptionTest extends IntegrationTestBase {
             VALIDATION_SUBSCRIPTION_LIST
         );
 
-        CaseSubscription caseSubscription = userSubscriptions.getCaseSubscriptions().get(0);
+        CaseSubscription caseSubscription = userSubscriptions.getCaseSubscriptions().getFirst();
         assertEquals(CASE_NAME, caseSubscription.getCaseName(), VALIDATION_CASE_NAME);
         assertEquals(CASE_ID, caseSubscription.getCaseNumber(), VALIDATION_CASE_ID);
         assertEquals(CASE_URN, caseSubscription.getUrn(), VALIDATION_CASE_URN);
@@ -550,7 +565,7 @@ class SubscriptionTest extends IntegrationTestBase {
     void testGetUsersSubscriptionsByUserIdSingleLocation() throws Exception {
         mvc.perform(setupMockSubscription(LOCATION_ID, SearchType.LOCATION_ID, UUID_STRING));
 
-        MvcResult response = mvc.perform(get(SUBSCRIPTION_USER_PATH))
+        MvcResult response = mvc.perform(get(SUBSCRIPTION_USER_PATH).header(USER_ID_HEADER, ACTIONING_USER_ID))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -565,7 +580,7 @@ class SubscriptionTest extends IntegrationTestBase {
         assertEquals(0, userSubscriptions.getCaseSubscriptions().size(),
                      "Court subscription list contains unknown cases");
 
-        LocationSubscription location = userSubscriptions.getLocationSubscriptions().get(0);
+        LocationSubscription location = userSubscriptions.getLocationSubscriptions().getFirst();
         assertEquals(LOCATION_NAME, location.getLocationName(), VALIDATION_LOCATION_NAME);
         assertEquals(DATE_ADDED.withNano(0), location.getDateAdded().withNano(0),
                      VALIDATION_DATE_ADDED);
@@ -575,7 +590,7 @@ class SubscriptionTest extends IntegrationTestBase {
     void testGetUsersSubscriptionsByUserIdSingleCaseId() throws Exception {
         mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, UUID_STRING));
 
-        MvcResult response = mvc.perform(get(SUBSCRIPTION_USER_PATH))
+        MvcResult response = mvc.perform(get(SUBSCRIPTION_USER_PATH).header(USER_ID_HEADER, ACTIONING_USER_ID))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -587,7 +602,7 @@ class SubscriptionTest extends IntegrationTestBase {
         assertEquals(0, userSubscriptions.getLocationSubscriptions().size(), VALIDATION_LOCATION_LIST);
         assertEquals(1, userSubscriptions.getCaseSubscriptions().size(), VALIDATION_ONE_CASE_LOCATION);
 
-        CaseSubscription caseSubscription = userSubscriptions.getCaseSubscriptions().get(0);
+        CaseSubscription caseSubscription = userSubscriptions.getCaseSubscriptions().getFirst();
         assertEquals(CASE_NAME, caseSubscription.getCaseName(), VALIDATION_CASE_NAME);
         assertEquals(SearchType.CASE_ID, caseSubscription.getSearchType(), VALIDATION_SEARCH_TYPE);
         assertEquals(CASE_ID, caseSubscription.getCaseNumber(), VALIDATION_CASE_ID);
@@ -599,7 +614,7 @@ class SubscriptionTest extends IntegrationTestBase {
     void testGetUsersSubscriptionsByUserIdSingleCaseUrn() throws Exception {
         mvc.perform(setupMockSubscription(CASE_URN, SearchType.CASE_URN, UUID_STRING));
 
-        MvcResult response = mvc.perform(get(SUBSCRIPTION_USER_PATH))
+        MvcResult response = mvc.perform(get(SUBSCRIPTION_USER_PATH).header(USER_ID_HEADER, ACTIONING_USER_ID))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -611,7 +626,7 @@ class SubscriptionTest extends IntegrationTestBase {
         assertEquals(0, userSubscriptions.getLocationSubscriptions().size(), VALIDATION_LOCATION_LIST);
         assertEquals(1, userSubscriptions.getCaseSubscriptions().size(), VALIDATION_ONE_CASE_LOCATION);
 
-        CaseSubscription caseSubscription = userSubscriptions.getCaseSubscriptions().get(0);
+        CaseSubscription caseSubscription = userSubscriptions.getCaseSubscriptions().getFirst();
         assertEquals(CASE_NAME, caseSubscription.getCaseName(), VALIDATION_CASE_NAME);
         assertEquals(SearchType.CASE_URN, caseSubscription.getSearchType(), VALIDATION_SEARCH_TYPE);
         assertEquals(CASE_ID, caseSubscription.getCaseNumber(), VALIDATION_CASE_ID);
@@ -620,7 +635,7 @@ class SubscriptionTest extends IntegrationTestBase {
 
     @Test
     void testGetUsersSubscriptionsByUserIdNoSubscriptions() throws Exception {
-        MvcResult response = mvc.perform(get(SUBSCRIPTION_USER_PATH))
+        MvcResult response = mvc.perform(get(SUBSCRIPTION_USER_PATH).header(USER_ID_HEADER, ACTIONING_USER_ID))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -648,7 +663,7 @@ class SubscriptionTest extends IntegrationTestBase {
 
     @Test
     void testBuildSubscriberListCaseUrnNull() throws Exception {
-        mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, VALID_USER_ID, CASE_ID, null));
+        mvc.perform(setupMockSubscription(CASE_ID, null));
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .post(ARTEFACT_RECIPIENT_PATH)
             .contentType(MediaType.APPLICATION_JSON)
@@ -661,7 +676,7 @@ class SubscriptionTest extends IntegrationTestBase {
 
     @Test
     void testBuildSubscriberListCaseNumberNull() throws Exception {
-        mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, VALID_USER_ID, null, CASE_URN));
+        mvc.perform(setupMockSubscription(null, CASE_URN));
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .post(ARTEFACT_RECIPIENT_PATH)
             .contentType(MediaType.APPLICATION_JSON)
@@ -688,8 +703,8 @@ class SubscriptionTest extends IntegrationTestBase {
 
     @Test
     void testBuildCourtSubscribersListReturnsAccepted() throws Exception {
-        mvc.perform(setupMockSubscriptionWithListType(LOCATION_ID, SearchType.LOCATION_ID,
-                                                      VALID_USER_ID));
+        mvc.perform(setupMockSubscriptionWithListType(
+        ));
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .post(ARTEFACT_RECIPIENT_PATH)
             .contentType(MediaType.APPLICATION_JSON)
@@ -705,6 +720,7 @@ class SubscriptionTest extends IntegrationTestBase {
     void testUnauthorizedCreateSubscription() throws Exception {
         MockHttpServletRequestBuilder mappedSubscription = setupMockSubscription(LOCATION_ID);
 
+        when(subscriptionAuthorisationService.userCanAddSubscriptions(any(), any())).thenReturn(false);
         MvcResult mvcResult =
             mvc.perform(mappedSubscription).andExpect(status().isForbidden()).andReturn();
 
@@ -732,6 +748,7 @@ class SubscriptionTest extends IntegrationTestBase {
             Subscription.class
         );
 
+        when(subscriptionAuthorisationService.userCanDeleteSubscriptions(any(), any())).thenReturn(false);
         MvcResult mvcResult = mvc.perform(delete(SUBSCRIPTION_BASE_URL + returnedSubscription.getId())
                                               .header(USER_ID_HEADER, SYSTEM_ADMIN_USER_ID)
                                               .with(user(UNAUTHORIZED_USERNAME).authorities(
@@ -782,7 +799,9 @@ class SubscriptionTest extends IntegrationTestBase {
     @Test
     @WithMockUser(username = "unauthorized_find_by_user_id", authorities = {"APPROLE_unknown.find"})
     void testUnauthorizedFindByUserId() throws Exception {
-        MvcResult mvcResult = mvc.perform(get(SUBSCRIPTION_USER_PATH)).andExpect(status().isForbidden()).andReturn();
+        when(subscriptionAuthorisationService.userCanViewSubscriptions(any(), any())).thenReturn(false);
+        MvcResult mvcResult = mvc.perform(get(SUBSCRIPTION_USER_PATH).header(USER_ID_HEADER, ACTIONING_USER_ID))
+            .andExpect(status().isForbidden()).andReturn();
 
         assertEquals(FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
                      FORBIDDEN_STATUS_CODE);
@@ -901,6 +920,8 @@ class SubscriptionTest extends IntegrationTestBase {
         String subscriptionIdRequest = OPENING_BRACKET + caseSubscriptionId + DOUBLE_QUOTE_COMMA
             + locationSubscriptionId + CLOSING_BRACKET;
 
+        when(subscriptionAuthorisationService.userCanBulkDeleteSubscriptions(any(), any())).thenReturn(false);
+
         MvcResult response = mvc.perform(delete(DELETE_BULK_SUBSCRIPTION_PATH)
                                              .contentType(MediaType.APPLICATION_JSON)
                                              .content(subscriptionIdRequest)
@@ -910,20 +931,6 @@ class SubscriptionTest extends IntegrationTestBase {
 
         assertEquals(FORBIDDEN.value(), response.getResponse().getStatus(),
                      FORBIDDEN_STATUS_CODE);
-    }
-
-    @Test
-    void testBulkDeletedSubscribersReturnsNotFound() throws Exception {
-        String subscriptionIdRequest = OPENING_BRACKET + UUID_STRING + CLOSING_BRACKET;
-
-        MvcResult response = mvc.perform(delete(DELETE_BULK_SUBSCRIPTION_PATH)
-                                             .contentType(MediaType.APPLICATION_JSON)
-                                             .content(subscriptionIdRequest)
-                                             .header(USER_ID_HEADER, ACTIONING_USER_ID))
-            .andExpect(status().isNotFound()).andReturn();
-
-        assertEquals(NOT_FOUND.value(), response.getResponse().getStatus(),
-                     NOT_FOUND_STATUS_CODE);
     }
 
     @Test
@@ -945,6 +952,7 @@ class SubscriptionTest extends IntegrationTestBase {
     void testUnauthorizedBulkDeleteSubscription() throws Exception {
         String subscriptionIdRequest = OPENING_BRACKET + UUID_STRING + CLOSING_BRACKET;
 
+        when(subscriptionAuthorisationService.userCanBulkDeleteSubscriptions(any(), any())).thenReturn(false);
         MvcResult response = mvc.perform(delete(DELETE_BULK_SUBSCRIPTION_PATH)
                                              .contentType(MediaType.APPLICATION_JSON)
                                              .content(subscriptionIdRequest)

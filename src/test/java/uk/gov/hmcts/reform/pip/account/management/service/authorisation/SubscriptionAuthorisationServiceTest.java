@@ -16,6 +16,7 @@ import uk.gov.hmcts.reform.pip.account.management.model.subscription.Subscriptio
 import uk.gov.hmcts.reform.pip.account.management.service.account.AccountService;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -456,7 +457,7 @@ class SubscriptionAuthorisationServiceTest {
 
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionAuthorisationService.class)) {
             assertThat(subscriptionAuthorisationService.userCanBulkDeleteSubscriptions(
-                USER_ID, SUBSCRIPTION_ID, SUBSCRIPTION_ID2, SUBSCRIPTION_ID3
+                USER_ID, List.of(SUBSCRIPTION_ID, SUBSCRIPTION_ID2, SUBSCRIPTION_ID3)
             ))
                 .as(CAN_DELETE_SUBSCRIPTION_MESSAGE)
                 .isTrue();
@@ -480,7 +481,7 @@ class SubscriptionAuthorisationServiceTest {
 
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionAuthorisationService.class)) {
             assertThat(subscriptionAuthorisationService.userCanBulkDeleteSubscriptions(
-                USER_ID, SUBSCRIPTION_ID, SUBSCRIPTION_ID2, SUBSCRIPTION_ID3
+                USER_ID, List.of(SUBSCRIPTION_ID, SUBSCRIPTION_ID2, SUBSCRIPTION_ID3)
             ))
                 .as(CANNOT_DELETE_SUBSCRIPTION_MESSAGE)
                 .isFalse();
@@ -514,7 +515,7 @@ class SubscriptionAuthorisationServiceTest {
 
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionAuthorisationService.class)) {
             assertThat(subscriptionAuthorisationService.userCanBulkDeleteSubscriptions(
-                USER_ID, SUBSCRIPTION_ID, SUBSCRIPTION_ID2, SUBSCRIPTION_ID3
+                USER_ID, List.of(SUBSCRIPTION_ID, SUBSCRIPTION_ID2, SUBSCRIPTION_ID3)
             ))
                 .as(CANNOT_DELETE_SUBSCRIPTION_MESSAGE)
                 .isFalse();
