@@ -52,7 +52,7 @@ public class AuditController {
     @ApiResponse(responseCode = OK_ERROR_CODE, description = "All audit logs returned as a page with filtering.")
     @ApiResponse(responseCode = FORBIDDEN_ERROR_CODE, description = "Action forbidden")
     @Operation(summary = "Get all audit logs returned as a page")
-    @PreAuthorize("@authorisationService.userCanViewAuditLogs(#requesterId)")
+    @PreAuthorize("@accountAuthorisationService.userCanViewAuditLogs(#requesterId)")
     @GetMapping
     public ResponseEntity<Page<AuditLog>> getAllAuditLogs(
         @RequestHeader(REQUESTER_ID) String requesterId,
@@ -71,7 +71,7 @@ public class AuditController {
     @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description = "Audit log with id {id} could not be found.")
     @ApiResponse(responseCode = FORBIDDEN_ERROR_CODE, description = "Action forbidden")
     @Operation(summary = "Get audit log with id")
-    @PreAuthorize("@authorisationService.userCanViewAuditLogs(#requesterId)")
+    @PreAuthorize("@accountAuthorisationService.userCanViewAuditLogs(#requesterId)")
     @GetMapping(value = "/{id}", produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<AuditLog> getAuditLogById(
         @RequestHeader(REQUESTER_ID) String requesterId,

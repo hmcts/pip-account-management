@@ -51,7 +51,7 @@ public class AzureAccountController {
      * @return A list containing details of any created and errored azureAccounts.
      */
     @ApiResponse(responseCode = OK_CODE, description = "{AzureAccount}")
-    @PreAuthorize("@authorisationService.userCanCreateAzureAccount(#issuerId)")
+    @PreAuthorize("@accountAuthorisationService.userCanCreateAzureAccount(#issuerId)")
     @PostMapping("/add/azure")
     public ResponseEntity<Map<CreationEnum, List<? extends AzureAccount>>> createAzureAccount(//NOSONAR
         @RequestHeader(ISSUER_ID) String issuerId, @RequestBody List<AzureAccount> azureAccounts) {

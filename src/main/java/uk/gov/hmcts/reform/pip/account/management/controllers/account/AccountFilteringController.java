@@ -59,7 +59,7 @@ public class AccountFilteringController {
     @ApiResponse(responseCode = FORBIDDEN_ERROR_CODE, description = "Action forbidden")
     @Operation(summary = "Get all third party accounts")
     @ResponseStatus(HttpStatus.OK)
-    @PreAuthorize("@authorisationService.userCanViewAccounts(#requesterId)")
+    @PreAuthorize("@accountAuthorisationService.userCanViewAccounts(#requesterId)")
     @GetMapping("/all/third-party")
     public ResponseEntity<List<PiUser>> getAllThirdPartyAccounts(
         @RequestHeader(REQUESTER_ID) String requesterId) {
@@ -68,7 +68,7 @@ public class AccountFilteringController {
 
     @ApiResponse(responseCode = FORBIDDEN_ERROR_CODE, description = "Action forbidden")
     @Operation(summary = "Get all accounts except third party in a page with filtering")
-    @PreAuthorize("@authorisationService.userCanViewAccounts(#requesterId)")
+    @PreAuthorize("@accountAuthorisationService.userCanViewAccounts(#requesterId)")
     @GetMapping("/all")
     public ResponseEntity<Page<PiUser>> getAllAccountsExceptThirdParty(
         @RequestHeader(REQUESTER_ID) String requesterId,

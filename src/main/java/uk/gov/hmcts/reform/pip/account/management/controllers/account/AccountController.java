@@ -65,7 +65,7 @@ public class AccountController {
             description = "CREATED_ACCOUNTS: [{Created User UUID's}]")
     @Operation(summary = "Add a user to the P&I postgres database")
     @PostMapping("/add/pi")
-    @PreAuthorize("@authorisationService.userCanCreateAccount(#issuerId, #users)")
+    @PreAuthorize("@accountAuthorisationService.userCanCreateAccount(#issuerId, #users)")
     public ResponseEntity<Map<CreationEnum, List<?>>> createUsers(//NOSONAR
         @RequestHeader(ISSUER_ID) String issuerId,
         @RequestBody List<PiUser> users) {
@@ -76,7 +76,7 @@ public class AccountController {
     @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description = "No user found with the "
             + "user Id: {userId}")
     @Operation(summary = "Get a user based on their user ID")
-    @PreAuthorize("@authorisationService.userCanViewAccounts(#requesterId)")
+    @PreAuthorize("@accountAuthorisationService.userCanViewAccounts(#requesterId)")
     @GetMapping("/{userId}")
     public ResponseEntity<PiUser> getUserById(
         @RequestHeader(REQUESTER_ID) String requesterId,
@@ -122,7 +122,7 @@ public class AccountController {
     @ApiResponse(responseCode = FORBIDDEN_ERROR_CODE,
         description = "User with ID %s is forbidden to remove user with ID %s")
     @Operation(summary = "Delete a user by their id")
-    @PreAuthorize("@authorisationService.userCanDeleteAccount(#userId, #adminUserId)")
+    @PreAuthorize("@accountAuthorisationService.userCanDeleteAccount(#userId, #adminUserId)")
     @DeleteMapping("/delete/{userId}")
     public ResponseEntity<String> deleteAccount(
         @RequestHeader(ADMIN_ID) UUID adminUserId,
@@ -137,7 +137,7 @@ public class AccountController {
         description = "User with ID %s is forbidden to remove user with ID %s")
     @Operation(summary = "Delete a user by their id")
     @DeleteMapping("/v2/{userId}")
-    @PreAuthorize("@authorisationService.userCanDeleteAccount(#userId, #adminUserId)")
+    @PreAuthorize("@accountAuthorisationService.userCanDeleteAccount(#userId, #adminUserId)")
     public ResponseEntity<String> deleteAccountV2(@PathVariable UUID userId,
                                                   @RequestHeader(value = ADMIN_ID, required = false)
                                                     UUID adminUserId) {
@@ -151,7 +151,7 @@ public class AccountController {
         description = "User with ID %s is forbidden to update user with ID %s")
     @Operation(summary = "Update a users role by their id")
     @PutMapping("/update/{userId}/{role}")
-    @PreAuthorize("@authorisationService.userCanUpdateAccount(#userId, #adminUserId)")
+    @PreAuthorize("@accountAuthorisationService.userCanUpdateAccount(#userId, #adminUserId)")
     public ResponseEntity<String> updateAccountRoleById(@PathVariable UUID userId,
                                                         @PathVariable Roles role,
                                                         @RequestHeader(value = ADMIN_ID, required = false)

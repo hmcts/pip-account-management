@@ -66,7 +66,7 @@ public class MediaApplicationController {
 
     @ApiResponse(responseCode = OK_ERROR_CODE, description = "List<{MediaApplication}>")
     @Operation(summary = "Get all application by the status")
-    @PreAuthorize("@authorisationService.userCanViewMediaApplications(#requesterId)")
+    @PreAuthorize("@accountAuthorisationService.userCanViewMediaApplications(#requesterId)")
     @GetMapping(value = "/status/{status}", produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<List<MediaApplication>> getApplicationsByStatus(
         @RequestHeader(REQUESTER_ID) String requesterId,
@@ -76,7 +76,7 @@ public class MediaApplicationController {
 
     @ApiResponse(responseCode = OK_ERROR_CODE, description = MEDIA_APPLICATION)
     @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description = NO_MEDIA_APPLICATION_FOUND_WITH_ID)
-    @PreAuthorize("@authorisationService.userCanViewMediaApplications(#requesterId)")
+    @PreAuthorize("@accountAuthorisationService.userCanViewMediaApplications(#requesterId)")
     @GetMapping(value = "/{id}", produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<MediaApplication> getApplicationById(
         @RequestHeader(REQUESTER_ID) String requesterId,
@@ -86,7 +86,7 @@ public class MediaApplicationController {
 
     @ApiResponse(responseCode = OK_ERROR_CODE, description = "Image with id: {id} is returned")
     @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description = "No image found with id: {id}")
-    @PreAuthorize("@authorisationService.userCanViewMediaApplications(#requesterId)")
+    @PreAuthorize("@accountAuthorisationService.userCanViewMediaApplications(#requesterId)")
     @GetMapping("/image/{id}")
     public ResponseEntity<Resource> getImageById(
         @RequestHeader(REQUESTER_ID) String requesterId,
@@ -119,7 +119,7 @@ public class MediaApplicationController {
     @ApiResponse(responseCode = OK_ERROR_CODE, description = MEDIA_APPLICATION)
     @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description = NO_MEDIA_APPLICATION_FOUND_WITH_ID)
     @Operation(summary = "Update a media application, sending an update email alongside")
-    @PreAuthorize("@authorisationService.userCanUpdateMediaApplications(#requesterId)")
+    @PreAuthorize("@accountAuthorisationService.userCanUpdateMediaApplications(#requesterId)")
     @PutMapping(value = "/{id}/{status}/reasons", consumes = APPLICATION_JSON_VALUE)
     public ResponseEntity<MediaApplication> updateApplicationRejection(
         @RequestHeader(REQUESTER_ID) String requesterId,
