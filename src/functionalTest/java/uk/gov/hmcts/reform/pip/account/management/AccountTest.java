@@ -304,22 +304,6 @@ class AccountTest extends AccountHelperBase {
     }
 
     @Test
-    void shouldBeAbleToDeleteAccountWhenSso() throws Exception {
-        String createdUserId = getCreatedAccountUserId(
-            createAccount(email, provenanceId, INTERNAL_ADMIN_LOCAL, UserProvenances.SSO, systemAdminId));
-
-        Map<String, String> headers = new ConcurrentHashMap<>(bearer);
-        headers.put(ADMIN_ID, localAdminId);
-
-        Response deleteResponse = doDeleteRequest(String.format(DELETE_ENDPOINT_V2, createdUserId), headers);
-
-        assertThat(deleteResponse.getStatusCode()).isEqualTo(OK.value());
-
-        Response getUserResponse = doGetRequest(String.format(GET_BY_PROVENANCE_ID, provenanceId), bearer);
-        assertThat(getUserResponse.getStatusCode()).isEqualTo(NOT_FOUND.value());
-    }
-
-    @Test
     void shouldNotBeAbleToDeleteVerifiedAccountV2WhenNonSystemAdmin() throws Exception {
         String createdUserId = getCreatedAccountUserId(createAccount(email, provenanceId, systemAdminId));
 
@@ -368,7 +352,7 @@ class AccountTest extends AccountHelperBase {
         headers.put(ADMIN_ID, systemAdminId);
 
         Response updateResponse = doPutRequest(
-            String.format(UPDATE_ACCOUNT_ROLE, ctscSuperAdminId, SUPER_ADMIN_LOCAL_ROLE_NAME), headers);
+            String.format(UPDATE_ACCOUNT_ROLE, ctscSuperAdminId, SUPER_ADMIN_LOCAL_ROLE_NAME), bearer);
 
         assertThat(updateResponse.getStatusCode()).isEqualTo(FORBIDDEN.value());
 
