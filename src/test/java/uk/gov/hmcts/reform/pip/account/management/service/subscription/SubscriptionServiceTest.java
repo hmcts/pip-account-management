@@ -166,31 +166,25 @@ class SubscriptionServiceTest {
     @Test
     void testDeleteSubscriptionWhereUserHasNoLocationSubscriptionAfterDeletion() {
         UUID testUuid = UUID.randomUUID();
-        ArgumentCaptor<UUID> captor = ArgumentCaptor.forClass(UUID.class);
 
         when(subscriptionRepository.findById(testUuid)).thenReturn(Optional.of(findableSubscription));
         when(subscriptionRepository.findLocationSubscriptionsByUserId(any())).thenReturn(Collections.emptyList());
 
         subscriptionService.deleteById(testUuid, ACTIONING_USER_ID);
-        verify(subscriptionRepository).deleteById(captor.capture());
+        verify(subscriptionRepository).deleteById(testUuid);
         verify(subscriptionListTypeService).deleteListTypesForSubscription(any());
-
-        assertEquals(testUuid, captor.getValue(), "The service layer tried to delete the wrong subscription");
     }
 
     @Test
     void testDeleteSubscriptionWhereUserStillHasLocationSubscriptionAfterDeletion() {
         UUID testUuid = UUID.randomUUID();
-        ArgumentCaptor<UUID> captor = ArgumentCaptor.forClass(UUID.class);
 
         when(subscriptionRepository.findById(testUuid)).thenReturn(Optional.of(findableSubscription));
         when(subscriptionRepository.findLocationSubscriptionsByUserId(any())).thenReturn(mockSubscriptionList);
 
         subscriptionService.deleteById(testUuid, ACTIONING_USER_ID);
-        verify(subscriptionRepository).deleteById(captor.capture());
+        verify(subscriptionRepository).deleteById(testUuid);
         verify(subscriptionListTypeService, never()).deleteListTypesForSubscription(any());
-
-        assertEquals(testUuid, captor.getValue(), "The service layer tried to delete the wrong subscription");
     }
 
     @Test
