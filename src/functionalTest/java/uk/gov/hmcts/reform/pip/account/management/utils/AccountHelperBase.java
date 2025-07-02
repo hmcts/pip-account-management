@@ -59,15 +59,18 @@ public class AccountHelperBase extends FunctionalTestBase {
         return response.getBody().as(PiUser.class);
     }
 
-    protected Response createAccount(String email, String provenanceId) throws JsonProcessingException {
-        return createAccount(email, provenanceId, Roles.VERIFIED, UserProvenances.PI_AAD);
+    protected Response createAccount(String email, String provenanceId, String requesterId)
+        throws JsonProcessingException {
+        return createAccount(email, provenanceId, Roles.VERIFIED, UserProvenances.PI_AAD, requesterId);
     }
 
-    protected Response createAccount(String email, String provenanceId, Roles role) throws JsonProcessingException {
-        return createAccount(email, provenanceId, role, UserProvenances.PI_AAD);
+    protected Response createAccount(String email, String provenanceId, Roles role, String requesterId)
+        throws JsonProcessingException {
+        return createAccount(email, provenanceId, role, UserProvenances.PI_AAD, requesterId);
     }
 
-    protected Response createAccount(String email, String provenanceId, Roles role, UserProvenances userProvenance)
+    protected Response createAccount(String email, String provenanceId, Roles role, UserProvenances userProvenance,
+                                     String requesterId)
         throws JsonProcessingException {
         PiUser piUser = new PiUser();
         piUser.setEmail(email);
@@ -81,7 +84,7 @@ public class AccountHelperBase extends FunctionalTestBase {
         users.add(piUser);
 
         Map<String, String> headers = new ConcurrentHashMap<>(bearer);
-        headers.put(ISSUER_ID, UUID.randomUUID().toString());
+        headers.put(ISSUER_ID, requesterId);
 
         final Response createResponse = doPostRequest(CREATE_PI_ACCOUNT,
                                                       headers, objectMapper.writeValueAsString(users));
