@@ -122,7 +122,7 @@ class AccountControllerTest {
 
         when(accountService.getUserById(uuid)).thenReturn(piUser);
 
-        ResponseEntity<PiUser> response = accountController.getUserById(uuid);
+        ResponseEntity<PiUser> response = accountController.getUserById(ISSUER_ID, uuid);
 
         assertEquals(HttpStatus.OK, response.getStatusCode(), "Expected status code does not match");
 
@@ -131,7 +131,7 @@ class AccountControllerTest {
 
     @Test
     void testDeleteAccount() {
-        assertThat(accountController.deleteAccount(UUID.randomUUID()).getStatusCode())
+        assertThat(accountController.deleteAccount(UUID.randomUUID(), UUID.randomUUID()).getStatusCode())
             .as(STATUS_CODE_MATCH)
             .isEqualTo(HttpStatus.OK);
     }
