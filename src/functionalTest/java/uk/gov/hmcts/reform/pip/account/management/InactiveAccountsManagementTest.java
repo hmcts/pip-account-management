@@ -144,7 +144,7 @@ class InactiveAccountsManagementTest extends AccountHelperBase {
                     "displayName": "%s"
                 }
             ]
-            """.formatted(InactiveAccountsManagementTest.TEST_EMAIL, FIRST_NAME, SURNAME, Roles.VERIFIED, TEST_NAME);
+            """.formatted(TEST_EMAIL, FIRST_NAME, SURNAME, Roles.VERIFIED, TEST_NAME);
 
 
         Response response = doPostRequestForB2C(ADD_USER_B2C_URL, headers, ctscAdminIssuerId, requestBody);

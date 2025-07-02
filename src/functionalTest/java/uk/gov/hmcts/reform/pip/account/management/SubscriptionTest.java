@@ -318,10 +318,10 @@ class SubscriptionTest extends AccountHelperBase {
         Subscription subscription = new Subscription();
         subscription.setUserId(userId);
         subscription.setSearchType(SearchType.LOCATION_ID);
-        subscription.setSearchValue(SubscriptionTest.LOCATION_ID);
+        subscription.setSearchValue(LOCATION_ID);
         subscription.setChannel(Channel.EMAIL);
         subscription.setCreatedDate(LocalDateTime.now());
-        subscription.setLocationName(SubscriptionTest.LOCATION_NAME);
+        subscription.setLocationName(LOCATION_NAME);
         subscription.setLastUpdatedDate(LocalDateTime.now());
         return subscription;
     }
