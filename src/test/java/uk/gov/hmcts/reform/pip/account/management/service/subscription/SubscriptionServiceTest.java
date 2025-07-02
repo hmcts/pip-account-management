@@ -21,6 +21,7 @@ import uk.gov.hmcts.reform.pip.model.subscription.Channel;
 import uk.gov.hmcts.reform.pip.model.subscription.SearchType;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -29,7 +30,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -55,7 +56,7 @@ class SubscriptionServiceTest {
     private Subscription findableSubscription;
 
     @Mock
-    SubscriptionLocationService subscriptionLocationService;
+    SubscriptionListTypeService subscriptionListTypeService;
 
     @Mock
     SubscriptionRepository subscriptionRepository;
@@ -163,13 +164,32 @@ class SubscriptionServiceTest {
     }
 
     @Test
-    void testDeleteSubscription() {
+    void testDeleteSubscriptionWhereUserHasNoLocationSubscriptionAfterDeletion() {
         UUID testUuid = UUID.randomUUID();
         ArgumentCaptor<UUID> captor = ArgumentCaptor.forClass(UUID.class);
-        doNothing().when(subscriptionRepository).deleteById(captor.capture());
+
         when(subscriptionRepository.findById(testUuid)).thenReturn(Optional.of(findableSubscription));
-        doNothing().when(subscriptionLocationService).deleteSubscriptionListTypeByUser(any());
+        when(subscriptionRepository.findLocationSubscriptionsByUserId(any())).thenReturn(Collections.emptyList());
+
         subscriptionService.deleteById(testUuid, ACTIONING_USER_ID);
+        verify(subscriptionRepository).deleteById(captor.capture());
+        verify(subscriptionListTypeService).deleteListTypesForSubscription(any());
+
+        assertEquals(testUuid, captor.getValue(), "The service layer tried to delete the wrong subscription");
+    }
+
+    @Test
+    void testDeleteSubscriptionWhereUserStillHasLocationSubscriptionAfterDeletion() {
+        UUID testUuid = UUID.randomUUID();
+        ArgumentCaptor<UUID> captor = ArgumentCaptor.forClass(UUID.class);
+
+        when(subscriptionRepository.findById(testUuid)).thenReturn(Optional.of(findableSubscription));
+        when(subscriptionRepository.findLocationSubscriptionsByUserId(any())).thenReturn(mockSubscriptionList);
+
+        subscriptionService.deleteById(testUuid, ACTIONING_USER_ID);
+        verify(subscriptionRepository).deleteById(captor.capture());
+        verify(subscriptionListTypeService, never()).deleteListTypesForSubscription(any());
+
         assertEquals(testUuid, captor.getValue(), "The service layer tried to delete the wrong subscription");
     }
 
@@ -182,6 +202,34 @@ class SubscriptionServiceTest {
                      "SubscriptionNotFoundException not thrown when trying to delete a subscription"
                          + " that does not exist"
         );
+    }
+
+    @Test
+    void testBulkDeleteSubscriptionsWhereUserHasNoLocationSubscriptionAfterDeletion() {
+        List<UUID> testIds = List.of(UUID.randomUUID(), UUID.randomUUID());
+        Subscription subscription1 = createMockSubscription(USER_ID, "1", EMAIL, DATE_ADDED);
+        Subscription subscription2 = createMockSubscription(USER_ID, "2", EMAIL, DATE_ADDED);
+
+        when(subscriptionRepository.findByIdIn(testIds)).thenReturn(List.of(subscription1, subscription2));
+        when(subscriptionRepository.findLocationSubscriptionsByUserId(USER_ID)).thenReturn(Collections.emptyList());
+
+        subscriptionService.bulkDeleteSubscriptions(testIds);
+        verify(subscriptionRepository).deleteByIdIn(testIds);
+        verify(subscriptionListTypeService).deleteListTypesForSubscription(USER_ID);
+    }
+
+    @Test
+    void testBulkDeleteSubscriptionsWhereUserStillHasLocationSubscriptionAfterDeletion() {
+        List<UUID> testIds = List.of(UUID.randomUUID(), UUID.randomUUID());
+        Subscription subscription1 = createMockSubscription(USER_ID, "1", EMAIL, DATE_ADDED);
+        Subscription subscription2 = createMockSubscription(USER_ID, "2", EMAIL, DATE_ADDED);
+
+        when(subscriptionRepository.findByIdIn(testIds)).thenReturn(List.of(subscription1, subscription2));
+        when(subscriptionRepository.findLocationSubscriptionsByUserId(USER_ID)).thenReturn(mockSubscriptionList);
+
+        subscriptionService.bulkDeleteSubscriptions(testIds);
+        verify(subscriptionRepository).deleteByIdIn(testIds);
+        verify(subscriptionListTypeService, never()).deleteListTypesForSubscription(USER_ID);
     }
 
     @Test
