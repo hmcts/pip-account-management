@@ -36,14 +36,15 @@ class AzureAccountTest extends AccountHelperBase {
         = new TypeRef<>() {};
 
     private Map<String, String> headers;
-    private PiUser systemAdminUser;
+    private String systemAdminUserId;
 
     @BeforeAll
     public void startUp() throws JsonProcessingException {
-        systemAdminUser = createSystemAdminAccount();
+        PiUser systemAdminUser = createSystemAdminAccount();
+        systemAdminUserId = systemAdminUser.getUserId();
 
         String adminCtscUserId = getCreatedAccountUserId(
-            createAccount(generateEmail(),UUID.randomUUID().toString(), Roles.INTERNAL_ADMIN_CTSC));
+            createAccount(generateEmail(),UUID.randomUUID().toString(), Roles.INTERNAL_ADMIN_CTSC, systemAdminUserId));
         bearer = Map.of(HttpHeaders.AUTHORIZATION, BEARER + accessToken);
         headers = new ConcurrentHashMap<>(bearer);
         headers.put(ISSUER_HEADER, adminCtscUserId);
@@ -52,7 +53,7 @@ class AzureAccountTest extends AccountHelperBase {
     @AfterAll
     public void tearDown() {
         Map<String, String> deleteHeaders = new ConcurrentHashMap<>(bearer);
-        deleteHeaders.put(ISSUER_HEADER, systemAdminUser.getUserId());
+        deleteHeaders.put(ISSUER_HEADER, systemAdminUserId);
 
         doDeleteRequest(TESTING_SUPPORT_DELETE_ACCOUNT_URL + TEST_EMAIL_PREFIX, deleteHeaders);
     }
@@ -80,7 +81,7 @@ class AzureAccountTest extends AccountHelperBase {
             .as(AZURE_ACCOUNT_RESPONSE_TYPE).get(CreationEnum.CREATED_ACCOUNTS).getFirst();
 
         assertThat(createdAccount.getEmail()).isEqualTo(email);
-        createAccount(email, createdAccount.getAzureAccountId());
+        createAccount(email, createdAccount.getAzureAccountId(), systemAdminUserId);
 
         Response getResponse = doGetRequest(String.format(GET_AZURE_ACCOUNT_INFO, createdAccount.getAzureAccountId()),
                      bearer);

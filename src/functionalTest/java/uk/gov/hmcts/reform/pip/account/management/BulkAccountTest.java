@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
@@ -26,16 +27,17 @@ class BulkAccountTest extends AccountHelperBase {
     private static final String TEST_SUITE_EMAIL_PREFIX = EMAIL_PREFIX + TEST_SUITE_PREFIX;
     private static final String BULK_UPLOAD_URL = "account/media-bulk-upload";
 
-    private PiUser systemAdminUser;
     private String mockFile;
     private Map<String, String> issuerId;
+    private String systemAdminId;
 
     @BeforeAll
     void startUp() throws IOException {
-        systemAdminUser = createSystemAdminAccount();
+        PiUser systemAdminUser = createSystemAdminAccount();
+        systemAdminId = systemAdminUser.getUserId();
 
         bearer = Map.of(HttpHeaders.AUTHORIZATION, BEARER + accessToken);
-        issuerId = Map.of(ISSUER_ID, systemAdminUser.getUserId());
+        issuerId = Map.of(ISSUER_ID, systemAdminId);
 
         StringBuilder csvContent = new StringBuilder(400);
         csvContent.append("email,firstName,surname\n");
@@ -60,8 +62,9 @@ class BulkAccountTest extends AccountHelperBase {
 
     @AfterAll
     public void teardown() throws IOException {
-        bearer.put(ISSUER_ID, systemAdminUser.getUserId());
-        doDeleteRequest(TESTING_SUPPORT_DELETE_ACCOUNT_URL + TEST_SUITE_EMAIL_PREFIX, bearer);
+        Map<String, String> headers = new ConcurrentHashMap<>(bearer);
+        headers.put(ISSUER_ID, systemAdminId);
+        doDeleteRequest(TESTING_SUPPORT_DELETE_ACCOUNT_URL + TEST_SUITE_EMAIL_PREFIX, headers);
         Files.deleteIfExists(Path.of(mockFile));
     }
 
