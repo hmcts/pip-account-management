@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import uk.gov.hmcts.reform.pip.account.management.model.account.AzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.account.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.utils.AccountHelperBase;
+import uk.gov.hmcts.reform.pip.model.account.PiUser;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 
 import java.util.ArrayList;
@@ -29,17 +30,31 @@ class AzureAccountTest extends AccountHelperBase {
     private static final String TEST_LAST_NAME = "E2E_TEST_AM_LAST_NAME";
     private static final String TEST_DISPLAY_NAME = "E2E_TEST_AM_DISPLAY_NAME";
 
+    private static final String ISSUER_HEADER = "x-issuer-id";
+
     private static final TypeRef<Map<CreationEnum, List<? extends AzureAccount>>> AZURE_ACCOUNT_RESPONSE_TYPE
         = new TypeRef<>() {};
 
+    private Map<String, String> headers;
+    private PiUser systemAdminUser;
+
     @BeforeAll
-    public void startUp() {
+    public void startUp() throws JsonProcessingException {
+        systemAdminUser = createSystemAdminAccount();
+
+        String adminCtscUserId = getCreatedAccountUserId(
+            createAccount(generateEmail(),UUID.randomUUID().toString(), Roles.INTERNAL_ADMIN_CTSC));
         bearer = Map.of(HttpHeaders.AUTHORIZATION, BEARER + accessToken);
+        headers = new ConcurrentHashMap<>(bearer);
+        headers.put(ISSUER_HEADER, adminCtscUserId);
     }
 
     @AfterAll
     public void tearDown() {
-        doDeleteRequest(TESTING_SUPPORT_DELETE_ACCOUNT_URL + TEST_EMAIL_PREFIX, bearer);
+        Map<String, String> deleteHeaders = new ConcurrentHashMap<>(bearer);
+        deleteHeaders.put(ISSUER_HEADER, systemAdminUser.getUserId());
+
+        doDeleteRequest(TESTING_SUPPORT_DELETE_ACCOUNT_URL + TEST_EMAIL_PREFIX, deleteHeaders);
     }
 
     @Test
@@ -56,16 +71,13 @@ class AzureAccountTest extends AccountHelperBase {
         List<AzureAccount> azureAccounts = new ArrayList<>();
         azureAccounts.add(azureAccount);
 
-        Map<String, String> headers = new ConcurrentHashMap<>(bearer);
-        headers.put(ISSUER_ID, UUID.randomUUID().toString());
-
         Response response =
             doPostRequest(CREATE_AZURE_ACCOUNT, headers, objectMapper.writeValueAsString(azureAccounts));
 
         assertThat(response.getStatusCode()).isEqualTo(OK.value());
 
         AzureAccount createdAccount = response.getBody()
-            .as(AZURE_ACCOUNT_RESPONSE_TYPE).get(CreationEnum.CREATED_ACCOUNTS).get(0);
+            .as(AZURE_ACCOUNT_RESPONSE_TYPE).get(CreationEnum.CREATED_ACCOUNTS).getFirst();
 
         assertThat(createdAccount.getEmail()).isEqualTo(email);
         createAccount(email, createdAccount.getAzureAccountId());
