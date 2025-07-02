@@ -29,17 +29,14 @@ public class SubscriptionService {
 
     private final SubscriptionRepository subscriptionRepository;
     private final SubscriptionListTypeService subscriptionListTypeService;
-    private final SubscriptionLocationService subscriptionLocationService;
     private final UserRepository userRepository;
 
     @Autowired
     public SubscriptionService(SubscriptionRepository subscriptionRepository,
                                SubscriptionListTypeService subscriptionListTypeService,
-                               SubscriptionLocationService subscriptionLocationService,
                                UserRepository userRepository) {
         this.subscriptionRepository = subscriptionRepository;
         this.subscriptionListTypeService = subscriptionListTypeService;
-        this.subscriptionLocationService = subscriptionLocationService;
         this.userRepository = userRepository;
     }
 
@@ -64,8 +61,9 @@ public class SubscriptionService {
             )));
         subscriptionRepository.deleteById(id);
 
-        if (subscription.getSearchType().equals(LOCATION_ID)) {
-            subscriptionLocationService.deleteSubscriptionListTypeByUser(subscription.getUserId());
+        if (subscription.getSearchType().equals(LOCATION_ID)
+            && subscriptionRepository.findLocationSubscriptionsByUserId(subscription.getUserId()).isEmpty()) {
+            subscriptionListTypeService.deleteListTypesForSubscription(subscription.getUserId());
         }
 
         log.info(writeLog(actioningUserId, UserActions.DELETE_SUBSCRIPTION,
@@ -83,23 +81,13 @@ public class SubscriptionService {
                     + missingIds.toString().replace("[", "").replace("]", ""));
         }
 
-        //FIND ALL THE LOCATION SUBSCRIPTION FOR THE USER AND CHECK IF MORE THAN ONE LOCATION SUBSCRIPTION EXISTS
-        //DO NOT DELETE RECORD FROM SUBSCRIPTION LIST TYPE BECAUSE ONE RECORD IS LINKED WITH ALL THE LOCATION
-        //SUBSCRIPTIONS
-        List<Subscription> bulkDeleteLocationSubscriptions = subscriptions.stream()
-            .filter(s -> s.getSearchType()
-            .equals(LOCATION_ID)).toList();
+        subscriptionRepository.deleteByIdIn(ids);
+        UUID userID = subscriptions.get(0).getUserId();
 
-        List<Subscription> userLocationSubscriptions = subscriptionRepository
-            .findLocationSubscriptionsByUserId(subscriptions.get(0).getUserId());
-
-        if (!userLocationSubscriptions.isEmpty()
-            && bulkDeleteLocationSubscriptions.size()
-            == subscriptionRepository.findLocationSubscriptionsByUserId(subscriptions.get(0).getUserId()).size()) {
-            subscriptionListTypeService.deleteListTypesForSubscription(subscriptions.get(0).getUserId());
+        if (subscriptionRepository.findLocationSubscriptionsByUserId(userID).isEmpty()) {
+            subscriptionListTypeService.deleteListTypesForSubscription(userID);
         }
 
-        subscriptionRepository.deleteByIdIn(ids);
         subscriptions.forEach(s -> log.info(writeLog(s.getUserId().toString(), UserActions.DELETE_SUBSCRIPTION,
                                                      s.getId().toString())));
     }
