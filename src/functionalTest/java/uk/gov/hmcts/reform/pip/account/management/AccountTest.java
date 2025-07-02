@@ -43,7 +43,7 @@ class AccountTest extends AccountHelperBase {
     private static final String SUPER_ADMIN_CTSC_ROLE_NAME = "INTERNAL_SUPER_ADMIN_CTSC";
     private static final String SUPER_ADMIN_LOCAL_ROLE_NAME = "INTERNAL_SUPER_ADMIN_LOCAL";
 
-    private PiUser systemAdminUser;
+    private String systemAdminId;
     private String ctscSuperAdminId;
     private String localSuperAdminId;
     private String localAdminId;
@@ -62,7 +62,8 @@ class AccountTest extends AccountHelperBase {
     public void startUp() throws JsonProcessingException {
         bearer = Map.of(HttpHeaders.AUTHORIZATION, BEARER + accessToken);
 
-        systemAdminUser = createSystemAdminAccount();
+        PiUser systemAdminUser = createSystemAdminAccount();
+        systemAdminId = systemAdminUser.getUserId();
 
         ctscSuperAdminId = getCreatedAccountUserId(
             createAccount(generateEmail(), UUID.randomUUID().toString(), Roles.INTERNAL_SUPER_ADMIN_CTSC));
@@ -76,8 +77,10 @@ class AccountTest extends AccountHelperBase {
 
     @AfterAll
     public void teardown() {
-        doDeleteRequest(TESTING_SUPPORT_DELETE_ACCOUNT_URL + TEST_EMAIL_PREFIX, bearer);
-        doDeleteRequest(String.format(DELETE_ENDPOINT, thirdPartyUserId), bearer);
+        Map<String, String> headers = new ConcurrentHashMap<>(bearer);
+        headers.put(ISSUER_ID, systemAdminId);
+        doDeleteRequest(TESTING_SUPPORT_DELETE_ACCOUNT_URL + TEST_EMAIL_PREFIX, headers);
+        doDeleteRequest(String.format(DELETE_ENDPOINT, thirdPartyUserId), headers);
     }
 
     private List<PiUser> generateThirdParty() {
@@ -117,7 +120,7 @@ class AccountTest extends AccountHelperBase {
         List<PiUser> thirdParty = generateThirdParty();
 
         Map<String, String> headers = new ConcurrentHashMap<>(bearer);
-        headers.put(ISSUER_ID, systemAdminUser.getUserId());
+        headers.put(ISSUER_ID, systemAdminId);
 
         final Response createdResponse = doPostRequest(CREATE_PI_ACCOUNT,
                                                       headers, objectMapper.writeValueAsString(thirdParty));
@@ -125,14 +128,17 @@ class AccountTest extends AccountHelperBase {
         assertThat(createdResponse.getStatusCode()).isEqualTo(CREATED.value());
 
         thirdPartyUserId = (String) createdResponse.getBody()
-            .as(CREATED_RESPONSE_TYPE).get(CreationEnum.CREATED_ACCOUNTS).get(0);
+            .as(CREATED_RESPONSE_TYPE).get(CreationEnum.CREATED_ACCOUNTS).getFirst();
     }
 
     @Test
     void shouldBeAbleToGetAnAccountByUserId() throws Exception {
         String createdUserId = getCreatedAccountUserId(createAccount(email, provenanceId));
 
-        Response getUserResponse = doGetRequest(String.format(GET_BY_USER_ID, createdUserId), bearer);
+        Map<String, String> headers = new ConcurrentHashMap<>(bearer);
+        headers.put(ISSUER_ID, systemAdminId);
+
+        Response getUserResponse = doGetRequest(String.format(GET_BY_USER_ID, createdUserId), headers);
 
         assertThat(getUserResponse.getStatusCode()).isEqualTo(OK.value());
         assertThat(getUserResponse.getBody().as(PiUser.class)).matches(user -> user.getEmail().equals(email));
@@ -142,7 +148,10 @@ class AccountTest extends AccountHelperBase {
     void shouldBeAbleToGetAnAccountByProvenanceId() throws Exception {
         createAccount(email, provenanceId);
 
-        Response getUserResponse = doGetRequest(String.format(GET_BY_PROVENANCE_ID, provenanceId), bearer);
+        Map<String, String> headers = new ConcurrentHashMap<>(bearer);
+        headers.put(ISSUER_ID, systemAdminId);
+
+        Response getUserResponse = doGetRequest(String.format(GET_BY_PROVENANCE_ID, provenanceId), headers);
 
         assertThat(getUserResponse.getStatusCode()).isEqualTo(OK.value());
         assertThat(getUserResponse.getBody().as(PiUser.class)).matches(user -> user.getEmail().equals(email));
@@ -151,10 +160,12 @@ class AccountTest extends AccountHelperBase {
     @Test
     void checkIfUserIsAuthorisedWhenPublicList() throws Exception {
         String createdUserId = getCreatedAccountUserId(createAccount(email, provenanceId));
+        Map<String, String> headers = new ConcurrentHashMap<>(bearer);
+        headers.put(ISSUER_ID, systemAdminId);
 
         Response getUserResponse = doGetRequest(String.format(USER_IS_AUTHORISED_FOR_LIST, createdUserId,
                                                               ListType.CIVIL_DAILY_CAUSE_LIST, Sensitivity.PUBLIC
-        ), bearer);
+        ), headers);
 
         assertThat(getUserResponse.getStatusCode()).isEqualTo(OK.value());
         assertThat(getUserResponse.getBody().as(Boolean.class)).isTrue();
@@ -164,9 +175,12 @@ class AccountTest extends AccountHelperBase {
     void checkIfUserIsAuthorisedWhenPrivateList() throws Exception {
         String createdUserId = getCreatedAccountUserId(createAccount(email, provenanceId));
 
+        Map<String, String> headers = new ConcurrentHashMap<>(bearer);
+        headers.put(ISSUER_ID, systemAdminId);
+
         Response getUserResponse = doGetRequest(String.format(USER_IS_AUTHORISED_FOR_LIST, createdUserId,
                                                               ListType.CIVIL_DAILY_CAUSE_LIST, Sensitivity.PRIVATE
-        ), bearer);
+        ), headers);
 
         assertThat(getUserResponse.getStatusCode()).isEqualTo(OK.value());
         assertThat(getUserResponse.getBody().as(Boolean.class)).isTrue();
@@ -176,9 +190,12 @@ class AccountTest extends AccountHelperBase {
     void checkIfUserIsAuthorisedWhenClassifiedList() throws Exception {
         String createdUserId = getCreatedAccountUserId(createAccount(email, provenanceId));
 
+        Map<String, String> headers = new ConcurrentHashMap<>(bearer);
+        headers.put(ISSUER_ID, systemAdminId);
+
         Response getUserResponse = doGetRequest(String.format(USER_IS_AUTHORISED_FOR_LIST, createdUserId,
                                                               ListType.SJP_PUBLIC_LIST, Sensitivity.CLASSIFIED
-        ), bearer);
+        ), headers);
 
         assertThat(getUserResponse.getStatusCode()).isEqualTo(OK.value());
         assertThat(getUserResponse.getBody().as(Boolean.class)).isTrue();
@@ -187,10 +204,12 @@ class AccountTest extends AccountHelperBase {
     @Test
     void checkIfUserIsNotAuthorisedWhenClassifiedList() throws Exception {
         String createdUserId = getCreatedAccountUserId(createAccount(email, provenanceId));
+        Map<String, String> headers = new ConcurrentHashMap<>(bearer);
+        headers.put(ISSUER_ID, systemAdminId);
 
         Response getUserResponse = doGetRequest(String.format(USER_IS_AUTHORISED_FOR_LIST, createdUserId,
                                                               ListType.CIVIL_DAILY_CAUSE_LIST, Sensitivity.CLASSIFIED
-        ), bearer);
+        ), headers);
 
         assertThat(getUserResponse.getStatusCode()).isEqualTo(OK.value());
         assertThat(getUserResponse.getBody().as(Boolean.class)).isFalse();
@@ -199,17 +218,19 @@ class AccountTest extends AccountHelperBase {
     @Test
     void shouldBeAbleToUpdateAccount() throws Exception {
         createAccount(email, provenanceId);
+        Map<String, String> headers = new ConcurrentHashMap<>(bearer);
+        headers.put(ISSUER_ID, systemAdminId);
 
         Map<String, String> updateParams = new ConcurrentHashMap<>();
         updateParams.put("lastVerifiedDate", "2024-12-01T01:01:01.123456Z");
         updateParams.put("lastSignedInDate", "2024-12-02T01:01:01.123456Z");
 
-        Response updateResponse = doPutRequestWithBody(String.format(UPDATE_ACCOUNT, provenanceId), bearer,
+        Response updateResponse = doPutRequestWithBody(String.format(UPDATE_ACCOUNT, provenanceId), headers,
                                                        objectMapper.writeValueAsString(updateParams));
 
         assertThat(updateResponse.getStatusCode()).isEqualTo(OK.value());
 
-        Response getUserResponse = doGetRequest(String.format(GET_BY_PROVENANCE_ID, provenanceId), bearer);
+        Response getUserResponse = doGetRequest(String.format(GET_BY_PROVENANCE_ID, provenanceId), headers);
         PiUser user = getUserResponse.getBody().as(PiUser.class);
 
         assertThat(user.getLastVerifiedDate()).isEqualTo(LocalDateTime.parse("2024-12-01T01:01:01"));
@@ -220,11 +241,14 @@ class AccountTest extends AccountHelperBase {
     void shouldBeAbleToDeleteAccount() throws Exception {
         String createdUserId = getCreatedAccountUserId(createAccount(email, provenanceId));
 
-        Response deleteResponse = doDeleteRequest(String.format(DELETE_ENDPOINT, createdUserId), bearer);
+        Map<String, String> headers = new ConcurrentHashMap<>(bearer);
+        headers.put(ISSUER_ID, systemAdminId);
+
+        Response deleteResponse = doDeleteRequest(String.format(DELETE_ENDPOINT, createdUserId), headers);
 
         assertThat(deleteResponse.getStatusCode()).isEqualTo(OK.value());
 
-        Response getUserResponse = doGetRequest(String.format(GET_BY_PROVENANCE_ID, provenanceId), bearer);
+        Response getUserResponse = doGetRequest(String.format(GET_BY_PROVENANCE_ID, provenanceId), headers);
         assertThat(getUserResponse.getStatusCode()).isEqualTo(NOT_FOUND.value());
     }
 
@@ -233,19 +257,19 @@ class AccountTest extends AccountHelperBase {
         String createdUserId = getCreatedAccountUserId(createAccount(email, provenanceId));
 
         Map<String, String> headers = new ConcurrentHashMap<>(bearer);
-        headers.put(ADMIN_ID, systemAdminUser.getUserId());
+        headers.put(ADMIN_ID, systemAdminId);
 
         Response deleteResponse = doDeleteRequest(String.format(DELETE_ENDPOINT_V2, createdUserId), headers);
 
         assertThat(deleteResponse.getStatusCode()).isEqualTo(OK.value());
 
-        Response getUserResponse = doGetRequest(String.format(GET_BY_PROVENANCE_ID, provenanceId), bearer);
+        Response getUserResponse = doGetRequest(String.format(GET_BY_PROVENANCE_ID, provenanceId), headers);
         assertThat(getUserResponse.getStatusCode()).isEqualTo(NOT_FOUND.value());
     }
 
     @ParameterizedTest
     @EnumSource(value = Roles.class, names = {SUPER_ADMIN_CTSC_ROLE_NAME, SUPER_ADMIN_LOCAL_ROLE_NAME})
-    void shouldBeAbleToDeleteAccountV2WhenSuperAdmin(Roles role) throws Exception {
+    void shouldNotBeAbleToDeleteAccountV2WhenSuperAdmin(Roles role) throws Exception {
         String createdUserId = getCreatedAccountUserId(createAccount(email, provenanceId, Roles.INTERNAL_ADMIN_LOCAL));
 
         Map<String, String> headers = new ConcurrentHashMap<>(bearer);
@@ -253,10 +277,10 @@ class AccountTest extends AccountHelperBase {
 
         Response deleteResponse = doDeleteRequest(String.format(DELETE_ENDPOINT_V2, createdUserId), headers);
 
-        assertThat(deleteResponse.getStatusCode()).isEqualTo(OK.value());
+        assertThat(deleteResponse.getStatusCode()).isEqualTo(FORBIDDEN.value());
 
-        Response getUserResponse = doGetRequest(String.format(GET_BY_PROVENANCE_ID, provenanceId), bearer);
-        assertThat(getUserResponse.getStatusCode()).isEqualTo(NOT_FOUND.value());
+        Response getUserResponse = doGetRequest(String.format(GET_BY_PROVENANCE_ID, provenanceId), headers);
+        assertThat(getUserResponse.getStatusCode()).isEqualTo(OK.value());
     }
 
     @Test
@@ -270,7 +294,7 @@ class AccountTest extends AccountHelperBase {
 
         assertThat(deleteResponse.getStatusCode()).isEqualTo(FORBIDDEN.value());
 
-        Response getUserResponse = doGetRequest(String.format(GET_BY_PROVENANCE_ID, provenanceId), bearer);
+        Response getUserResponse = doGetRequest(String.format(GET_BY_PROVENANCE_ID, provenanceId), headers);
         assertThat(getUserResponse.getStatusCode()).isEqualTo(OK.value());
     }
 
@@ -335,13 +359,16 @@ class AccountTest extends AccountHelperBase {
 
     @Test
     void shouldNotBeAbleToUpdateRoleWhenUserNotProvided() {
+        Map<String, String> headers = new ConcurrentHashMap<>(bearer);
+        headers.put(ADMIN_ID, systemAdminId);
+
         Response updateResponse = doPutRequest(
-            String.format(UPDATE_ACCOUNT_ROLE, ctscSuperAdminId, SUPER_ADMIN_LOCAL_ROLE_NAME), bearer);
+            String.format(UPDATE_ACCOUNT_ROLE, ctscSuperAdminId, SUPER_ADMIN_LOCAL_ROLE_NAME), headers);
 
         assertThat(updateResponse.getStatusCode()).isEqualTo(FORBIDDEN.value());
 
         PiUser getUserResponse =
-            doGetRequest(String.format(GET_BY_USER_ID, ctscSuperAdminId), bearer).getBody().as(PiUser.class);
+            doGetRequest(String.format(GET_BY_USER_ID, ctscSuperAdminId), headers).getBody().as(PiUser.class);
 
         assertThat(getUserResponse.getRoles()).isEqualTo(Roles.INTERNAL_SUPER_ADMIN_CTSC);
     }
@@ -352,7 +379,7 @@ class AccountTest extends AccountHelperBase {
             createAccount(email, provenanceId, Roles.INTERNAL_ADMIN_LOCAL));
 
         Map<String, String> headers = new ConcurrentHashMap<>(bearer);
-        headers.put(ADMIN_ID, systemAdminUser.getUserId());
+        headers.put(ADMIN_ID, systemAdminId);
 
         Response updateResponse = doPutRequest(
             String.format(UPDATE_ACCOUNT_ROLE, createdUserId, SUPER_ADMIN_CTSC_ROLE_NAME), headers);

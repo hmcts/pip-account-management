@@ -1,6 +1,5 @@
 package uk.gov.hmcts.reform.pip.account.management.utils;
 
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.restassured.common.mapper.TypeRef;
@@ -92,6 +91,6 @@ public class AccountHelperBase extends FunctionalTestBase {
     }
 
     protected String getCreatedAccountUserId(Response response) {
-        return (String) response.getBody().as(CREATED_RESPONSE_TYPE).get(CreationEnum.CREATED_ACCOUNTS).get(0);
+        return (String) response.getBody().as(CREATED_RESPONSE_TYPE).get(CreationEnum.CREATED_ACCOUNTS).getFirst();
     }
 }

@@ -58,7 +58,7 @@ class MediaApplicationCreationTest extends AccountHelperBase {
     private Map<String, String> addAuthHeader() {
         Map<String, String> bearer = Map.of(HttpHeaders.AUTHORIZATION, "bearer" + accessToken);
 
-        headers = new ConcurrentHashMap<>(bearer);
+        Map<String, String> headers = new ConcurrentHashMap<>(bearer);
         headers.put(REQUESTER_HEADER, systemAdminUser.getUserId());
 
         return headers;
