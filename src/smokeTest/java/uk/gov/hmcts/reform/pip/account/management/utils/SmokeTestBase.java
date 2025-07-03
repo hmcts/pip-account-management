@@ -62,11 +62,12 @@ public class SmokeTestBase {
             .thenReturn();
     }
 
-    protected Response doPostMultipartForApplication(String path, File file, String name, String email,
+    protected Response doPostMultipartForApplication(String path, String userId, File file, String name, String email,
                                                      String employer, String status) {
         return given()
             .relaxedHTTPSValidation()
             .headers(Map.of(AUTHORIZATION, "bearer " + accessToken))
+            .header("x-requester-id", userId)
             .multiPart("file", file)
             .multiPart("fullName", name)
             .multiPart("email", email)

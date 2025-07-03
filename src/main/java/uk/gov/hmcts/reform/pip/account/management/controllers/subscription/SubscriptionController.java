@@ -6,7 +6,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
+@AllArgsConstructor
 @Tag(name = "Account Management - API for managing account subscriptions")
 @RequestMapping("/subscription")
 @ApiResponse(responseCode = "401", description = "Invalid access credential")
@@ -50,17 +51,6 @@ public class SubscriptionController {
     private final UserSubscriptionService userSubscriptionService;
     private final SubscriptionNotificationService subscriptionNotificationService;
 
-    @Autowired
-    public SubscriptionController(
-        SubscriptionService subscriptionService,
-        UserSubscriptionService userSubscriptionService,
-        SubscriptionNotificationService subscriptionNotificationService
-    ) {
-        this.subscriptionService = subscriptionService;
-        this.userSubscriptionService = userSubscriptionService;
-        this.subscriptionNotificationService = subscriptionNotificationService;
-    }
-
     @PostMapping(consumes = "application/json")
     @Operation(summary = "Endpoint to create a new unique subscription "
         + "- the 'id' field is hidden from swagger as it is auto generated on creation")
@@ -69,11 +59,12 @@ public class SubscriptionController {
         + "for user: {userId}")
     @ApiResponse(responseCode = "400", description = "This subscription object has an invalid format. Please "
         + "check again.")
+    @PreAuthorize("@subscriptionAuthorisationService.userCanAddSubscriptions(#requesterId, #subscription)")
     public ResponseEntity<String> createSubscription(
         @RequestBody @Valid Subscription subscription,
-        @RequestHeader(X_USER_ID_HEADER) String actioningUserId
+        @RequestHeader(X_USER_ID_HEADER) String requesterId
     ) {
-        Subscription createdSubscription = subscriptionService.createSubscription(subscription, actioningUserId);
+        Subscription createdSubscription = subscriptionService.createSubscription(subscription, requesterId);
         return ResponseEntity.status(HttpStatus.CREATED)
             .body(String.format("Subscription created with the id %s for user %s",
                                 createdSubscription.getId(), createdSubscription.getUserId()
@@ -86,11 +77,10 @@ public class SubscriptionController {
     @Transactional
     @Operation(summary = "Endpoint to delete a given unique subscription, using subscription ID as a parameter.")
     @DeleteMapping("/{subId}")
-    @PreAuthorize("@authorisationService.userCanDeleteSubscriptions(#actioningUserId, #subId)")
+    @PreAuthorize("@subscriptionAuthorisationService.userCanDeleteSubscriptions(#requesterId, #subId)")
     public ResponseEntity<String> deleteById(@Parameter @PathVariable UUID subId,
-                                             @RequestHeader(X_USER_ID_HEADER) String actioningUserId) {
-
-        subscriptionService.deleteById(subId, actioningUserId);
+                                             @RequestHeader(X_USER_ID_HEADER) String requesterId) {
+        subscriptionService.deleteById(subId, requesterId);
         return ResponseEntity.ok(String.format("Subscription: %s was deleted", subId));
     }
 
@@ -100,10 +90,9 @@ public class SubscriptionController {
     @Transactional
     @Operation(summary = "Delete a set of subscriptions using the subscription IDs")
     @DeleteMapping("/bulk")
-    @PreAuthorize("@authorisationService.userCanDeleteSubscriptions(#actioningUserId, #subIds)")
+    @PreAuthorize("@subscriptionAuthorisationService.userCanBulkDeleteSubscriptions(#requesterId, #subIds)")
     public ResponseEntity<String> bulkDeleteSubscriptions(@RequestBody List<UUID> subIds,
-                                                          @RequestHeader(X_USER_ID_HEADER) String actioningUserId) {
-
+                                                          @RequestHeader(X_USER_ID_HEADER) String requesterId) {
         subscriptionService.bulkDeleteSubscriptions(subIds);
         return ResponseEntity.ok(String.format(
             "Subscriptions with ID %s deleted",
@@ -125,8 +114,11 @@ public class SubscriptionController {
     @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE,
         description = "No subscription found with the user id {userId}")
     @Operation(summary = "Returns the list of relevant subscriptions associated with a given user id.")
+    @PreAuthorize("@subscriptionAuthorisationService.userCanViewSubscriptions(#requesterId, #userId)")
     @GetMapping("/user/{userId}")
-    public ResponseEntity<UserSubscription> findByUserId(@Parameter @PathVariable UUID userId) {
+    public ResponseEntity<UserSubscription> findByUserId(
+        @RequestHeader(X_USER_ID_HEADER) UUID requesterId,
+        @Parameter @PathVariable UUID userId) {
         return ResponseEntity.ok(userSubscriptionService.findByUserId(userId));
     }
 

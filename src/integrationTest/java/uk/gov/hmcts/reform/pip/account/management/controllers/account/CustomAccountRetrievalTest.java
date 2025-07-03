@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -12,6 +13,7 @@ import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -20,6 +22,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.testcontainers.shaded.org.apache.commons.lang3.RandomUtils;
 import uk.gov.hmcts.reform.pip.account.management.model.account.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.account.PiUser;
+import uk.gov.hmcts.reform.pip.account.management.service.authorisation.AccountAuthorisationService;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
 import uk.gov.hmcts.reform.pip.model.report.AccountMiData;
@@ -32,6 +35,8 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 import static org.springframework.http.HttpStatus.FORBIDDEN;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -57,6 +62,8 @@ class CustomAccountRetrievalTest {
     private static final String FORENAME = "Forename";
     private static final String ISSUER_ID = "87f907d2-eb28-42cc-b6e1-ae2b03f7bba2";
     private static final String ISSUER_HEADER = "x-issuer-id";
+    private static final String REQUESTER_HEADER = "x-requester-id";
+    private static final UUID REQUESTER_ID = UUID.randomUUID();
 
     private static final String NOT_FOUND_STATUS_CODE_MESSAGE = "Status code does not match not found";
     private static final String USER_SHOULD_MATCH = "Users should match";
@@ -66,14 +73,17 @@ class CustomAccountRetrievalTest {
     private static final String UNAUTHORIZED_USERNAME = "unauthorized_isAuthorized";
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-    private static final PiUser VALID_USER = createUser(true, UUID.randomUUID().toString());
+    private static final PiUser VALID_USER = createUser(UUID.randomUUID().toString());
 
     @Autowired
     private MockMvc mockMvc;
 
-    private static PiUser createUser(boolean valid, String id) {
+    @MockitoBean
+    private AccountAuthorisationService accountAuthorisationService;
+
+    private static PiUser createUser(String id) {
         PiUser user = new PiUser();
-        user.setEmail(valid ? EMAIL : INVALID_EMAIL);
+        user.setEmail(EMAIL);
         user.setProvenanceUserId(id);
         user.setUserProvenance(UserProvenances.PI_AAD);
         user.setRoles(Roles.INTERNAL_ADMIN_CTSC);
@@ -87,10 +97,16 @@ class CustomAccountRetrievalTest {
         OBJECT_MAPPER.findAndRegisterModules();
     }
 
+    @BeforeEach
+    void beforeEachSetUp() {
+        when(accountAuthorisationService.userCanCreateAccount(any(), any())).thenReturn(true);
+        when(accountAuthorisationService.userCanViewAccounts(any())).thenReturn(true);
+    }
+
     @Test
     void testMiData() throws Exception {
         String provenanceId = UUID.randomUUID().toString();
-        PiUser validUser = createUser(true, provenanceId);
+        PiUser validUser = createUser(provenanceId);
         validUser.setEmail("test-account-am-" + RandomUtils.nextInt() + "@hmcts.net");
 
         MockHttpServletRequestBuilder createRequest =
@@ -109,7 +125,7 @@ class CustomAccountRetrievalTest {
                 }
             );
 
-        String createdUserId = mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).get(0).toString();
+        String createdUserId = mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).getFirst().toString();
 
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .get(MI_REPORTING_ACCOUNT_DATA_URL);
@@ -164,10 +180,10 @@ class CustomAccountRetrievalTest {
                 }
             );
 
-        String createdUserId = mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).get(0).toString();
+        String createdUserId = mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).getFirst().toString();
 
         MockHttpServletRequestBuilder getRequest = MockMvcRequestBuilders
-            .get(THIRD_PARTY_URL);
+            .get(THIRD_PARTY_URL).header(REQUESTER_HEADER, REQUESTER_ID);
 
         MvcResult responseGetUser =
             mockMvc.perform(getRequest).andExpect(status().isOk()).andReturn();
@@ -184,8 +200,10 @@ class CustomAccountRetrievalTest {
     @Test
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testUnauthorizedGetAllThirdPartyAccounts() throws Exception {
+        when(accountAuthorisationService.userCanViewAccounts(any())).thenReturn(false);
+
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
-            .get(THIRD_PARTY_URL);
+            .get(THIRD_PARTY_URL).header(REQUESTER_HEADER, REQUESTER_ID);
 
         MvcResult mvcResult =
             mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isForbidden()).andReturn();
@@ -197,8 +215,8 @@ class CustomAccountRetrievalTest {
 
     @Test
     void testGetAllAccountsExceptThirdParty() throws Exception {
-        PiUser validUser1 = createUser(true, UUID.randomUUID().toString());
-        PiUser validUser2 = createUser(true, UUID.randomUUID().toString());
+        PiUser validUser1 = createUser(UUID.randomUUID().toString());
+        PiUser validUser2 = createUser(UUID.randomUUID().toString());
 
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder =
             MockMvcRequestBuilders
@@ -216,10 +234,10 @@ class CustomAccountRetrievalTest {
                 }
             );
 
-        String createdUserId = mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).get(0).toString();
+        String createdUserId = mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).getFirst().toString();
 
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
-            .get(GET_ALL_ACCOUNTS_EXCEPT_THIRD_PARTY);
+            .get(GET_ALL_ACCOUNTS_EXCEPT_THIRD_PARTY).header(REQUESTER_HEADER, REQUESTER_ID);
 
         MvcResult response =
             mockMvc.perform(request).andExpect(status().isOk()).andReturn();
@@ -233,8 +251,11 @@ class CustomAccountRetrievalTest {
     @Test
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testUnauthorizedGetAllAccountsExceptThirdParty() throws Exception {
+        when(accountAuthorisationService.userCanViewAccounts(any())).thenReturn(false);
+
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
-            .get(GET_ALL_ACCOUNTS_EXCEPT_THIRD_PARTY);
+            .get(GET_ALL_ACCOUNTS_EXCEPT_THIRD_PARTY)
+            .header(REQUESTER_HEADER, REQUESTER_ID);
 
         MvcResult mvcResult = mockMvc.perform(request).andExpect(status().isForbidden()).andReturn();
 
@@ -261,7 +282,7 @@ class CustomAccountRetrievalTest {
                 }
             );
 
-        String createdUserId = mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).get(0).toString();
+        String createdUserId = mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).getFirst().toString();
 
         MockHttpServletRequestBuilder getRequest = MockMvcRequestBuilders
             .get(ADMIN_ROOT_URL + VALID_USER.getEmail() + "/" + VALID_USER.getUserProvenance());
