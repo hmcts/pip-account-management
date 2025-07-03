@@ -48,7 +48,7 @@ class AuditCreationTest extends AccountHelperBase {
     }
 
     private Map<String, String> addAuthHeader() {
-        Map<String, String> bearer = Map.of(HttpHeaders.AUTHORIZATION, "bearer" + accessToken);
+        Map<String, String> bearer = Map.of(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken);
 
         headers = new ConcurrentHashMap<>(bearer);
         headers.put(REQUESTER_HEADER, systemAdminUser.getUserId());
