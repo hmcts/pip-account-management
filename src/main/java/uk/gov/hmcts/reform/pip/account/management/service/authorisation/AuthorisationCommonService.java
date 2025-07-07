@@ -30,6 +30,10 @@ public class AuthorisationCommonService {
     }
 
     public boolean isSystemAdmin(UUID userId) {
+        if (userId == null) {
+            return false;
+        }
+
         PiUser user = accountService.getUserById(userId);
         return user != null && user.getRoles() == SYSTEM_ADMIN;
     }

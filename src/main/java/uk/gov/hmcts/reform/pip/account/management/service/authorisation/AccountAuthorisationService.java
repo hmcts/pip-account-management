@@ -67,6 +67,10 @@ public class AccountAuthorisationService {
     }
 
     public boolean userCanDeleteAccount(UUID userId, UUID adminUserId) {
+        if (userId == null || adminUserId == null) {
+            return false;
+        }
+
         if (!authorisationCommonService.isAdmin()
             || !authorisationCommonService.isSystemAdmin(adminUserId)
             || adminUserId.equals(userId)) {
