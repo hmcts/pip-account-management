@@ -55,7 +55,6 @@ class InactiveAccountsManagementTest extends AccountHelperBase {
     private static final String FIRST_NAME = "E2E Account Management";
     private static final String SURNAME = "Test Name";
     private static final String LAST_SINGED_IN_DATE = "lastSignedInDate";
-    private static final String BEARER = "Bearer ";
     private static final String ISSUER_ID = "x-issuer-id";
     private static final Clock CL = Clock.systemUTC();
     private static final String IDAM_USER_PROVENANCE_ID = UUID.randomUUID().toString();

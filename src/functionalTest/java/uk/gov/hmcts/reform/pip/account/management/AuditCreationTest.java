@@ -36,24 +36,18 @@ class AuditCreationTest extends AccountHelperBase {
     private static final String GET_AUDIT_URL = "/audit/%s";
     private static final String TESTING_SUPPORT_AUDIT_URL = "/testing-support/audit/";
     private static final String CONTENT = "content";
-    private static final String REQUESTER_HEADER = "x-requester-id";
 
-    private PiUser systemAdminUser;
+
     private Map<String, String> headers;
 
     @BeforeAll
     public void startUp() throws JsonProcessingException {
+        PiUser systemAdminUser;
         systemAdminUser = createSystemAdminAccount();
-        headers = addAuthHeader();
-    }
 
-    private Map<String, String> addAuthHeader() {
-        Map<String, String> bearer = Map.of(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken);
-
+        bearer = Map.of(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken);
         headers = new ConcurrentHashMap<>(bearer);
-        headers.put(REQUESTER_HEADER, systemAdminUser.getUserId());
-
-        return headers;
+        headers.put(ISSUER_ID, systemAdminUser.getUserId());
     }
 
     @AfterAll

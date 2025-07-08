@@ -30,8 +30,6 @@ class AzureAccountTest extends AccountHelperBase {
     private static final String TEST_LAST_NAME = "E2E_TEST_AM_LAST_NAME";
     private static final String TEST_DISPLAY_NAME = "E2E_TEST_AM_DISPLAY_NAME";
 
-    private static final String ISSUER_HEADER = "x-issuer-id";
-
     private static final TypeRef<Map<CreationEnum, List<? extends AzureAccount>>> AZURE_ACCOUNT_RESPONSE_TYPE
         = new TypeRef<>() {};
 
@@ -44,18 +42,16 @@ class AzureAccountTest extends AccountHelperBase {
         systemAdminUserId = systemAdminUser.getUserId();
 
         String adminCtscUserId = getCreatedAccountUserId(
-            createAccount(generateEmail(),UUID.randomUUID().toString(), Roles.INTERNAL_ADMIN_CTSC, systemAdminUserId));
+            createAccount(generateEmail(), UUID.randomUUID().toString(), Roles.INTERNAL_ADMIN_CTSC, systemAdminUserId));
+
         bearer = Map.of(HttpHeaders.AUTHORIZATION, BEARER + accessToken);
         headers = new ConcurrentHashMap<>(bearer);
-        headers.put(ISSUER_HEADER, adminCtscUserId);
+        headers.put(ISSUER_ID, adminCtscUserId);
     }
 
     @AfterAll
     public void tearDown() {
-        Map<String, String> deleteHeaders = new ConcurrentHashMap<>(bearer);
-        deleteHeaders.put(ISSUER_HEADER, systemAdminUserId);
-
-        doDeleteRequest(TESTING_SUPPORT_DELETE_ACCOUNT_URL + TEST_EMAIL_PREFIX, deleteHeaders);
+        doDeleteRequest(TESTING_SUPPORT_DELETE_ACCOUNT_URL + TEST_EMAIL_PREFIX, bearer);
     }
 
     @Test

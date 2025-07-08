@@ -80,10 +80,8 @@ class AccountTest extends AccountHelperBase {
 
     @AfterAll
     public void teardown() {
-        Map<String, String> headers = new ConcurrentHashMap<>(bearer);
-        headers.put(ISSUER_ID, systemAdminId);
-        doDeleteRequest(TESTING_SUPPORT_DELETE_ACCOUNT_URL + TEST_EMAIL_PREFIX, headers);
-        doDeleteRequest(String.format(DELETE_ENDPOINT, thirdPartyUserId), headers);
+        doDeleteRequest(TESTING_SUPPORT_DELETE_ACCOUNT_URL + TEST_EMAIL_PREFIX, bearer);
+        doDeleteRequest(String.format(DELETE_ENDPOINT, thirdPartyUserId), bearer);
     }
 
     private List<PiUser> generateThirdParty() {
@@ -245,10 +243,9 @@ class AccountTest extends AccountHelperBase {
         String createdUserId = getCreatedAccountUserId(createAccount(email, provenanceId, systemAdminId));
 
         Map<String, String> headers = new ConcurrentHashMap<>(bearer);
-        headers.put(ISSUER_ID, systemAdminId);
+        headers.put(ADMIN_ID, systemAdminId);
 
         Response deleteResponse = doDeleteRequest(String.format(DELETE_ENDPOINT, createdUserId), headers);
-
         assertThat(deleteResponse.getStatusCode()).isEqualTo(OK.value());
 
         Response getUserResponse = doGetRequest(String.format(GET_BY_PROVENANCE_ID, provenanceId), headers);
@@ -263,7 +260,6 @@ class AccountTest extends AccountHelperBase {
         headers.put(ADMIN_ID, systemAdminId);
 
         Response deleteResponse = doDeleteRequest(String.format(DELETE_ENDPOINT_V2, createdUserId), headers);
-
         assertThat(deleteResponse.getStatusCode()).isEqualTo(OK.value());
 
         Response getUserResponse = doGetRequest(String.format(GET_BY_PROVENANCE_ID, provenanceId), headers);
@@ -348,13 +344,13 @@ class AccountTest extends AccountHelperBase {
 
     @Test
     void shouldNotBeAbleToUpdateRoleWhenUserNotProvided() {
-        Map<String, String> headers = new ConcurrentHashMap<>(bearer);
-        headers.put(ADMIN_ID, systemAdminId);
-
         Response updateResponse = doPutRequest(
             String.format(UPDATE_ACCOUNT_ROLE, ctscSuperAdminId, SUPER_ADMIN_LOCAL_ROLE_NAME), bearer);
 
         assertThat(updateResponse.getStatusCode()).isEqualTo(FORBIDDEN.value());
+
+        Map<String, String> headers = new ConcurrentHashMap<>(bearer);
+        headers.put(ISSUER_ID, systemAdminId);
 
         PiUser getUserResponse =
             doGetRequest(String.format(GET_BY_USER_ID, ctscSuperAdminId), headers).getBody().as(PiUser.class);
@@ -374,6 +370,8 @@ class AccountTest extends AccountHelperBase {
             String.format(UPDATE_ACCOUNT_ROLE, createdUserId, SUPER_ADMIN_CTSC_ROLE_NAME), headers);
 
         assertThat(updateResponse.getStatusCode()).isEqualTo(OK.value());
+
+        headers.put(ISSUER_ID, systemAdminId);
 
         PiUser getUserResponse =
             doGetRequest(String.format(GET_BY_USER_ID, createdUserId), bearer).getBody().as(PiUser.class);

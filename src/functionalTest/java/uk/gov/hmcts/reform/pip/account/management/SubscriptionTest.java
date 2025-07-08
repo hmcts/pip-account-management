@@ -94,8 +94,7 @@ class SubscriptionTest extends AccountHelperBase {
     @Test
     void testGetSubscription() {
 
-        Map<String, String> headerMap = new ConcurrentHashMap<>();
-        headerMap.putAll(bearer);
+        Map<String, String> headerMap = new ConcurrentHashMap<>(bearer);
         headerMap.put(USER_ID_HEADER, systemAdminUserId);
 
         Response responseCreateSubscription = doPostRequest(
@@ -113,7 +112,7 @@ class SubscriptionTest extends AccountHelperBase {
         assertThat(returnedSubscriptionBySubId.getUserId()).isEqualTo(verifiedUserId);
         assertThat(returnedSubscriptionBySubId.getLocationName()).isEqualTo(LOCATION_NAME);
 
-        Response responseFindByUserId = doGetRequest(FIND_SUBSCRIPTION_BY_USER_ID_URL + verifiedUserId, bearer);
+        Response responseFindByUserId = doGetRequest(FIND_SUBSCRIPTION_BY_USER_ID_URL + verifiedUserId, headerMap);
         assertThat(responseFindByUserId.getStatusCode()).isEqualTo(OK.value());
         UserSubscription returnedSubscriptionByUserId = responseFindByUserId.as(UserSubscription.class);
         assertThat(returnedSubscriptionByUserId.getCaseSubscriptions().size()).isEqualTo(0);

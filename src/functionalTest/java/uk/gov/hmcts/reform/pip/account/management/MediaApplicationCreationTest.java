@@ -12,10 +12,12 @@ import uk.gov.hmcts.reform.pip.account.management.model.MediaApplication;
 import uk.gov.hmcts.reform.pip.account.management.model.MediaApplicationStatus;
 import uk.gov.hmcts.reform.pip.account.management.utils.AccountHelperBase;
 import uk.gov.hmcts.reform.pip.model.account.PiUser;
+import uk.gov.hmcts.reform.pip.model.account.Roles;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
@@ -41,27 +43,25 @@ class MediaApplicationCreationTest extends AccountHelperBase {
     private static final String REPORTING = "/application/reporting";
     private static final String GET_ALL_APPLICATIONS = "/application";
     private static final String MOCK_FILE = "files/test-image.png";
-    private static final String REQUESTER_HEADER = "x-requester-id";
 
     Map<String, List<String>> reasons =
         Map.of("Reason 1", List.of("Reason 1", "Reason 2"), "Reason 2", List.of("Reason 3", "Reason 4"));
 
-    private PiUser systemAdminUser;
+
     private Map<String, String> headers;
 
     @BeforeAll
     public void startUp() throws JsonProcessingException {
-        systemAdminUser = createSystemAdminAccount();
-        headers = addAuthHeader();
-    }
+        String systemAdminUserId;
+        PiUser systemAdminUser = createSystemAdminAccount();
+        systemAdminUserId = systemAdminUser.getUserId();
 
-    private Map<String, String> addAuthHeader() {
-        Map<String, String> bearer = Map.of(HttpHeaders.AUTHORIZATION, "bearer" + accessToken);
+        String adminCtscUserId = getCreatedAccountUserId(
+            createAccount(generateEmail(), UUID.randomUUID().toString(), Roles.INTERNAL_ADMIN_CTSC, systemAdminUserId));
 
-        Map<String, String> headers = new ConcurrentHashMap<>(bearer);
-        headers.put(REQUESTER_HEADER, systemAdminUser.getUserId());
-
-        return headers;
+        bearer = Map.of(HttpHeaders.AUTHORIZATION, BEARER + accessToken);
+        headers = new ConcurrentHashMap<>(bearer);
+        headers.put(ISSUER_ID, adminCtscUserId);
     }
 
     @AfterAll
@@ -201,7 +201,7 @@ class MediaApplicationCreationTest extends AccountHelperBase {
         assertThat(getImageResponse.getStatusCode()).isEqualTo(NOT_FOUND.value());
 
         final Response getApplicationResponse = doGetRequest(String.format(GET_MEDIA_APPLICATION_URL,
-                                                                           mediaApplication.getId()), bearer);
+                                                                           mediaApplication.getId()), headers);
 
         assertThat(getApplicationResponse.getStatusCode()).isEqualTo(NOT_FOUND.value());
     }
