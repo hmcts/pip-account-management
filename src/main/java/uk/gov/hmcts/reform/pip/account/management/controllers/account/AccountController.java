@@ -43,7 +43,6 @@ import java.util.UUID;
 public class AccountController {
 
     private static final String ISSUER_ID = "x-issuer-id";
-    private static final String REQUESTER_ID = "x-requester-id";
     private static final String ADMIN_ID = "x-admin-id";
 
     private static final String FORBIDDEN_ERROR_CODE = "403";
@@ -79,7 +78,7 @@ public class AccountController {
     @PreAuthorize("@accountAuthorisationService.userCanViewAccounts(#requesterId)")
     @GetMapping("/{userId}")
     public ResponseEntity<PiUser> getUserById(
-        @RequestHeader(REQUESTER_ID) String requesterId,
+        @RequestHeader(ISSUER_ID) String requesterId,
         @PathVariable UUID userId) {
         return ResponseEntity.ok(accountService.getUserById(userId));
     }

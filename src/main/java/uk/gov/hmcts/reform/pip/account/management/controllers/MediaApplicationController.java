@@ -51,7 +51,8 @@ public class MediaApplicationController {
     public static final String NO_MEDIA_APPLICATION_FOUND_WITH_ID = "No media application found with id: {id}";
     private final MediaApplicationService mediaApplicationService;
 
-    private static final String REQUESTER_ID = "x-requester-id";
+    private static final String ISSUER_ID = "x-issuer-id";
+    private static final String ADMIN_ID = "x-admin-id";
 
     private static final String NO_CONTENT_MESSAGE = "The request has been successfully fulfilled";
     private static final String OK_ERROR_CODE = "200";
@@ -69,7 +70,7 @@ public class MediaApplicationController {
     @PreAuthorize("@accountAuthorisationService.userCanViewMediaApplications(#requesterId)")
     @GetMapping(value = "/status/{status}", produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<List<MediaApplication>> getApplicationsByStatus(
-        @RequestHeader(REQUESTER_ID) String requesterId,
+        @RequestHeader(ISSUER_ID) String requesterId,
         @PathVariable MediaApplicationStatus status) {
         return ResponseEntity.ok(mediaApplicationService.getApplicationsByStatus(status));
     }
@@ -79,7 +80,7 @@ public class MediaApplicationController {
     @PreAuthorize("@accountAuthorisationService.userCanViewMediaApplications(#requesterId)")
     @GetMapping(value = "/{id}", produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<MediaApplication> getApplicationById(
-        @RequestHeader(REQUESTER_ID) String requesterId,
+        @RequestHeader(ISSUER_ID) String requesterId,
         @PathVariable UUID id) {
         return ResponseEntity.ok(mediaApplicationService.getApplicationById(id));
     }
@@ -89,7 +90,7 @@ public class MediaApplicationController {
     @PreAuthorize("@accountAuthorisationService.userCanViewMediaApplications(#requesterId)")
     @GetMapping("/image/{id}")
     public ResponseEntity<Resource> getImageById(
-        @RequestHeader(REQUESTER_ID) String requesterId,
+        @RequestHeader(ISSUER_ID) String requesterId,
         @PathVariable String id) {
         return ResponseEntity.ok()
             .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_OCTET_STREAM_VALUE)
@@ -122,7 +123,7 @@ public class MediaApplicationController {
     @PreAuthorize("@accountAuthorisationService.userCanUpdateMediaApplications(#requesterId)")
     @PutMapping(value = "/{id}/{status}/reasons", consumes = APPLICATION_JSON_VALUE)
     public ResponseEntity<MediaApplication> updateApplicationRejection(
-        @RequestHeader(REQUESTER_ID) String requesterId,
+        @RequestHeader(ADMIN_ID) String requesterId,
         @RequestBody Map<String, List<String>> reasons,
         @PathVariable MediaApplicationStatus status, @PathVariable UUID id) {
         return ResponseEntity.ok(mediaApplicationService.updateApplication(id, status, reasons));

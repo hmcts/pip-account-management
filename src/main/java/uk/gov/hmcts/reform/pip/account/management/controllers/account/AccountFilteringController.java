@@ -46,7 +46,7 @@ public class AccountFilteringController {
     private static final String NOT_FOUND_ERROR_CODE = "404";
     private static final String FORBIDDEN_ERROR_CODE = "403";
     private static final String PI_USER = "{piUser}";
-    private static final String REQUESTER_ID = "x-requester-id";
+    private static final String ISSUER_ID = "x-issuer-id";
 
     @ApiResponse(responseCode = OK_CODE, description = "List of Accounts MI Data")
     @Operation(summary = "Returns anonymized account data for MI reporting")
@@ -62,7 +62,7 @@ public class AccountFilteringController {
     @PreAuthorize("@accountAuthorisationService.userCanViewAccounts(#requesterId)")
     @GetMapping("/all/third-party")
     public ResponseEntity<List<PiUser>> getAllThirdPartyAccounts(
-        @RequestHeader(REQUESTER_ID) String requesterId) {
+        @RequestHeader(ISSUER_ID) String requesterId) {
         return ResponseEntity.ok(accountFilteringService.findAllThirdPartyAccounts());
     }
 
@@ -71,7 +71,7 @@ public class AccountFilteringController {
     @PreAuthorize("@accountAuthorisationService.userCanViewAccounts(#requesterId)")
     @GetMapping("/all")
     public ResponseEntity<Page<PiUser>> getAllAccountsExceptThirdParty(
-        @RequestHeader(REQUESTER_ID) String requesterId,
+        @RequestHeader(ISSUER_ID) String requesterId,
         @RequestParam(name = "pageNumber", defaultValue = "0") int pageNumber,
         @RequestParam(name = "pageSize", defaultValue = "25") int pageSize,
         @RequestParam(name = "email", defaultValue = "", required = false) String email,

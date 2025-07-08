@@ -43,7 +43,7 @@ public class AuditController {
 
     private final AuditService auditService;
 
-    private static final String REQUESTER_ID = "x-requester-id";
+    private static final String ISSUER_ID = "x-issuer-id";
 
     private static final String OK_ERROR_CODE = "200";
     private static final String NOT_FOUND_ERROR_CODE = "404";
@@ -55,7 +55,7 @@ public class AuditController {
     @PreAuthorize("@accountAuthorisationService.userCanViewAuditLogs(#requesterId)")
     @GetMapping
     public ResponseEntity<Page<AuditLog>> getAllAuditLogs(
-        @RequestHeader(REQUESTER_ID) String requesterId,
+        @RequestHeader(ISSUER_ID) String requesterId,
         @RequestParam(name = "pageNumber", defaultValue = "0") int pageNumber,
         @RequestParam(name = "pageSize", defaultValue = "25") int pageSize,
         @RequestParam(name = "email", defaultValue = "", required = false) String email,
@@ -74,7 +74,7 @@ public class AuditController {
     @PreAuthorize("@accountAuthorisationService.userCanViewAuditLogs(#requesterId)")
     @GetMapping(value = "/{id}", produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<AuditLog> getAuditLogById(
-        @RequestHeader(REQUESTER_ID) String requesterId,
+        @RequestHeader(ISSUER_ID) String requesterId,
         @PathVariable UUID id) {
         return ResponseEntity.ok(auditService.getAuditLogById(id));
     }
