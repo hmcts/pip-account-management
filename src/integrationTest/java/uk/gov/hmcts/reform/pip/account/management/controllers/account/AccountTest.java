@@ -93,7 +93,6 @@ class AccountTest extends IntegrationTestBase {
     private static final String SUPER_ADMIN_ISSUER_ID = "87f907d2-eb28-42cc-b6e1-ae2b03f7bba3";
     private static final String ISSUER_HEADER = "x-issuer-id";
     private static final String ADMIN_HEADER = "x-admin-id";
-    private static final String REQUESTER_HEADER = "x-requester-id";
     private static final UUID USER_ID = UUID.randomUUID();
     private static final String GIVEN_NAME = "Given Name";
     private static final String ID = "1234";
@@ -522,7 +521,7 @@ class AccountTest extends IntegrationTestBase {
         String createdUserId = mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).getFirst().toString();
 
         MockHttpServletRequestBuilder getRequest = MockMvcRequestBuilders
-            .get(ROOT_URL + "/" + createdUserId).header(REQUESTER_HEADER, SYSTEM_ADMIN_ISSUER_ID);
+            .get(ROOT_URL + "/" + createdUserId).header(ISSUER_HEADER, SYSTEM_ADMIN_ISSUER_ID);
 
         MvcResult responseGetUser = mockMvc.perform(getRequest).andExpect(status().isOk()).andReturn();
 
@@ -536,7 +535,7 @@ class AccountTest extends IntegrationTestBase {
     @Test
     void testGetUserByIdNotFound() throws Exception {
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
-            .get(ROOT_URL + "/" + UUID.randomUUID()).header(REQUESTER_HEADER, SYSTEM_ADMIN_ISSUER_ID);
+            .get(ROOT_URL + "/" + UUID.randomUUID()).header(ISSUER_HEADER, SYSTEM_ADMIN_ISSUER_ID);
 
         MvcResult mvcResult = mockMvc.perform(request).andExpect(status().isNotFound()).andReturn();
 
@@ -954,7 +953,7 @@ class AccountTest extends IntegrationTestBase {
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testUnauthorizedGetUserById() throws Exception {
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
-            .get(ROOT_URL + "/" + UUID.randomUUID()).header(REQUESTER_HEADER, SUPER_ADMIN_ISSUER_ID);
+            .get(ROOT_URL + "/" + UUID.randomUUID()).header(ISSUER_HEADER, SUPER_ADMIN_ISSUER_ID);
 
         when(accountAuthorisationService.userCanViewAccounts(any())).thenReturn(false);
         MvcResult mvcResult = mockMvc.perform(request).andExpect(status().isForbidden()).andReturn();

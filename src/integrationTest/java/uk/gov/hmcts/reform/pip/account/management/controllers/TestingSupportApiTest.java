@@ -86,7 +86,6 @@ class TestingSupportApiTest extends IntegrationTestBase {
 
     private static final String ISSUER_HEADER = "x-issuer-id";
     private static final String ISSUER_ID = "87f907d2-eb28-42cc-b6e1-ae2b03f7bba2";
-    private static final String REQUESTER_HEADER = "x-requester-id";
     private static final UUID REQUESTER_ID = UUID.randomUUID();
 
     private static final String EMAIL_PREFIX = "TEST_789_";
@@ -197,7 +196,7 @@ class TestingSupportApiTest extends IntegrationTestBase {
 
         //Check whether account is created in Pi user table
         MockHttpServletRequestBuilder getPiUserRequest = get(ACCOUNT_URL + createdAccount.getUserId())
-            .header(REQUESTER_HEADER, REQUESTER_ID);
+            .header(ISSUER_HEADER, REQUESTER_ID);
 
         MvcResult responseGetUser = mockMvc.perform(getPiUserRequest).andExpect(status().isOk()).andReturn();
 
@@ -218,7 +217,7 @@ class TestingSupportApiTest extends IntegrationTestBase {
 
         //Check whether the user deleted in Pi user table
         mockMvc.perform(get(ACCOUNT_URL + createdAccount.getUserId())
-            .header(REQUESTER_HEADER, REQUESTER_ID))
+            .header(ISSUER_HEADER, REQUESTER_ID))
             .andExpect(status().isNotFound());
     }
 
@@ -296,7 +295,7 @@ class TestingSupportApiTest extends IntegrationTestBase {
 
         String userId = mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).getFirst();
         mockMvc.perform(get(ACCOUNT_URL + userId)
-            .header(REQUESTER_HEADER, REQUESTER_ID))
+            .header(ISSUER_HEADER, REQUESTER_ID))
             .andExpect(status().isOk());
 
         when(accountAuthorisationService.userCanDeleteAccount(any(), any())).thenReturn(true);
@@ -310,7 +309,7 @@ class TestingSupportApiTest extends IntegrationTestBase {
 
         when(accountAuthorisationService.userCanViewAccounts(any())).thenReturn(true);
         mockMvc.perform(get(ACCOUNT_URL + userId)
-            .header(REQUESTER_HEADER, REQUESTER_ID))
+            .header(ISSUER_HEADER, REQUESTER_ID))
             .andExpect(status().isNotFound());
     }
 
@@ -320,7 +319,7 @@ class TestingSupportApiTest extends IntegrationTestBase {
 
         when(accountAuthorisationService.userCanViewMediaApplications(any())).thenReturn(true);
         mockMvc.perform(get(APPLICATION_URL + "/" + application.getId())
-            .header(REQUESTER_HEADER, REQUESTER_ID))
+            .header(ISSUER_HEADER, REQUESTER_ID))
             .andExpect(status().isOk());
 
         MvcResult deleteResponse = mockMvc.perform(delete(TESTING_SUPPORT_APPLICATION_URL + EMAIL_PREFIX)
@@ -334,7 +333,7 @@ class TestingSupportApiTest extends IntegrationTestBase {
 
         when(accountAuthorisationService.userCanViewMediaApplications(any())).thenReturn(true);
         mockMvc.perform(get(APPLICATION_URL + "/" + application.getId())
-            .header(REQUESTER_HEADER, REQUESTER_ID))
+            .header(ISSUER_HEADER, REQUESTER_ID))
             .andExpect(status().isNotFound());
     }
 
@@ -374,7 +373,7 @@ class TestingSupportApiTest extends IntegrationTestBase {
         AuditLog auditLog = createAuditLog();
 
         mockMvc.perform(get(AUDIT_URL + "/" + auditLog.getId())
-            .header(REQUESTER_HEADER, REQUESTER_ID))
+            .header(ISSUER_HEADER, REQUESTER_ID))
             .andExpect(status().isOk());
 
         MvcResult deleteResponse = mockMvc.perform(delete(TESTING_SUPPORT_AUDIT_URL + EMAIL_PREFIX))
@@ -386,7 +385,7 @@ class TestingSupportApiTest extends IntegrationTestBase {
             .isEqualTo("2 audit log(s) deleted with user email starting with " + EMAIL_PREFIX);
 
         mockMvc.perform(get(AUDIT_URL + "/" + auditLog.getId())
-            .header(REQUESTER_HEADER, REQUESTER_ID))
+            .header(ISSUER_HEADER, REQUESTER_ID))
             .andExpect(status().isNotFound());
     }
 
@@ -396,11 +395,11 @@ class TestingSupportApiTest extends IntegrationTestBase {
         LocalDate expiredDate = auditLog.getTimestamp().minusDays(200).toLocalDate();
 
         mockMvc.perform(get(AUDIT_URL + "/" + auditLog.getId())
-            .header(REQUESTER_HEADER, REQUESTER_ID))
+            .header(ISSUER_HEADER, REQUESTER_ID))
             .andExpect(status().isOk());
 
         MvcResult updateAudit = mockMvc.perform(put(TESTING_SUPPORT_AUDIT_URL + auditLog.getId())
-            .header(REQUESTER_HEADER, REQUESTER_ID))
+            .header(ISSUER_HEADER, REQUESTER_ID))
             .andExpect(status().isOk())
             .andReturn();
 

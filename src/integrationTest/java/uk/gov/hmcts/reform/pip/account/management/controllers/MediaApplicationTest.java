@@ -64,7 +64,8 @@ class MediaApplicationTest extends IntegrationTestBase {
     private static final String REPORT_APPLICATIONS_URL = ROOT_URL + "/reporting";
     private static final String UNAUTHORIZED_USERNAME = "unauthorized_username";
     private static final String UNAUTHORIZED_ROLE = "APPROLE_unknown.role";
-    private static final String REQUESTER_HEADER = "x-requester-id";
+    private static final String ISSUER_HEADER = "x-issuer-id";
+    private static final String ADMIN_ID = "x-admin-id";
     private static final UUID REQUESTER_ID = UUID.randomUUID();
 
     private ObjectMapper objectMapper;
@@ -238,7 +239,7 @@ class MediaApplicationTest extends IntegrationTestBase {
         MediaApplication application = createApplication();
 
         MvcResult mvcResult = mockMvc.perform(get(GET_STATUS_URL, PENDING_STATUS)
-            .header(REQUESTER_HEADER, REQUESTER_ID))
+            .header(ISSUER_HEADER, REQUESTER_ID))
                 .andExpect(status().isOk())
                 .andReturn();
 
@@ -261,7 +262,7 @@ class MediaApplicationTest extends IntegrationTestBase {
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testGetApplicationsByStatusUnauthorised() throws Exception {
         when(accountAuthorisationService.userCanViewMediaApplications(any())).thenReturn(false);
-        mockMvc.perform(get(GET_STATUS_URL, PENDING_STATUS).header(REQUESTER_HEADER, TEST_ID))
+        mockMvc.perform(get(GET_STATUS_URL, PENDING_STATUS).header(ISSUER_HEADER, TEST_ID))
             .andExpect(status().isForbidden());
     }
 
@@ -270,7 +271,7 @@ class MediaApplicationTest extends IntegrationTestBase {
         MediaApplication application = createApplication();
 
         MvcResult mvcResult = mockMvc.perform(get(GET_BY_ID_URL, application.getId())
-            .header(REQUESTER_HEADER, REQUESTER_ID))
+            .header(ISSUER_HEADER, REQUESTER_ID))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -287,7 +288,7 @@ class MediaApplicationTest extends IntegrationTestBase {
 
     @Test
     void testGetApplicationByIdNotFound() throws Exception {
-        MvcResult mvcResult = mockMvc.perform(get(GET_BY_ID_URL, TEST_ID).header(REQUESTER_HEADER, REQUESTER_ID))
+        MvcResult mvcResult = mockMvc.perform(get(GET_BY_ID_URL, TEST_ID).header(ISSUER_HEADER, REQUESTER_ID))
             .andExpect(status().isNotFound())
             .andReturn();
 
@@ -298,7 +299,7 @@ class MediaApplicationTest extends IntegrationTestBase {
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testGetApplicationByIdUnauthorised() throws Exception {
         when(accountAuthorisationService.userCanViewMediaApplications(any())).thenReturn(false);
-        mockMvc.perform(get(GET_BY_ID_URL, TEST_ID).header(REQUESTER_HEADER, TEST_ID))
+        mockMvc.perform(get(GET_BY_ID_URL, TEST_ID).header(ISSUER_HEADER, TEST_ID))
             .andExpect(status().isForbidden());
     }
 
@@ -312,7 +313,7 @@ class MediaApplicationTest extends IntegrationTestBase {
         when(blobClient.downloadContent()).thenReturn(binaryData);
 
         MvcResult mvcResult = mockMvc.perform(get(GET_IMAGE_BY_ID_URL, application.getImage())
-            .header(REQUESTER_HEADER, REQUESTER_ID))
+            .header(ISSUER_HEADER, REQUESTER_ID))
                 .andExpect(status().isOk())
                 .andReturn();
 
@@ -325,7 +326,7 @@ class MediaApplicationTest extends IntegrationTestBase {
 
         when(blobClient.downloadContent()).thenThrow(BlobStorageException.class);
 
-        MvcResult mvcResult = mockMvc.perform(get(GET_IMAGE_BY_ID_URL, TEST_ID).header(REQUESTER_HEADER, REQUESTER_ID))
+        MvcResult mvcResult = mockMvc.perform(get(GET_IMAGE_BY_ID_URL, TEST_ID).header(ISSUER_HEADER, REQUESTER_ID))
             .andExpect(status().isNotFound())
             .andReturn();
 
@@ -336,7 +337,7 @@ class MediaApplicationTest extends IntegrationTestBase {
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testGetImageByIdUnauthorised() throws Exception {
         when(accountAuthorisationService.userCanViewMediaApplications(any())).thenReturn(false);
-        mockMvc.perform(get(GET_IMAGE_BY_ID_URL, TEST_ID).header(REQUESTER_HEADER, TEST_ID))
+        mockMvc.perform(get(GET_IMAGE_BY_ID_URL, TEST_ID).header(ISSUER_HEADER, TEST_ID))
             .andExpect(status().isForbidden());
     }
 
@@ -385,7 +386,7 @@ class MediaApplicationTest extends IntegrationTestBase {
         MvcResult mvcResult = mockMvc.perform(put(UPDATE_APPLICATION_REJECTION_URL, application.getId(),
                                                   MediaApplicationStatus.REJECTED
             ).content(objectMapper.writeValueAsString(REASONS)).contentType(MediaType.APPLICATION_JSON)
-            .header(REQUESTER_HEADER, REQUESTER_ID))
+            .header(ADMIN_ID, REQUESTER_ID))
                 .andExpect(status().isOk())
                 .andReturn();
 
@@ -405,7 +406,7 @@ class MediaApplicationTest extends IntegrationTestBase {
         MvcResult mvcResult = mockMvc.perform(put(UPDATE_APPLICATION_REJECTION_URL, TEST_ID,
                                                   MediaApplicationStatus.REJECTED
             ).content(objectMapper.writeValueAsString(REASONS)).contentType(MediaType.APPLICATION_JSON)
-            .header(REQUESTER_HEADER, REQUESTER_ID))
+            .header(ADMIN_ID, REQUESTER_ID))
                 .andExpect(status().isNotFound())
                 .andReturn();
 
@@ -421,7 +422,7 @@ class MediaApplicationTest extends IntegrationTestBase {
         mockMvc.perform(put(UPDATE_APPLICATION_REJECTION_URL, TEST_ID,
                             MediaApplicationStatus.REJECTED
             ).content(objectMapper.writeValueAsString(REASONS)).contentType(MediaType.APPLICATION_JSON)
-                            .contentType(MediaType.APPLICATION_JSON).header(REQUESTER_HEADER, TEST_ID))
+                            .contentType(MediaType.APPLICATION_JSON).header(ADMIN_ID, TEST_ID))
             .andExpect(status().isForbidden());
     }
 

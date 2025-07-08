@@ -55,7 +55,7 @@ class AuditTest {
     private static final String USER_ID = "1234";
     private static final String ADDITIONAL_USER_ID = "3456";
     private static final UUID REQUESTER_ID = UUID.randomUUID();
-    private static final String REQUESTER_HEADER = "x-requester-id";
+    private static final String ISSUER_HEADER = "x-issuer-id";
     private static final String UNAUTHORIZED_ROLE = "APPROLE_unknown.authorized";
     private static final String UNAUTHORIZED_USERNAME = "unauthorized_isAuthorized";
     private static final String FORBIDDEN_STATUS_CODE = "Status code does not match forbidden";
@@ -113,7 +113,7 @@ class AuditTest {
             .contentType(MediaType.APPLICATION_JSON);
         mockMvc.perform(mockHttpServletRequestBuilder2).andExpect(status().isOk());
 
-        MvcResult mvcResult = mockMvc.perform(get(ROOT_URL).header(REQUESTER_HEADER, REQUESTER_ID))
+        MvcResult mvcResult = mockMvc.perform(get(ROOT_URL).header(ISSUER_HEADER, REQUESTER_ID))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -159,7 +159,7 @@ class AuditTest {
         mockMvc.perform(mockHttpServletRequestBuilder2).andExpect(status().isOk());
 
         MvcResult mvcResult = mockMvc.perform(get(ROOT_URL + "?email=" + EMAIL)
-            .header(REQUESTER_HEADER, REQUESTER_ID))
+            .header(ISSUER_HEADER, REQUESTER_ID))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -199,7 +199,7 @@ class AuditTest {
         mockMvc.perform(mockHttpServletRequestBuilder2).andExpect(status().isOk());
 
         MvcResult mvcResult = mockMvc.perform(get(ROOT_URL + "?email=test_account_admin")
-            .header(REQUESTER_HEADER, REQUESTER_ID))
+            .header(ISSUER_HEADER, REQUESTER_ID))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -246,7 +246,7 @@ class AuditTest {
         mockMvc.perform(mockHttpServletRequestBuilder2).andExpect(status().isOk());
 
         MvcResult mvcResult = mockMvc.perform(get(ROOT_URL + "?userId=" + ADDITIONAL_USER_ID)
-            .header(REQUESTER_HEADER, REQUESTER_ID))
+            .header(ISSUER_HEADER, REQUESTER_ID))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -286,7 +286,7 @@ class AuditTest {
         mockMvc.perform(mockHttpServletRequestBuilder2).andExpect(status().isOk());
 
         MvcResult mvcResult = mockMvc.perform(get(ROOT_URL + "?actions=" + ADDITIONAL_USER_AUDIT_ACTION)
-            .header(REQUESTER_HEADER, REQUESTER_ID))
+            .header(ISSUER_HEADER, REQUESTER_ID))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -331,7 +331,7 @@ class AuditTest {
         LocalDate filterDate = LocalDate.parse(LocalDate.now().toString(), formatter);
 
         MvcResult mvcResult = mockMvc.perform(get(ROOT_URL + "?filterDate=" + filterDate)
-            .header(REQUESTER_HEADER, REQUESTER_ID))
+            .header(ISSUER_HEADER, REQUESTER_ID))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -382,7 +382,7 @@ class AuditTest {
 
         MvcResult mvcResult = mockMvc.perform(get(ROOT_URL + "?email=" + ADDITIONAL_USER_EMAIL
              + "&userId=" + ADDITIONAL_USER_ID + "&actions=" + ADDITIONAL_USER_AUDIT_ACTION
-                + "&filterDate=" + filterDate).header(REQUESTER_HEADER, REQUESTER_ID))
+                + "&filterDate=" + filterDate).header(ISSUER_HEADER, REQUESTER_ID))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -404,7 +404,7 @@ class AuditTest {
     void testUnauthorizedGetAllAuditLogs() throws Exception {
         when(accountAuthorisationService.userCanViewAuditLogs(REQUESTER_ID)).thenReturn(false);
 
-        MvcResult mvcResult = mockMvc.perform(get(ROOT_URL).header(REQUESTER_HEADER, REQUESTER_ID))
+        MvcResult mvcResult = mockMvc.perform(get(ROOT_URL).header(ISSUER_HEADER, REQUESTER_ID))
             .andExpect(status().isForbidden()).andReturn();
 
         assertEquals(FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
