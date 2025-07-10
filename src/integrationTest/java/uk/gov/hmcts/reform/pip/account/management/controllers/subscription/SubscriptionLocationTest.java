@@ -6,7 +6,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -35,6 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.when;
 import static org.springframework.http.HttpStatus.FORBIDDEN;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -92,9 +92,10 @@ class SubscriptionLocationTest extends IntegrationTestBase {
 
     @BeforeEach
     public void setupEach() {
-        Mockito.when(subscriptionAuthorisationService.userCanAddSubscriptions(any(), any())).thenReturn(true);
-        Mockito.when(subscriptionAuthorisationService.userCanDeleteSubscriptions(any(), any())).thenReturn(true);
-        Mockito.when(subscriptionAuthorisationService.userCanViewSubscriptions(any(), any())).thenReturn(true);
+        when(subscriptionAuthorisationService.userCanAddSubscriptions(any(), any())).thenReturn(true);
+        when(subscriptionAuthorisationService.userCanDeleteSubscriptions(any(), any())).thenReturn(true);
+        when(subscriptionAuthorisationService.userCanViewSubscriptions(any(), any())).thenReturn(true);
+        when(subscriptionAuthorisationService.userCanDeleteLocationSubscriptions(any(), any())).thenReturn(true);
     }
 
     @Test
@@ -190,6 +191,8 @@ class SubscriptionLocationTest extends IntegrationTestBase {
     @Test
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testDeleteSubscriptionByLocationUnauthorized() throws Exception {
+        when(subscriptionAuthorisationService.userCanDeleteLocationSubscriptions(any(), any())).thenReturn(false);
+
         MvcResult response = mvc.perform(delete(SUBSCRIPTIONS_BY_LOCATION + LOCATION_ID)
                                              .header(USER_ID_HEADER, SYSTEM_ADMIN_USER_ID))
             .andExpect(status().isForbidden())

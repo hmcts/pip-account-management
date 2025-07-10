@@ -19,7 +19,7 @@ import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
 @Service
 @AllArgsConstructor
 @Slf4j
-@SuppressWarnings("PMD.SimplifyBooleanReturns")
+@SuppressWarnings({"PMD.SimplifyBooleanReturns", "PMD.TooManyMethods"})
 public class SubscriptionAuthorisationService {
 
     private final SubscriptionRepository subscriptionRepository;
@@ -66,6 +66,19 @@ public class SubscriptionAuthorisationService {
         return false;
     }
 
+    public boolean userCanDeleteLocationSubscriptions(UUID requesterId, Integer locationId) {
+        if (!authorisationCommonService.isAdmin()
+            || !authorisationCommonService.isSystemAdmin(requesterId)
+            || locationId == null) {
+            log.error(writeLog(String.format("User with ID %s is not authorised to remove these subscriptions",
+                                             requesterId)));
+            return false;
+        }
+
+        return subscriptionRepository.findSubscriptionsByLocationId(locationId.toString())
+                .stream().allMatch(this::isThirdPartySubscription);
+    }
+
     public boolean userCanBulkDeleteSubscriptions(UUID requesterId, List<UUID> subscriptionIds) {
         if (isVerifiedUser(requesterId)
             && subscriptionIds.stream().allMatch(id -> isSubscriptionUserMatch(id, requesterId))) {
@@ -95,6 +108,24 @@ public class SubscriptionAuthorisationService {
             return false;
         }
         return true;
+    }
+
+    public boolean userCanRetrieveChannels(UUID requesterId, UUID userId) {
+        if (authorisationCommonService.isAdmin()
+            && authorisationCommonService.isSystemAdmin(requesterId)
+            && isThirdParty(userId)) {
+            return true;
+        }
+
+        log.error(writeLog(String.format("User with ID %s is not authorised to retrieve these channels",
+            requesterId)));
+
+        return false;
+    }
+
+    private boolean isThirdParty(UUID userId) {
+        PiUser user = accountService.getUserById(userId);
+        return Roles.getAllThirdPartyRoles().contains(user.getRoles());
     }
 
     private boolean isThirdPartySubscription(Subscription subscription) {

@@ -10,13 +10,19 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import uk.gov.hmcts.reform.pip.account.management.service.authorisation.SubscriptionAuthorisationService;
 import uk.gov.hmcts.reform.pip.account.management.utils.IntegrationBasicTestBase;
 import uk.gov.hmcts.reform.pip.model.subscription.Channel;
 
+import java.util.UUID;
+
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -27,11 +33,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class SubscriptionChannelTest extends IntegrationBasicTestBase {
     private static final String FORBIDDEN_STATUS_CODE = "Status code does not match forbidden";
     private static final String SUBSCRIPTION_CHANNEL_URL = "/subscription/channel";
+    private static final String USER_ID_HEADER = "x-user-id";
+    private static final UUID USER_ID = UUID.randomUUID();
 
     private ObjectMapper objectMapper;
 
     @Autowired
     private MockMvc mvc;
+
+    @MockitoBean
+    private SubscriptionAuthorisationService subscriptionAuthorisationService;
 
     @BeforeEach
     void setup() {
@@ -42,7 +53,9 @@ class SubscriptionChannelTest extends IntegrationBasicTestBase {
     @DisplayName("Get all channels")
     @Test
     void testGetAllChannels() throws Exception {
-        MvcResult response = mvc.perform(get(SUBSCRIPTION_CHANNEL_URL))
+        when(subscriptionAuthorisationService.userCanRetrieveChannels(any(), any())).thenReturn(true);
+        MvcResult response = mvc.perform(get(SUBSCRIPTION_CHANNEL_URL + "?userId=" + USER_ID)
+                                             .header(USER_ID_HEADER, USER_ID))
             .andExpect(status().isOk()).andReturn();
 
         Channel[] channelsReturned = objectMapper.readValue(
@@ -58,7 +71,8 @@ class SubscriptionChannelTest extends IntegrationBasicTestBase {
     @Test
     @WithMockUser(username = "unauthorized_delete", authorities = {"APPROLE_unknown.delete"})
     void testUnauthorizedGetAllChannels() throws Exception {
-        MvcResult mvcResult = mvc.perform(get(SUBSCRIPTION_CHANNEL_URL))
+        MvcResult mvcResult = mvc.perform(get(SUBSCRIPTION_CHANNEL_URL + "?userId=" + USER_ID)
+                                              .header(USER_ID_HEADER, USER_ID))
             .andExpect(status().isForbidden()).andReturn();
 
         assertEquals(HttpStatus.FORBIDDEN.value(), mvcResult.getResponse().getStatus(),

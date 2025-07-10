@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -52,8 +53,8 @@ public class SubscriptionLocationController {
     @ApiResponse(responseCode = OK_CODE, description = "Subscription for location {locationId} has been deleted")
     @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description = "No subscription found for location {locationId}")
     @Transactional
+    @PreAuthorize("@subscriptionAuthorisationService.userCanDeleteLocationSubscriptions(#userId, #locationId)")
     @DeleteMapping("/{locationId}")
-    @IsAdmin
     public ResponseEntity<String> deleteSubscriptionByLocation(@RequestHeader(X_USER_ID_HEADER) String userId,
                                                                @PathVariable Integer locationId) {
         return ResponseEntity.ok(subscriptionLocationService.deleteSubscriptionByLocation(
