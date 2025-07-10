@@ -61,21 +61,17 @@ class SubscriptionTest extends AccountHelperBase {
     private static final ListType LIST_TYPE = ListType.CIVIL_DAILY_CAUSE_LIST;
 
     private UUID verifiedUserId = UUID.randomUUID();
+    private String systemAdminUserId;
 
     @BeforeAll
     public void setup() throws JsonProcessingException {
-        String adminCtscUserId;
-        String systemAdminUserId;
         bearer = Map.of(AUTHORIZATION, BEARER + accessToken);
 
         PiUser systemAdminAccount = createSystemAdminAccount();
         systemAdminUserId = systemAdminAccount.getUserId();
 
-        adminCtscUserId = getCreatedAccountUserId(
-            createAccount(generateEmail(), UUID.randomUUID().toString(), Roles.INTERNAL_ADMIN_CTSC, systemAdminUserId));
-
         String createdUserId = getCreatedAccountUserId(
-            createAccount(generateEmail(), UUID.randomUUID().toString(), adminCtscUserId)
+            createAccount(generateEmail(), UUID.randomUUID().toString(), Roles.GENERAL_THIRD_PARTY, systemAdminUserId)
         );
 
         verifiedUserId = UUID.fromString(createdUserId);
@@ -208,9 +204,13 @@ class SubscriptionTest extends AccountHelperBase {
         assertThat(returnedSubscriptionsByLocationId.getFirst().getLocationName()).isEqualTo(LOCATION_NAME);
 
         headerMap.put("x-provenance-user-id", systemAdminProvenanceId);
+
+        Map<String, String> deleteHeader = new ConcurrentHashMap<>(bearer);
+        deleteHeader.put(USER_ID_HEADER, String.valueOf(systemAdminUserId));
+
         final Response responseDeleteSubscriptionByLocationId = doDeleteRequest(
             SUBSCRIPTION_BY_LOCATION_URL + LOCATION_ID,
-            headerMap
+            deleteHeader
         );
         assertThat(responseDeleteSubscriptionByLocationId.getStatusCode()).isEqualTo(OK.value());
         assertThat(responseDeleteSubscriptionByLocationId.asString().contains(String.format(
