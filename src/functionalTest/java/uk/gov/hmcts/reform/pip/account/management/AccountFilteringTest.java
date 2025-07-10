@@ -42,6 +42,8 @@ class AccountFilteringTest extends AccountHelperBase {
 
     @BeforeAll
     public void startUp() throws JsonProcessingException {
+        bearer = Map.of(HttpHeaders.AUTHORIZATION, BEARER + accessToken);
+
         systemAdminUser = createSystemAdminAccount();
 
         PiUser piUser = new PiUser();
@@ -52,21 +54,13 @@ class AccountFilteringTest extends AccountHelperBase {
         List<PiUser> thirdPartyList = new ArrayList<>();
         thirdPartyList.add(piUser);
 
-        headers = addAuthHeader();
+        headers = new ConcurrentHashMap<>(bearer);
+        headers.put(ISSUER_ID, systemAdminUser.getUserId());
 
         Response createdResponse =
             doPostRequest(CREATE_PI_ACCOUNT, headers, objectMapper.writeValueAsString(thirdPartyList));
 
         thirdPartyUserId = getCreatedAccountUserId(createdResponse);
-    }
-
-    private Map<String, String> addAuthHeader() {
-        bearer = Map.of(HttpHeaders.AUTHORIZATION, BEARER + accessToken);
-
-        headers = new ConcurrentHashMap<>(bearer);
-        headers.put(ISSUER_ID, systemAdminUser.getUserId());
-
-        return headers;
     }
 
     private void verifyFilteringController(Map<String, String> requestParams) {

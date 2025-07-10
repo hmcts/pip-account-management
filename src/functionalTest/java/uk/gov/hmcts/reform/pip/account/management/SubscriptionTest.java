@@ -11,6 +11,7 @@ import uk.gov.hmcts.reform.pip.account.management.model.subscription.Subscriptio
 import uk.gov.hmcts.reform.pip.account.management.model.subscription.usersubscription.UserSubscription;
 import uk.gov.hmcts.reform.pip.account.management.utils.AccountHelperBase;
 import uk.gov.hmcts.reform.pip.model.account.PiUser;
+import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.publication.ListType;
 import uk.gov.hmcts.reform.pip.model.report.AllSubscriptionMiData;
 import uk.gov.hmcts.reform.pip.model.report.LocationSubscriptionMiData;
@@ -60,17 +61,21 @@ class SubscriptionTest extends AccountHelperBase {
     private static final ListType LIST_TYPE = ListType.CIVIL_DAILY_CAUSE_LIST;
 
     private UUID verifiedUserId = UUID.randomUUID();
-    private String systemAdminUserId;
 
     @BeforeAll
     public void setup() throws JsonProcessingException {
+        String adminCtscUserId;
+        String systemAdminUserId;
         bearer = Map.of(AUTHORIZATION, BEARER + accessToken);
 
         PiUser systemAdminAccount = createSystemAdminAccount();
         systemAdminUserId = systemAdminAccount.getUserId();
 
+        adminCtscUserId = getCreatedAccountUserId(
+            createAccount(generateEmail(), UUID.randomUUID().toString(), Roles.INTERNAL_ADMIN_CTSC, systemAdminUserId));
+
         String createdUserId = getCreatedAccountUserId(
-            createAccount(generateEmail(), UUID.randomUUID().toString(), systemAdminUserId)
+            createAccount(generateEmail(), UUID.randomUUID().toString(), adminCtscUserId)
         );
 
         verifiedUserId = UUID.fromString(createdUserId);
@@ -95,7 +100,7 @@ class SubscriptionTest extends AccountHelperBase {
     void testGetSubscription() {
 
         Map<String, String> headerMap = new ConcurrentHashMap<>(bearer);
-        headerMap.put(USER_ID_HEADER, systemAdminUserId);
+        headerMap.put(USER_ID_HEADER, String.valueOf(verifiedUserId));
 
         Response responseCreateSubscription = doPostRequest(
             SUBSCRIPTION_URL,
@@ -135,7 +140,7 @@ class SubscriptionTest extends AccountHelperBase {
 
         Map<String, String> headerMap = new ConcurrentHashMap<>();
         headerMap.putAll(bearer);
-        headerMap.put(USER_ID_HEADER, systemAdminUserId);
+        headerMap.put(USER_ID_HEADER, String.valueOf(verifiedUserId));
 
         doPostRequest(
             SUBSCRIPTION_URL,
@@ -185,7 +190,7 @@ class SubscriptionTest extends AccountHelperBase {
 
         Map<String, String> headerMap = new ConcurrentHashMap<>();
         headerMap.putAll(bearer);
-        headerMap.put(USER_ID_HEADER, systemAdminUserId);
+        headerMap.put(USER_ID_HEADER, String.valueOf(verifiedUserId));
 
         Response responseCreateSubscription = doPostRequest(
             SUBSCRIPTION_URL,
@@ -220,7 +225,7 @@ class SubscriptionTest extends AccountHelperBase {
 
         Map<String, String> headerMap = new ConcurrentHashMap<>();
         headerMap.putAll(bearer);
-        headerMap.put(USER_ID_HEADER, systemAdminUserId);
+        headerMap.put(USER_ID_HEADER, String.valueOf(verifiedUserId));
 
         Response responseCreateSubscription = doPostRequest(
             SUBSCRIPTION_URL,

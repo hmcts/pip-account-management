@@ -52,6 +52,8 @@ class MediaApplicationCreationTest extends AccountHelperBase {
 
     @BeforeAll
     public void startUp() throws JsonProcessingException {
+        bearer = Map.of(HttpHeaders.AUTHORIZATION, BEARER + accessToken);
+
         String systemAdminUserId;
         PiUser systemAdminUser = createSystemAdminAccount();
         systemAdminUserId = systemAdminUser.getUserId();
@@ -59,9 +61,9 @@ class MediaApplicationCreationTest extends AccountHelperBase {
         String adminCtscUserId = getCreatedAccountUserId(
             createAccount(generateEmail(), UUID.randomUUID().toString(), Roles.INTERNAL_ADMIN_CTSC, systemAdminUserId));
 
-        bearer = Map.of(HttpHeaders.AUTHORIZATION, BEARER + accessToken);
         headers = new ConcurrentHashMap<>(bearer);
         headers.put(ISSUER_ID, adminCtscUserId);
+        headers.put(ADMIN_ID, adminCtscUserId);
     }
 
     @AfterAll

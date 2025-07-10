@@ -34,17 +34,19 @@ class AzureAccountTest extends AccountHelperBase {
         = new TypeRef<>() {};
 
     private Map<String, String> headers;
-    private String systemAdminUserId;
+    private String adminCtscUserId;
 
     @BeforeAll
     public void startUp() throws JsonProcessingException {
+        String systemAdminUserId;
+        bearer = Map.of(HttpHeaders.AUTHORIZATION, BEARER + accessToken);
+
         PiUser systemAdminUser = createSystemAdminAccount();
         systemAdminUserId = systemAdminUser.getUserId();
 
-        String adminCtscUserId = getCreatedAccountUserId(
+        adminCtscUserId = getCreatedAccountUserId(
             createAccount(generateEmail(), UUID.randomUUID().toString(), Roles.INTERNAL_ADMIN_CTSC, systemAdminUserId));
 
-        bearer = Map.of(HttpHeaders.AUTHORIZATION, BEARER + accessToken);
         headers = new ConcurrentHashMap<>(bearer);
         headers.put(ISSUER_ID, adminCtscUserId);
     }
@@ -77,7 +79,7 @@ class AzureAccountTest extends AccountHelperBase {
             .as(AZURE_ACCOUNT_RESPONSE_TYPE).get(CreationEnum.CREATED_ACCOUNTS).getFirst();
 
         assertThat(createdAccount.getEmail()).isEqualTo(email);
-        createAccount(email, createdAccount.getAzureAccountId(), systemAdminUserId);
+        createAccount(email, createdAccount.getAzureAccountId(), adminCtscUserId);
 
         Response getResponse = doGetRequest(String.format(GET_AZURE_ACCOUNT_INFO, createdAccount.getAzureAccountId()),
                      bearer);

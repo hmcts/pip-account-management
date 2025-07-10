@@ -33,10 +33,11 @@ class BulkAccountTest extends AccountHelperBase {
 
     @BeforeAll
     void startUp() throws IOException {
+        bearer = Map.of(HttpHeaders.AUTHORIZATION, BEARER + accessToken);
+
         PiUser systemAdminUser = createSystemAdminAccount();
         systemAdminId = systemAdminUser.getUserId();
 
-        bearer = Map.of(HttpHeaders.AUTHORIZATION, BEARER + accessToken);
         issuerId = Map.of(ISSUER_ID, systemAdminId);
 
         StringBuilder csvContent = new StringBuilder(400);

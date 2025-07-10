@@ -42,10 +42,11 @@ class AuditCreationTest extends AccountHelperBase {
 
     @BeforeAll
     public void startUp() throws JsonProcessingException {
+        bearer = Map.of(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken);
+
         PiUser systemAdminUser;
         systemAdminUser = createSystemAdminAccount();
 
-        bearer = Map.of(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken);
         headers = new ConcurrentHashMap<>(bearer);
         headers.put(ISSUER_ID, systemAdminUser.getUserId());
     }
