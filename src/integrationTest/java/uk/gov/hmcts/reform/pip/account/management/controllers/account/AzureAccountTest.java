@@ -20,6 +20,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
@@ -30,6 +31,7 @@ import uk.gov.hmcts.reform.pip.account.management.model.account.AzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.account.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.account.PiUser;
 import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredAzureAccount;
+import uk.gov.hmcts.reform.pip.account.management.service.AuthorisationService;
 import uk.gov.hmcts.reform.pip.account.management.utils.IntegrationTestBase;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
@@ -66,7 +68,7 @@ class AzureAccountTest extends IntegrationTestBase {
     private static final String INVALID_EMAIL = "ab";
     private static final String FIRST_NAME = "First name";
     private static final String SURNAME = "Surname";
-    private static final String ISSUER_ID = "1234-1234-1234-1234";
+    private static final UUID ISSUER_ID = UUID.randomUUID();
     private static final String ISSUER_HEADER = "x-issuer-id";
     private static final String GIVEN_NAME = "Given Name";
     private static final String ID = "1234";
@@ -111,6 +113,9 @@ class AzureAccountTest extends IntegrationTestBase {
     @Mock
     private ClientConfiguration clientConfiguration;
 
+    @MockitoBean
+    private AuthorisationService authorisationService;
+
     private static PiUser createUser(boolean valid, String id) {
         PiUser user = new PiUser();
         user.setEmail(valid ? EMAIL : INVALID_EMAIL);
@@ -152,6 +157,7 @@ class AzureAccountTest extends IntegrationTestBase {
 
         when(graphClient.users()).thenReturn(usersRequestBuilder);
         when(usersRequestBuilder.post(any())).thenReturn(userToReturn);
+        when(authorisationService.userCanCreateAzureAccount(any())).thenReturn(true);
     }
 
     @AfterEach
@@ -198,7 +204,7 @@ class AzureAccountTest extends IntegrationTestBase {
                      "1 Created account should be returned"
         );
 
-        AzureAccount returnedAzureAccount = accounts.get(CreationEnum.CREATED_ACCOUNTS).get(0);
+        AzureAccount returnedAzureAccount = accounts.get(CreationEnum.CREATED_ACCOUNTS).getFirst();
 
         assertEquals(ID, returnedAzureAccount.getAzureAccountId(), TEST_MESSAGE_ID);
         assertEquals(EMAIL, returnedAzureAccount.getEmail(), TEST_MESSAGE_EMAIL);
@@ -245,7 +251,7 @@ class AzureAccountTest extends IntegrationTestBase {
         );
 
         AzureAccount returnedValidAzureAccount = OBJECT_MAPPER.convertValue(
-            accounts.get(CreationEnum.CREATED_ACCOUNTS).get(0), AzureAccount.class
+            accounts.get(CreationEnum.CREATED_ACCOUNTS).getFirst(), AzureAccount.class
         );
 
         assertEquals(ID, returnedValidAzureAccount.getAzureAccountId(), TEST_MESSAGE_ID);
@@ -255,9 +261,9 @@ class AzureAccountTest extends IntegrationTestBase {
         assertEquals(Roles.INTERNAL_ADMIN_CTSC, returnedValidAzureAccount.getRole(), TEST_MESSAGE_ROLE);
 
         ErroredAzureAccount returnedInvalidAccount = OBJECT_MAPPER.convertValue(
-            accounts.get(CreationEnum.ERRORED_ACCOUNTS).get(0), ErroredAzureAccount.class);
+            accounts.get(CreationEnum.ERRORED_ACCOUNTS).getFirst(), ErroredAzureAccount.class);
 
-        assertEquals(UNSENT_EMAIL_MESSAGE, returnedInvalidAccount.getErrorMessages().get(0), MESSAGE_ERROR);
+        assertEquals(UNSENT_EMAIL_MESSAGE, returnedInvalidAccount.getErrorMessages().getFirst(), MESSAGE_ERROR);
     }
 
     @Test
@@ -330,7 +336,7 @@ class AzureAccountTest extends IntegrationTestBase {
 
         List<Object> accountList = accounts.get(CreationEnum.ERRORED_ACCOUNTS);
         ErroredAzureAccount erroredAccount = OBJECT_MAPPER.convertValue(
-            accountList.get(0),
+            accountList.getFirst(),
             ErroredAzureAccount.class
         );
 
@@ -339,7 +345,7 @@ class AzureAccountTest extends IntegrationTestBase {
         assertEquals(FIRST_NAME, erroredAccount.getFirstName(), TEST_MESSAGE_FIRST_NAME);
         assertEquals(SURNAME, erroredAccount.getSurname(), TEST_MESSAGE_SURNAME);
         assertEquals(Roles.INTERNAL_ADMIN_CTSC, erroredAccount.getRole(), TEST_MESSAGE_ROLE);
-        assertEquals(EMAIL_VALIDATION_MESSAGE, erroredAccount.getErrorMessages().get(0),
+        assertEquals(EMAIL_VALIDATION_MESSAGE, erroredAccount.getErrorMessages().getFirst(),
                      INVALID_EMAIL_ERROR
         );
     }
@@ -376,7 +382,7 @@ class AzureAccountTest extends IntegrationTestBase {
 
         List<Object> accountList = accounts.get(CreationEnum.ERRORED_ACCOUNTS);
         ErroredAzureAccount erroredAccount = OBJECT_MAPPER.convertValue(
-            accountList.get(0),
+            accountList.getFirst(),
             ErroredAzureAccount.class
         );
 
@@ -385,7 +391,7 @@ class AzureAccountTest extends IntegrationTestBase {
         assertNull(erroredAccount.getFirstName(), "Firstname has not been sent");
         assertEquals(SURNAME, erroredAccount.getSurname(), TEST_MESSAGE_SURNAME);
         assertEquals(Roles.INTERNAL_ADMIN_CTSC, erroredAccount.getRole(), TEST_MESSAGE_ROLE);
-        assertEquals(INVALID_FIRST_NAME_MESSAGE, erroredAccount.getErrorMessages().get(0),
+        assertEquals(INVALID_FIRST_NAME_MESSAGE, erroredAccount.getErrorMessages().getFirst(),
                      "Error message is displayed for an invalid name"
         );
     }
@@ -484,10 +490,10 @@ class AzureAccountTest extends IntegrationTestBase {
         );
 
         ErroredAzureAccount returnedInvalidAccount = OBJECT_MAPPER.convertValue(
-            accounts.get(CreationEnum.ERRORED_ACCOUNTS).get(0), ErroredAzureAccount.class
+            accounts.get(CreationEnum.ERRORED_ACCOUNTS).getFirst(), ErroredAzureAccount.class
         );
 
-        assertEquals(UNSENT_EMAIL_MESSAGE, returnedInvalidAccount.getErrorMessages().get(0), MESSAGE_ERROR);
+        assertEquals(UNSENT_EMAIL_MESSAGE, returnedInvalidAccount.getErrorMessages().getFirst(), MESSAGE_ERROR);
     }
 
     @Test
@@ -522,7 +528,7 @@ class AzureAccountTest extends IntegrationTestBase {
 
         List<Object> acccountList = accounts.get(CreationEnum.ERRORED_ACCOUNTS);
         ErroredAzureAccount erroredAccount = OBJECT_MAPPER.convertValue(
-            acccountList.get(0),
+            acccountList.getFirst(),
             ErroredAzureAccount.class
         );
 
@@ -531,7 +537,7 @@ class AzureAccountTest extends IntegrationTestBase {
         assertEquals(FIRST_NAME, erroredAccount.getFirstName(), TEST_MESSAGE_FIRST_NAME);
         assertEquals(SURNAME, erroredAccount.getSurname(), TEST_MESSAGE_SURNAME);
         assertNull(erroredAccount.getRole(), "Role is not null");
-        assertEquals(INVALID_ROLE_MESSAGE, erroredAccount.getErrorMessages().get(0),
+        assertEquals(INVALID_ROLE_MESSAGE, erroredAccount.getErrorMessages().getFirst(),
                      "Error message is displayed for an invalid name"
         );
     }
@@ -573,14 +579,14 @@ class AzureAccountTest extends IntegrationTestBase {
         assertEquals(0, accounts.get(CreationEnum.CREATED_ACCOUNTS).size(), "0 created account returned");
 
         ErroredAzureAccount erroredAccount = OBJECT_MAPPER.convertValue(
-            accounts.get(CreationEnum.ERRORED_ACCOUNTS).get(0), ErroredAzureAccount.class);
+            accounts.get(CreationEnum.ERRORED_ACCOUNTS).getFirst(), ErroredAzureAccount.class);
 
         assertNull(erroredAccount.getAzureAccountId(), "Errored azureAccount does not have ID");
         assertEquals(EMAIL, erroredAccount.getEmail(), TEST_MESSAGE_EMAIL);
         assertEquals(FIRST_NAME, erroredAccount.getFirstName(), TEST_MESSAGE_FIRST_NAME);
         assertEquals(SURNAME, erroredAccount.getSurname(), TEST_MESSAGE_SURNAME);
         assertEquals(Roles.INTERNAL_ADMIN_CTSC, erroredAccount.getRole(), TEST_MESSAGE_ROLE);
-        assertEquals(DIRECTORY_ERROR, erroredAccount.getErrorMessages().get(0),
+        assertEquals(DIRECTORY_ERROR, erroredAccount.getErrorMessages().getFirst(),
                      "Error message matches directory message"
         );
     }
@@ -657,7 +663,7 @@ class AzureAccountTest extends IntegrationTestBase {
         );
 
         AzureAccount returnedValidAzureAccount = OBJECT_MAPPER.convertValue(
-            accounts.get(CreationEnum.CREATED_ACCOUNTS).get(0), AzureAccount.class);
+            accounts.get(CreationEnum.CREATED_ACCOUNTS).getFirst(), AzureAccount.class);
 
         assertEquals(ID, returnedValidAzureAccount.getAzureAccountId(), TEST_MESSAGE_ID);
         assertEquals(EMAIL, returnedValidAzureAccount.getEmail(), TEST_MESSAGE_EMAIL);
@@ -666,14 +672,14 @@ class AzureAccountTest extends IntegrationTestBase {
         assertEquals(Roles.INTERNAL_ADMIN_CTSC, returnedValidAzureAccount.getRole(), TEST_MESSAGE_ROLE);
 
         ErroredAzureAccount returnedInvalidAccount = OBJECT_MAPPER.convertValue(
-            accounts.get(CreationEnum.ERRORED_ACCOUNTS).get(0), ErroredAzureAccount.class);
+            accounts.get(CreationEnum.ERRORED_ACCOUNTS).getFirst(), ErroredAzureAccount.class);
 
         assertNull(returnedInvalidAccount.getAzureAccountId(), "AzureAccount ID should be null");
         assertEquals("abc.test", returnedInvalidAccount.getEmail(), TEST_MESSAGE_EMAIL);
         assertEquals(FIRST_NAME, returnedInvalidAccount.getFirstName(), TEST_MESSAGE_FIRST_NAME);
         assertEquals(SURNAME, returnedInvalidAccount.getSurname(), TEST_MESSAGE_SURNAME);
         assertEquals(Roles.INTERNAL_ADMIN_CTSC, returnedInvalidAccount.getRole(), TEST_MESSAGE_ROLE);
-        assertEquals(EMAIL_VALIDATION_MESSAGE, returnedInvalidAccount.getErrorMessages().get(0),
+        assertEquals(EMAIL_VALIDATION_MESSAGE, returnedInvalidAccount.getErrorMessages().getFirst(),
                      INVALID_EMAIL_ERROR
         );
     }
@@ -681,6 +687,8 @@ class AzureAccountTest extends IntegrationTestBase {
     @Test
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testUnauthorizedCreateAccount() throws Exception {
+        when(authorisationService.userCanCreateAzureAccount(any())).thenReturn(false);
+
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(AZURE_URL)
             .content("[]")
