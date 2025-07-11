@@ -1,5 +1,6 @@
 package uk.gov.hmcts.reform.pip.account.management;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.dockerjava.zerodep.shaded.org.apache.hc.core5.http.HttpHeaders;
@@ -13,7 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import uk.gov.hmcts.reform.pip.account.management.model.account.AzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.account.PiUser;
-import uk.gov.hmcts.reform.pip.account.management.utils.FunctionalTestBase;
+import uk.gov.hmcts.reform.pip.account.management.utils.AccountHelperBase;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
 
@@ -22,15 +23,17 @@ import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.HttpStatus.NO_CONTENT;
 import static org.springframework.http.HttpStatus.OK;
+import static uk.gov.hmcts.reform.pip.model.account.Roles.INTERNAL_ADMIN_CTSC;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-class InactiveAccountsManagementTest extends FunctionalTestBase {
+class InactiveAccountsManagementTest extends AccountHelperBase {
     private static final String TEST_NAME = "E2E Account Management Test Name";
     private static final Integer TEST_EMAIL_RANDOM_NUMBER =
         ThreadLocalRandom.current().nextInt(1000, 9999);
@@ -53,12 +56,12 @@ class InactiveAccountsManagementTest extends FunctionalTestBase {
     private static final String FIRST_NAME = "E2E Account Management";
     private static final String SURNAME = "Test Name";
     private static final String LAST_SINGED_IN_DATE = "lastSignedInDate";
-    private static final String BEARER = "Bearer ";
     private static final String ISSUER_ID = "x-issuer-id";
     private static final Clock CL = Clock.systemUTC();
     private static final String IDAM_USER_PROVENANCE_ID = UUID.randomUUID().toString();
-    private Map<String, String> headers;
     private Map<String, String> issuerId;
+    private Map<String, String> ctscAdminIssuerId;
+    private Map<String, String> systemAdminAuthHeaders;
     private String mediaUserProvenanceId;
     private String adminProvenanceId;
     private String mediaUserId;
@@ -82,7 +85,7 @@ class InactiveAccountsManagementTest extends FunctionalTestBase {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     @BeforeAll
-    public void startUp() {
+    public void startUp() throws JsonProcessingException {
 
         String requestBody = """
             {
@@ -93,36 +96,44 @@ class InactiveAccountsManagementTest extends FunctionalTestBase {
 
         OBJECT_MAPPER.findAndRegisterModules();
 
-        headers = Map.of(HttpHeaders.AUTHORIZATION, BEARER + accessToken);
-        String userId =  doPostRequest(SYSTEM_ADMIN_SSO_URL, headers, requestBody)
+        bearer = Map.of(HttpHeaders.AUTHORIZATION, BEARER + accessToken);
+        String userId =  doPostRequest(SYSTEM_ADMIN_SSO_URL, bearer, requestBody)
             .jsonPath().getString("userId");
         issuerId = Map.of(ISSUER_ID, userId);
-
-        //ADD MEDIA USER
-        AzureAccount mediaUserAzureAccount = createAzureAccount(TEST_EMAIL, Roles.VERIFIED);
-        mediaUserProvenanceId = mediaUserAzureAccount.getAzureAccountId();
-        mediaUserId = createUser(TEST_EMAIL, mediaUserAzureAccount.getAzureAccountId(),
-                                   Roles.VERIFIED, UserProvenances.PI_AAD);
 
         //ADD SYSTEM ADMIN
         PiUser systemAdminAccount = createSystemAdminAccount(TEST_ADMIN_EMAIL);
         adminProvenanceId = systemAdminAccount.getProvenanceUserId();
         adminUserId = systemAdminAccount.getUserId().toString();
 
+        String ctscAdminId = getCreatedAccountUserId(
+            createAccount(generateEmail(), UUID.randomUUID().toString(), INTERNAL_ADMIN_CTSC, adminUserId));
+        ctscAdminIssuerId = Map.of(ISSUER_ID, ctscAdminId);
+
         //ADD IDAM USER
         idamUserId = createUser(TEST_IDAM_EMAIL, IDAM_USER_PROVENANCE_ID,
-                   Roles.VERIFIED, UserProvenances.CFT_IDAM);
+                                Roles.VERIFIED, UserProvenances.CFT_IDAM);
+
+        //ADD MEDIA USER
+        AzureAccount mediaUserAzureAccount = createAzureAccount();
+        mediaUserProvenanceId = mediaUserAzureAccount.getAzureAccountId();
+        mediaUserId = createUser(TEST_EMAIL, mediaUserAzureAccount.getAzureAccountId(),
+                                 Roles.VERIFIED, UserProvenances.PI_AAD);
+
+        systemAdminAuthHeaders = new ConcurrentHashMap<>(bearer);
+        systemAdminAuthHeaders.putAll(issuerId);
+
     }
 
     @AfterAll
     public void teardown() {
-        doDeleteRequest(TESTING_SUPPORT_ACCOUNT_URL + TEST_EMAIL, headers);
-        doDeleteRequest(TESTING_SUPPORT_ACCOUNT_URL + TEST_ADMIN_EMAIL, headers);
-        doDeleteRequest(TESTING_SUPPORT_ACCOUNT_URL + TEST_IDAM_EMAIL, headers);
-        doDeleteRequest(TESTING_SUPPORT_ACCOUNT_URL + TEST_SYSTEM_ADMIN_EMAIL, headers);
+        doDeleteRequest(TESTING_SUPPORT_ACCOUNT_URL + TEST_EMAIL, bearer);
+        doDeleteRequest(TESTING_SUPPORT_ACCOUNT_URL + TEST_ADMIN_EMAIL, bearer);
+        doDeleteRequest(TESTING_SUPPORT_ACCOUNT_URL + TEST_IDAM_EMAIL, bearer);
+        doDeleteRequest(TESTING_SUPPORT_ACCOUNT_URL + TEST_SYSTEM_ADMIN_EMAIL, bearer);
     }
 
-    private AzureAccount createAzureAccount(String email, Roles role) {
+    private AzureAccount createAzureAccount() {
         String requestBody = """
             [
                 {
@@ -133,10 +144,10 @@ class InactiveAccountsManagementTest extends FunctionalTestBase {
                     "displayName": "%s"
                 }
             ]
-            """.formatted(email, FIRST_NAME, SURNAME, role, TEST_NAME);
+            """.formatted(TEST_EMAIL, FIRST_NAME, SURNAME, Roles.VERIFIED, TEST_NAME);
 
 
-        Response response = doPostRequestForB2C(ADD_USER_B2C_URL, headers, issuerId, requestBody);
+        Response response = doPostRequestForB2C(ADD_USER_B2C_URL, bearer, ctscAdminIssuerId, requestBody);
         List<AzureAccount> azureAccountList = OBJECT_MAPPER.convertValue(
             response.jsonPath().getJsonObject("CREATED_ACCOUNTS"),
             new TypeReference<>() {
@@ -144,7 +155,7 @@ class InactiveAccountsManagementTest extends FunctionalTestBase {
         );
         assertThat(azureAccountList.size()).isEqualTo(1);
 
-        return azureAccountList.get(0);
+        return azureAccountList.getFirst();
     }
 
     private PiUser createSystemAdminAccount(String email) {
@@ -157,7 +168,7 @@ class InactiveAccountsManagementTest extends FunctionalTestBase {
             """.formatted(email, FIRST_NAME, SURNAME);
 
 
-        Response response = doPostRequestForB2C(ADD_SYSTEM_ADMIN_B2C_URL, headers, issuerId, requestBody);
+        Response response = doPostRequestForB2C(ADD_SYSTEM_ADMIN_B2C_URL, bearer, issuerId, requestBody);
         PiUser piUser = response.getBody().as(PiUser.class);
         assertThat(response.getStatusCode()).isEqualTo(OK.value());
 
@@ -177,14 +188,14 @@ class InactiveAccountsManagementTest extends FunctionalTestBase {
             ]
             """.formatted(email, provenancesId, role, provenances);
 
-        Response postResponse = doPostRequestForB2C(ADD_PI_USER_URL, headers, issuerId, requestBody);
+        Response postResponse = doPostRequestForB2C(ADD_PI_USER_URL, bearer, ctscAdminIssuerId, requestBody);
         List<UUID> piUsersList = OBJECT_MAPPER.convertValue(
             postResponse.jsonPath().getJsonObject("CREATED_ACCOUNTS"),
             new TypeReference<>() {
             }
         );
         assertThat(piUsersList.size()).isEqualTo(1);
-        return piUsersList.get(0).toString();
+        return piUsersList.getFirst().toString();
     }
 
     void updateUserAccountLastVerifiedDate(String userProvenancesId, UserProvenances userProvenances,
@@ -192,7 +203,7 @@ class InactiveAccountsManagementTest extends FunctionalTestBase {
         JSONObject jsonFieldsToUpdate = new JSONObject(fieldsToUpdate);
 
         Response response = doPutRequestWithBody(UPDATE_USER_INFO + "/" + userProvenances + "/" + userProvenancesId,
-                                                 headers, jsonFieldsToUpdate.toString());
+                                                 bearer, jsonFieldsToUpdate.toString());
 
         assertThat(response.getStatusCode()).isEqualTo(OK.value());
     }
@@ -206,7 +217,7 @@ class InactiveAccountsManagementTest extends FunctionalTestBase {
         );
         updateUserAccountLastVerifiedDate(mediaUserProvenanceId,
                                           UserProvenances.PI_AAD, updateParameters);
-        Response response = doPostRequest(NOTIFY_INACTIVE_MEDIA_ACCOUNT, headers, "");
+        Response response = doPostRequest(NOTIFY_INACTIVE_MEDIA_ACCOUNT, bearer, "");
         assertThat(response.getStatusCode()).isEqualTo(NO_CONTENT.value());
     }
 
@@ -219,11 +230,11 @@ class InactiveAccountsManagementTest extends FunctionalTestBase {
         );
         updateUserAccountLastVerifiedDate(mediaUserProvenanceId,
                                           UserProvenances.PI_AAD, updateParameters);
-        Response response = doDeleteRequest(DELETE_INACTIVE_MEDIA_ACCOUNT, headers);
+        Response response = doDeleteRequest(DELETE_INACTIVE_MEDIA_ACCOUNT, bearer);
         assertThat(response.getStatusCode()).isEqualTo(NO_CONTENT.value());
 
         final Response getPiUserResponse = doGetRequest(String.format(GET_PI_USER_URL, mediaUserId),
-                                                             headers);
+                                                        systemAdminAuthHeaders);
         assertThat(getPiUserResponse.getStatusCode()).isEqualTo(NOT_FOUND.value());
     }
 
@@ -236,7 +247,7 @@ class InactiveAccountsManagementTest extends FunctionalTestBase {
         );
         updateUserAccountLastVerifiedDate(adminProvenanceId,
                                           UserProvenances.PI_AAD, updateParameters);
-        Response response = doPostRequest(NOTIFY_INACTIVE_ADMIN_ACCOUNT, headers, "");
+        Response response = doPostRequest(NOTIFY_INACTIVE_ADMIN_ACCOUNT, bearer, "");
         assertThat(response.getStatusCode()).isEqualTo(NO_CONTENT.value());
     }
 
@@ -249,10 +260,10 @@ class InactiveAccountsManagementTest extends FunctionalTestBase {
         );
         updateUserAccountLastVerifiedDate(adminProvenanceId,
                                           UserProvenances.PI_AAD, updateParameters);
-        Response response = doDeleteRequest(DELETE_INACTIVE_ADMIN_ACCOUNT, headers);
+        Response response = doDeleteRequest(DELETE_INACTIVE_ADMIN_ACCOUNT, bearer);
         assertThat(response.getStatusCode()).isEqualTo(NO_CONTENT.value());
         final Response getPiUserResponse = doGetRequest(String.format(GET_PI_USER_URL, adminUserId),
-                                                        headers);
+                                                        systemAdminAuthHeaders);
         assertThat(getPiUserResponse.getStatusCode()).isEqualTo(NOT_FOUND.value());
     }
 
@@ -265,7 +276,7 @@ class InactiveAccountsManagementTest extends FunctionalTestBase {
         );
         updateUserAccountLastVerifiedDate(IDAM_USER_PROVENANCE_ID,
                                           UserProvenances.CFT_IDAM, updateParameters);
-        Response response = doPostRequest(NOTIFY_INACTIVE_IDAM_ACCOUNT, headers, "");
+        Response response = doPostRequest(NOTIFY_INACTIVE_IDAM_ACCOUNT, bearer, "");
         assertThat(response.getStatusCode()).isEqualTo(NO_CONTENT.value());
     }
 
@@ -278,10 +289,10 @@ class InactiveAccountsManagementTest extends FunctionalTestBase {
         );
         updateUserAccountLastVerifiedDate(IDAM_USER_PROVENANCE_ID,
                                           UserProvenances.CFT_IDAM, updateParameters);
-        Response response = doDeleteRequest(DELETE_INACTIVE_IDAM_ACCOUNT, headers);
+        Response response = doDeleteRequest(DELETE_INACTIVE_IDAM_ACCOUNT, bearer);
         assertThat(response.getStatusCode()).isEqualTo(NO_CONTENT.value());
         final Response getPiUserResponse = doGetRequest(String.format(GET_PI_USER_URL, idamUserId),
-                                                        headers);
+                                                        systemAdminAuthHeaders);
         assertThat(getPiUserResponse.getStatusCode()).isEqualTo(NOT_FOUND.value());
     }
 

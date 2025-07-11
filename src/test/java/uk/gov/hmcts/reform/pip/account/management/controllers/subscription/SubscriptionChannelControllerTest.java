@@ -29,7 +29,7 @@ class SubscriptionChannelControllerTest {
         List<Channel> channelList = List.of(Channel.EMAIL);
         when(subscriptionChannelService.retrieveChannels()).thenReturn(channelList);
 
-        ResponseEntity<List<Channel>> channels = subscriptionChannelController.retrieveChannels();
+        ResponseEntity<List<Channel>> channels = subscriptionChannelController.retrieveChannels("123", "456");
 
         assertEquals(channelList, channels.getBody(), "Unexpected list of channels returned");
         assertEquals(HttpStatus.OK, channels.getStatusCode(), "Unexpected status returned");

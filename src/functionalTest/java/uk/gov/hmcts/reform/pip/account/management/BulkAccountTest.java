@@ -7,6 +7,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import uk.gov.hmcts.reform.pip.account.management.utils.AccountHelperBase;
+import uk.gov.hmcts.reform.pip.model.account.PiUser;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -14,13 +15,12 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
-import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 class BulkAccountTest extends AccountHelperBase {
-    private static final String USER_ID = UUID.randomUUID().toString();
     private static final String EMAIL_PREFIX = "pip-am-test-email-";
     private static final String TEST_SUITE_PREFIX = String.format("%s-",
         ThreadLocalRandom.current().nextInt(1000, 9999));
@@ -29,11 +29,16 @@ class BulkAccountTest extends AccountHelperBase {
 
     private String mockFile;
     private Map<String, String> issuerId;
+    private String systemAdminId;
 
     @BeforeAll
     void startUp() throws IOException {
         bearer = Map.of(HttpHeaders.AUTHORIZATION, BEARER + accessToken);
-        issuerId = Map.of(ISSUER_ID, USER_ID);
+
+        PiUser systemAdminUser = createSystemAdminAccount();
+        systemAdminId = systemAdminUser.getUserId();
+
+        issuerId = Map.of(ISSUER_ID, systemAdminId);
 
         StringBuilder csvContent = new StringBuilder(400);
         csvContent.append("email,firstName,surname\n");
@@ -58,7 +63,9 @@ class BulkAccountTest extends AccountHelperBase {
 
     @AfterAll
     public void teardown() throws IOException {
-        doDeleteRequest(TESTING_SUPPORT_DELETE_ACCOUNT_URL + TEST_SUITE_EMAIL_PREFIX, bearer);
+        Map<String, String> headers = new ConcurrentHashMap<>(bearer);
+        headers.put(ISSUER_ID, systemAdminId);
+        doDeleteRequest(TESTING_SUPPORT_DELETE_ACCOUNT_URL + TEST_SUITE_EMAIL_PREFIX, headers);
         Files.deleteIfExists(Path.of(mockFile));
     }
 

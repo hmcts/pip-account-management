@@ -1,6 +1,5 @@
 package uk.gov.hmcts.reform.pip.account.management.utils;
 
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.restassured.common.mapper.TypeRef;
@@ -11,7 +10,6 @@ import uk.gov.hmcts.reform.pip.model.account.PiUser;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -27,6 +25,7 @@ public class AccountHelperBase extends FunctionalTestBase {
     //Header Values
     protected static final String BEARER = "Bearer ";
     protected static final String ISSUER_ID = "x-issuer-id";
+    protected static final String ADMIN_ID = "x-admin-id";
 
     //Utils
     protected static final String TEST_EMAIL_PREFIX = String.format(
@@ -60,15 +59,18 @@ public class AccountHelperBase extends FunctionalTestBase {
         return response.getBody().as(PiUser.class);
     }
 
-    protected Response createAccount(String email, String provenanceId) throws JsonProcessingException {
-        return createAccount(email, provenanceId, Roles.VERIFIED, UserProvenances.PI_AAD);
+    protected Response createAccount(String email, String provenanceId, String requesterId)
+        throws JsonProcessingException {
+        return createAccount(email, provenanceId, Roles.VERIFIED, UserProvenances.PI_AAD, requesterId);
     }
 
-    protected Response createAccount(String email, String provenanceId, Roles role) throws JsonProcessingException {
-        return createAccount(email, provenanceId, role, UserProvenances.PI_AAD);
+    protected Response createAccount(String email, String provenanceId, Roles role, String requesterId)
+        throws JsonProcessingException {
+        return createAccount(email, provenanceId, role, UserProvenances.PI_AAD, requesterId);
     }
 
-    protected Response createAccount(String email, String provenanceId, Roles role, UserProvenances userProvenance)
+    protected Response createAccount(String email, String provenanceId, Roles role, UserProvenances userProvenance,
+                                     String requesterId)
         throws JsonProcessingException {
         PiUser piUser = new PiUser();
         piUser.setEmail(email);
@@ -78,20 +80,19 @@ public class AccountHelperBase extends FunctionalTestBase {
         piUser.setUserProvenance(userProvenance);
         piUser.setProvenanceUserId(provenanceId);
 
-        List<PiUser> users = new ArrayList<>();
-        users.add(piUser);
+        List<PiUser> users = List.of(piUser);
 
         Map<String, String> headers = new ConcurrentHashMap<>(bearer);
-        headers.put(ISSUER_ID, UUID.randomUUID().toString());
+        headers.put(ISSUER_ID, requesterId);
 
-        final Response createResponse = doPostRequest(CREATE_PI_ACCOUNT,
-                                                      headers, objectMapper.writeValueAsString(users));
+        final Response createResponse = doPostRequest(CREATE_PI_ACCOUNT, headers,
+                                                      objectMapper.writeValueAsString(users));
 
         assertThat(createResponse.getStatusCode()).isEqualTo(CREATED.value());
         return createResponse;
     }
 
     protected String getCreatedAccountUserId(Response response) {
-        return (String) response.getBody().as(CREATED_RESPONSE_TYPE).get(CreationEnum.CREATED_ACCOUNTS).get(0);
+        return (String) response.getBody().as(CREATED_RESPONSE_TYPE).get(CreationEnum.CREATED_ACCOUNTS).getFirst();
     }
 }

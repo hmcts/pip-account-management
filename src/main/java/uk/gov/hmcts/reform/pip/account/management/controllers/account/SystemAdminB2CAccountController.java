@@ -45,7 +45,7 @@ public class SystemAdminB2CAccountController {
     @ApiResponse(responseCode = OK_CODE, description = PI_USER)
     @ApiResponse(responseCode = BAD_REQUEST_CODE, description = "{ErroredSystemAdminAccount}")
     @PostMapping("/add/system-admin")
-    @PreAuthorize("@authorisationService.userCanCreateSystemAdmin(#issuerId)")
+    @PreAuthorize("@accountAuthorisationService.userCanCreateSystemAdmin(#issuerId)")
     public ResponseEntity<? extends PiUser> createSystemAdminAccount(//NOSONAR
         @RequestHeader(ISSUER_ID) String issuerId, @RequestBody SystemAdminAccount account) {
         return ResponseEntity.ok(systemAdminB2CAccountService.addSystemAdminAccount(account, issuerId));
