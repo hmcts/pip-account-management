@@ -5,7 +5,6 @@ import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -33,6 +32,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 import static org.springframework.http.HttpStatus.FORBIDDEN;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -81,8 +81,8 @@ class SubscriptionListTypeTest extends IntegrationTestBase {
         subscriptionListType.setListLanguage(List.of("ENGLISH"));
         subscriptionListType.setUserId(VALID_USER_ID);
 
-        Mockito.when(subscriptionAuthorisationService.userCanAddSubscriptions(any(), any())).thenReturn(true);
-        Mockito.when(subscriptionAuthorisationService.userCanUpdateSubscriptions(any(), any())).thenReturn(true);
+        when(subscriptionAuthorisationService.userCanAddSubscriptions(any(), any())).thenReturn(true);
+        when(subscriptionAuthorisationService.userCanUpdateSubscriptions(any(), any())).thenReturn(true);
     }
 
     @Test
@@ -116,7 +116,7 @@ class SubscriptionListTypeTest extends IntegrationTestBase {
     @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = ADD_VERIFIED_USERS_SCRIPT)
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testUnauthorizedAddListTypesForSubscription() throws Exception {
-        Mockito.when(subscriptionAuthorisationService.userCanUpdateSubscriptions(any(), any())).thenReturn(false);
+        when(subscriptionAuthorisationService.userCanUpdateSubscriptions(any(), any())).thenReturn(false);
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .post(ADD_LIST_TYPE_PATH)
             .header(USER_ID_HEADER, ACTIONING_USER_ID)
@@ -177,7 +177,7 @@ class SubscriptionListTypeTest extends IntegrationTestBase {
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = ADD_VERIFIED_USERS_SCRIPT)
     void testUnauthorizedConfigureListTypesForSubscription() throws Exception {
-        Mockito.when(subscriptionAuthorisationService.userCanUpdateSubscriptions(any(), any())).thenReturn(false);
+        when(subscriptionAuthorisationService.userCanUpdateSubscriptions(any(), any())).thenReturn(false);
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .put(UPDATE_LIST_TYPE_PATH)
             .header(USER_ID_HEADER, ACTIONING_USER_ID)
