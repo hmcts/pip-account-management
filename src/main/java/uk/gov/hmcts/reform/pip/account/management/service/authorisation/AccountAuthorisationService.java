@@ -23,7 +23,6 @@ import static uk.gov.hmcts.reform.pip.model.account.UserProvenances.PI_AAD;
 @Service
 @AllArgsConstructor
 @Slf4j
-@SuppressWarnings("PMD.TooManyMethods")
 public class AccountAuthorisationService {
 
     private final UserRepository userRepository;
@@ -135,34 +134,9 @@ public class AccountAuthorisationService {
         return true;
     }
 
-    public boolean userCanViewMediaApplications(UUID userId) {
-        if (!authorisationCommonService.isAdmin() || !isAdminCtsc(userId)) {
-            log.error(writeLog(String.format("User with ID %s is not authorised to view media applications", userId)));
-            return false;
-        }
-        return true;
-    }
-
-    public boolean userCanUpdateMediaApplications(UUID userId) {
-        if (!authorisationCommonService.isAdmin() || !isAdminCtsc(userId)) {
-            log.error(writeLog(String.format("User with ID %s is not authorised to update media "
-                                                 + "applications", userId)));
-            return false;
-        }
-        return true;
-    }
-
     public boolean userCanCreateAzureAccount(UUID userId) {
         if (!authorisationCommonService.isAdmin() || !isAdminCtsc(userId)) {
             log.error(writeLog(String.format("User with ID %s is not authorised to create azure accounts", userId)));
-            return false;
-        }
-        return true;
-    }
-
-    public boolean userCanViewAuditLogs(UUID userId) {
-        if (!authorisationCommonService.isAdmin() || !authorisationCommonService.isSystemAdmin(userId)) {
-            log.error(writeLog(String.format("User with ID %s is not authorised to view audit logs", userId)));
             return false;
         }
         return true;

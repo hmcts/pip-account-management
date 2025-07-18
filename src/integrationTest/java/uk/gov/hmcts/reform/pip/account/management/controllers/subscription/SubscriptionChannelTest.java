@@ -33,7 +33,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class SubscriptionChannelTest extends IntegrationBasicTestBase {
     private static final String FORBIDDEN_STATUS_CODE = "Status code does not match forbidden";
     private static final String SUBSCRIPTION_CHANNEL_URL = "/subscription/channel";
-    private static final String USER_ID_HEADER = "x-user-id";
+    private static final String REQUESTER_ID_HEADER = "x-requester-id";
     private static final UUID USER_ID = UUID.randomUUID();
 
     private ObjectMapper objectMapper;
@@ -55,7 +55,7 @@ class SubscriptionChannelTest extends IntegrationBasicTestBase {
     void testGetAllChannels() throws Exception {
         when(subscriptionAuthorisationService.userCanRetrieveChannels(any(), any())).thenReturn(true);
         MvcResult response = mvc.perform(get(SUBSCRIPTION_CHANNEL_URL + "?userId=" + USER_ID)
-                                             .header(USER_ID_HEADER, USER_ID))
+                                             .header(REQUESTER_ID_HEADER, USER_ID))
             .andExpect(status().isOk()).andReturn();
 
         Channel[] channelsReturned = objectMapper.readValue(
@@ -72,7 +72,7 @@ class SubscriptionChannelTest extends IntegrationBasicTestBase {
     @WithMockUser(username = "unauthorized_delete", authorities = {"APPROLE_unknown.delete"})
     void testUnauthorizedGetAllChannels() throws Exception {
         MvcResult mvcResult = mvc.perform(get(SUBSCRIPTION_CHANNEL_URL + "?userId=" + USER_ID)
-                                              .header(USER_ID_HEADER, USER_ID))
+                                              .header(REQUESTER_ID_HEADER, USER_ID))
             .andExpect(status().isForbidden()).andReturn();
 
         assertEquals(HttpStatus.FORBIDDEN.value(), mvcResult.getResponse().getStatus(),

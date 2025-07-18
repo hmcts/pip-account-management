@@ -52,8 +52,8 @@ class SensitivityTest {
 
     private static final String ROOT_URL = "/account";
     private static final String PI_URL = ROOT_URL + "/add/pi";
-    private static final String ISSUER_ID = "87f907d2-eb28-42cc-b6e1-ae2b03f7bba2";
-    private static final String ISSUER_HEADER = "x-issuer-id";
+    private static final String REQUESTER_ID = "87f907d2-eb28-42cc-b6e1-ae2b03f7bba2";
+    private static final String REQUESTER_ID_HEADER = "x-requester-id";
     private static final String EMAIL = "a@b.com";
     private static final String URL_FORMAT = "%s/isAuthorised/%s/%s/%s";
 
@@ -70,7 +70,7 @@ class SensitivityTest {
         MockHttpServletRequestBuilder setupRequest = MockMvcRequestBuilders
             .post(PI_URL)
             .content(objectMapper.writeValueAsString(List.of(validUser)))
-            .header(ISSUER_HEADER, ISSUER_ID)
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
         when(accountAuthorisationService.userCanCreateAccount(any(), any())).thenReturn(true);

@@ -65,11 +65,10 @@ class AzureAccountTest extends IntegrationTestBase {
     private static final String AZURE_PATH = "/azure/";
 
     private static final String EMAIL = "test_account_admin@hmcts.net";
-    private static final String INVALID_EMAIL = "ab";
     private static final String FIRST_NAME = "First name";
     private static final String SURNAME = "Surname";
-    private static final UUID ISSUER_ID = UUID.randomUUID();
-    private static final String ISSUER_HEADER = "x-issuer-id";
+    private static final UUID REQUESTER_ID = UUID.randomUUID();
+    private static final String REQUESTER_ID_HEADER = "x-requester-id";
     private static final String GIVEN_NAME = "Given Name";
     private static final String ID = "1234";
     private static final String UNAUTHORIZED_ROLE = "APPROLE_unknown.authorized";
@@ -185,7 +184,7 @@ class AzureAccountTest extends IntegrationTestBase {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(AZURE_URL)
             .content(OBJECT_MAPPER.writeValueAsString(List.of(azureAccount)))
-            .header(ISSUER_HEADER, ISSUER_ID)
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isOk()).andReturn();
@@ -233,7 +232,7 @@ class AzureAccountTest extends IntegrationTestBase {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(AZURE_URL)
             .content(OBJECT_MAPPER.writeValueAsString(List.of(azureAccount)))
-            .header(ISSUER_HEADER, ISSUER_ID)
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isOk()).andReturn();
@@ -282,7 +281,7 @@ class AzureAccountTest extends IntegrationTestBase {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(AZURE_URL)
             .content(OBJECT_MAPPER.writeValueAsString(List.of(azureAccount)))
-            .header(ISSUER_HEADER, ISSUER_ID)
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder)
@@ -314,7 +313,7 @@ class AzureAccountTest extends IntegrationTestBase {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(AZURE_URL)
             .content(OBJECT_MAPPER.writeValueAsString(List.of(azureAccount)))
-            .header(ISSUER_HEADER, ISSUER_ID)
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder)
@@ -360,7 +359,7 @@ class AzureAccountTest extends IntegrationTestBase {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(AZURE_URL)
             .content(OBJECT_MAPPER.writeValueAsString(List.of(azureAccount)))
-            .header(ISSUER_HEADER, ISSUER_ID)
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder)
@@ -422,7 +421,7 @@ class AzureAccountTest extends IntegrationTestBase {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(AZURE_URL)
             .content(OBJECT_MAPPER.writeValueAsString(List.of(azureAccount)))
-            .header(ISSUER_HEADER, ISSUER_ID)
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder)
@@ -469,7 +468,7 @@ class AzureAccountTest extends IntegrationTestBase {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(AZURE_URL)
             .content(OBJECT_MAPPER.writeValueAsString(List.of(azureAccount)))
-            .header(ISSUER_HEADER, ISSUER_ID)
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder)
@@ -506,7 +505,7 @@ class AzureAccountTest extends IntegrationTestBase {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(AZURE_URL)
             .content(OBJECT_MAPPER.writeValueAsString(List.of(azureAccount)))
-            .header(ISSUER_HEADER, ISSUER_ID)
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder)
@@ -563,7 +562,7 @@ class AzureAccountTest extends IntegrationTestBase {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(AZURE_URL)
             .content(OBJECT_MAPPER.writeValueAsString(List.of(azureAccount)))
-            .header(ISSUER_HEADER, ISSUER_ID)
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isOk()).andReturn();
@@ -598,7 +597,7 @@ class AzureAccountTest extends IntegrationTestBase {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(AZURE_URL)
             .content(duplicateKeyString)
-            .header(ISSUER_HEADER, ISSUER_ID)
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder)
@@ -643,7 +642,7 @@ class AzureAccountTest extends IntegrationTestBase {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(AZURE_URL)
             .content(OBJECT_MAPPER.writeValueAsString(List.of(validAzureAccount, invalidAzureAccount)))
-            .header(ISSUER_HEADER, ISSUER_ID)
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isOk()).andReturn();
@@ -692,7 +691,7 @@ class AzureAccountTest extends IntegrationTestBase {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(AZURE_URL)
             .content("[]")
-            .header(ISSUER_HEADER, ISSUER_ID)
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult mvcResult =

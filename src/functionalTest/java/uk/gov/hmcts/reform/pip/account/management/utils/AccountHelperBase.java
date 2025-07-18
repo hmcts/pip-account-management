@@ -24,8 +24,7 @@ public class AccountHelperBase extends FunctionalTestBase {
 
     //Header Values
     protected static final String BEARER = "Bearer ";
-    protected static final String ISSUER_ID = "x-issuer-id";
-    protected static final String ADMIN_ID = "x-admin-id";
+    protected static final String REQUESTER_ID_HEADER = "x-requester-id";
 
     //Utils
     protected static final String TEST_EMAIL_PREFIX = String.format(
@@ -83,7 +82,7 @@ public class AccountHelperBase extends FunctionalTestBase {
         List<PiUser> users = List.of(piUser);
 
         Map<String, String> headers = new ConcurrentHashMap<>(bearer);
-        headers.put(ISSUER_ID, requesterId);
+        headers.put(REQUESTER_ID_HEADER, requesterId);
 
         final Response createResponse = doPostRequest(CREATE_PI_ACCOUNT, headers,
                                                       objectMapper.writeValueAsString(users));

@@ -117,7 +117,7 @@ verification:
   crime-idam-account-deletion-days: 208
 
 admin:
-  max-system-admin: ${MAX_SYSTEM_ADMIN_ACCOUNTS:40}
+  max-system-admin: ${MAX_SYSTEM_ADMIN_ACCOUNTS:4}
 
 springdoc:
   swagger-ui:

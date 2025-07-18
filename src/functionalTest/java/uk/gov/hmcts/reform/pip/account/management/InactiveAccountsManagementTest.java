@@ -56,7 +56,6 @@ class InactiveAccountsManagementTest extends AccountHelperBase {
     private static final String FIRST_NAME = "E2E Account Management";
     private static final String SURNAME = "Test Name";
     private static final String LAST_SINGED_IN_DATE = "lastSignedInDate";
-    private static final String ISSUER_ID = "x-issuer-id";
     private static final Clock CL = Clock.systemUTC();
     private static final String IDAM_USER_PROVENANCE_ID = UUID.randomUUID().toString();
     private Map<String, String> issuerId;
@@ -99,7 +98,7 @@ class InactiveAccountsManagementTest extends AccountHelperBase {
         bearer = Map.of(HttpHeaders.AUTHORIZATION, BEARER + accessToken);
         String userId =  doPostRequest(SYSTEM_ADMIN_SSO_URL, bearer, requestBody)
             .jsonPath().getString("userId");
-        issuerId = Map.of(ISSUER_ID, userId);
+        issuerId = Map.of(REQUESTER_ID_HEADER, userId);
 
         //ADD SYSTEM ADMIN
         PiUser systemAdminAccount = createSystemAdminAccount(TEST_ADMIN_EMAIL);
@@ -108,7 +107,7 @@ class InactiveAccountsManagementTest extends AccountHelperBase {
 
         String ctscAdminId = getCreatedAccountUserId(
             createAccount(generateEmail(), UUID.randomUUID().toString(), INTERNAL_ADMIN_CTSC, adminUserId));
-        ctscAdminIssuerId = Map.of(ISSUER_ID, ctscAdminId);
+        ctscAdminIssuerId = Map.of(REQUESTER_ID_HEADER, ctscAdminId);
 
         //ADD IDAM USER
         idamUserId = createUser(TEST_IDAM_EMAIL, IDAM_USER_PROVENANCE_ID,

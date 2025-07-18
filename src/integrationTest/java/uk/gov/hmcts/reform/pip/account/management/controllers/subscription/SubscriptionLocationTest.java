@@ -67,7 +67,7 @@ class SubscriptionLocationTest extends IntegrationTestBase {
 
     private static final String SYSTEM_ADMIN_PROVENANCE_ID = "e5f1cc77-6e9a-40ab-8da0-a9666b328466";
     private static final String SYSTEM_ADMIN_USER_ID = "87f907d2-eb28-42cc-b6e1-ae2b03f7bba4";
-    private static final String USER_ID_HEADER = "x-user-id";
+    private static final String REQUESTER_ID_HEADER = "x-requester-id";
     private static final String TEST_EMAIL = "test-email-cath@justice.gov.uk";
 
     private static final Subscription SUBSCRIPTION = new Subscription();
@@ -103,7 +103,7 @@ class SubscriptionLocationTest extends IntegrationTestBase {
     void testFindSubscriptionsByLocationId() throws Exception {
         MockHttpServletRequestBuilder createSubscriptionRequest = MockMvcRequestBuilders.post(SUBSCRIPTION_PATH)
             .content(OBJECT_MAPPER.writeValueAsString(SUBSCRIPTION))
-            .header(USER_ID_HEADER, ACTIONING_USER_ID)
+            .header(REQUESTER_ID_HEADER, ACTIONING_USER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
         mvc.perform(createSubscriptionRequest)
@@ -156,7 +156,7 @@ class SubscriptionLocationTest extends IntegrationTestBase {
 
         MockHttpServletRequestBuilder createSubscriptionRequest = MockMvcRequestBuilders.post(SUBSCRIPTION_PATH)
             .content(OBJECT_MAPPER.writeValueAsString(SUBSCRIPTION))
-            .header(USER_ID_HEADER, ACTIONING_USER_ID)
+            .header(REQUESTER_ID_HEADER, ACTIONING_USER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
         mvc.perform(createSubscriptionRequest)
@@ -167,7 +167,7 @@ class SubscriptionLocationTest extends IntegrationTestBase {
 
         MvcResult deleteResponse = mvc.perform(delete(
                 SUBSCRIPTIONS_BY_LOCATION + LOCATION_ID)
-                                                   .header(USER_ID_HEADER, SYSTEM_ADMIN_USER_ID))
+                                                   .header(REQUESTER_ID_HEADER, SYSTEM_ADMIN_USER_ID))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -181,7 +181,7 @@ class SubscriptionLocationTest extends IntegrationTestBase {
     void testDeleteSubscriptionByLocationNotFound() throws Exception {
         MvcResult response = mvc.perform(delete(
                 SUBSCRIPTIONS_BY_LOCATION + LOCATION_ID)
-                                             .header(USER_ID_HEADER, SYSTEM_ADMIN_USER_ID))
+                                             .header(REQUESTER_ID_HEADER, SYSTEM_ADMIN_USER_ID))
             .andExpect(status().isNotFound())
             .andReturn();
 
@@ -194,7 +194,7 @@ class SubscriptionLocationTest extends IntegrationTestBase {
         when(subscriptionAuthorisationService.userCanDeleteLocationSubscriptions(any(), any())).thenReturn(false);
 
         MvcResult response = mvc.perform(delete(SUBSCRIPTIONS_BY_LOCATION + LOCATION_ID)
-                                             .header(USER_ID_HEADER, SYSTEM_ADMIN_USER_ID))
+                                             .header(REQUESTER_ID_HEADER, SYSTEM_ADMIN_USER_ID))
             .andExpect(status().isForbidden())
             .andReturn();
 

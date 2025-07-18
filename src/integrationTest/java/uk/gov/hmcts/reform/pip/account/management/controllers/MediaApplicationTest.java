@@ -20,7 +20,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import uk.gov.hmcts.reform.pip.account.management.model.MediaApplication;
 import uk.gov.hmcts.reform.pip.account.management.model.MediaApplicationStatus;
-import uk.gov.hmcts.reform.pip.account.management.service.authorisation.AccountAuthorisationService;
+import uk.gov.hmcts.reform.pip.account.management.service.authorisation.MediaApplicationAuthorisationService;
 import uk.gov.hmcts.reform.pip.account.management.utils.IntegrationTestBase;
 
 import java.io.InputStream;
@@ -64,8 +64,7 @@ class MediaApplicationTest extends IntegrationTestBase {
     private static final String REPORT_APPLICATIONS_URL = ROOT_URL + "/reporting";
     private static final String UNAUTHORIZED_USERNAME = "unauthorized_username";
     private static final String UNAUTHORIZED_ROLE = "APPROLE_unknown.role";
-    private static final String ISSUER_HEADER = "x-issuer-id";
-    private static final String ADMIN_ID = "x-admin-id";
+    private static final String REQUESTER_ID_HEADER = "x-requester-id";
     private static final UUID REQUESTER_ID = UUID.randomUUID();
 
     private ObjectMapper objectMapper;
@@ -87,7 +86,7 @@ class MediaApplicationTest extends IntegrationTestBase {
     private static final Map<String, List<String>> REASONS = new ConcurrentHashMap<>();
 
     @MockitoBean
-    private AccountAuthorisationService accountAuthorisationService;
+    private MediaApplicationAuthorisationService mediaApplicationAuthorisationService;
 
     @BeforeAll
     static void beforeAllSetup() {
@@ -98,8 +97,8 @@ class MediaApplicationTest extends IntegrationTestBase {
     void setup() {
         objectMapper = new ObjectMapper();
         objectMapper.findAndRegisterModules();
-        when(accountAuthorisationService.userCanViewMediaApplications(any())).thenReturn(true);
-        when(accountAuthorisationService.userCanUpdateMediaApplications(any())).thenReturn(true);
+        when(mediaApplicationAuthorisationService.userCanViewMediaApplications(any())).thenReturn(true);
+        when(mediaApplicationAuthorisationService.userCanUpdateMediaApplications(any())).thenReturn(true);
     }
 
     @SuppressWarnings("PMD.SignatureDeclareThrowsException")
@@ -239,7 +238,7 @@ class MediaApplicationTest extends IntegrationTestBase {
         MediaApplication application = createApplication();
 
         MvcResult mvcResult = mockMvc.perform(get(GET_STATUS_URL, PENDING_STATUS)
-            .header(ISSUER_HEADER, REQUESTER_ID))
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID))
                 .andExpect(status().isOk())
                 .andReturn();
 
@@ -261,8 +260,8 @@ class MediaApplicationTest extends IntegrationTestBase {
     @Test
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testGetApplicationsByStatusUnauthorised() throws Exception {
-        when(accountAuthorisationService.userCanViewMediaApplications(any())).thenReturn(false);
-        mockMvc.perform(get(GET_STATUS_URL, PENDING_STATUS).header(ISSUER_HEADER, TEST_ID))
+        when(mediaApplicationAuthorisationService.userCanViewMediaApplications(any())).thenReturn(false);
+        mockMvc.perform(get(GET_STATUS_URL, PENDING_STATUS).header(REQUESTER_ID_HEADER, TEST_ID))
             .andExpect(status().isForbidden());
     }
 
@@ -271,7 +270,7 @@ class MediaApplicationTest extends IntegrationTestBase {
         MediaApplication application = createApplication();
 
         MvcResult mvcResult = mockMvc.perform(get(GET_BY_ID_URL, application.getId())
-            .header(ISSUER_HEADER, REQUESTER_ID))
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -288,7 +287,7 @@ class MediaApplicationTest extends IntegrationTestBase {
 
     @Test
     void testGetApplicationByIdNotFound() throws Exception {
-        MvcResult mvcResult = mockMvc.perform(get(GET_BY_ID_URL, TEST_ID).header(ISSUER_HEADER, REQUESTER_ID))
+        MvcResult mvcResult = mockMvc.perform(get(GET_BY_ID_URL, TEST_ID).header(REQUESTER_ID_HEADER, REQUESTER_ID))
             .andExpect(status().isNotFound())
             .andReturn();
 
@@ -298,8 +297,8 @@ class MediaApplicationTest extends IntegrationTestBase {
     @Test
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testGetApplicationByIdUnauthorised() throws Exception {
-        when(accountAuthorisationService.userCanViewMediaApplications(any())).thenReturn(false);
-        mockMvc.perform(get(GET_BY_ID_URL, TEST_ID).header(ISSUER_HEADER, TEST_ID))
+        when(mediaApplicationAuthorisationService.userCanViewMediaApplications(any())).thenReturn(false);
+        mockMvc.perform(get(GET_BY_ID_URL, TEST_ID).header(REQUESTER_ID_HEADER, TEST_ID))
             .andExpect(status().isForbidden());
     }
 
@@ -313,7 +312,7 @@ class MediaApplicationTest extends IntegrationTestBase {
         when(blobClient.downloadContent()).thenReturn(binaryData);
 
         MvcResult mvcResult = mockMvc.perform(get(GET_IMAGE_BY_ID_URL, application.getImage())
-            .header(ISSUER_HEADER, REQUESTER_ID))
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID))
                 .andExpect(status().isOk())
                 .andReturn();
 
@@ -326,7 +325,8 @@ class MediaApplicationTest extends IntegrationTestBase {
 
         when(blobClient.downloadContent()).thenThrow(BlobStorageException.class);
 
-        MvcResult mvcResult = mockMvc.perform(get(GET_IMAGE_BY_ID_URL, TEST_ID).header(ISSUER_HEADER, REQUESTER_ID))
+        MvcResult mvcResult = mockMvc
+            .perform(get(GET_IMAGE_BY_ID_URL, TEST_ID).header(REQUESTER_ID_HEADER, REQUESTER_ID))
             .andExpect(status().isNotFound())
             .andReturn();
 
@@ -336,8 +336,8 @@ class MediaApplicationTest extends IntegrationTestBase {
     @Test
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testGetImageByIdUnauthorised() throws Exception {
-        when(accountAuthorisationService.userCanViewMediaApplications(any())).thenReturn(false);
-        mockMvc.perform(get(GET_IMAGE_BY_ID_URL, TEST_ID).header(ISSUER_HEADER, TEST_ID))
+        when(mediaApplicationAuthorisationService.userCanViewMediaApplications(any())).thenReturn(false);
+        mockMvc.perform(get(GET_IMAGE_BY_ID_URL, TEST_ID).header(REQUESTER_ID_HEADER, TEST_ID))
             .andExpect(status().isForbidden());
     }
 
@@ -386,7 +386,7 @@ class MediaApplicationTest extends IntegrationTestBase {
         MvcResult mvcResult = mockMvc.perform(put(UPDATE_APPLICATION_REJECTION_URL, application.getId(),
                                                   MediaApplicationStatus.REJECTED
             ).content(objectMapper.writeValueAsString(REASONS)).contentType(MediaType.APPLICATION_JSON)
-            .header(ADMIN_ID, REQUESTER_ID))
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID))
                 .andExpect(status().isOk())
                 .andReturn();
 
@@ -406,7 +406,7 @@ class MediaApplicationTest extends IntegrationTestBase {
         MvcResult mvcResult = mockMvc.perform(put(UPDATE_APPLICATION_REJECTION_URL, TEST_ID,
                                                   MediaApplicationStatus.REJECTED
             ).content(objectMapper.writeValueAsString(REASONS)).contentType(MediaType.APPLICATION_JSON)
-            .header(ADMIN_ID, REQUESTER_ID))
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID))
                 .andExpect(status().isNotFound())
                 .andReturn();
 
@@ -418,11 +418,11 @@ class MediaApplicationTest extends IntegrationTestBase {
     @Test
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testUpdateApplicationRejectionUnauthorised() throws Exception {
-        when(accountAuthorisationService.userCanUpdateMediaApplications(any())).thenReturn(false);
+        when(mediaApplicationAuthorisationService.userCanUpdateMediaApplications(any())).thenReturn(false);
         mockMvc.perform(put(UPDATE_APPLICATION_REJECTION_URL, TEST_ID,
                             MediaApplicationStatus.REJECTED
             ).content(objectMapper.writeValueAsString(REASONS)).contentType(MediaType.APPLICATION_JSON)
-                            .contentType(MediaType.APPLICATION_JSON).header(ADMIN_ID, TEST_ID))
+                            .contentType(MediaType.APPLICATION_JSON).header(REQUESTER_ID_HEADER, TEST_ID))
             .andExpect(status().isForbidden());
     }
 

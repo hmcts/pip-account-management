@@ -54,7 +54,6 @@ class SubscriptionTest extends AccountHelperBase {
 
     private static final String LOCATION_ID = randomLocationId();
     private static final String LOCATION_NAME = "TestLocation" + LOCATION_ID;
-    private static final String USER_ID_HEADER = "x-user-id";
     private static final String BEARER = "Bearer ";
     private static final String LIST_LANGUAGE = "ENGLISH";
     private static final String LIST_LANGUAGE_CONFIGURE = "WELSH";
@@ -96,7 +95,7 @@ class SubscriptionTest extends AccountHelperBase {
     void testGetSubscription() {
 
         Map<String, String> headerMap = new ConcurrentHashMap<>(bearer);
-        headerMap.put(USER_ID_HEADER, String.valueOf(verifiedUserId));
+        headerMap.put(REQUESTER_ID_HEADER, String.valueOf(verifiedUserId));
 
         Response responseCreateSubscription = doPostRequest(
             SUBSCRIPTION_URL,
@@ -136,7 +135,7 @@ class SubscriptionTest extends AccountHelperBase {
 
         Map<String, String> headerMap = new ConcurrentHashMap<>();
         headerMap.putAll(bearer);
-        headerMap.put(USER_ID_HEADER, String.valueOf(verifiedUserId));
+        headerMap.put(REQUESTER_ID_HEADER, String.valueOf(verifiedUserId));
 
         doPostRequest(
             SUBSCRIPTION_URL,
@@ -186,7 +185,7 @@ class SubscriptionTest extends AccountHelperBase {
 
         Map<String, String> headerMap = new ConcurrentHashMap<>();
         headerMap.putAll(bearer);
-        headerMap.put(USER_ID_HEADER, String.valueOf(verifiedUserId));
+        headerMap.put(REQUESTER_ID_HEADER, String.valueOf(verifiedUserId));
 
         Response responseCreateSubscription = doPostRequest(
             SUBSCRIPTION_URL,
@@ -206,7 +205,7 @@ class SubscriptionTest extends AccountHelperBase {
         headerMap.put("x-provenance-user-id", systemAdminProvenanceId);
 
         Map<String, String> deleteHeader = new ConcurrentHashMap<>(bearer);
-        deleteHeader.put(USER_ID_HEADER, String.valueOf(systemAdminUserId));
+        deleteHeader.put(REQUESTER_ID_HEADER, String.valueOf(systemAdminUserId));
 
         final Response responseDeleteSubscriptionByLocationId = doDeleteRequest(
             SUBSCRIPTION_BY_LOCATION_URL + LOCATION_ID,
@@ -225,7 +224,7 @@ class SubscriptionTest extends AccountHelperBase {
 
         Map<String, String> headerMap = new ConcurrentHashMap<>();
         headerMap.putAll(bearer);
-        headerMap.put(USER_ID_HEADER, String.valueOf(verifiedUserId));
+        headerMap.put(REQUESTER_ID_HEADER, String.valueOf(verifiedUserId));
 
         Response responseCreateSubscription = doPostRequest(
             SUBSCRIPTION_URL,
@@ -268,7 +267,7 @@ class SubscriptionTest extends AccountHelperBase {
     void testGetMiDataAll() {
         Map<String, String> headerMap = new ConcurrentHashMap<>();
         headerMap.putAll(bearer);
-        headerMap.put(USER_ID_HEADER, verifiedUserId.toString());
+        headerMap.put(REQUESTER_ID_HEADER, verifiedUserId.toString());
 
         Response responseCreateSubscription = doPostRequest(
             SUBSCRIPTION_URL,
@@ -295,7 +294,7 @@ class SubscriptionTest extends AccountHelperBase {
     void testGetMiDataLocationSubscription() {
         Map<String, String> headerMap = new ConcurrentHashMap<>();
         headerMap.putAll(bearer);
-        headerMap.put(USER_ID_HEADER, verifiedUserId.toString());
+        headerMap.put(REQUESTER_ID_HEADER, verifiedUserId.toString());
 
         doPostRequest(
             SUBSCRIPTION_URL,

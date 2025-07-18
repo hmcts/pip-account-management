@@ -30,15 +30,15 @@ import java.util.Map;
 @Tag(name = "Account Management - API for managing Azure accounts")
 @RequestMapping("/account")
 @ApiResponse(responseCode = "401", description = "Invalid access credential")
-@ApiResponse(responseCode = "403", description = "User has not been authorized")
 @Validated
 @IsAdmin
 @SecurityRequirement(name = "bearerAuth")
 public class AzureAccountController {
-    private static final String ISSUER_ID = "x-issuer-id";
+    private static final String REQUESTER_ID = "x-requester-id";
 
     private static final String OK_CODE = "200";
     private static final String NOT_FOUND_ERROR_CODE = "404";
+    private static final String FORBIDDEN_ERROR_CODE = "403";
 
     private final AzureAccountService azureAccountService;
 
@@ -46,16 +46,18 @@ public class AzureAccountController {
      * POST endpoint to create a new azure account.
      * This will also trigger any welcome emails.
      *
-     * @param issuerId The id of the user creating the accounts.
+     * @param requesterId The id of the user creating the accounts.
      * @param azureAccounts The accounts to add.
      * @return A list containing details of any created and errored azureAccounts.
      */
     @ApiResponse(responseCode = OK_CODE, description = "{AzureAccount}")
-    @PreAuthorize("@accountAuthorisationService.userCanCreateAzureAccount(#issuerId)")
+    @ApiResponse(responseCode = FORBIDDEN_ERROR_CODE,
+        description = "User with ID %s {requesterId} forbidden to create user")
+    @PreAuthorize("@accountAuthorisationService.userCanCreateAzureAccount(#requesterId)")
     @PostMapping("/add/azure")
     public ResponseEntity<Map<CreationEnum, List<? extends AzureAccount>>> createAzureAccount(//NOSONAR
-        @RequestHeader(ISSUER_ID) String issuerId, @RequestBody List<AzureAccount> azureAccounts) {
-        return ResponseEntity.ok(azureAccountService.addAzureAccounts(azureAccounts, issuerId, false, false));
+        @RequestHeader(REQUESTER_ID) String requesterId, @RequestBody List<AzureAccount> azureAccounts) {
+        return ResponseEntity.ok(azureAccountService.addAzureAccounts(azureAccounts, requesterId, false, false));
     }
 
     @ApiResponse(responseCode = OK_CODE, description = "P&I Azure User Information")

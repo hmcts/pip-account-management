@@ -45,7 +45,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class SubscriptionListTypeTest extends IntegrationTestBase {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-    private static final String USER_ID_HEADER = "x-user-id";
+    private static final String REQUESTER_ID_HEADER = "x-requester-id";
     private static final String ACTIONING_USER_ID = "f54c9783-7f56-4a69-91bc-55b582c0206f";
     private static final UUID VALID_USER_ID = UUID.fromString("87f907d2-eb28-42cc-b6e1-ae2b03f7bba5");
     private static final String CASE_ID = "T485913";
@@ -90,7 +90,7 @@ class SubscriptionListTypeTest extends IntegrationTestBase {
     void testAddListTypesForSubscription() throws Exception {
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .post(ADD_LIST_TYPE_PATH)
-            .header(USER_ID_HEADER, ACTIONING_USER_ID)
+            .header(REQUESTER_ID_HEADER, ACTIONING_USER_ID)
             .contentType(MediaType.APPLICATION_JSON)
             .content(OBJECT_MAPPER.writeValueAsString(subscriptionListType));
         MvcResult result = mvc.perform(request).andExpect(status().isCreated()).andReturn();
@@ -104,7 +104,7 @@ class SubscriptionListTypeTest extends IntegrationTestBase {
         subscriptionListType.setUserId(UUID.randomUUID());
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .post(ADD_LIST_TYPE_PATH)
-            .header(USER_ID_HEADER, ACTIONING_USER_ID)
+            .header(REQUESTER_ID_HEADER, ACTIONING_USER_ID)
             .contentType(MediaType.APPLICATION_JSON)
             .content(OBJECT_MAPPER.writeValueAsString(subscriptionListType));
         MvcResult mvcResult = mvc.perform(request).andExpect(status().isNotFound()).andReturn();
@@ -119,7 +119,7 @@ class SubscriptionListTypeTest extends IntegrationTestBase {
         when(subscriptionAuthorisationService.userCanUpdateSubscriptions(any(), any())).thenReturn(false);
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .post(ADD_LIST_TYPE_PATH)
-            .header(USER_ID_HEADER, ACTIONING_USER_ID)
+            .header(REQUESTER_ID_HEADER, ACTIONING_USER_ID)
             .contentType(MediaType.APPLICATION_JSON)
             .content(OBJECT_MAPPER.writeValueAsString(subscriptionListType));
         MvcResult mvcResult = mvc.perform(request).andExpect(status().isForbidden()).andReturn();
@@ -140,7 +140,7 @@ class SubscriptionListTypeTest extends IntegrationTestBase {
 
         MockHttpServletRequestBuilder createSubscriptionRequest = MockMvcRequestBuilders.post(SUBSCRIPTION_PATH)
             .content(OBJECT_MAPPER.writeValueAsString(subscription))
-            .header(USER_ID_HEADER, ACTIONING_USER_ID)
+            .header(REQUESTER_ID_HEADER, ACTIONING_USER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
         mvc.perform(createSubscriptionRequest)
@@ -148,7 +148,7 @@ class SubscriptionListTypeTest extends IntegrationTestBase {
 
         MockHttpServletRequestBuilder updateListTypeRequest = MockMvcRequestBuilders
             .put(UPDATE_LIST_TYPE_PATH)
-            .header(USER_ID_HEADER, ACTIONING_USER_ID)
+            .header(REQUESTER_ID_HEADER, ACTIONING_USER_ID)
             .contentType(MediaType.APPLICATION_JSON)
             .content(OBJECT_MAPPER.writeValueAsString(subscriptionListType));
 
@@ -165,7 +165,7 @@ class SubscriptionListTypeTest extends IntegrationTestBase {
         subscriptionListType.setUserId(UUID.randomUUID());
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .put(UPDATE_LIST_TYPE_PATH)
-            .header(USER_ID_HEADER, ACTIONING_USER_ID)
+            .header(REQUESTER_ID_HEADER, ACTIONING_USER_ID)
             .contentType(MediaType.APPLICATION_JSON)
             .content(OBJECT_MAPPER.writeValueAsString(subscriptionListType));
         MvcResult mvcResult = mvc.perform(request).andExpect(status().isNotFound()).andReturn();
@@ -180,7 +180,7 @@ class SubscriptionListTypeTest extends IntegrationTestBase {
         when(subscriptionAuthorisationService.userCanUpdateSubscriptions(any(), any())).thenReturn(false);
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .put(UPDATE_LIST_TYPE_PATH)
-            .header(USER_ID_HEADER, ACTIONING_USER_ID)
+            .header(REQUESTER_ID_HEADER, ACTIONING_USER_ID)
             .contentType(MediaType.APPLICATION_JSON)
             .content(OBJECT_MAPPER.writeValueAsString(subscriptionListType));
         MvcResult mvcResult = mvc.perform(request).andExpect(status().isForbidden()).andReturn();

@@ -305,7 +305,7 @@ curl --request POST \
   --url http://localhost:6969/account/add/pi \
   --header 'Authorization: Bearer {BEARER_TOKEN_HERE}' \
   --header 'Content-Type: application/json' \
-  --header 'x-issuer-id: <UserIdOfTheUserSubmittingTheRequest>' \
+  --header 'x-requester-id: <UserIdOfTheUserSubmittingTheRequest>' \
   --data-raw '[
     {
     	"userProvenance": "PI_AAD",

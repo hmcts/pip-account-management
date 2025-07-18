@@ -38,7 +38,7 @@ class BulkAccountTest extends AccountHelperBase {
         PiUser systemAdminUser = createSystemAdminAccount();
         systemAdminId = systemAdminUser.getUserId();
 
-        issuerId = Map.of(ISSUER_ID, systemAdminId);
+        issuerId = Map.of(REQUESTER_ID_HEADER, systemAdminId);
 
         StringBuilder csvContent = new StringBuilder(400);
         csvContent.append("email,firstName,surname\n");
@@ -64,7 +64,7 @@ class BulkAccountTest extends AccountHelperBase {
     @AfterAll
     public void teardown() throws IOException {
         Map<String, String> headers = new ConcurrentHashMap<>(bearer);
-        headers.put(ISSUER_ID, systemAdminId);
+        headers.put(REQUESTER_ID_HEADER, systemAdminId);
         doDeleteRequest(TESTING_SUPPORT_DELETE_ACCOUNT_URL + TEST_SUITE_EMAIL_PREFIX, headers);
         Files.deleteIfExists(Path.of(mockFile));
     }

@@ -42,7 +42,6 @@ import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
 @Tag(name = "Account Management - API for managing media applications")
 @RequestMapping("/application")
 @ApiResponse(responseCode = "401", description = "Invalid access credential")
-@ApiResponse(responseCode = "403", description = "User has not been authorized")
 @IsAdmin
 @SecurityRequirement(name = "bearerAuth")
 public class MediaApplicationController {
@@ -51,12 +50,12 @@ public class MediaApplicationController {
     public static final String NO_MEDIA_APPLICATION_FOUND_WITH_ID = "No media application found with id: {id}";
     private final MediaApplicationService mediaApplicationService;
 
-    private static final String ISSUER_ID = "x-issuer-id";
-    private static final String ADMIN_ID = "x-admin-id";
+    private static final String REQUESTER_ID = "x-requester-id";
 
     private static final String NO_CONTENT_MESSAGE = "The request has been successfully fulfilled";
     private static final String OK_ERROR_CODE = "200";
     private static final String NOT_FOUND_ERROR_CODE = "404";
+    private static final String FORBIDDEN_ERROR_CODE = "403";
 
     @ApiResponse(responseCode = OK_ERROR_CODE, description = "List<{MediaApplication}>")
     @Operation(summary = "Get all applications")
@@ -66,31 +65,37 @@ public class MediaApplicationController {
     }
 
     @ApiResponse(responseCode = OK_ERROR_CODE, description = "List<{MediaApplication}>")
+    @ApiResponse(responseCode = FORBIDDEN_ERROR_CODE,
+        description = "User with ID {requesterId} is not authorised to view media applications")
     @Operation(summary = "Get all application by the status")
-    @PreAuthorize("@accountAuthorisationService.userCanViewMediaApplications(#requesterId)")
+    @PreAuthorize("@mediaApplicationAuthorisationService.userCanViewMediaApplications(#requesterId)")
     @GetMapping(value = "/status/{status}", produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<List<MediaApplication>> getApplicationsByStatus(
-        @RequestHeader(ISSUER_ID) String requesterId,
+        @RequestHeader(REQUESTER_ID) String requesterId,
         @PathVariable MediaApplicationStatus status) {
         return ResponseEntity.ok(mediaApplicationService.getApplicationsByStatus(status));
     }
 
     @ApiResponse(responseCode = OK_ERROR_CODE, description = MEDIA_APPLICATION)
     @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description = NO_MEDIA_APPLICATION_FOUND_WITH_ID)
-    @PreAuthorize("@accountAuthorisationService.userCanViewMediaApplications(#requesterId)")
+    @ApiResponse(responseCode = FORBIDDEN_ERROR_CODE,
+        description = "User with ID {requesterId} is not authorised to view media applications")
+    @PreAuthorize("@mediaApplicationAuthorisationService.userCanViewMediaApplications(#requesterId)")
     @GetMapping(value = "/{id}", produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<MediaApplication> getApplicationById(
-        @RequestHeader(ISSUER_ID) String requesterId,
+        @RequestHeader(REQUESTER_ID) String requesterId,
         @PathVariable UUID id) {
         return ResponseEntity.ok(mediaApplicationService.getApplicationById(id));
     }
 
     @ApiResponse(responseCode = OK_ERROR_CODE, description = "Image with id: {id} is returned")
     @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description = "No image found with id: {id}")
-    @PreAuthorize("@accountAuthorisationService.userCanViewMediaApplications(#requesterId)")
+    @ApiResponse(responseCode = FORBIDDEN_ERROR_CODE,
+        description = "User with ID {requesterId} is not authorised to view media applications")
+    @PreAuthorize("@mediaApplicationAuthorisationService.userCanViewMediaApplications(#requesterId)")
     @GetMapping("/image/{id}")
     public ResponseEntity<Resource> getImageById(
-        @RequestHeader(ISSUER_ID) String requesterId,
+        @RequestHeader(REQUESTER_ID) String requesterId,
         @PathVariable String id) {
         return ResponseEntity.ok()
             .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_OCTET_STREAM_VALUE)
@@ -119,11 +124,13 @@ public class MediaApplicationController {
 
     @ApiResponse(responseCode = OK_ERROR_CODE, description = MEDIA_APPLICATION)
     @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description = NO_MEDIA_APPLICATION_FOUND_WITH_ID)
+    @ApiResponse(responseCode = FORBIDDEN_ERROR_CODE,
+        description = "User with ID {requesterId} is not authorised to update media applications")
     @Operation(summary = "Update a media application, sending an update email alongside")
-    @PreAuthorize("@accountAuthorisationService.userCanUpdateMediaApplications(#requesterId)")
+    @PreAuthorize("@mediaApplicationAuthorisationService.userCanUpdateMediaApplications(#requesterId)")
     @PutMapping(value = "/{id}/{status}/reasons", consumes = APPLICATION_JSON_VALUE)
     public ResponseEntity<MediaApplication> updateApplicationRejection(
-        @RequestHeader(ADMIN_ID) String requesterId,
+        @RequestHeader(REQUESTER_ID) String requesterId,
         @RequestBody Map<String, List<String>> reasons,
         @PathVariable MediaApplicationStatus status, @PathVariable UUID id) {
         return ResponseEntity.ok(mediaApplicationService.updateApplication(id, status, reasons));

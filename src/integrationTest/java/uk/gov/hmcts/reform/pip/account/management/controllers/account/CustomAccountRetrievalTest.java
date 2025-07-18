@@ -59,8 +59,7 @@ class CustomAccountRetrievalTest {
     private static final String EMAIL = "test_account_admin@hmcts.net";
     private static final String SURNAME = "Surname";
     private static final String FORENAME = "Forename";
-    private static final String ISSUER_ID = "87f907d2-eb28-42cc-b6e1-ae2b03f7bba2";
-    private static final String ISSUER_HEADER = "x-issuer-id";
+    private static final String REQUESTER_ID_HEADER = "x-requester-id";
     private static final UUID REQUESTER_ID = UUID.randomUUID();
 
     private static final String NOT_FOUND_STATUS_CODE_MESSAGE = "Status code does not match not found";
@@ -111,7 +110,7 @@ class CustomAccountRetrievalTest {
             MockMvcRequestBuilders
                 .post(PI_URL)
                 .content(OBJECT_MAPPER.writeValueAsString(List.of(validUser)))
-                .header(ISSUER_HEADER, ISSUER_ID)
+                .header(REQUESTER_ID_HEADER, REQUESTER_ID)
                 .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult responseCreateUser = mockMvc.perform(createRequest)
@@ -166,7 +165,7 @@ class CustomAccountRetrievalTest {
             MockMvcRequestBuilders
                 .post(PI_URL)
                 .content(OBJECT_MAPPER.writeValueAsString(List.of(VALID_USER)))
-                .header(ISSUER_HEADER, ISSUER_ID)
+                .header(REQUESTER_ID_HEADER, REQUESTER_ID)
                 .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult responseCreateUser = mockMvc.perform(createRequest)
@@ -181,7 +180,7 @@ class CustomAccountRetrievalTest {
         String createdUserId = mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).getFirst().toString();
 
         MockHttpServletRequestBuilder getRequest = MockMvcRequestBuilders
-            .get(THIRD_PARTY_URL).header(ISSUER_HEADER, REQUESTER_ID);
+            .get(THIRD_PARTY_URL).header(REQUESTER_ID_HEADER, REQUESTER_ID);
 
         MvcResult responseGetUser =
             mockMvc.perform(getRequest).andExpect(status().isOk()).andReturn();
@@ -201,7 +200,7 @@ class CustomAccountRetrievalTest {
         when(accountAuthorisationService.userCanViewAccounts(any())).thenReturn(false);
 
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
-            .get(THIRD_PARTY_URL).header(ISSUER_HEADER, REQUESTER_ID);
+            .get(THIRD_PARTY_URL).header(REQUESTER_ID_HEADER, REQUESTER_ID);
 
         MvcResult mvcResult =
             mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isForbidden()).andReturn();
@@ -220,7 +219,7 @@ class CustomAccountRetrievalTest {
             MockMvcRequestBuilders
                 .post(PI_URL)
                 .content(OBJECT_MAPPER.writeValueAsString(List.of(validUser1, validUser2)))
-                .header(ISSUER_HEADER, ISSUER_ID)
+                .header(REQUESTER_ID_HEADER, REQUESTER_ID)
                 .contentType(MediaType.APPLICATION_JSON);
         MvcResult responseCreateUser = mockMvc.perform(mockHttpServletRequestBuilder)
             .andExpect(status().isCreated()).andReturn();
@@ -235,7 +234,7 @@ class CustomAccountRetrievalTest {
         String createdUserId = mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).getFirst().toString();
 
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
-            .get(GET_ALL_ACCOUNTS_EXCEPT_THIRD_PARTY).header(ISSUER_HEADER, REQUESTER_ID);
+            .get(GET_ALL_ACCOUNTS_EXCEPT_THIRD_PARTY).header(REQUESTER_ID_HEADER, REQUESTER_ID);
 
         MvcResult response =
             mockMvc.perform(request).andExpect(status().isOk()).andReturn();
@@ -253,7 +252,7 @@ class CustomAccountRetrievalTest {
 
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .get(GET_ALL_ACCOUNTS_EXCEPT_THIRD_PARTY)
-            .header(ISSUER_HEADER, REQUESTER_ID);
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID);
 
         MvcResult mvcResult = mockMvc.perform(request).andExpect(status().isForbidden()).andReturn();
 
@@ -268,7 +267,7 @@ class CustomAccountRetrievalTest {
             MockMvcRequestBuilders
                 .post(PI_URL)
                 .content(OBJECT_MAPPER.writeValueAsString(List.of(VALID_USER)))
-                .header(ISSUER_HEADER, ISSUER_ID)
+                .header(REQUESTER_ID_HEADER, REQUESTER_ID)
                 .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult responseCreateUser = mockMvc.perform(createRequest)

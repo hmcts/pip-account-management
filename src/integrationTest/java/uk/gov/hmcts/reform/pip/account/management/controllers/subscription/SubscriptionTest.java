@@ -135,7 +135,7 @@ class SubscriptionTest extends IntegrationTestBase {
     private static final UUID ACTIONING_USER_ID = UUID.fromString("87f907d2-eb28-42cc-b6e1-ae2b03f7bba5");
     private static final String INVALID_ACTIONING_USER_ID = "87f907d2-eb28-42cc-b6e1-ae2b03f7bba6";
     private static final String SYSTEM_ADMIN_USER_ID = "87f907d2-eb28-42cc-b6e1-ae2b03f7bba4";
-    private static final String USER_ID_HEADER = "x-user-id";
+    private static final String REQUESTER_ID_HEADER = "x-requester-id";
     private static final String TEST_EMAIL = "test-email-cath@justice.gov.uk";
     private static final Subscription SUBSCRIPTION = new Subscription();
 
@@ -187,7 +187,7 @@ class SubscriptionTest extends IntegrationTestBase {
 
         return MockMvcRequestBuilders.post(SUBSCRIPTION_PATH)
             .content(OBJECT_MAPPER.writeValueAsString(SUBSCRIPTION))
-            .header(USER_ID_HEADER, ACTIONING_USER_ID)
+            .header(REQUESTER_ID_HEADER, ACTIONING_USER_ID)
             .contentType(MediaType.APPLICATION_JSON);
     }
 
@@ -226,7 +226,7 @@ class SubscriptionTest extends IntegrationTestBase {
     protected MockHttpServletRequestBuilder setupRawJsonSubscription(String json) {
         return MockMvcRequestBuilders.post(SUBSCRIPTION_PATH)
             .content(json)
-            .header(USER_ID_HEADER, ACTIONING_USER_ID)
+            .header(REQUESTER_ID_HEADER, ACTIONING_USER_ID)
             .contentType(MediaType.APPLICATION_JSON);
     }
 
@@ -391,7 +391,7 @@ class SubscriptionTest extends IntegrationTestBase {
         );
 
         MvcResult deleteResponse = mvc.perform(delete(SUBSCRIPTION_BASE_URL + returnedSubscription.getId())
-                                                   .header(USER_ID_HEADER, SYSTEM_ADMIN_USER_ID))
+                                                   .header(REQUESTER_ID_HEADER, SYSTEM_ADMIN_USER_ID))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -424,7 +424,7 @@ class SubscriptionTest extends IntegrationTestBase {
         );
 
         MvcResult deleteResponse = mvc.perform(delete(SUBSCRIPTION_BASE_URL + returnedSubscription.getId())
-                                                   .header(USER_ID_HEADER, ACTIONING_USER_ID))
+                                                   .header(REQUESTER_ID_HEADER, ACTIONING_USER_ID))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -456,7 +456,7 @@ class SubscriptionTest extends IntegrationTestBase {
 
         when(subscriptionAuthorisationService.userCanDeleteSubscriptions(any(), any())).thenReturn(false);
         mvc.perform(delete(SUBSCRIPTION_BASE_URL + returnedSubscription.getId())
-                        .header(USER_ID_HEADER, INVALID_ACTIONING_USER_ID))
+                        .header(REQUESTER_ID_HEADER, INVALID_ACTIONING_USER_ID))
             .andExpect(status().isForbidden());
     }
 
@@ -464,7 +464,7 @@ class SubscriptionTest extends IntegrationTestBase {
     @Test
     void failedDelete() throws Exception {
         MvcResult response = mvc.perform(delete(SUBSCRIPTION_BASE_URL + UUID_STRING)
-                                             .header(USER_ID_HEADER, ACTIONING_USER_ID))
+                                             .header(REQUESTER_ID_HEADER, ACTIONING_USER_ID))
             .andExpect(status().isNotFound()).andReturn();
         assertNotNull(response.getResponse().getContentAsString(), VALIDATION_EMPTY_RESPONSE);
 
@@ -502,7 +502,7 @@ class SubscriptionTest extends IntegrationTestBase {
         mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, UUID_STRING));
         mvc.perform(setupMockSubscription(CASE_URN, SearchType.CASE_URN, UUID_STRING));
 
-        MvcResult response = mvc.perform(get(SUBSCRIPTION_USER_PATH).header(USER_ID_HEADER, ACTIONING_USER_ID))
+        MvcResult response = mvc.perform(get(SUBSCRIPTION_USER_PATH).header(REQUESTER_ID_HEADER, ACTIONING_USER_ID))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -538,7 +538,7 @@ class SubscriptionTest extends IntegrationTestBase {
 
         mvc.perform(mappedSubscription).andExpect(status().isCreated()).andReturn();
 
-        MvcResult response = mvc.perform(get(SUBSCRIPTION_USER_PATH).header(USER_ID_HEADER, ACTIONING_USER_ID))
+        MvcResult response = mvc.perform(get(SUBSCRIPTION_USER_PATH).header(REQUESTER_ID_HEADER, ACTIONING_USER_ID))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -565,7 +565,7 @@ class SubscriptionTest extends IntegrationTestBase {
     void testGetUsersSubscriptionsByUserIdSingleLocation() throws Exception {
         mvc.perform(setupMockSubscription(LOCATION_ID, SearchType.LOCATION_ID, UUID_STRING));
 
-        MvcResult response = mvc.perform(get(SUBSCRIPTION_USER_PATH).header(USER_ID_HEADER, ACTIONING_USER_ID))
+        MvcResult response = mvc.perform(get(SUBSCRIPTION_USER_PATH).header(REQUESTER_ID_HEADER, ACTIONING_USER_ID))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -590,7 +590,7 @@ class SubscriptionTest extends IntegrationTestBase {
     void testGetUsersSubscriptionsByUserIdSingleCaseId() throws Exception {
         mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, UUID_STRING));
 
-        MvcResult response = mvc.perform(get(SUBSCRIPTION_USER_PATH).header(USER_ID_HEADER, ACTIONING_USER_ID))
+        MvcResult response = mvc.perform(get(SUBSCRIPTION_USER_PATH).header(REQUESTER_ID_HEADER, ACTIONING_USER_ID))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -614,7 +614,7 @@ class SubscriptionTest extends IntegrationTestBase {
     void testGetUsersSubscriptionsByUserIdSingleCaseUrn() throws Exception {
         mvc.perform(setupMockSubscription(CASE_URN, SearchType.CASE_URN, UUID_STRING));
 
-        MvcResult response = mvc.perform(get(SUBSCRIPTION_USER_PATH).header(USER_ID_HEADER, ACTIONING_USER_ID))
+        MvcResult response = mvc.perform(get(SUBSCRIPTION_USER_PATH).header(REQUESTER_ID_HEADER, ACTIONING_USER_ID))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -635,7 +635,7 @@ class SubscriptionTest extends IntegrationTestBase {
 
     @Test
     void testGetUsersSubscriptionsByUserIdNoSubscriptions() throws Exception {
-        MvcResult response = mvc.perform(get(SUBSCRIPTION_USER_PATH).header(USER_ID_HEADER, ACTIONING_USER_ID))
+        MvcResult response = mvc.perform(get(SUBSCRIPTION_USER_PATH).header(REQUESTER_ID_HEADER, ACTIONING_USER_ID))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -750,7 +750,7 @@ class SubscriptionTest extends IntegrationTestBase {
 
         when(subscriptionAuthorisationService.userCanDeleteSubscriptions(any(), any())).thenReturn(false);
         MvcResult mvcResult = mvc.perform(delete(SUBSCRIPTION_BASE_URL + returnedSubscription.getId())
-                                              .header(USER_ID_HEADER, SYSTEM_ADMIN_USER_ID)
+                                              .header(REQUESTER_ID_HEADER, SYSTEM_ADMIN_USER_ID)
                                               .with(user(UNAUTHORIZED_USERNAME).authorities(
                                                   new SimpleGrantedAuthority(UNAUTHORIZED_ROLE))))
             .andExpect(status().isForbidden()).andReturn();
@@ -800,7 +800,7 @@ class SubscriptionTest extends IntegrationTestBase {
     @WithMockUser(username = "unauthorized_find_by_user_id", authorities = {"APPROLE_unknown.find"})
     void testUnauthorizedFindByUserId() throws Exception {
         when(subscriptionAuthorisationService.userCanViewSubscriptions(any(), any())).thenReturn(false);
-        MvcResult mvcResult = mvc.perform(get(SUBSCRIPTION_USER_PATH).header(USER_ID_HEADER, ACTIONING_USER_ID))
+        MvcResult mvcResult = mvc.perform(get(SUBSCRIPTION_USER_PATH).header(REQUESTER_ID_HEADER, ACTIONING_USER_ID))
             .andExpect(status().isForbidden()).andReturn();
 
         assertEquals(FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
@@ -839,7 +839,7 @@ class SubscriptionTest extends IntegrationTestBase {
         MvcResult deleteResponse = mvc.perform(delete(DELETE_BULK_SUBSCRIPTION_PATH)
                                                    .contentType(MediaType.APPLICATION_JSON)
                                                    .content(subscriptionIdRequest)
-                                                   .header(USER_ID_HEADER, SYSTEM_ADMIN_USER_ID))
+                                                   .header(REQUESTER_ID_HEADER, SYSTEM_ADMIN_USER_ID))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -881,7 +881,7 @@ class SubscriptionTest extends IntegrationTestBase {
         MvcResult deleteResponse = mvc.perform(delete(DELETE_BULK_SUBSCRIPTION_PATH)
                                                    .contentType(MediaType.APPLICATION_JSON)
                                                    .content(subscriptionIdRequest)
-                                                   .header(USER_ID_HEADER, ACTIONING_USER_ID))
+                                                   .header(REQUESTER_ID_HEADER, ACTIONING_USER_ID))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -925,7 +925,7 @@ class SubscriptionTest extends IntegrationTestBase {
         MvcResult response = mvc.perform(delete(DELETE_BULK_SUBSCRIPTION_PATH)
                                              .contentType(MediaType.APPLICATION_JSON)
                                              .content(subscriptionIdRequest)
-                                             .header(USER_ID_HEADER, INVALID_ACTIONING_USER_ID))
+                                             .header(REQUESTER_ID_HEADER, INVALID_ACTIONING_USER_ID))
             .andExpect(status().isForbidden())
             .andReturn();
 
@@ -940,7 +940,7 @@ class SubscriptionTest extends IntegrationTestBase {
         MvcResult response = mvc.perform(delete(DELETE_BULK_SUBSCRIPTION_PATH)
                                              .contentType(MediaType.APPLICATION_JSON)
                                              .content(subscriptionIdRequest)
-                                             .header(USER_ID_HEADER, ACTIONING_USER_ID))
+                                             .header(REQUESTER_ID_HEADER, ACTIONING_USER_ID))
             .andExpect(status().isNotFound()).andReturn();
 
         assertEquals(NOT_FOUND.value(), response.getResponse().getStatus(),
@@ -956,7 +956,7 @@ class SubscriptionTest extends IntegrationTestBase {
         MvcResult response = mvc.perform(delete(DELETE_BULK_SUBSCRIPTION_PATH)
                                              .contentType(MediaType.APPLICATION_JSON)
                                              .content(subscriptionIdRequest)
-                                             .header(USER_ID_HEADER, ACTIONING_USER_ID))
+                                             .header(REQUESTER_ID_HEADER, ACTIONING_USER_ID))
             .andExpect(status().isForbidden()).andReturn();
 
         assertEquals(FORBIDDEN.value(), response.getResponse().getStatus(),

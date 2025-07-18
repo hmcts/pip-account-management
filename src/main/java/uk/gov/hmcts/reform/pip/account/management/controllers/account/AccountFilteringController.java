@@ -33,7 +33,6 @@ import java.util.List;
 @Tag(name = "Account Management - API for retrieving custom user accounts")
 @RequestMapping("/account")
 @ApiResponse(responseCode = "401", description = "Invalid access credential")
-@ApiResponse(responseCode = "403", description = "User has not been authorized")
 @Validated
 @IsAdmin
 @SecurityRequirement(name = "bearerAuth")
@@ -46,7 +45,7 @@ public class AccountFilteringController {
     private static final String NOT_FOUND_ERROR_CODE = "404";
     private static final String FORBIDDEN_ERROR_CODE = "403";
     private static final String PI_USER = "{piUser}";
-    private static final String ISSUER_ID = "x-issuer-id";
+    private static final String REQUESTER_ID = "x-requester-id";
 
     @ApiResponse(responseCode = OK_CODE, description = "List of Accounts MI Data")
     @Operation(summary = "Returns anonymized account data for MI reporting")
@@ -56,22 +55,25 @@ public class AccountFilteringController {
     }
 
     @ApiResponse(responseCode = OK_CODE, description = "List of third party accounts")
-    @ApiResponse(responseCode = FORBIDDEN_ERROR_CODE, description = "Action forbidden")
+    @ApiResponse(responseCode = FORBIDDEN_ERROR_CODE,
+        description = "User with ID {requesterId} is not authorised to view accounts")
     @Operation(summary = "Get all third party accounts")
     @ResponseStatus(HttpStatus.OK)
     @PreAuthorize("@accountAuthorisationService.userCanViewAccounts(#requesterId)")
     @GetMapping("/all/third-party")
     public ResponseEntity<List<PiUser>> getAllThirdPartyAccounts(
-        @RequestHeader(ISSUER_ID) String requesterId) {
+        @RequestHeader(REQUESTER_ID) String requesterId) {
         return ResponseEntity.ok(accountFilteringService.findAllThirdPartyAccounts());
     }
 
-    @ApiResponse(responseCode = FORBIDDEN_ERROR_CODE, description = "Action forbidden")
+    @ApiResponse(responseCode = OK_CODE, description = "List of accounts")
+    @ApiResponse(responseCode = FORBIDDEN_ERROR_CODE,
+        description = "User with ID {requesterId} is not authorised to view accounts")
     @Operation(summary = "Get all accounts except third party in a page with filtering")
     @PreAuthorize("@accountAuthorisationService.userCanViewAccounts(#requesterId)")
     @GetMapping("/all")
     public ResponseEntity<Page<PiUser>> getAllAccountsExceptThirdParty(
-        @RequestHeader(ISSUER_ID) String requesterId,
+        @RequestHeader(REQUESTER_ID) String requesterId,
         @RequestParam(name = "pageNumber", defaultValue = "0") int pageNumber,
         @RequestParam(name = "pageSize", defaultValue = "25") int pageSize,
         @RequestParam(name = "email", defaultValue = "", required = false) String email,

@@ -44,7 +44,6 @@ import static uk.gov.hmcts.reform.pip.model.account.Roles.VERIFIED_THIRD_PARTY_P
 @SuppressWarnings("PMD.UnitTestAssertionsShouldIncludeMessage")
 @ExtendWith(MockitoExtension.class)
 class AccountAuthorisationServiceTest {
-
     private static final UUID USER_ID = UUID.randomUUID();
     private static final UUID ADMIN_USER_ID = UUID.randomUUID();
     private static final String SYSTEM_ADMIN_ROLE = "SYSTEM_ADMIN";
@@ -127,31 +126,6 @@ class AccountAuthorisationServiceTest {
     }
 
     @Test
-    void testSystemAdminUserCanViewAuditLogs() {
-        adminUser.setRoles(SYSTEM_ADMIN);
-        when(authorisationCommonService.isSystemAdmin(ADMIN_USER_ID)).thenReturn(true);
-
-        assertTrue(accountAuthorisationService.userCanViewAuditLogs(ADMIN_USER_ID));
-    }
-
-    @Test
-    void testSystemAdminUserCanNotViewAuditLogsWhenNotLoggedIn() {
-        adminUser.setRoles(SYSTEM_ADMIN);
-
-        when(authorisationCommonService.isAdmin()).thenReturn(false);
-
-        assertFalse(accountAuthorisationService.userCanViewAuditLogs(ADMIN_USER_ID));
-    }
-
-    @ParameterizedTest
-    @EnumSource(value = Roles.class, names = { SYSTEM_ADMIN_ROLE }, mode = EnumSource.Mode.EXCLUDE)
-    void testUserCanNotViewAuditLogsWhenNotSystemAdmin(Roles role) {
-        user.setRoles(role);
-
-        assertFalse(accountAuthorisationService.userCanViewAuditLogs(USER_ID));
-    }
-
-    @Test
     void testSystemAdminUserCanViewAccounts() {
         adminUser.setRoles(SYSTEM_ADMIN);
         when(authorisationCommonService.isSystemAdmin(ADMIN_USER_ID)).thenReturn(true);
@@ -197,63 +171,6 @@ class AccountAuthorisationServiceTest {
         user.setRoles(role);
 
         assertFalse(accountAuthorisationService.userCanBulkCreateMediaAccounts(USER_ID));
-    }
-
-    @Test
-    void testAdminCtscUserCanViewMediaApplications() {
-        adminUser.setRoles(INTERNAL_ADMIN_CTSC);
-        when(accountService.getUserById(ADMIN_USER_ID)).thenReturn(adminUser);
-        when(authorisationCommonService.isAdmin()).thenReturn(true);
-
-        assertTrue(accountAuthorisationService.userCanViewMediaApplications(ADMIN_USER_ID));
-    }
-
-    @ParameterizedTest
-    @EnumSource(value = Roles.class, names = { INTERNAL_ADMIN_CTSC_ROLE }, mode = EnumSource.Mode.EXCLUDE)
-    void testUserCanNotViewMediaApplicationsWhenNotAdminCtsc(Roles role) {
-        user.setRoles(role);
-        when(accountService.getUserById(USER_ID)).thenReturn(user);
-
-        assertFalse(accountAuthorisationService.userCanViewMediaApplications(USER_ID));
-    }
-
-    @ParameterizedTest
-    @EnumSource(Roles.class)
-    void testUserCanNotViewMediaApplicationsWhenNotLoggedIn(Roles role) {
-        user.setRoles(role);
-
-        when(authorisationCommonService.isAdmin()).thenReturn(false);
-
-        assertFalse(accountAuthorisationService.userCanViewMediaApplications(USER_ID));
-    }
-
-    @Test
-    void testAdminCtscUserCanUpdateMediaApplications() {
-        adminUser.setRoles(INTERNAL_ADMIN_CTSC);
-        when(accountService.getUserById(ADMIN_USER_ID)).thenReturn(adminUser);
-        when(authorisationCommonService.isAdmin()).thenReturn(true);
-
-        assertTrue(accountAuthorisationService.userCanUpdateMediaApplications(ADMIN_USER_ID));
-    }
-
-    @ParameterizedTest
-    @EnumSource(value = Roles.class, names = { INTERNAL_ADMIN_CTSC_ROLE }, mode = EnumSource.Mode.EXCLUDE)
-    void testUserCanNotUpdateMediaApplicationsWhenNotAdminCtsc(Roles role) {
-        user.setRoles(role);
-        when(accountService.getUserById(USER_ID)).thenReturn(user);
-
-        assertFalse(accountAuthorisationService.userCanUpdateMediaApplications(USER_ID));
-    }
-
-    @ParameterizedTest
-    @EnumSource(Roles.class)
-    void testUserCanNotUpdateMediaApplicationsWhenNotLoggedIn(Roles role) {
-        user.setRoles(role);
-
-        when(authorisationCommonService.isAdmin()).thenReturn(false);
-
-
-        assertFalse(accountAuthorisationService.userCanUpdateMediaApplications(USER_ID));
     }
 
     @Test

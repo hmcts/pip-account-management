@@ -48,7 +48,7 @@ class AzureAccountTest extends AccountHelperBase {
             createAccount(generateEmail(), UUID.randomUUID().toString(), Roles.INTERNAL_ADMIN_CTSC, systemAdminUserId));
 
         headers = new ConcurrentHashMap<>(bearer);
-        headers.put(ISSUER_ID, adminCtscUserId);
+        headers.put(REQUESTER_ID_HEADER, adminCtscUserId);
     }
 
     @AfterAll

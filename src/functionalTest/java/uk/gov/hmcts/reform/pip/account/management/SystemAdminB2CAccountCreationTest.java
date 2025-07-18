@@ -29,7 +29,7 @@ class SystemAdminB2CAccountCreationTest extends AccountHelperBase {
         bearer = Map.of(HttpHeaders.AUTHORIZATION, BEARER + accessToken);
 
         PiUser piUser = createSystemAdminAccount();
-        issuerId = Map.of(ISSUER_ID, piUser.getUserId());
+        issuerId = Map.of(REQUESTER_ID_HEADER, piUser.getUserId());
     }
 
     @BeforeEach

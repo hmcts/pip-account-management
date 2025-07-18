@@ -48,7 +48,7 @@ class AuditCreationTest extends AccountHelperBase {
         systemAdminUser = createSystemAdminAccount();
 
         headers = new ConcurrentHashMap<>(bearer);
-        headers.put(ISSUER_ID, systemAdminUser.getUserId());
+        headers.put(REQUESTER_ID_HEADER, systemAdminUser.getUserId());
     }
 
     @AfterAll

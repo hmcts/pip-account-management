@@ -55,7 +55,7 @@ class AccountFilteringTest extends AccountHelperBase {
         thirdPartyList.add(piUser);
 
         headers = new ConcurrentHashMap<>(bearer);
-        headers.put(ISSUER_ID, systemAdminUser.getUserId());
+        headers.put(REQUESTER_ID_HEADER, systemAdminUser.getUserId());
 
         Response createdResponse =
             doPostRequest(CREATE_PI_ACCOUNT, headers, objectMapper.writeValueAsString(thirdPartyList));

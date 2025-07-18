@@ -50,9 +50,8 @@ class SmokeTest extends SmokeTestBase {
     private static final String TESTING_SUPPORT_APPLICATION_URL = "/testing-support/application/";
     private static final String TESTING_SUPPORT_SUBSCRIPTION_URL = "/testing-support/subscription/";
 
-    private static final String ISSUER_ID_HEADER = "x-issuer-id";
-    private static final String ISSUER_ID = UUID.randomUUID().toString();
-    private static final String USER_ID_HEADER = "x-user-id";
+    private static final String REQUESTER_ID_HEADER = "x-requester-id";
+    private static final String REQUESTER_ID = UUID.randomUUID().toString();
     private static final String TEST_FIRST_NAME = "SmokeTestFirstName";
     private static final String TEST_SURNAME = "SmokeTestSurname";
     private static final String TEST_DISPLAY_NAME = "SmokeTestName";
@@ -89,7 +88,7 @@ class SmokeTest extends SmokeTestBase {
         piUser.setProvenanceUserId(UUID.randomUUID().toString());
 
         verifiedUserId = (String)
-            doPostRequest(CREATE_PI_ACCOUNT_URL, Map.of(ISSUER_ID_HEADER, ISSUER_ID),
+            doPostRequest(CREATE_PI_ACCOUNT_URL, Map.of(REQUESTER_ID_HEADER, REQUESTER_ID),
                           OBJECT_MAPPER.writeValueAsString(List.of(piUser)))
                 .getBody()
                 .as(CREATED_RESPONSE_TYPE)
@@ -106,7 +105,7 @@ class SmokeTest extends SmokeTestBase {
         adminCtscUser.setProvenanceUserId(UUID.randomUUID().toString());
 
         adminUserId = (String)
-            doPostRequest(CREATE_PI_ACCOUNT_URL, Map.of(ISSUER_ID_HEADER, ISSUER_ID),
+            doPostRequest(CREATE_PI_ACCOUNT_URL, Map.of(REQUESTER_ID_HEADER, REQUESTER_ID),
                           OBJECT_MAPPER.writeValueAsString(List.of(adminCtscUser)))
                 .getBody()
                 .as(CREATED_RESPONSE_TYPE)
@@ -144,7 +143,7 @@ class SmokeTest extends SmokeTestBase {
         azureAccount.setRole(Roles.VERIFIED);
         azureAccount.setEmail(TEST_EMAIL);
 
-        Response response = doPostRequest(CREATE_AZURE_ACCOUNT_URL, Map.of(ISSUER_ID_HEADER, adminUserId),
+        Response response = doPostRequest(CREATE_AZURE_ACCOUNT_URL, Map.of(REQUESTER_ID_HEADER, adminUserId),
                                           OBJECT_MAPPER.writeValueAsString(List.of(azureAccount)));
 
         assertThat(response.getStatusCode())
@@ -164,7 +163,7 @@ class SmokeTest extends SmokeTestBase {
         piUser.setUserProvenance(UserProvenances.PI_AAD);
         piUser.setProvenanceUserId(azureAccountId);
 
-        response = doPostRequest(CREATE_PI_ACCOUNT_URL, Map.of(ISSUER_ID_HEADER, adminUserId),
+        response = doPostRequest(CREATE_PI_ACCOUNT_URL, Map.of(REQUESTER_ID_HEADER, adminUserId),
                                  OBJECT_MAPPER.writeValueAsString(List.of(piUser)));
 
         assertThat(response.getStatusCode())
@@ -174,7 +173,7 @@ class SmokeTest extends SmokeTestBase {
 
     @Test
     void testCreateMediaApplication() throws IOException {
-        Response response = doPostMultipartForApplication(MEDIA_APPLICATION_URL, ISSUER_ID,
+        Response response = doPostMultipartForApplication(MEDIA_APPLICATION_URL, REQUESTER_ID,
                                                           new ClassPathResource(MOCK_FILE).getFile(),
                                                           TEST_DISPLAY_NAME, TEST_EMAIL, TEST_EMPLOYER,
                                                           MediaApplicationStatus.PENDING.toString());
@@ -195,7 +194,7 @@ class SmokeTest extends SmokeTestBase {
         subscription.setLocationName(LOCATION_NAME);
         subscription.setLastUpdatedDate(LocalDateTime.now());
 
-        Response response = doPostRequest(SUBSCRIPTION_URL, Map.of(USER_ID_HEADER, verifiedUserId), subscription);
+        Response response = doPostRequest(SUBSCRIPTION_URL, Map.of(REQUESTER_ID_HEADER, verifiedUserId), subscription);
 
         assertThat(response.getStatusCode())
             .as(STATUS_CODE_MATCH)

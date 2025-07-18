@@ -23,12 +23,11 @@ import java.util.List;
 @Tag(name = "Account Management - API for managing subscription channels")
 @RequestMapping("/subscription/channel")
 @ApiResponse(responseCode = "401", description = "Invalid access credential")
-@ApiResponse(responseCode = "403", description = "User has not been authorized")
 @Valid
 @IsAdmin
 @SecurityRequirement(name = "bearerAuth")
 public class SubscriptionChannelController {
-    private static final String X_USER_ID_HEADER = "x-user-id";
+    private static final String X_REQUESTER_ID_HEADER = "x-requester-id";
 
     private final SubscriptionChannelService subscriptionChannelService;
 
@@ -40,8 +39,10 @@ public class SubscriptionChannelController {
     @GetMapping
     @Operation(summary = "Endpoint to retrieve the available subscription channels")
     @ApiResponse(responseCode = "200", description = "List of channels returned in JSON array format")
+    @ApiResponse(responseCode = "403",
+        description = "User with ID {requesterId} is not authorised to retrieve these channel")
     @PreAuthorize("@subscriptionAuthorisationService.userCanRetrieveChannels(#requesterId, #userId)")
-    public ResponseEntity<List<Channel>> retrieveChannels(@RequestHeader(X_USER_ID_HEADER) String requesterId,
+    public ResponseEntity<List<Channel>> retrieveChannels(@RequestHeader(X_REQUESTER_ID_HEADER) String requesterId,
                                                           @RequestParam(name = "userId") String userId) {
         return ResponseEntity.ok(subscriptionChannelService.retrieveChannels());
     }
