@@ -15,7 +15,7 @@ public class AuditAuthorisationService {
     private final AuthorisationCommonService authorisationCommonService;
 
     public boolean userCanViewAuditLogs(UUID userId) {
-        if (!authorisationCommonService.isAdmin() || !authorisationCommonService.isSystemAdmin(userId)) {
+        if (!(authorisationCommonService.isAdmin() && authorisationCommonService.isSystemAdmin(userId))) {
             log.error(writeLog(String.format("User with ID %s is not authorised to view audit logs", userId)));
             return false;
         }

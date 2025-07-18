@@ -27,7 +27,7 @@ public class MediaApplicationAuthorisationService {
 
 
     public boolean userCanBulkCreateMediaAccounts(UUID userId) {
-        if (!authorisationCommonService.isAdmin() || !authorisationCommonService.isSystemAdmin(userId)) {
+        if (!(authorisationCommonService.isAdmin() && authorisationCommonService.isSystemAdmin(userId))) {
             log.error(writeLog(String.format("User with ID %s is not authorised to create these accounts", userId)));
             return false;
         }
@@ -35,7 +35,7 @@ public class MediaApplicationAuthorisationService {
     }
 
     public boolean userCanViewMediaApplications(UUID userId) {
-        if (!authorisationCommonService.isAdmin() || !isAdminCtsc(userId)) {
+        if (!(authorisationCommonService.isAdmin() && isAdminCtsc(userId))) {
             log.error(writeLog(String.format("User with ID %s is not authorised to view media applications", userId)));
             return false;
         }
@@ -43,7 +43,7 @@ public class MediaApplicationAuthorisationService {
     }
 
     public boolean userCanUpdateMediaApplications(UUID userId) {
-        if (!authorisationCommonService.isAdmin() || !isAdminCtsc(userId)) {
+        if (!(authorisationCommonService.isAdmin() && isAdminCtsc(userId))) {
             log.error(writeLog(String.format("User with ID %s is not authorised to update media "
                                                  + "applications", userId)));
             return false;

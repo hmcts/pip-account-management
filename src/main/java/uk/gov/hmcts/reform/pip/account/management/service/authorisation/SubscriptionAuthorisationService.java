@@ -102,7 +102,7 @@ public class SubscriptionAuthorisationService {
     }
 
     public boolean userCanUpdateSubscriptions(UUID requesterId, UUID userId) {
-        if (!isVerifiedUser(requesterId) || !requesterId.equals(userId)) {
+        if (!(isVerifiedUser(requesterId) && requesterId.equals(userId))) {
             log.error(writeLog(String.format("User with ID %s is not authorised to update subscriptions for user with "
                                                  + "ID %s", requesterId, userId)));
             return false;

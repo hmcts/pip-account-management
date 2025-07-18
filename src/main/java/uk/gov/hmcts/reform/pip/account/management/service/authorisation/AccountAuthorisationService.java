@@ -119,7 +119,7 @@ public class AccountAuthorisationService {
     }
 
     public boolean userCanViewAccounts(UUID userId) {
-        if (!authorisationCommonService.isAdmin() || !authorisationCommonService.isSystemAdmin(userId)) {
+        if (!(authorisationCommonService.isAdmin() && authorisationCommonService.isSystemAdmin(userId))) {
             log.error(writeLog(String.format("User with ID %s is not authorised to view accounts", userId)));
             return false;
         }
@@ -127,7 +127,7 @@ public class AccountAuthorisationService {
     }
 
     public boolean userCanBulkCreateMediaAccounts(UUID userId) {
-        if (!authorisationCommonService.isAdmin() || !authorisationCommonService.isSystemAdmin(userId)) {
+        if (!(authorisationCommonService.isAdmin() && authorisationCommonService.isSystemAdmin(userId))) {
             log.error(writeLog(String.format("User with ID %s is not authorised to create these accounts", userId)));
             return false;
         }
@@ -135,7 +135,7 @@ public class AccountAuthorisationService {
     }
 
     public boolean userCanCreateAzureAccount(UUID userId) {
-        if (!authorisationCommonService.isAdmin() || !isAdminCtsc(userId)) {
+        if (!(authorisationCommonService.isAdmin() && isAdminCtsc(userId))) {
             log.error(writeLog(String.format("User with ID %s is not authorised to create azure accounts", userId)));
             return false;
         }
