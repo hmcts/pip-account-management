@@ -34,7 +34,7 @@ public interface UserRepository extends JpaRepository<PiUser, Long> {
         + " * :daysAgo AND user_provenance = 'PI_AAD' AND roles = 'VERIFIED'", nativeQuery = true)
     List<PiUser> findVerifiedUsersForNotificationByLastVerifiedDate(@Param("daysAgo") int daysSinceLastVerified);
 
-    @Query(value = "SELECT * FROM pi_user WHERE CAST(last_verified_date AS DATE) = CURRENT_DATE - (interval '1' day)"
+    @Query(value = "SELECT * FROM pi_user WHERE CAST(last_verified_date AS DATE) <= CURRENT_DATE - (interval '1' day)"
         + " * :daysAgo AND user_provenance = 'PI_AAD' AND roles = 'VERIFIED'", nativeQuery = true)
     List<PiUser> findVerifiedUsersForDeletionByLastVerifiedDate(@Param("daysAgo") int daysSinceLastVerified);
 
