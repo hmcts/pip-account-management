@@ -40,7 +40,7 @@ public interface UserRepository extends JpaRepository<PiUser, Long> {
 
     @Query(value = "SELECT * FROM pi_user WHERE user_provenance = 'PI_AAD' AND roles <> 'VERIFIED' AND "
         + "CAST(last_signed_in_date AS DATE) = CURRENT_DATE - (interval '1' day) * :aadDays", nativeQuery = true)
-    List<PiUser> findAdminUsersFortNotificationByLastSignedInDate(@Param("aadDays") int aadNumberOfDays);
+    List<PiUser> findAdminUsersForNotificationByLastSignedInDate(@Param("aadDays") int aadNumberOfDays);
 
     @Query(value = "SELECT * FROM pi_user WHERE (user_provenance = 'PI_AAD' AND roles <> 'VERIFIED' AND "
         + "CAST(last_signed_in_date AS DATE) <= CURRENT_DATE - (interval '1' day) * :aadDays) OR "

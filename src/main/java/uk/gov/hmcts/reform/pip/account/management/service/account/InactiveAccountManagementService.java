@@ -78,7 +78,7 @@ public class InactiveAccountManagementService {
      * Then send their details on to publication services to send them a notification email.
      */
     public void notifyAdminUsersToSignIn() {
-        userRepository.findAdminUsersFortNotificationByLastSignedInDate(aadAdminAccountSignInNotificationDays)
+        userRepository.findAdminUsersForNotificationByLastSignedInDate(aadAdminAccountSignInNotificationDays)
             .forEach(user -> {
                 try {
                     publicationService.sendInactiveAccountSignInNotificationEmail(
