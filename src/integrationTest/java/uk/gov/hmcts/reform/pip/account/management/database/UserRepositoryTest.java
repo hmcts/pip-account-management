@@ -120,8 +120,8 @@ class UserRepositoryTest {
     }
 
     @Test
-    void shouldFindVerifiedUsersByLastVerifiedDate() {
-        assertThat(userRepository.findVerifiedUsersByLastVerifiedDate(DAYS))
+    void shouldFindVerifiedUsersForNotificationByLastVerifiedDate() {
+        assertThat(userRepository.findVerifiedUsersForNotificationByLastVerifiedDate(DAYS))
             .as(USER_MATCHED_MESSAGE)
             .hasSize(1)
             .extracting(PiUser::getUserId)
@@ -147,8 +147,8 @@ class UserRepositoryTest {
     }
 
     @Test
-    void shouldFindIdamUsersByLastSignedInDate() {
-        assertThat(userRepository.findIdamUsersByLastSignedInDate(DAYS, DAYS))
+    void shouldFindIdamUsersForNotificationByLastSignedInDate() {
+        assertThat(userRepository.findIdamUsersForNotificationByLastSignedInDate(DAYS, DAYS))
             .as(USER_MATCHED_MESSAGE)
             .hasSize(2)
             .extracting(PiUser::getUserId)
