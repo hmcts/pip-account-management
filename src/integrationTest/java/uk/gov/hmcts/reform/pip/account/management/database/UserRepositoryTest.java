@@ -163,7 +163,7 @@ class UserRepositoryTest {
 
     @Test
     void shouldFindVerifiedUsersForDeletionByLastVerifiedDate() {
-        assertThat(userRepository.findVerifiedUsersForNotificationByLastVerifiedDate(DAYS))
+        assertThat(userRepository.findVerifiedUsersForDeletionByLastVerifiedDate(DAYS))
             .as(USER_MATCHED_MESSAGE)
             .hasSize(2)
             .extracting(PiUser::getUserId)
@@ -199,9 +199,9 @@ class UserRepositoryTest {
 
     @Test
     void shouldFindIdamUsersForDeletionByLastSignedInDate() {
-        assertThat(userRepository.findIdamUsersForNotificationByLastSignedInDate(DAYS, DAYS))
+        assertThat(userRepository.findIdamUsersForDeletionByLastSignedInDate(DAYS, DAYS))
             .as(USER_MATCHED_MESSAGE)
-            .hasSize(2)
+            .hasSize(4)
             .extracting(PiUser::getUserId)
             .containsExactlyInAnyOrder(userId5, userId6, userId7, userId8);
     }
