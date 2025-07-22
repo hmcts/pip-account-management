@@ -58,7 +58,7 @@ public interface UserRepository extends JpaRepository<PiUser, Long> {
 
     @Query(value = "SELECT * FROM pi_user WHERE (CAST(last_signed_in_date AS DATE) <= CURRENT_DATE - (interval '1' day)"
         + " * :cftDaysAgo AND user_provenance = 'CFT_IDAM') "
-        + " OR (CAST(last_signed_in_date AS DATE) = CURRENT_DATE <= (interval '1' day)"
+        + " OR (CAST(last_signed_in_date AS DATE) <= CURRENT_DATE <= (interval '1' day)"
         + " * :crimeDaysAgo AND user_provenance = 'CRIME_IDAM') ", nativeQuery = true)
     List<PiUser> findIdamUsersForDeletionByLastSignedInDate(@Param("cftDaysAgo") int cftDaysSinceLastSignedIn,
                                                             @Param("crimeDaysAgo") int crimeDaysSinceLastSignedIn);
