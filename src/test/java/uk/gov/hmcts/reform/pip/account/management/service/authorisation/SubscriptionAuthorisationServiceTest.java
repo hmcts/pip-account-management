@@ -2,6 +2,7 @@ package uk.gov.hmcts.reform.pip.account.management.service.authorisation;
 
 import nl.altindag.log.LogCaptor;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -21,6 +22,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -96,12 +98,16 @@ class SubscriptionAuthorisationServiceTest {
         subscription3.setId(SUBSCRIPTION_ID3);
     }
 
+    @BeforeEach
+    void setupEach() {
+        lenient().when(authorisationCommonService.hasOAuthAdminRole()).thenReturn(true);
+    }
+
     @ParameterizedTest
     @EnumSource(Roles.class)
     void testSystemAdminUserCanViewSubscriptions(Roles role) {
         adminUser.setRoles(SYSTEM_ADMIN);
         user.setRoles(role);
-        when(authorisationCommonService.hasOAuthAdminRole()).thenReturn(true);
         when(authorisationCommonService.isSystemAdmin(ADMIN_USER_ID)).thenReturn(true);
 
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionAuthorisationService.class)) {
@@ -197,10 +203,17 @@ class SubscriptionAuthorisationServiceTest {
     }
 
     @Test
+    void testUserCannotViewSubscriptionIfNoOAuthAdminRole() {
+        when(authorisationCommonService.hasOAuthAdminRole()).thenReturn(false);
+        assertThat(subscriptionAuthorisationService.userCanViewSubscriptions(ADMIN_USER_ID, USER_ID))
+            .as(CANNOT_VIEW_SUBSCRIPTION_MESSAGE)
+            .isFalse();
+    }
+
+    @Test
     void testSystemAdminUserCanDeleteSubscription() {
         adminUser.setRoles(SYSTEM_ADMIN);
 
-        when(authorisationCommonService.hasOAuthAdminRole()).thenReturn(true);
         when(authorisationCommonService.isSystemAdmin(ADMIN_USER_ID)).thenReturn(true);
 
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionAuthorisationService.class)) {
@@ -295,6 +308,14 @@ class SubscriptionAuthorisationServiceTest {
         }
     }
 
+    @Test
+    void testUserCannotDeleteSubscriptionIfNoOAuthAdminRole() {
+        when(authorisationCommonService.hasOAuthAdminRole()).thenReturn(false);
+        assertThat(subscriptionAuthorisationService.userCanDeleteSubscriptions(USER_ID, SUBSCRIPTION_ID))
+            .as(CANNOT_DELETE_SUBSCRIPTION_MESSAGE)
+            .isFalse();
+    }
+
     @ParameterizedTest
     @MethodSource("uk.gov.hmcts.reform.pip.model.account.Roles#getAllVerifiedRoles")
     void testVerifiedUserCanAddSubscriptionToTheirAccount(Roles role) {
@@ -375,7 +396,6 @@ class SubscriptionAuthorisationServiceTest {
         user.setRoles(role);
         subscription.setUserId(USER_ID);
         when(accountService.getUserById(USER_ID)).thenReturn(user);
-        when(authorisationCommonService.hasOAuthAdminRole()).thenReturn(true);
         when(authorisationCommonService.isSystemAdmin(ADMIN_USER_ID)).thenReturn(true);
 
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionAuthorisationService.class)) {
@@ -446,6 +466,14 @@ class SubscriptionAuthorisationServiceTest {
         }
     }
 
+    @Test
+    void testUserCannotAddSubscriptionIfNoOAuthAdminRole() {
+        when(authorisationCommonService.hasOAuthAdminRole()).thenReturn(false);
+        assertThat(subscriptionAuthorisationService.userCanAddSubscriptions(ADMIN_USER_ID, subscription))
+            .as(CANNOT_ADD_SUBSCRIPTION_MESSAGE)
+            .isFalse();
+    }
+
     @ParameterizedTest
     @MethodSource("uk.gov.hmcts.reform.pip.model.account.Roles#getAllVerifiedRoles")
     void testVerifiedUserCanBulkDeleteTheirOwnSubscriptions(Roles role) {
@@ -479,6 +507,7 @@ class SubscriptionAuthorisationServiceTest {
         subscription.setUserId(USER_ID);
         subscription2.setUserId(ANOTHER_USER_ID);
         subscription3.setUserId(USER_ID);
+
         when(accountService.getUserById(USER_ID)).thenReturn(user);
         when(subscriptionRepository.findById(SUBSCRIPTION_ID)).thenReturn(Optional.of(subscription));
         when(subscriptionRepository.findById(SUBSCRIPTION_ID2)).thenReturn(Optional.of(subscription2));
@@ -514,7 +543,7 @@ class SubscriptionAuthorisationServiceTest {
         user.setRoles(role);
         subscription.setUserId(USER_ID);
         subscription2.setUserId(USER_ID);
-        subscription3.setUserId(USER_ID);
+
         when(accountService.getUserById(USER_ID)).thenReturn(user);
 
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionAuthorisationService.class)) {
@@ -537,9 +566,17 @@ class SubscriptionAuthorisationServiceTest {
     }
 
     @Test
+    void testUserCannotBulkDeleteSubscriptionsIfNoOAuthAdminRole() {
+        when(authorisationCommonService.hasOAuthAdminRole()).thenReturn(false);
+        assertThat(subscriptionAuthorisationService.userCanBulkDeleteSubscriptions(
+            USER_ID, List.of(SUBSCRIPTION_ID, SUBSCRIPTION_ID2, SUBSCRIPTION_ID3)))
+            .as(CANNOT_DELETE_SUBSCRIPTION_MESSAGE)
+            .isFalse();
+    }
+
+    @Test
     void testUserCanDeleteSubscriptionReturnsTrueIfSubscriptionNotFound() {
         user.setRoles(SYSTEM_ADMIN);
-        when(authorisationCommonService.hasOAuthAdminRole()).thenReturn(true);
         when(authorisationCommonService.isSystemAdmin(USER_ID)).thenReturn(true);
 
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionAuthorisationService.class)) {
@@ -618,6 +655,14 @@ class SubscriptionAuthorisationServiceTest {
         }
     }
 
+    @Test
+    void testUserCannotUpdateSubscriptionIfNoOAuthAdminRole() {
+        when(authorisationCommonService.hasOAuthAdminRole()).thenReturn(false);
+        assertThat(subscriptionAuthorisationService.userCanUpdateSubscriptions(USER_ID, USER_ID))
+            .as(CANNOT_UPDATE_SUBSCRIPTION_MESSAGE)
+            .isFalse();
+    }
+
     @ParameterizedTest
     @MethodSource("uk.gov.hmcts.reform.pip.model.account.Roles#getAllThirdPartyRoles")
     void testSystemAdminUserCanDeleteLocationSubscriptionsForThirdPartyAccount(Roles role) {
@@ -625,14 +670,13 @@ class SubscriptionAuthorisationServiceTest {
         user.setRoles(role);
         subscription.setUserId(USER_ID);
         when(accountService.getUserById(USER_ID)).thenReturn(user);
-        when(authorisationCommonService.hasOAuthAdminRole()).thenReturn(true);
         when(authorisationCommonService.isSystemAdmin(ADMIN_USER_ID)).thenReturn(true);
         when(subscriptionRepository.findSubscriptionsByLocationId("123"))
             .thenReturn(List.of(subscription));
 
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionAuthorisationService.class)) {
             assertThat(subscriptionAuthorisationService.userCanDeleteLocationSubscriptions(ADMIN_USER_ID, 123))
-                .as(CAN_ADD_SUBSCRIPTION_MESSAGE)
+                .as(CAN_DELETE_SUBSCRIPTION_MESSAGE)
                 .isTrue();
 
             assertThat(logCaptor.getErrorLogs())
@@ -650,7 +694,7 @@ class SubscriptionAuthorisationServiceTest {
 
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionAuthorisationService.class)) {
             assertThat(subscriptionAuthorisationService.userCanDeleteLocationSubscriptions(ADMIN_USER_ID, 123))
-                .as(CANNOT_ADD_SUBSCRIPTION_MESSAGE)
+                .as(CANNOT_DELETE_SUBSCRIPTION_MESSAGE)
                 .isFalse();
 
             assertThat(logCaptor.getErrorLogs())
@@ -679,13 +723,12 @@ class SubscriptionAuthorisationServiceTest {
         user.setRoles(role);
         subscription.setUserId(USER_ID);
         when(accountService.getUserById(USER_ID)).thenReturn(user);
-        when(authorisationCommonService.hasOAuthAdminRole()).thenReturn(true);
         when(authorisationCommonService.isSystemAdmin(ADMIN_USER_ID)).thenReturn(true);
         when(subscriptionRepository.findSubscriptionsByLocationId("123"))
             .thenReturn(List.of(subscription));
 
         assertThat(subscriptionAuthorisationService.userCanDeleteLocationSubscriptions(ADMIN_USER_ID, 123))
-            .as(CANNOT_ADD_SUBSCRIPTION_MESSAGE)
+            .as(CANNOT_DELETE_SUBSCRIPTION_MESSAGE)
             .isFalse();
 
         verify(subscriptionRepository, never()).deleteByIdIn(List.of(subscription.getId()));
@@ -697,11 +740,10 @@ class SubscriptionAuthorisationServiceTest {
         adminUser.setRoles(INTERNAL_ADMIN_CTSC);
         user.setRoles(role);
         subscription.setUserId(USER_ID);
-        when(authorisationCommonService.hasOAuthAdminRole()).thenReturn(true);
 
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionAuthorisationService.class)) {
             assertThat(subscriptionAuthorisationService.userCanDeleteLocationSubscriptions(ADMIN_USER_ID, 123))
-                .as(CAN_ADD_SUBSCRIPTION_MESSAGE)
+                .as(CANNOT_DELETE_SUBSCRIPTION_MESSAGE)
                 .isFalse();
 
             assertThat(logCaptor.getErrorLogs())
@@ -712,7 +754,13 @@ class SubscriptionAuthorisationServiceTest {
         }
     }
 
-    /// /////////////////////////////////////////////
+    @Test
+    void testUserCannotDeleteLocationSubscriptionIfNoOAuthAdminRole() {
+        when(authorisationCommonService.hasOAuthAdminRole()).thenReturn(false);
+        assertThat(subscriptionAuthorisationService.userCanDeleteLocationSubscriptions(ADMIN_USER_ID, 123))
+            .as(CANNOT_DELETE_SUBSCRIPTION_MESSAGE)
+            .isFalse();
+    }
 
     @ParameterizedTest
     @MethodSource("uk.gov.hmcts.reform.pip.model.account.Roles#getAllThirdPartyRoles")
@@ -720,7 +768,6 @@ class SubscriptionAuthorisationServiceTest {
         adminUser.setRoles(SYSTEM_ADMIN);
         user.setRoles(role);
         when(accountService.getUserById(USER_ID)).thenReturn(user);
-        when(authorisationCommonService.hasOAuthAdminRole()).thenReturn(true);
         when(authorisationCommonService.isSystemAdmin(ADMIN_USER_ID)).thenReturn(true);
 
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionAuthorisationService.class)) {
@@ -768,7 +815,6 @@ class SubscriptionAuthorisationServiceTest {
         adminUser.setRoles(SYSTEM_ADMIN);
         user.setRoles(role);
         when(accountService.getUserById(USER_ID)).thenReturn(user);
-        when(authorisationCommonService.hasOAuthAdminRole()).thenReturn(true);
         when(authorisationCommonService.isSystemAdmin(ADMIN_USER_ID)).thenReturn(true);
 
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionAuthorisationService.class)) {
@@ -791,7 +837,6 @@ class SubscriptionAuthorisationServiceTest {
     void testUserCanNotGetSubscriptionChannelsForThirdPartyAccountWhenNotSystemAdmin(Roles role) {
         adminUser.setRoles(INTERNAL_ADMIN_CTSC);
         user.setRoles(role);
-        when(authorisationCommonService.hasOAuthAdminRole()).thenReturn(true);
 
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionAuthorisationService.class)) {
             assertThat(subscriptionAuthorisationService.userCanRetrieveChannels(ADMIN_USER_ID, USER_ID))
@@ -808,5 +853,11 @@ class SubscriptionAuthorisationServiceTest {
         }
     }
 
-
+    @Test
+    void testUserCannotGetSubscriptionChannelIfNoOAuthAdminRole() {
+        when(authorisationCommonService.hasOAuthAdminRole()).thenReturn(false);
+        assertThat(subscriptionAuthorisationService.userCanRetrieveChannels(ADMIN_USER_ID, USER_ID))
+            .as(CANNOT_GET_CHANNELS_MESSAGE)
+            .isFalse();
+    }
 }
