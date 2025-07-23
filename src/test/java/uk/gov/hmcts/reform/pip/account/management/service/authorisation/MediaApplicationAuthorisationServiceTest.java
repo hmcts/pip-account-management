@@ -43,7 +43,7 @@ class MediaApplicationAuthorisationServiceTest {
 
     @BeforeEach
     void beforeEachSetup() {
-        when(authorisationCommonService.isAdmin()).thenReturn(true);
+        when(authorisationCommonService.hasOAuthAdminRole()).thenReturn(true);
     }
 
     @BeforeAll
@@ -63,7 +63,7 @@ class MediaApplicationAuthorisationServiceTest {
     @Test
     void testSystemAdminUserCanNotBulkCreateMediaAccountsWhenNotLoggedIn() {
         adminUser.setRoles(SYSTEM_ADMIN);
-        when(authorisationCommonService.isAdmin()).thenReturn(false);
+        when(authorisationCommonService.hasOAuthAdminRole()).thenReturn(false);
 
         assertFalse(mediaApplicationAuthorisationService.userCanBulkCreateMediaAccounts(ADMIN_USER_ID));
     }
@@ -80,7 +80,7 @@ class MediaApplicationAuthorisationServiceTest {
     void testAdminCtscUserCanViewMediaApplications() {
         adminUser.setRoles(INTERNAL_ADMIN_CTSC);
         when(accountService.getUserById(ADMIN_USER_ID)).thenReturn(adminUser);
-        when(authorisationCommonService.isAdmin()).thenReturn(true);
+        when(authorisationCommonService.hasOAuthAdminRole()).thenReturn(true);
 
         assertTrue(mediaApplicationAuthorisationService.userCanViewMediaApplications(ADMIN_USER_ID));
     }
@@ -98,7 +98,7 @@ class MediaApplicationAuthorisationServiceTest {
     @EnumSource(Roles.class)
     void testUserCanNotViewMediaApplicationsWhenNotLoggedIn(Roles role) {
         user.setRoles(role);
-        when(authorisationCommonService.isAdmin()).thenReturn(false);
+        when(authorisationCommonService.hasOAuthAdminRole()).thenReturn(false);
 
         assertFalse(mediaApplicationAuthorisationService.userCanViewMediaApplications(USER_ID));
     }
@@ -107,7 +107,7 @@ class MediaApplicationAuthorisationServiceTest {
     void testAdminCtscUserCanUpdateMediaApplications() {
         adminUser.setRoles(INTERNAL_ADMIN_CTSC);
         when(accountService.getUserById(ADMIN_USER_ID)).thenReturn(adminUser);
-        when(authorisationCommonService.isAdmin()).thenReturn(true);
+        when(authorisationCommonService.hasOAuthAdminRole()).thenReturn(true);
 
         assertTrue(mediaApplicationAuthorisationService.userCanUpdateMediaApplications(ADMIN_USER_ID));
     }
@@ -125,7 +125,7 @@ class MediaApplicationAuthorisationServiceTest {
     @EnumSource(Roles.class)
     void testUserCanNotUpdateMediaApplicationsWhenNotLoggedIn(Roles role) {
         user.setRoles(role);
-        when(authorisationCommonService.isAdmin()).thenReturn(false);
+        when(authorisationCommonService.hasOAuthAdminRole()).thenReturn(false);
 
         assertFalse(mediaApplicationAuthorisationService.userCanUpdateMediaApplications(USER_ID));
     }

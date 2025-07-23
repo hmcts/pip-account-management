@@ -35,7 +35,7 @@ public class AccountAuthorisationService {
     }
 
     public boolean userCanCreateAccount(UUID adminUserId, List<PiUser> users) {
-        if (!authorisationCommonService.isAdmin()) {
+        if (!authorisationCommonService.hasOAuthAdminRole()) {
             return false;
         }
 
@@ -70,7 +70,7 @@ public class AccountAuthorisationService {
             return false;
         }
 
-        if (!authorisationCommonService.isAdmin()
+        if (!authorisationCommonService.hasOAuthAdminRole()
             || !authorisationCommonService.isSystemAdmin(adminUserId)
             || adminUserId.equals(userId)) {
             log.error(writeLog(String.format("User with ID %s is not authorised to delete this account", adminUserId)));
@@ -81,7 +81,7 @@ public class AccountAuthorisationService {
 
     public boolean userCanUpdateAccount(UUID userId, UUID adminUserId) {
 
-        if (!authorisationCommonService.isAdmin()) {
+        if (!authorisationCommonService.hasOAuthAdminRole()) {
             return false;
         }
 
@@ -103,7 +103,7 @@ public class AccountAuthorisationService {
     }
 
     public boolean userCanCreateSystemAdmin(UUID userId) {
-        if (!authorisationCommonService.isAdmin()) {
+        if (!authorisationCommonService.hasOAuthAdminRole()) {
             return false;
         }
 
@@ -119,7 +119,7 @@ public class AccountAuthorisationService {
     }
 
     public boolean userCanViewAccounts(UUID userId) {
-        if (!(authorisationCommonService.isAdmin() && authorisationCommonService.isSystemAdmin(userId))) {
+        if (!(authorisationCommonService.hasOAuthAdminRole() && authorisationCommonService.isSystemAdmin(userId))) {
             log.error(writeLog(String.format("User with ID %s is not authorised to view accounts", userId)));
             return false;
         }
@@ -127,7 +127,7 @@ public class AccountAuthorisationService {
     }
 
     public boolean userCanBulkCreateMediaAccounts(UUID userId) {
-        if (!(authorisationCommonService.isAdmin() && authorisationCommonService.isSystemAdmin(userId))) {
+        if (!(authorisationCommonService.hasOAuthAdminRole() && authorisationCommonService.isSystemAdmin(userId))) {
             log.error(writeLog(String.format("User with ID %s is not authorised to create these accounts", userId)));
             return false;
         }
@@ -135,7 +135,7 @@ public class AccountAuthorisationService {
     }
 
     public boolean userCanCreateAzureAccount(UUID userId) {
-        if (!(authorisationCommonService.isAdmin() && isAdminCtsc(userId))) {
+        if (!(authorisationCommonService.hasOAuthAdminRole() && isAdminCtsc(userId))) {
             log.error(writeLog(String.format("User with ID %s is not authorised to create azure accounts", userId)));
             return false;
         }

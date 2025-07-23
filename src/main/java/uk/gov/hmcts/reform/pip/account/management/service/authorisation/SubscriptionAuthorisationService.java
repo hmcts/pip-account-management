@@ -34,44 +34,46 @@ public class SubscriptionAuthorisationService {
         return Roles.getAllVerifiedRoles().contains(user.getRoles());
     }
 
-    public boolean userCanAddSubscriptions(UUID userId, Subscription subscription) {
+    public boolean userCanAddSubscriptions(UUID requesterId, Subscription subscription) {
         UUID subscriptionId = subscription.getId();
 
-        boolean isSystemAdminAddingThirdParty = authorisationCommonService.isAdmin()
-            && authorisationCommonService.isSystemAdmin(userId)
+        boolean isSystemAdminAddingThirdParty = authorisationCommonService.isSystemAdmin(requesterId)
             && isThirdPartySubscription(subscription);
 
-        boolean isVerifiedMatchingUser = isVerifiedUser(userId)
-            && isSubscriptionUserMatch(subscriptionId, userId);
+        boolean isVerifiedMatchingUser = isVerifiedUser(requesterId)
+            && isSubscriptionUserMatch(subscriptionId, requesterId);
 
-        if (isSystemAdminAddingThirdParty || isVerifiedMatchingUser) {
+        if (authorisationCommonService.hasOAuthAdminRole()
+            && (isSystemAdminAddingThirdParty || isVerifiedMatchingUser)) {
             return true;
         }
 
         log.error(writeLog(String.format("User with ID %s is not authorised to add subscription with ID %s",
-                                         userId, subscriptionId)));
+                                         requesterId, subscriptionId)));
         return false;
     }
 
     public boolean userCanDeleteSubscriptions(UUID requesterId, UUID... subscriptionIds) {
-        if (authorisationCommonService.isAdmin() && authorisationCommonService.isSystemAdmin(requesterId)) {
+        boolean isVerifiedMatchingUsersAllMatched = isVerifiedUser(requesterId)
+            && Arrays.stream(subscriptionIds).allMatch(id -> isSubscriptionUserMatch(id, requesterId));
+
+        if (authorisationCommonService.hasOAuthAdminRole()
+            && (authorisationCommonService.isSystemAdmin(requesterId) || isVerifiedMatchingUsersAllMatched)) {
             return true;
         }
-        if (isVerifiedUser(requesterId) && Arrays.stream(subscriptionIds)
-            .allMatch(id -> isSubscriptionUserMatch(id, requesterId))) {
-            return true;
-        }
+
         log.error(writeLog(String.format("User with ID %s is not authorised to remove these subscriptions",
                                          requesterId)));
         return false;
     }
 
     public boolean userCanDeleteLocationSubscriptions(UUID requesterId, Integer locationId) {
-        if (!authorisationCommonService.isAdmin()
+        if (!authorisationCommonService.hasOAuthAdminRole()
             || !authorisationCommonService.isSystemAdmin(requesterId)
             || locationId == null) {
-            log.error(writeLog(String.format("User with ID %s is not authorised to remove these subscriptions",
-                                             requesterId)));
+            log.error(writeLog(
+                String.format("User with ID %s is not authorised to remove these subscriptions", requesterId)
+            ));
             return false;
         }
 
@@ -80,46 +82,55 @@ public class SubscriptionAuthorisationService {
     }
 
     public boolean userCanBulkDeleteSubscriptions(UUID requesterId, List<UUID> subscriptionIds) {
-        if (isVerifiedUser(requesterId)
+        if (authorisationCommonService.hasOAuthAdminRole()
+            && isVerifiedUser(requesterId)
             && subscriptionIds.stream().allMatch(id -> isSubscriptionUserMatch(id, requesterId))) {
             return true;
         }
-        log.error(writeLog(String.format("User with ID %s is not authorised to remove these subscriptions",
-                                         requesterId)));
+        log.error(writeLog(
+            String.format("User with ID %s is not authorised to remove these subscriptions", requesterId)
+        ));
         return false;
     }
 
     public boolean userCanViewSubscriptions(UUID requesterId, UUID userId) {
-        if (authorisationCommonService.isAdmin() && authorisationCommonService.isSystemAdmin(requesterId)) {
+        boolean isVerifiedUserMatched = isVerifiedUser(requesterId) && requesterId.equals(userId);
+
+        if (authorisationCommonService.hasOAuthAdminRole()
+            && (authorisationCommonService.isSystemAdmin(requesterId) || isVerifiedUserMatched)) {
             return true;
         }
-        if (isVerifiedUser(requesterId) && requesterId.equals(userId)) {
-            return true;
-        }
-        log.error(writeLog(String.format("User with ID %s is not authorised to view these subscriptions",
-                                         requesterId)));
+
+        log.error(writeLog(
+            String.format("User with ID %s is not authorised to view these subscriptions", requesterId)
+        ));
         return false;
     }
 
     public boolean userCanUpdateSubscriptions(UUID requesterId, UUID userId) {
-        if (!(isVerifiedUser(requesterId) && requesterId.equals(userId))) {
-            log.error(writeLog(String.format("User with ID %s is not authorised to update subscriptions for user with "
-                                                 + "ID %s", requesterId, userId)));
-            return false;
+        if (authorisationCommonService.hasOAuthAdminRole()
+            && isVerifiedUser(requesterId)
+            && requesterId.equals(userId)) {
+            return true;
         }
-        return true;
+
+        log.error(writeLog(
+            String.format("User with ID %s is not authorised to update subscriptions for user with ID %s",
+                          requesterId, userId)
+        ));
+        return false;
     }
 
     public boolean userCanRetrieveChannels(UUID requesterId, UUID userId) {
-        if (authorisationCommonService.isAdmin()
+        if (authorisationCommonService.hasOAuthAdminRole()
             && authorisationCommonService.isSystemAdmin(requesterId)
             && isThirdParty(userId)) {
             return true;
         }
 
-        log.error(writeLog(String.format("User with ID %s is not authorised to retrieve these channels",
-            requesterId)));
-
+        log.error(writeLog(
+            String.format("User with ID %s is not authorised to retrieve these channels", requesterId)
+        ));
         return false;
     }
 

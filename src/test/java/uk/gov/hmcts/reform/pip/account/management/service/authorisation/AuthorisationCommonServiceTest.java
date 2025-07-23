@@ -99,7 +99,7 @@ class AuthorisationCommonServiceTest {
         when(accountService.getUserById(ADMIN_USER_ID)).thenReturn(adminUser);
 
         assertTrue(authorisationCommonService.isSystemAdmin(ADMIN_USER_ID));
-        assertTrue(authorisationCommonService.isAdmin());
+        assertTrue(authorisationCommonService.hasOAuthAdminRole());
     }
 
     @Test
@@ -109,7 +109,7 @@ class AuthorisationCommonServiceTest {
         when(accountService.getUserById(ADMIN_USER_ID)).thenReturn(adminUser);
 
         assertTrue(authorisationCommonService.isSystemAdmin(ADMIN_USER_ID));
-        assertFalse(authorisationCommonService.isAdmin());
+        assertFalse(authorisationCommonService.hasOAuthAdminRole());
     }
 
     @Test
@@ -119,7 +119,7 @@ class AuthorisationCommonServiceTest {
         when(accountService.getUserById(ADMIN_USER_ID)).thenReturn(adminUser);
 
         assertFalse(authorisationCommonService.isSystemAdmin(ADMIN_USER_ID));
-        assertTrue(authorisationCommonService.isAdmin());
+        assertTrue(authorisationCommonService.hasOAuthAdminRole());
     }
 
     @Test
@@ -128,7 +128,7 @@ class AuthorisationCommonServiceTest {
         adminUser.setRoles(VERIFIED);
         when(accountService.getUserById(ADMIN_USER_ID)).thenReturn(adminUser);
 
-        assertFalse(authorisationCommonService.isAdmin());
+        assertFalse(authorisationCommonService.hasOAuthAdminRole());
         assertFalse(authorisationCommonService.isSystemAdmin(ADMIN_USER_ID));
     }
 

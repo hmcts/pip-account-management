@@ -81,7 +81,7 @@ class AccountAuthorisationServiceTest {
 
     @BeforeEach
     void beforeEachSetup() {
-        when(authorisationCommonService.isAdmin()).thenReturn(true);
+        when(authorisationCommonService.hasOAuthAdminRole()).thenReturn(true);
     }
 
     @BeforeAll
@@ -120,7 +120,7 @@ class AccountAuthorisationServiceTest {
         adminUser.setRoles(SYSTEM_ADMIN);
         user.setRoles(VERIFIED);
 
-        when(authorisationCommonService.isAdmin()).thenReturn(false);
+        when(authorisationCommonService.hasOAuthAdminRole()).thenReturn(false);
 
         assertFalse(accountAuthorisationService.userCanDeleteAccount(USER_ID, ADMIN_USER_ID));
     }
@@ -144,7 +144,7 @@ class AccountAuthorisationServiceTest {
     @Test
     void testSystemAdminUserCanNotViewAccountsWhenNotLoggedIn() {
         adminUser.setRoles(SYSTEM_ADMIN);
-        when(authorisationCommonService.isAdmin()).thenReturn(false);
+        when(authorisationCommonService.hasOAuthAdminRole()).thenReturn(false);
 
         assertFalse(accountAuthorisationService.userCanViewAccounts(ADMIN_USER_ID));
     }
@@ -160,7 +160,7 @@ class AccountAuthorisationServiceTest {
     @Test
     void testSystemAdminUserCanNotBulkCreateMediaAccountsWhenNotLoggedIn() {
         adminUser.setRoles(SYSTEM_ADMIN);
-        when(authorisationCommonService.isAdmin()).thenReturn(false);
+        when(authorisationCommonService.hasOAuthAdminRole()).thenReturn(false);
 
         assertFalse(accountAuthorisationService.userCanBulkCreateMediaAccounts(ADMIN_USER_ID));
     }
@@ -195,7 +195,7 @@ class AccountAuthorisationServiceTest {
     void testUserCanNotCreateAzureAccountWhenNotLoggedIn(Roles role) {
         user.setRoles(role);
 
-        when(authorisationCommonService.isAdmin()).thenReturn(false);
+        when(authorisationCommonService.hasOAuthAdminRole()).thenReturn(false);
 
         assertFalse(accountAuthorisationService.userCanCreateAzureAccount(USER_ID));
     }
@@ -240,7 +240,7 @@ class AccountAuthorisationServiceTest {
         adminUser.setRoles(role);
         user.setRoles(GENERAL_THIRD_PARTY);
 
-        when(authorisationCommonService.isAdmin()).thenReturn(false);
+        when(authorisationCommonService.hasOAuthAdminRole()).thenReturn(false);
 
         assertFalse(accountAuthorisationService.userCanCreateAccount(ADMIN_USER_ID, List.of(user)));
     }
@@ -274,7 +274,7 @@ class AccountAuthorisationServiceTest {
         adminUser.setRoles(role);
         user.setRoles(VERIFIED);
         user.setUserProvenance(UserProvenances.PI_AAD);
-        when(authorisationCommonService.isAdmin()).thenReturn(false);
+        when(authorisationCommonService.hasOAuthAdminRole()).thenReturn(false);
 
         assertFalse(accountAuthorisationService.userCanCreateAccount(ADMIN_USER_ID, List.of(user)));
     }
@@ -287,7 +287,7 @@ class AccountAuthorisationServiceTest {
 
         lenient().when(userRepository.findByUserId(ADMIN_USER_ID)).thenReturn(Optional.of(adminUser));
 
-        when(authorisationCommonService.isAdmin()).thenReturn(false);
+        when(authorisationCommonService.hasOAuthAdminRole()).thenReturn(false);
 
         assertThat(accountAuthorisationService.userCanCreateAccount(ADMIN_USER_ID, List.of(user)))
             .as(UNAUTHORIZED_MESSAGE)
@@ -301,7 +301,7 @@ class AccountAuthorisationServiceTest {
         user.setRoles(role);
 
         lenient().when(userRepository.findByUserId(ADMIN_USER_ID)).thenReturn(Optional.of(adminUser));
-        when(authorisationCommonService.isAdmin()).thenReturn(true);
+        when(authorisationCommonService.hasOAuthAdminRole()).thenReturn(true);
 
         assertTrue(accountAuthorisationService.userCanCreateAccount(ADMIN_USER_ID, List.of(user)));
     }
@@ -336,7 +336,7 @@ class AccountAuthorisationServiceTest {
 
         when(userRepository.findByUserId(USER_ID)).thenReturn(Optional.of(user));
         when(userRepository.findByUserId(ADMIN_USER_ID)).thenReturn(Optional.of(adminUser));
-        when(authorisationCommonService.isAdmin()).thenReturn(true);
+        when(authorisationCommonService.hasOAuthAdminRole()).thenReturn(true);
 
         try (LogCaptor logCaptor = LogCaptor.forClass(AccountAuthorisationService.class)) {
             SoftAssertions softly = new SoftAssertions();
@@ -359,7 +359,7 @@ class AccountAuthorisationServiceTest {
         user.setUserProvenance(UserProvenances.PI_AAD);
         adminUser.setRoles(SYSTEM_ADMIN);
 
-        when(authorisationCommonService.isAdmin()).thenReturn(false);
+        when(authorisationCommonService.hasOAuthAdminRole()).thenReturn(false);
 
         SoftAssertions softly = new SoftAssertions();
 
@@ -559,7 +559,7 @@ class AccountAuthorisationServiceTest {
 
         when(userRepository.findByUserId(USER_ID)).thenReturn(Optional.of(user));
         when(userRepository.findByUserId(ADMIN_USER_ID)).thenReturn(Optional.of(adminUser));
-        when(authorisationCommonService.isAdmin()).thenReturn(true);
+        when(authorisationCommonService.hasOAuthAdminRole()).thenReturn(true);
 
         try (LogCaptor logCaptor = LogCaptor.forClass(AccountAuthorisationService.class)) {
             SoftAssertions softly = new SoftAssertions();
@@ -668,7 +668,7 @@ class AccountAuthorisationServiceTest {
 
         when(userRepository.findByUserId(USER_ID)).thenReturn(Optional.of(user));
         when(userRepository.findByUserId(ADMIN_USER_ID)).thenReturn(Optional.of(adminUser));
-        when(authorisationCommonService.isAdmin()).thenReturn(true);
+        when(authorisationCommonService.hasOAuthAdminRole()).thenReturn(true);
 
         try (LogCaptor logCaptor = LogCaptor.forClass(AccountAuthorisationService.class)) {
             SoftAssertions softly = new SoftAssertions();
@@ -852,7 +852,7 @@ class AccountAuthorisationServiceTest {
         user.setRoles(INTERNAL_ADMIN_LOCAL);
 
         when(userRepository.findByUserId(userId)).thenReturn(Optional.of(user));
-        when(authorisationCommonService.isAdmin()).thenReturn(true);
+        when(authorisationCommonService.hasOAuthAdminRole()).thenReturn(true);
 
         try (LogCaptor logCaptor = LogCaptor.forClass(AccountAuthorisationService.class)) {
             assertThat(accountAuthorisationService.userCanCreateSystemAdmin(userId)).isFalse();

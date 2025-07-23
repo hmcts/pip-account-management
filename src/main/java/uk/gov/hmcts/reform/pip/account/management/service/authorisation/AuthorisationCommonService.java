@@ -19,7 +19,7 @@ public class AuthorisationCommonService {
 
     private final AccountService accountService;
 
-    public boolean isAdmin() {
+    public boolean hasOAuthAdminRole() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         return hasAuthority(authentication, "APPROLE_api.request.admin");
     }

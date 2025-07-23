@@ -101,7 +101,7 @@ class SubscriptionAuthorisationServiceTest {
     void testSystemAdminUserCanViewSubscriptions(Roles role) {
         adminUser.setRoles(SYSTEM_ADMIN);
         user.setRoles(role);
-        when(authorisationCommonService.isAdmin()).thenReturn(true);
+        when(authorisationCommonService.hasOAuthAdminRole()).thenReturn(true);
         when(authorisationCommonService.isSystemAdmin(ADMIN_USER_ID)).thenReturn(true);
 
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionAuthorisationService.class)) {
@@ -200,7 +200,7 @@ class SubscriptionAuthorisationServiceTest {
     void testSystemAdminUserCanDeleteSubscription() {
         adminUser.setRoles(SYSTEM_ADMIN);
 
-        when(authorisationCommonService.isAdmin()).thenReturn(true);
+        when(authorisationCommonService.hasOAuthAdminRole()).thenReturn(true);
         when(authorisationCommonService.isSystemAdmin(ADMIN_USER_ID)).thenReturn(true);
 
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionAuthorisationService.class)) {
@@ -375,7 +375,7 @@ class SubscriptionAuthorisationServiceTest {
         user.setRoles(role);
         subscription.setUserId(USER_ID);
         when(accountService.getUserById(USER_ID)).thenReturn(user);
-        when(authorisationCommonService.isAdmin()).thenReturn(true);
+        when(authorisationCommonService.hasOAuthAdminRole()).thenReturn(true);
         when(authorisationCommonService.isSystemAdmin(ADMIN_USER_ID)).thenReturn(true);
 
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionAuthorisationService.class)) {
@@ -539,7 +539,7 @@ class SubscriptionAuthorisationServiceTest {
     @Test
     void testUserCanDeleteSubscriptionReturnsTrueIfSubscriptionNotFound() {
         user.setRoles(SYSTEM_ADMIN);
-        when(authorisationCommonService.isAdmin()).thenReturn(true);
+        when(authorisationCommonService.hasOAuthAdminRole()).thenReturn(true);
         when(authorisationCommonService.isSystemAdmin(USER_ID)).thenReturn(true);
 
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionAuthorisationService.class)) {
@@ -625,7 +625,7 @@ class SubscriptionAuthorisationServiceTest {
         user.setRoles(role);
         subscription.setUserId(USER_ID);
         when(accountService.getUserById(USER_ID)).thenReturn(user);
-        when(authorisationCommonService.isAdmin()).thenReturn(true);
+        when(authorisationCommonService.hasOAuthAdminRole()).thenReturn(true);
         when(authorisationCommonService.isSystemAdmin(ADMIN_USER_ID)).thenReturn(true);
         when(subscriptionRepository.findSubscriptionsByLocationId("123"))
             .thenReturn(List.of(subscription));
@@ -679,7 +679,7 @@ class SubscriptionAuthorisationServiceTest {
         user.setRoles(role);
         subscription.setUserId(USER_ID);
         when(accountService.getUserById(USER_ID)).thenReturn(user);
-        when(authorisationCommonService.isAdmin()).thenReturn(true);
+        when(authorisationCommonService.hasOAuthAdminRole()).thenReturn(true);
         when(authorisationCommonService.isSystemAdmin(ADMIN_USER_ID)).thenReturn(true);
         when(subscriptionRepository.findSubscriptionsByLocationId("123"))
             .thenReturn(List.of(subscription));
@@ -697,7 +697,7 @@ class SubscriptionAuthorisationServiceTest {
         adminUser.setRoles(INTERNAL_ADMIN_CTSC);
         user.setRoles(role);
         subscription.setUserId(USER_ID);
-        when(authorisationCommonService.isAdmin()).thenReturn(true);
+        when(authorisationCommonService.hasOAuthAdminRole()).thenReturn(true);
 
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionAuthorisationService.class)) {
             assertThat(subscriptionAuthorisationService.userCanDeleteLocationSubscriptions(ADMIN_USER_ID, 123))
@@ -720,7 +720,7 @@ class SubscriptionAuthorisationServiceTest {
         adminUser.setRoles(SYSTEM_ADMIN);
         user.setRoles(role);
         when(accountService.getUserById(USER_ID)).thenReturn(user);
-        when(authorisationCommonService.isAdmin()).thenReturn(true);
+        when(authorisationCommonService.hasOAuthAdminRole()).thenReturn(true);
         when(authorisationCommonService.isSystemAdmin(ADMIN_USER_ID)).thenReturn(true);
 
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionAuthorisationService.class)) {
@@ -768,7 +768,7 @@ class SubscriptionAuthorisationServiceTest {
         adminUser.setRoles(SYSTEM_ADMIN);
         user.setRoles(role);
         when(accountService.getUserById(USER_ID)).thenReturn(user);
-        when(authorisationCommonService.isAdmin()).thenReturn(true);
+        when(authorisationCommonService.hasOAuthAdminRole()).thenReturn(true);
         when(authorisationCommonService.isSystemAdmin(ADMIN_USER_ID)).thenReturn(true);
 
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionAuthorisationService.class)) {
@@ -791,7 +791,7 @@ class SubscriptionAuthorisationServiceTest {
     void testUserCanNotGetSubscriptionChannelsForThirdPartyAccountWhenNotSystemAdmin(Roles role) {
         adminUser.setRoles(INTERNAL_ADMIN_CTSC);
         user.setRoles(role);
-        when(authorisationCommonService.isAdmin()).thenReturn(true);
+        when(authorisationCommonService.hasOAuthAdminRole()).thenReturn(true);
 
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionAuthorisationService.class)) {
             assertThat(subscriptionAuthorisationService.userCanRetrieveChannels(ADMIN_USER_ID, USER_ID))

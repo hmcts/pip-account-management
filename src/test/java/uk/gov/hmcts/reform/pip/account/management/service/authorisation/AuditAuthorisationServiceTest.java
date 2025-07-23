@@ -37,7 +37,7 @@ class AuditAuthorisationServiceTest {
 
     @BeforeEach
     void beforeEachSetup() {
-        when(authorisationCommonService.isAdmin()).thenReturn(true);
+        when(authorisationCommonService.hasOAuthAdminRole()).thenReturn(true);
     }
 
     @BeforeAll
@@ -58,7 +58,7 @@ class AuditAuthorisationServiceTest {
     void testSystemAdminUserCanNotViewAuditLogsWhenNotLoggedIn() {
         adminUser.setRoles(SYSTEM_ADMIN);
 
-        when(authorisationCommonService.isAdmin()).thenReturn(false);
+        when(authorisationCommonService.hasOAuthAdminRole()).thenReturn(false);
 
         assertFalse(auditAuthorisationService.userCanViewAuditLogs(ADMIN_USER_ID));
     }
