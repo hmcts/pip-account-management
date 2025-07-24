@@ -36,7 +36,6 @@ import static org.mockito.Mockito.when;
 class SubscriptionControllerTest {
 
     private Subscription mockSubscription;
-    private List<Subscription> mockSubscriptionList;
 
     private static final String SEARCH_VALUE = "193254";
     private static final String STATUS_CODE_MATCH = "Status codes should match";
@@ -163,7 +162,7 @@ class SubscriptionControllerTest {
     @Test
     void testFindByUserId() {
         when(userSubscriptionService.findByUserId(USER_ID)).thenReturn(userSubscription);
-        assertEquals(userSubscription, subscriptionController.findByUserId(USER_ID).getBody(),
+        assertEquals(userSubscription, subscriptionController.findByUserId(USER_ID, USER_ID).getBody(),
                      "Should return users subscriptions"
         );
     }
@@ -171,7 +170,7 @@ class SubscriptionControllerTest {
     @Test
     void testFindByUserIdReturnsOk() {
         when(userSubscriptionService.findByUserId(USER_ID)).thenReturn(userSubscription);
-        assertEquals(HttpStatus.OK, subscriptionController.findByUserId(USER_ID).getStatusCode(),
+        assertEquals(HttpStatus.OK, subscriptionController.findByUserId(USER_ID, USER_ID).getStatusCode(),
                      STATUS_CODE_MATCH
         );
     }

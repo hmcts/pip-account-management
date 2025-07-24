@@ -7,6 +7,7 @@ import com.microsoft.graph.models.UserCollectionResponse;
 import com.microsoft.graph.serviceclient.GraphServiceClient;
 import com.microsoft.graph.users.UsersRequestBuilder;
 import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -23,12 +24,14 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.testcontainers.shaded.org.apache.commons.io.IOUtils;
 import uk.gov.hmcts.reform.pip.account.management.model.account.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredAzureAccount;
+import uk.gov.hmcts.reform.pip.account.management.service.authorisation.AccountAuthorisationService;
 import uk.gov.hmcts.reform.pip.account.management.utils.IntegrationTestBase;
 
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -39,6 +42,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@Slf4j
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("integration")
@@ -49,8 +53,8 @@ class BulkAccountCreationTest extends IntegrationTestBase {
     private static final String ROOT_URL = "/account";
     private static final String BULK_UPLOAD = ROOT_URL + "/media-bulk-upload";
 
-    private static final String ISSUER_ID = "1234-1234-1234-1234";
-    private static final String ISSUER_HEADER = "x-issuer-id";
+    private static final UUID REQUESTER_ID = UUID.randomUUID();
+    private static final String REQUESTER_ID_HEADER = "x-requester-id";
     private static final String MEDIA_LIST = "mediaList";
     private static final String GIVEN_NAME = "Given Name";
 
@@ -69,6 +73,9 @@ class BulkAccountCreationTest extends IntegrationTestBase {
     @Mock
     private UsersRequestBuilder usersRequestBuilder;
 
+    @MockitoBean
+    private AccountAuthorisationService accountAuthorisationService;
+
     @BeforeEach
     void setup() {
         User user = new User();
@@ -86,6 +93,8 @@ class BulkAccountCreationTest extends IntegrationTestBase {
         userCollectionResponse.setValue(new ArrayList<>());
 
         when(usersRequestBuilder.get(any())).thenReturn(userCollectionResponse);
+
+        when(accountAuthorisationService.userCanBulkCreateMediaAccounts(any())).thenReturn(true);
     }
 
     @Test
@@ -97,7 +106,7 @@ class BulkAccountCreationTest extends IntegrationTestBase {
             MockMultipartFile multipartFile = new MockMultipartFile(MEDIA_LIST, IOUtils.toByteArray(inputStream));
 
             MvcResult mvcResult = mockMvc.perform(multipart(BULK_UPLOAD).file(multipartFile)
-                                                      .header(ISSUER_HEADER, ISSUER_ID))
+                                                      .header(REQUESTER_ID_HEADER, REQUESTER_ID))
                 .andExpect(status().isOk()).andReturn();
             Map<CreationEnum, List<?>> users = OBJECT_MAPPER.readValue(
                 mvcResult.getResponse().getContentAsString(),
@@ -119,7 +128,7 @@ class BulkAccountCreationTest extends IntegrationTestBase {
             MockMultipartFile multipartFile = new MockMultipartFile(MEDIA_LIST, IOUtils.toByteArray(inputStream));
 
             MvcResult mvcResult = mockMvc.perform(multipart(BULK_UPLOAD).file(multipartFile)
-                                                      .header(ISSUER_HEADER, ISSUER_ID))
+                                                      .header(REQUESTER_ID_HEADER, REQUESTER_ID))
                 .andExpect(status().isOk()).andReturn();
             Map<CreationEnum, List<?>> users = OBJECT_MAPPER.readValue(
                 mvcResult.getResponse().getContentAsString(),
@@ -131,11 +140,11 @@ class BulkAccountCreationTest extends IntegrationTestBase {
             assertEquals(1, users.get(CreationEnum.ERRORED_ACCOUNTS).size(), MAP_SIZE_MESSAGE);
 
             ErroredAzureAccount returnedInvalidAccount = OBJECT_MAPPER.convertValue(
-                users.get(CreationEnum.ERRORED_ACCOUNTS).get(0), ErroredAzureAccount.class
+                users.get(CreationEnum.ERRORED_ACCOUNTS).getFirst(), ErroredAzureAccount.class
             );
 
             assertEquals("Account has been successfully created, however email has failed to send.",
-                         returnedInvalidAccount.getErrorMessages().get(0), "Message error does not match");
+                         returnedInvalidAccount.getErrorMessages().getFirst(), "Message error does not match");
         }
     }
 
@@ -145,7 +154,8 @@ class BulkAccountCreationTest extends IntegrationTestBase {
             .getResourceAsStream("csv/invalidCsv.txt")) {
             MockMultipartFile csvFile = new MockMultipartFile(MEDIA_LIST, inputStream);
 
-            MvcResult result = mockMvc.perform(multipart(BULK_UPLOAD).file(csvFile).header(ISSUER_HEADER, ISSUER_ID))
+            MvcResult result = mockMvc
+                .perform(multipart(BULK_UPLOAD).file(csvFile).header(REQUESTER_ID_HEADER, REQUESTER_ID))
                 .andExpect(status().isBadRequest()).andReturn();
 
             assertTrue(
@@ -164,7 +174,7 @@ class BulkAccountCreationTest extends IntegrationTestBase {
             MockMultipartFile multipartFile = new MockMultipartFile(MEDIA_LIST, IOUtils.toByteArray(inputStream));
 
             MvcResult mvcResult = mockMvc.perform(multipart(BULK_UPLOAD).file(multipartFile)
-                                                      .header(ISSUER_HEADER, ISSUER_ID))
+                                                      .header(REQUESTER_ID_HEADER, REQUESTER_ID))
                 .andExpect(status().isOk()).andReturn();
             Map<CreationEnum, List<?>> users = OBJECT_MAPPER.readValue(
                 mvcResult.getResponse().getContentAsString(),
@@ -184,7 +194,7 @@ class BulkAccountCreationTest extends IntegrationTestBase {
             MockMultipartFile multipartFile = new MockMultipartFile(MEDIA_LIST, IOUtils.toByteArray(inputStream));
 
             MvcResult mvcResult = mockMvc.perform(multipart(BULK_UPLOAD).file(multipartFile)
-                                                      .header(ISSUER_HEADER, ISSUER_ID))
+                                                      .header(REQUESTER_ID_HEADER, REQUESTER_ID))
                 .andExpect(status().isOk()).andReturn();
             Map<CreationEnum, List<?>> users = OBJECT_MAPPER.readValue(
                 mvcResult.getResponse().getContentAsString(),

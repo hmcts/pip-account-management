@@ -50,7 +50,9 @@ class SubscriptionListTypeControllerTest {
                 String.format("Location list Type successfully added for user %s", USER_ID),
                 HttpStatus.CREATED
             ),
-            subscriptionListTypeController.addListTypesForSubscription(USER_ID.toString(), subscriptionListType),
+            subscriptionListTypeController.addListTypesForSubscription(
+                USER_ID.toString(), USER_ID.toString(), subscriptionListType
+            ),
             RETURNED_SUBSCRIPTION_NOT_MATCHED
         );
     }
@@ -65,7 +67,9 @@ class SubscriptionListTypeControllerTest {
                 String.format("Location list Type successfully updated for user %s", USER_ID),
                 HttpStatus.OK
             ),
-            subscriptionListTypeController.configureListTypesForSubscription(USER_ID.toString(), subscriptionListType),
+            subscriptionListTypeController.configureListTypesForSubscription(
+                USER_ID.toString(), USER_ID.toString(), subscriptionListType
+            ),
             RETURNED_SUBSCRIPTION_NOT_MATCHED
         );
     }
