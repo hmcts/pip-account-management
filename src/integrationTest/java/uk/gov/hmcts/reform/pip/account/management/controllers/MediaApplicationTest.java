@@ -243,8 +243,7 @@ class MediaApplicationTest extends IntegrationTestBase {
     @Test
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testGetApplicationsByStatusUnauthorised() throws Exception {
-        mockMvc.perform(get(GET_STATUS_URL, PENDING_STATUS))
-            .andExpect(status().isForbidden());
+        mockMvc.perform(get(GET_STATUS_URL, PENDING_STATUS)).andExpect(status().isForbidden());
     }
 
     @Test
@@ -426,20 +425,17 @@ class MediaApplicationTest extends IntegrationTestBase {
     @Test
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testDeleteApplicationUnauthorised() throws Exception {
-        mockMvc.perform(delete(DELETE_URL, TEST_ID))
-            .andExpect(status().isForbidden());
+        mockMvc.perform(delete(DELETE_URL, TEST_ID)).andExpect(status().isForbidden());
     }
 
     @Test
     void testReportApplicationsSuccess() throws Exception {
-        mockMvc.perform(post(REPORT_APPLICATIONS_URL))
-            .andExpect(status().isNoContent());
+        mockMvc.perform(post(REPORT_APPLICATIONS_URL)).andExpect(status().isNoContent());
     }
 
     @Test
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testReportApplicationsUnauthorised() throws Exception {
-        mockMvc.perform(post(REPORT_APPLICATIONS_URL))
-            .andExpect(status().isForbidden());
+        mockMvc.perform(post(REPORT_APPLICATIONS_URL)).andExpect(status().isForbidden());
     }
 }

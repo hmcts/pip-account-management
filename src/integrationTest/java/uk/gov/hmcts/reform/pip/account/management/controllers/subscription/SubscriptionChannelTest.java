@@ -35,8 +35,7 @@ class SubscriptionChannelTest extends IntegrationBasicTestBase {
     @DisplayName("Get all channels")
     @Test
     void testGetAllChannels() throws Exception {
-        MvcResult response = mvc.perform(get(SUBSCRIPTION_CHANNEL_URL))
-            .andExpect(status().isOk()).andReturn();
+        MvcResult response = mvc.perform(get(SUBSCRIPTION_CHANNEL_URL)).andExpect(status().isOk()).andReturn();
 
         Channel[] channelsReturned = objectMapper.readValue(
             response.getResponse().getContentAsString(),
