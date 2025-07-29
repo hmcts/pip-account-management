@@ -184,8 +184,8 @@ class AccountTest extends AccountHelperBase {
     @ParameterizedTest
     @CsvSource({
         "SYSTEM_ADMIN,PI_AAD,VERIFIED",
-        "SUPER_ADMIN_CTSC_ROLE_NAME,PI_AAD,INTERNAL_ADMIN_LOCAL",
-        "SUPER_ADMIN_LOCAL_ROLE_NAME,PI_AAD,INTERNAL_ADMIN_LOCAL",
+        "INTERNAL_SUPER_ADMIN_CTSC,PI_AAD,INTERNAL_ADMIN_LOCAL",
+        "INTERNAL_SUPER_ADMIN_LOCAL,PI_AAD,INTERNAL_ADMIN_LOCAL",
         "INTERNAL_ADMIN_LOCAL,SSO,INTERNAL_ADMIN_LOCAL",
     })
     void shouldBeAbleToDeleteAccount(String role, String provenance, String createdUserRole)
@@ -271,8 +271,8 @@ class AccountTest extends AccountHelperBase {
 
     @ParameterizedTest
     @CsvSource({
-        "SUPER_ADMIN_CTSC_ROLE_NAME, PI_AAD",
-        "SUPER_ADMIN_LOCAL_ROLE_NAME, PI_AAD",
+        "INTERNAL_SUPER_ADMIN_CTSC, PI_AAD",
+        "INTERNAL_SUPER_ADMIN_LOCAL, PI_AAD",
         "SYSTEM_ADMIN, PI_AAD",
         "INTERNAL_ADMIN_LOCAL, SSO"
     })
@@ -304,7 +304,7 @@ class AccountTest extends AccountHelperBase {
             createAccount(email, provenanceId, Roles.valueOf(createdRole)));
 
         Map<String, String> headers = new ConcurrentHashMap<>(bearer);
-        headers.put(ADMIN_ID, adminRole);
+        headers.put(ADMIN_ID, idMap.get(Roles.valueOf(adminRole)));
 
         Response updateResponse = doPutRequest(
             String.format(UPDATE_ACCOUNT_ROLE, createdUserId, SUPER_ADMIN_CTSC_ROLE_NAME), headers);
