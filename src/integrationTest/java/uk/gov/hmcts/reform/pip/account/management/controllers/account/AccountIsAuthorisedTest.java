@@ -1,4 +1,4 @@
-package uk.gov.hmcts.reform.pip.account.management.controllers;
+package uk.gov.hmcts.reform.pip.account.management.controllers.account;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -28,12 +28,13 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.springframework.http.HttpStatus.FORBIDDEN;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @WithMockUser(username = "admin", authorities = { "APPROLE_api.request.admin" })
-class SensitivityTest extends IntegrationTestBase {
+class AccountIsAuthorisedTest extends IntegrationTestBase {
 
     @Autowired
     private MockMvc mockMvc;
@@ -44,6 +45,8 @@ class SensitivityTest extends IntegrationTestBase {
     private static final String ISSUER_HEADER = "x-issuer-id";
     private static final String EMAIL = "a@b.com";
     private static final String URL_FORMAT = "%s/isAuthorised/%s/%s/%s";
+    private static final String UNAUTHORIZED_ROLE = "APPROLE_unknown.authorized";
+    private static final String UNAUTHORIZED_USERNAME = "unauthorized_isAuthorized";
 
     private static final String TRUE_MESSAGE = "Should return true";
     private static final String FALSE_MESSAGE = "Should return false";
@@ -176,6 +179,17 @@ class SensitivityTest extends IntegrationTestBase {
 
         MvcResult response = callIsAuthorised(user, Sensitivity.CLASSIFIED);
         assertFalse(Boolean.parseBoolean(response.getResponse().getContentAsString()), FALSE_MESSAGE);
+    }
+
+    @Test
+    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
+    void testUnauthorizedCheckUserAuthorised() throws Exception {
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+            .get(String.format("%s/isAuthorised/%s/%s/%s", ROOT_URL, UUID.randomUUID(),
+                               ListType.SJP_PRESS_LIST, Sensitivity.PUBLIC
+            ));
+
+        assertRequestResponseStatus(mockMvc, request, FORBIDDEN.value());
     }
 
     @SuppressWarnings("PMD.SignatureDeclareThrowsException")
