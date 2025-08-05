@@ -91,7 +91,7 @@ class SensitivityTest {
 
     @Test
     void testIsUserAuthenticatedReturnsTrueWhenPublicListAndAdmin() throws Exception {
-        user.setUserProvenance(UserProvenances.PI_AAD);
+        user.setUserProvenance(UserProvenances.SSO);
         user.setRoles(Roles.INTERNAL_ADMIN_CTSC);
 
         MvcResult response = callIsAuthorised(user, Sensitivity.PUBLIC);
@@ -119,7 +119,7 @@ class SensitivityTest {
 
     @Test
     void testIsUserAuthenticatedReturnsFalseWhenPrivateListAndAdmin() throws Exception {
-        user.setUserProvenance(UserProvenances.PI_AAD);
+        user.setUserProvenance(UserProvenances.SSO);
         user.setRoles(Roles.INTERNAL_ADMIN_CTSC);
 
         MvcResult response = callIsAuthorised(user, Sensitivity.PRIVATE);

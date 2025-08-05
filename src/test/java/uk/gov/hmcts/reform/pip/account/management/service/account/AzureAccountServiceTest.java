@@ -324,24 +324,6 @@ class AzureAccountServiceTest {
     }
 
     @Test
-    void testAccountSoftErrored() throws AzureCustomException {
-        when(validator.validate(argThat(sub -> ((AzureAccount) sub).getEmail().equals(azureAccount.getEmail()))))
-            .thenReturn(Set.of());
-
-        when(azureUserService.createUser(argThat(user -> user.getEmail().equals(azureAccount.getEmail())),
-                                         anyBoolean())).thenReturn(expectedUser);
-
-        when(publicationService.sendNotificationEmail(any(), any(), any())).thenReturn(FALSE);
-
-        Map<CreationEnum, List<? extends AzureAccount>> erroredAccounts =
-            azureAccountService.addAzureAccounts(List.of(azureAccount), ISSUER_ID, FALSE, FALSE);
-
-        List<? extends AzureAccount> accounts = erroredAccounts.get(CreationEnum.ERRORED_ACCOUNTS);
-        assertEquals(azureAccount.getEmail(), accounts.get(0).getEmail(), EMAIL_VALIDATION_MESSAGE);
-        assertEquals(ID, azureAccount.getAzureAccountId(), AZURE_ACCOUNT_ERROR);
-    }
-
-    @Test
     void creationOfMultipleAccounts() throws AzureCustomException {
         AzureAccount erroredAzureAccount = new AzureAccount();
         erroredAzureAccount.setEmail(INVALID_EMAIL);

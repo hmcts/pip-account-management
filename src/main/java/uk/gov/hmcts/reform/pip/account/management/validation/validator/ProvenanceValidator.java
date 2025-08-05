@@ -18,7 +18,7 @@ public class ProvenanceValidator implements ConstraintValidator<ValidProvenance,
         if (Roles.VERIFIED.equals(piUser.getRoles())) {
             return !UserProvenances.SSO.equals(piUser.getUserProvenance());
         } else if (Roles.getAllThirdPartyRoles().contains(piUser.getRoles())) {
-            return UserProvenances.PI_AAD.equals(piUser.getUserProvenance());
+            return UserProvenances.THIRD_PARTY.equals(piUser.getUserProvenance());
         }
 
         return UserProvenances.SSO.equals(piUser.getUserProvenance());

@@ -160,7 +160,8 @@ class AzureAccountTest extends IntegrationTestBase {
 
     @Test
     void creationOfValidAccount() throws Exception {
-        when(publicationService.sendNotificationEmail(anyString(), anyString(), anyString())).thenReturn(true);
+        when(publicationService.sendMediaNotificationEmail(anyString(), anyString(), anyBoolean()))
+            .thenReturn(true);
 
         AzureAccount azureAccount = new AzureAccount();
         azureAccount.setEmail(EMAIL);
@@ -206,7 +207,8 @@ class AzureAccountTest extends IntegrationTestBase {
 
     @Test
     void creationOfValidAccountWhenFailedToSendNotificationEmail() throws Exception {
-        when(publicationService.sendNotificationEmail(anyString(), anyString(), anyString())).thenReturn(false);
+        when(publicationService.sendMediaNotificationEmail(anyString(), anyString(), anyBoolean()))
+            .thenReturn(false);
 
         AzureAccount azureAccount = new AzureAccount();
         azureAccount.setEmail(EMAIL);
@@ -547,7 +549,8 @@ class AzureAccountTest extends IntegrationTestBase {
 
     @Test
     void testCreationOfTwoAccountsOneFailOneOK() throws Exception {
-        when(publicationService.sendNotificationEmail(anyString(), anyString(), anyString())).thenReturn(true);
+        when(publicationService.sendMediaNotificationEmail(anyString(), anyString(), anyBoolean()))
+            .thenReturn(true);
 
         User userToReturn = new User();
         userToReturn.setId(ID);

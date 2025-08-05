@@ -75,7 +75,7 @@ class CustomAccountRetrievalTest {
         PiUser user = new PiUser();
         user.setEmail(valid ? EMAIL : INVALID_EMAIL);
         user.setProvenanceUserId(id);
-        user.setUserProvenance(UserProvenances.PI_AAD);
+        user.setUserProvenance(UserProvenances.SSO);
         user.setRoles(Roles.INTERNAL_ADMIN_CTSC);
         user.setForenames(FORENAME);
         user.setSurname(SURNAME);
@@ -123,7 +123,7 @@ class CustomAccountRetrievalTest {
             .as("Returned account MI data must match user object")
             .anyMatch(account -> createdUserId.equals(account.getUserId().toString())
                 && provenanceId.equals(account.getProvenanceUserId())
-                && UserProvenances.PI_AAD.equals(account.getUserProvenance())
+                && UserProvenances.SSO.equals(account.getUserProvenance())
                 && Roles.INTERNAL_ADMIN_CTSC.equals(account.getRoles())
                 && account.getCreatedDate() != null
                 && account.getLastSignedInDate() != null);
