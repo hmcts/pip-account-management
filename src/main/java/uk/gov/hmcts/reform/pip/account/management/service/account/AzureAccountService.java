@@ -26,7 +26,6 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
-import static uk.gov.hmcts.reform.pip.model.account.Roles.VERIFIED;
 
 @Service
 @Slf4j
@@ -89,9 +88,10 @@ public class AzureAccountService {
                     createdAzureAccounts.add(azureAccount);
 
                     log.info(writeLog(issuerId, UserActions.CREATE_ACCOUNT, azureAccount.getAzureAccountId()));
-                    boolean emailSent = handleAccountCreationEmail(azureAccount, user.getGivenName(), isExisting);
-                    checkAndAddToErrorAccount(emailSent, azureAccount, List.of(EMAIL_NOT_SENT_MESSAGE),
-                                              erroredAccounts);
+                    boolean emailSent =  publicationService.sendMediaNotificationEmail(
+                        azureAccount.getEmail(), user.getGivenName(), isExisting);
+                    checkAndAddToErrorAccount(
+                        emailSent, azureAccount, List.of(EMAIL_NOT_SENT_MESSAGE), erroredAccounts);
                 }
             } catch (AzureCustomException azureCustomException) {
                 log.error(writeLog(issuerId, UserActions.CREATE_ACCOUNT, azureAccount.getAzureAccountId()));
@@ -135,8 +135,7 @@ public class AzureAccountService {
         throws AzureCustomException {
         User userAzure = azureUserService.getUser(azureAccount.getEmail());
 
-        if (userAzure != null && !userAzure.getGivenName().isEmpty()
-            && azureAccount.getRole().equals(VERIFIED)) {
+        if (userAzure != null && !userAzure.getGivenName().isEmpty()) {
             boolean emailSent = publicationService.sendNotificationEmailForDuplicateMediaAccount(
                 azureAccount.getEmail(), userAzure.getGivenName());
 
@@ -155,17 +154,5 @@ public class AzureAccountService {
             softErroredAccount.setErrorMessages(errorMessage);
             erroredAccounts.add(softErroredAccount);
         }
-    }
-
-    private boolean handleAccountCreationEmail(AzureAccount createdAccount, String fullName,
-                                               boolean isExisting) {
-        return switch (createdAccount.getRole()) {
-            case INTERNAL_ADMIN_CTSC, INTERNAL_ADMIN_LOCAL, INTERNAL_SUPER_ADMIN_CTSC, INTERNAL_SUPER_ADMIN_LOCAL ->
-                publicationService.sendNotificationEmail(createdAccount.getEmail(),
-                                                         createdAccount.getFirstName(), createdAccount.getSurname());
-            case VERIFIED ->  publicationService.sendMediaNotificationEmail(createdAccount.getEmail(),
-                                                                            fullName, isExisting);
-            default -> false;
-        };
     }
 }

@@ -8,8 +8,6 @@ import nl.altindag.log.LogCaptor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -23,7 +21,6 @@ import uk.gov.hmcts.reform.pip.account.management.model.account.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.account.PiUser;
 import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredAzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.service.PublicationService;
-import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
 
 import java.util.List;
@@ -102,7 +99,6 @@ class AzureAccountServiceTest {
         piUser.setEmail(EMAIL);
 
         azureAccount.setEmail(EMAIL);
-        azureAccount.setRole(Roles.INTERNAL_ADMIN_CTSC);
 
         expectedUser.setGivenName(TEST);
         expectedUser.setId(ID);
@@ -113,39 +109,8 @@ class AzureAccountServiceTest {
         when(path.toString()).thenReturn(EMAIL_PATH);
     }
 
-    @ParameterizedTest
-    @ValueSource(strings = {"INTERNAL_ADMIN_CTSC", "INTERNAL_SUPER_ADMIN_CTSC"})
-    void testAccountCreated(String role) throws AzureCustomException {
-        azureAccount.setRole(Roles.valueOf(role));
-
-        when(validator.validate(argThat(sub -> ((AzureAccount) sub).getEmail().equals(azureAccount.getEmail()))))
-            .thenReturn(Set.of());
-
-        when(azureUserService.getUser(EMAIL)).thenReturn(null);
-
-        when(azureUserService.createUser(argThat(user -> user.getEmail().equals(azureAccount.getEmail())),
-                                         anyBoolean())).thenReturn(expectedUser);
-
-        when(publicationService.sendNotificationEmail(any(), any(), any())).thenReturn(TRUE);
-
-        Map<CreationEnum, List<? extends AzureAccount>> createdAccounts =
-            azureAccountService.addAzureAccounts(List.of(azureAccount), ISSUER_ID, FALSE, FALSE);
-
-        assertTrue(createdAccounts.containsKey(CreationEnum.CREATED_ACCOUNTS), SHOULD_CONTAIN + CREATED_ACCOUNTS_KEY);
-        List<? extends AzureAccount> accounts = createdAccounts.get(CreationEnum.CREATED_ACCOUNTS);
-        assertEquals(azureAccount.getEmail(), accounts.get(0).getEmail(), EMAIL_VALIDATION_MESSAGE);
-        assertEquals(ID, azureAccount.getAzureAccountId(), AZURE_ACCOUNT_ERROR);
-        assertEquals(0, createdAccounts.get(CreationEnum.ERRORED_ACCOUNTS).size(),
-                     "Map should have no errored accounts"
-        );
-
-        verify(azureUserService).createUser(azureAccount, FALSE);
-    }
-
     @Test
     void testVerifiedAccountCreated() throws AzureCustomException {
-        azureAccount.setRole(Roles.VERIFIED);
-
         when(validator.validate(argThat(sub -> ((AzureAccount) sub).getEmail().equals(azureAccount.getEmail()))))
             .thenReturn(Set.of());
 
@@ -174,8 +139,6 @@ class AzureAccountServiceTest {
 
     @Test
     void testVerifiedAccountCreatedWithSuppliedPassword() throws AzureCustomException {
-        azureAccount.setRole(Roles.VERIFIED);
-
         when(validator.validate(argThat(sub -> ((AzureAccount) sub).getEmail().equals(azureAccount.getEmail()))))
             .thenReturn(Set.of());
 
@@ -211,8 +174,6 @@ class AzureAccountServiceTest {
         azUser.setId(ID);
         azUser.setGivenName(FULL_NAME);
 
-        azureAccount.setRole(Roles.VERIFIED);
-
         when(azureUserService.getUser(EMAIL)).thenReturn(azUser);
 
         Map<CreationEnum, List<? extends AzureAccount>> createdAccounts =
@@ -230,8 +191,6 @@ class AzureAccountServiceTest {
         User azUser = new User();
         azUser.setId(ID);
         azUser.setGivenName(FULL_NAME);
-
-        azureAccount.setRole(Roles.VERIFIED);
 
         when(azureUserService.getUser(EMAIL)).thenReturn(azUser);
         when(publicationService.sendNotificationEmailForDuplicateMediaAccount(any(), any())).thenReturn(TRUE);
@@ -252,32 +211,6 @@ class AzureAccountServiceTest {
         User azUser = new User();
         azUser.setId(ID);
         azUser.setGivenName("");
-
-        azureAccount.setRole(Roles.VERIFIED);
-
-        when(azureUserService.getUser(EMAIL)).thenReturn(azUser);
-        when(publicationService.sendNotificationEmailForDuplicateMediaAccount(any(), any())).thenReturn(TRUE);
-        when(azureUserService.createUser(argThat(user -> user.getEmail().equals(azureAccount.getEmail())),
-                                         anyBoolean())).thenReturn(expectedUser);
-        Map<CreationEnum, List<? extends AzureAccount>> createdAccounts =
-            azureAccountService.addAzureAccounts(List.of(azureAccount), ISSUER_ID, FALSE, FALSE);
-
-        assertTrue(createdAccounts.containsKey(CreationEnum.CREATED_ACCOUNTS), SHOULD_CONTAIN
-            + ERRORED_ACCOUNTS_KEY);
-        assertFalse(createdAccounts.containsValue(CreationEnum.CREATED_ACCOUNTS), "Should not contain "
-            + "CREATED_ACCOUNTS value");
-    }
-
-    @Test
-    void testAccountCreatedAlreadyExistsWithNotVerifiedEmail() throws AzureCustomException {
-        when(validator.validate(argThat(sub -> ((AzureAccount) sub).getEmail().equals(azureAccount.getEmail()))))
-            .thenReturn(Set.of());
-
-        User azUser = new User();
-        azUser.setId(ID);
-        azUser.setGivenName(FULL_NAME);
-
-        azureAccount.setRole(Roles.INTERNAL_ADMIN_CTSC);
 
         when(azureUserService.getUser(EMAIL)).thenReturn(azUser);
         when(publicationService.sendNotificationEmailForDuplicateMediaAccount(any(), any())).thenReturn(TRUE);
@@ -339,8 +272,7 @@ class AzureAccountServiceTest {
     }
 
     @Test
-    void testAccountNotCreatedEmailNotSentWhenSystemAdmin() throws AzureCustomException {
-        azureAccount.setRole(Roles.SYSTEM_ADMIN);
+    void testAccountNotCreatedEmailNotSent() throws AzureCustomException {
         when(validator.validate(argThat(sub -> ((AzureAccount) sub).getEmail().equals(azureAccount.getEmail()))))
             .thenReturn(Set.of());
 
@@ -423,7 +355,7 @@ class AzureAccountServiceTest {
         when(azureUserService.createUser(argThat(user -> user.getEmail().equals(azureAccount.getEmail())),
                                          anyBoolean())).thenReturn(expectedUser);
 
-        when(publicationService.sendNotificationEmail(any(), any(), any())).thenReturn(TRUE);
+        when(publicationService.sendMediaNotificationEmail(any(), any(), anyBoolean())).thenReturn(TRUE);
 
         Map<CreationEnum, List<? extends AzureAccount>> createdAccounts =
             azureAccountService.addAzureAccounts(List.of(azureAccount, erroredAzureAccount), ISSUER_ID, FALSE, FALSE);

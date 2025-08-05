@@ -13,6 +13,7 @@ import uk.gov.hmcts.reform.pip.account.management.config.ClientConfiguration;
 import uk.gov.hmcts.reform.pip.account.management.config.UserConfiguration;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.AzureCustomException;
 import uk.gov.hmcts.reform.pip.account.management.model.account.AzureAccount;
+import uk.gov.hmcts.reform.pip.model.account.Roles;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -67,7 +68,7 @@ public class AzureUserService {
         user.setSurname(azureAccount.getSurname());
         user.setAdditionalData(Map.of(
             "extension_" + clientConfiguration.getExtensionId().replace("-", "") + "_UserRole",
-            azureAccount.getRole().toString()));
+            Roles.VERIFIED.toString()));
 
         ObjectIdentity identity = new ObjectIdentity();
         identity.setSignInType(userConfiguration.getSignInType());
@@ -131,25 +132,4 @@ public class AzureUserService {
         }
     }
 
-    /**
-     * Updates an account in the Azure active directory.
-     * @param provenanceUserId The provenanceUserId of the account to update.
-     * @param role The updated role for the user.
-     * @return The update user if it was successful.
-     * @throws AzureCustomException thrown if there is an error with communicating with Azure.
-     */
-    public User updateUserRole(String provenanceUserId, String role) throws AzureCustomException {
-        try {
-            User user = new User();
-            user.setAdditionalData(Map.of(
-                "extension_" + clientConfiguration.getExtensionId().replace("-", "") + "_UserRole",
-                role
-            ));
-
-            return graphClient.users().byUserId(provenanceUserId)
-                .patch(user);
-        } catch (ApiException e) {
-            throw new AzureCustomException("Error when updating account in Azure.");
-        }
-    }
 }

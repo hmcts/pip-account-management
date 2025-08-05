@@ -123,7 +123,6 @@ class SmokeTest extends SmokeTestBase {
         azureAccount.setFirstName(TEST_FIRST_NAME);
         azureAccount.setSurname(TEST_SURNAME);
         azureAccount.setDisplayName(TEST_DISPLAY_NAME);
-        azureAccount.setRole(Roles.VERIFIED);
         azureAccount.setEmail(TEST_EMAIL);
 
         Response response = doPostRequest(CREATE_AZURE_ACCOUNT_URL, Map.of(ISSUER_ID_HEADER, ISSUER_ID),

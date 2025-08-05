@@ -46,7 +46,7 @@ public class AzureAccountController {
     }
 
     /**
-     * POST endpoint to create a new azure account.
+     * POST endpoint to create a new azure account. This is only for the creation of verified accounts.
      * This will also trigger any welcome emails.
      *
      * @param issuerId The id of the user creating the accounts.

@@ -13,7 +13,6 @@ import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.CsvPa
 import uk.gov.hmcts.reform.pip.account.management.model.account.AzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.account.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.account.PiUser;
-import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
 
 import java.io.IOException;
@@ -57,7 +56,6 @@ class BulkAccountCreationServiceTest {
         PI_USER.setEmail(EMAIL);
 
         AZURE_ACCOUNT.setEmail(EMAIL);
-        AZURE_ACCOUNT.setRole(Roles.INTERNAL_ADMIN_CTSC);
     }
 
     @Test
