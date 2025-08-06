@@ -5,12 +5,9 @@ import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -18,6 +15,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import uk.gov.hmcts.reform.pip.account.management.model.account.PiUser;
 import uk.gov.hmcts.reform.pip.account.management.model.account.SystemAdminAccount;
+import uk.gov.hmcts.reform.pip.account.management.utils.IntegrationTestBase;
 
 import java.util.UUID;
 
@@ -26,13 +24,10 @@ import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.FORBIDDEN;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
-@AutoConfigureMockMvc
-@ActiveProfiles("integration")
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @WithMockUser(username = "admin", authorities = {"APPROLE_api.request.admin"})
-class SystemAdminAccountTest {
+class SystemAdminAccountTest extends IntegrationTestBase {
 
     private static final String ROOT_URL = "/account";
     private static final String CREATE_SYSTEM_ADMIN_URL = ROOT_URL + "/system-admin";
@@ -40,7 +35,6 @@ class SystemAdminAccountTest {
     private static final String TEST_SYS_ADMIN_SURNAME = "testSysAdminSurname";
     private static final String TEST_SYS_ADMIN_FIRSTNAME = "testSysAdminFirstname";
     private static final String TEST_SYS_ADMIN_EMAIL = "testSysAdminEmail@justice.gov.uk";
-    private static final String FORBIDDEN_STATUS_CODE = "Status code does not match forbidden";
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
@@ -147,17 +141,12 @@ class SystemAdminAccountTest {
         systemAdmin.setEmail(TEST_SYS_ADMIN_EMAIL);
         systemAdmin.setProvenanceUserId(UUID.randomUUID().toString());
 
-        MockHttpServletRequestBuilder createRequest =
+        MockHttpServletRequestBuilder request =
             MockMvcRequestBuilders
                 .post(CREATE_SYSTEM_ADMIN_URL)
                 .content(OBJECT_MAPPER.writeValueAsString(systemAdmin))
                 .contentType(MediaType.APPLICATION_JSON);
 
-        MvcResult responseCreateSystemAdminUser = mockMvc.perform(createRequest)
-            .andExpect(status().isForbidden()).andReturn();
-
-        assertEquals(FORBIDDEN.value(), responseCreateSystemAdminUser.getResponse().getStatus(),
-                     FORBIDDEN_STATUS_CODE
-        );
+        assertRequestResponseStatus(mockMvc, request, FORBIDDEN.value());
     }
 }
