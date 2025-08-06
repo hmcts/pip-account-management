@@ -269,7 +269,7 @@ class AuthorisationServiceTest {
     }
 
     @Test
-    void testSystemAdminUserCanUpdateAndDeleteSystemAdmin() {
+    void testSystemAdminUserCanDeleteSystemAdmin() {
         setupWithAuth();
         user.setRoles(Roles.SYSTEM_ADMIN);
         user.setUserProvenance(UserProvenances.PI_AAD);
@@ -285,10 +285,6 @@ class AuthorisationServiceTest {
                 .as(CAN_DELETE_ACCOUNT_MESSAGE)
                 .isTrue();
 
-            softly.assertThat(authorisationService.userCanUpdateAccount(USER_ID, ADMIN_USER_ID))
-                .as(CAN_UPDATE_ACCOUNT_MESSAGE)
-                .isTrue();
-
             softly.assertThat(logCaptor.getErrorLogs())
                 .as(LOG_EMPTY_MESSAGE)
                 .isEmpty();
@@ -298,7 +294,7 @@ class AuthorisationServiceTest {
     }
 
     @Test
-    void testSystemAdminUserCannotUpdateAndDeleteSystemAdminWhenUnauthorized() {
+    void testSystemAdminUserCannotDeleteSystemAdminWhenUnauthorized() {
         setupWithoutAuth();
         user.setRoles(Roles.SYSTEM_ADMIN);
         user.setUserProvenance(UserProvenances.PI_AAD);
@@ -310,15 +306,11 @@ class AuthorisationServiceTest {
             .as(UNAUTHORIZED_MESSAGE)
             .isFalse();
 
-        softly.assertThat(authorisationService.userCanUpdateAccount(USER_ID, ADMIN_USER_ID))
-            .as(UNAUTHORIZED_MESSAGE)
-            .isFalse();
-
         softly.assertAll();
     }
 
     @Test
-    void testSystemAdminUserCanUpdateAndDeleteSuperAdmin() {
+    void testSystemAdminUserCanDeleteSuperAdmin() {
         setupWithAuth();
         user.setRoles(Roles.INTERNAL_SUPER_ADMIN_LOCAL);
         user.setUserProvenance(UserProvenances.PI_AAD);
@@ -334,10 +326,6 @@ class AuthorisationServiceTest {
                 .as(CAN_DELETE_ACCOUNT_MESSAGE)
                 .isTrue();
 
-            softly.assertThat(authorisationService.userCanUpdateAccount(USER_ID, ADMIN_USER_ID))
-                .as(CAN_UPDATE_ACCOUNT_MESSAGE)
-                .isTrue();
-
             softly.assertThat(logCaptor.getErrorLogs())
                 .as(LOG_EMPTY_MESSAGE)
                 .isEmpty();
@@ -347,7 +335,7 @@ class AuthorisationServiceTest {
     }
 
     @Test
-    void testSystemAdminUserCanUpdateAndDeleteAdmin() {
+    void testSystemAdminUserCanDeleteAdmin() {
         setupWithAuth();
         user.setRoles(Roles.INTERNAL_ADMIN_CTSC);
         user.setUserProvenance(UserProvenances.PI_AAD);
@@ -363,10 +351,6 @@ class AuthorisationServiceTest {
                 .as(CAN_DELETE_ACCOUNT_MESSAGE)
                 .isTrue();
 
-            softly.assertThat(authorisationService.userCanUpdateAccount(USER_ID, ADMIN_USER_ID))
-                .as(CAN_UPDATE_ACCOUNT_MESSAGE)
-                .isTrue();
-
             softly.assertThat(logCaptor.getErrorLogs())
                 .as(LOG_EMPTY_MESSAGE)
                 .isEmpty();
@@ -376,7 +360,7 @@ class AuthorisationServiceTest {
     }
 
     @Test
-    void testSystemAdminUserCanUpdateAndDeleteVerifiedAccount() {
+    void testSystemAdminUserCanDeleteVerifiedAccount() {
         setupWithAuth();
         user.setRoles(Roles.VERIFIED);
         user.setUserProvenance(UserProvenances.PI_AAD);
@@ -392,10 +376,6 @@ class AuthorisationServiceTest {
                 .as(CAN_DELETE_ACCOUNT_MESSAGE)
                 .isTrue();
 
-            softly.assertThat(authorisationService.userCanUpdateAccount(USER_ID, ADMIN_USER_ID))
-                .as(CAN_UPDATE_ACCOUNT_MESSAGE)
-                .isTrue();
-
             softly.assertThat(logCaptor.getErrorLogs())
                 .as(LOG_EMPTY_MESSAGE)
                 .isEmpty();
@@ -405,7 +385,7 @@ class AuthorisationServiceTest {
     }
 
     @Test
-    void testSystemAdminUserCanUpdateAndDeleteThirdPartyAccount() {
+    void testSystemAdminUserCanDeleteThirdPartyAccount() {
         setupWithAuth();
         user.setRoles(Roles.VERIFIED_THIRD_PARTY_ALL);
         user.setUserProvenance(UserProvenances.PI_AAD);
@@ -421,10 +401,6 @@ class AuthorisationServiceTest {
                 .as(CAN_DELETE_ACCOUNT_MESSAGE)
                 .isTrue();
 
-            softly.assertThat(authorisationService.userCanUpdateAccount(USER_ID, ADMIN_USER_ID))
-                .as(CAN_UPDATE_ACCOUNT_MESSAGE)
-                .isTrue();
-
             softly.assertThat(logCaptor.getErrorLogs())
                 .as(LOG_EMPTY_MESSAGE)
                 .isEmpty();
@@ -434,7 +410,7 @@ class AuthorisationServiceTest {
     }
 
     @Test
-    void testSuperAdminUserCanUpdateAndDeleteSuperAdmin() {
+    void testSuperAdminUserCannotUpdateAndDeleteSuperAdmin() {
         setupWithAuth();
         user.setRoles(Roles.INTERNAL_SUPER_ADMIN_CTSC);
         user.setUserProvenance(UserProvenances.PI_AAD);
@@ -448,22 +424,30 @@ class AuthorisationServiceTest {
 
             softly.assertThat(authorisationService.userCanDeleteAccount(USER_ID, ADMIN_USER_ID))
                 .as(CAN_DELETE_ACCOUNT_MESSAGE)
-                .isTrue();
+                .isFalse();
 
             softly.assertThat(authorisationService.userCanUpdateAccount(USER_ID, ADMIN_USER_ID))
                 .as(CAN_UPDATE_ACCOUNT_MESSAGE)
-                .isTrue();
+                .isFalse();
 
             softly.assertThat(logCaptor.getErrorLogs())
-                .as(LOG_EMPTY_MESSAGE)
-                .isEmpty();
+                .as(LOG_NOT_EMPTY_MESSAGE)
+                .hasSize(2);
+
+            softly.assertThat(logCaptor.getErrorLogs().get(0))
+                .as(LOG_MATCHED_MESSAGE)
+                .contains(String.format(DELETE_ERROR_LOG, ADMIN_USER_ID, USER_ID));
+
+            softly.assertThat(logCaptor.getErrorLogs().get(1))
+                .as(LOG_MATCHED_MESSAGE)
+                .contains(String.format(UPDATE_ERROR_LOG, ADMIN_USER_ID, USER_ID));
 
             softly.assertAll();
         }
     }
 
     @Test
-    void testSuperAdminUserCanUpdateAndDeleteAdmin() {
+    void testSuperAdminUserCannotUpdateAndDeleteAdmin() {
         setupWithAuth();
         user.setRoles(Roles.INTERNAL_ADMIN_LOCAL);
         user.setUserProvenance(UserProvenances.PI_AAD);
@@ -477,15 +461,23 @@ class AuthorisationServiceTest {
 
             softly.assertThat(authorisationService.userCanDeleteAccount(USER_ID, ADMIN_USER_ID))
                 .as(CAN_DELETE_ACCOUNT_MESSAGE)
-                .isTrue();
+                .isFalse();
 
             softly.assertThat(authorisationService.userCanUpdateAccount(USER_ID, ADMIN_USER_ID))
                 .as(CAN_UPDATE_ACCOUNT_MESSAGE)
-                .isTrue();
+                .isFalse();
 
             softly.assertThat(logCaptor.getErrorLogs())
-                .as(LOG_EMPTY_MESSAGE)
-                .isEmpty();
+                .as(LOG_NOT_EMPTY_MESSAGE)
+                .hasSize(2);
+
+            softly.assertThat(logCaptor.getErrorLogs().get(0))
+                .as(LOG_MATCHED_MESSAGE)
+                .contains(String.format(DELETE_ERROR_LOG, ADMIN_USER_ID, USER_ID));
+
+            softly.assertThat(logCaptor.getErrorLogs().get(1))
+                .as(LOG_MATCHED_MESSAGE)
+                .contains(String.format(UPDATE_ERROR_LOG, ADMIN_USER_ID, USER_ID));
 
             softly.assertAll();
         }

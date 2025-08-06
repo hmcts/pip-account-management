@@ -549,7 +549,7 @@ class AzureAccountTest extends IntegrationTestBase {
 
     @Test
     void testCreationOfTwoAccountsOneFailOneOK() throws Exception {
-        when(publicationService.sendMediaNotificationEmail(anyString(), anyString(), anyBoolean()))
+        when(publicationService.sendMediaNotificationEmail(any(), any(), anyBoolean()))
             .thenReturn(true);
 
         User userToReturn = new User();

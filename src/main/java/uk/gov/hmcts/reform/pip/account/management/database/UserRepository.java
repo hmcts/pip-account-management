@@ -34,10 +34,6 @@ public interface UserRepository extends JpaRepository<PiUser, Long> {
         + " * :daysAgo AND user_provenance = 'PI_AAD' AND roles = 'VERIFIED'", nativeQuery = true)
     List<PiUser> findVerifiedUsersByLastVerifiedDate(@Param("daysAgo") int daysSinceLastVerified);
 
-    @Query(value = "SELECT * FROM pi_user WHERE user_provenance = 'PI_AAD' AND roles <> 'VERIFIED' AND "
-        + "CAST(last_signed_in_date AS DATE) = CURRENT_DATE - (interval '1' day) * :aadDays", nativeQuery = true)
-    List<PiUser> findAdminUsersFortNotificationByLastSignedInDate(@Param("aadDays") int aadNumberOfDays);
-
     @Query(value = "SELECT * FROM pi_user WHERE (user_provenance = 'PI_AAD' AND roles <> 'VERIFIED' AND "
         + "CAST(last_signed_in_date AS DATE) <= CURRENT_DATE - (interval '1' day) * :aadDays) OR "
         + "(user_provenance = 'SSO' AND "

@@ -75,11 +75,11 @@ class AccountTest extends IntegrationTestBase {
     private static final String CREATE_MEDIA_USER_URL = "/application";
     private static final String GET_PROVENANCE_USER_URL = ROOT_URL + "/provenance/";
     private static final String UPDATE_ACCOUNT_URL = ROOT_URL + "/provenance/";
-    private static final String CREATE_SYSTEM_ADMIN_URL = ROOT_URL + "/add/system-admin";
+    private static final String CREATE_SYSTEM_ADMIN_URL = ROOT_URL + "/system-admin";
 
     private static final String EMAIL = "test_account_admin@hmcts.net";
     private static final String SYSTEM_ADMIN_EMAIL = "test_account_system-admin@hmcts.net";
-    private static final String SYSTEM_ADMIN_ISSUER_ID = "87f907d2-eb28-42cc-b6e1-ae2b03f7bba2";
+    private static final String SYSTEM_ADMIN_ISSUER_ID = "87f907d2-eb28-42cc-b6e1-ae2b03f7bba4";
 
     private static final String INVALID_EMAIL = "ab";
     private static final String SURNAME = "Surname";
@@ -111,7 +111,7 @@ class AccountTest extends IntegrationTestBase {
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-    private PiUser validUser;
+    private PiUser verifiedUser;
     private PiUser superAdminUser;
 
     private PiUser createVerifiedUser(boolean valid) {
@@ -153,7 +153,7 @@ class AccountTest extends IntegrationTestBase {
 
     @BeforeEach
     void setup() {
-        validUser = createVerifiedUser(true);
+        verifiedUser = createVerifiedUser(true);
         superAdminUser = createAdminUser(true, Roles.INTERNAL_SUPER_ADMIN_CTSC);
 
         User userToReturn = new User();
@@ -172,7 +172,7 @@ class AccountTest extends IntegrationTestBase {
     void testCreateSingleUser() throws Exception {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(PI_URL)
-            .content(OBJECT_MAPPER.writeValueAsString(List.of(validUser)))
+            .content(OBJECT_MAPPER.writeValueAsString(List.of(verifiedUser)))
             .header(ISSUER_HEADER, SYSTEM_ADMIN_ISSUER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
@@ -368,7 +368,7 @@ class AccountTest extends IntegrationTestBase {
 
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(PI_URL)
-            .content(OBJECT_MAPPER.writeValueAsString(List.of(validUser, invalidUser)))
+            .content(OBJECT_MAPPER.writeValueAsString(List.of(verifiedUser, invalidUser)))
             .header(ISSUER_HEADER, SYSTEM_ADMIN_ISSUER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
@@ -392,15 +392,15 @@ class AccountTest extends IntegrationTestBase {
     void testGetUserByProvenanceIdReturnsUser() throws Exception {
         MockHttpServletRequestBuilder setupRequest = MockMvcRequestBuilders
             .post(PI_URL)
-            .content(OBJECT_MAPPER.writeValueAsString(List.of(validUser)))
+            .content(OBJECT_MAPPER.writeValueAsString(List.of(verifiedUser)))
             .header(ISSUER_HEADER, SYSTEM_ADMIN_ISSUER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
         mockMvc.perform(setupRequest).andExpect(status().isCreated());
 
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
-            .get(String.format(REPLACE_STRING, GET_PROVENANCE_USER_URL, validUser.getUserProvenance(),
-                               validUser.getProvenanceUserId()
+            .get(String.format(REPLACE_STRING, GET_PROVENANCE_USER_URL, verifiedUser.getUserProvenance(),
+                               verifiedUser.getProvenanceUserId()
             ))
             .contentType(MediaType.APPLICATION_JSON);
 
@@ -409,8 +409,9 @@ class AccountTest extends IntegrationTestBase {
             response.getResponse().getContentAsString(),
             PiUser.class
         );
-        assertEquals(validUser.getProvenanceUserId(), returnedUser.getProvenanceUserId(),
-                     USER_SHOULD_MATCH
+        assertEquals(
+            verifiedUser.getProvenanceUserId(), returnedUser.getProvenanceUserId(),
+            USER_SHOULD_MATCH
         );
         assertThat(returnedUser.getCreatedDate()).as("Created date must not be null").isNotNull();
     }
@@ -434,15 +435,15 @@ class AccountTest extends IntegrationTestBase {
     void testUpdateAccountLastVerifiedDateSuccessful() throws Exception {
         MockHttpServletRequestBuilder setupRequest = MockMvcRequestBuilders
             .post(PI_URL)
-            .content(OBJECT_MAPPER.writeValueAsString(List.of(validUser)))
+            .content(OBJECT_MAPPER.writeValueAsString(List.of(verifiedUser)))
             .header(ISSUER_HEADER, SYSTEM_ADMIN_ISSUER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
         mockMvc.perform(setupRequest).andExpect(status().isCreated());
 
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
-            .put(UPDATE_ACCOUNT_URL + validUser.getUserProvenance() + "/"
-                     + validUser.getProvenanceUserId())
+            .put(UPDATE_ACCOUNT_URL + verifiedUser.getUserProvenance() + "/"
+                     + verifiedUser.getProvenanceUserId())
             .content(OBJECT_MAPPER.writeValueAsString(Collections.singletonMap(
                 "lastVerifiedDate", "2022-08-14T20:21:10.912Z")))
             .contentType(MediaType.APPLICATION_JSON);
@@ -457,15 +458,15 @@ class AccountTest extends IntegrationTestBase {
     void testUpdateAccountLastSignedInDateSuccessful() throws Exception {
         MockHttpServletRequestBuilder setupRequest = MockMvcRequestBuilders
             .post(PI_URL)
-            .content(OBJECT_MAPPER.writeValueAsString(List.of(validUser)))
+            .content(OBJECT_MAPPER.writeValueAsString(List.of(verifiedUser)))
             .header(ISSUER_HEADER, SYSTEM_ADMIN_ISSUER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
         mockMvc.perform(setupRequest).andExpect(status().isCreated());
 
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
-            .put(UPDATE_ACCOUNT_URL + validUser.getUserProvenance() + "/"
-                     + validUser.getProvenanceUserId())
+            .put(UPDATE_ACCOUNT_URL + verifiedUser.getUserProvenance() + "/"
+                     + verifiedUser.getProvenanceUserId())
             .content(OBJECT_MAPPER.writeValueAsString(Collections.singletonMap(
                 "lastSignedInDate", "2022-08-14T20:21:10.912Z")))
             .contentType(MediaType.APPLICATION_JSON);
@@ -479,7 +480,7 @@ class AccountTest extends IntegrationTestBase {
     @Test
     void testUpdateAccountNotFound() throws Exception {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
-            .put(UPDATE_ACCOUNT_URL + validUser.getUserProvenance() + "/1234")
+            .put(UPDATE_ACCOUNT_URL + verifiedUser.getUserProvenance() + "/1234")
             .content(OBJECT_MAPPER.writeValueAsString(Map.of(
                 "lastSignedInDate", "2022-08-14T20:21:20.912Z")))
             .contentType(MediaType.APPLICATION_JSON);
@@ -494,15 +495,15 @@ class AccountTest extends IntegrationTestBase {
     void testUpdateAccountWithUnsupportedParam() throws Exception {
         MockHttpServletRequestBuilder setupRequest = MockMvcRequestBuilders
             .post(PI_URL)
-            .content(OBJECT_MAPPER.writeValueAsString(List.of(validUser)))
+            .content(OBJECT_MAPPER.writeValueAsString(List.of(verifiedUser)))
             .header(ISSUER_HEADER, SYSTEM_ADMIN_ISSUER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
         mockMvc.perform(setupRequest).andExpect(status().isCreated());
 
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
-            .put(UPDATE_ACCOUNT_URL + validUser.getUserProvenance() + "/"
-                     + validUser.getProvenanceUserId())
+            .put(UPDATE_ACCOUNT_URL + verifiedUser.getUserProvenance() + "/"
+                     + verifiedUser.getProvenanceUserId())
             .content(OBJECT_MAPPER.writeValueAsString(Collections.singletonMap(
                 "email", "test@test.com")))
             .contentType(MediaType.APPLICATION_JSON);
@@ -517,7 +518,7 @@ class AccountTest extends IntegrationTestBase {
         MockHttpServletRequestBuilder createRequest =
             MockMvcRequestBuilders
                 .post(PI_URL)
-                .content(OBJECT_MAPPER.writeValueAsString(List.of(validUser)))
+                .content(OBJECT_MAPPER.writeValueAsString(List.of(verifiedUser)))
                 .header(ISSUER_HEADER, SYSTEM_ADMIN_ISSUER_ID)
                 .contentType(MediaType.APPLICATION_JSON);
 
@@ -558,11 +559,11 @@ class AccountTest extends IntegrationTestBase {
 
     @Test
     void testDeleteAccount() throws Exception {
-        validUser.setUserProvenance(UserProvenances.CFT_IDAM);
+        verifiedUser.setUserProvenance(UserProvenances.CFT_IDAM);
         MockHttpServletRequestBuilder createRequest =
             MockMvcRequestBuilders
                 .post(PI_URL)
-                .content(OBJECT_MAPPER.writeValueAsString(List.of(validUser)))
+                .content(OBJECT_MAPPER.writeValueAsString(List.of(verifiedUser)))
                 .header(ISSUER_HEADER, SYSTEM_ADMIN_ISSUER_ID)
                 .contentType(MediaType.APPLICATION_JSON);
 
@@ -601,11 +602,11 @@ class AccountTest extends IntegrationTestBase {
     @Test
     @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = ADD_USERS_SCRIPT)
     void testV2SystemAdminDeletesVerifiedUser() throws Exception {
-        validUser.setUserProvenance(UserProvenances.CFT_IDAM);
+        verifiedUser.setUserProvenance(UserProvenances.CFT_IDAM);
         MockHttpServletRequestBuilder createRequest =
             MockMvcRequestBuilders
                 .post(PI_URL)
-                .content(OBJECT_MAPPER.writeValueAsString(List.of(validUser)))
+                .content(OBJECT_MAPPER.writeValueAsString(List.of(verifiedUser)))
                 .header(ISSUER_HEADER, SYSTEM_ADMIN_ISSUER_ID)
                 .contentType(MediaType.APPLICATION_JSON);
 
@@ -664,7 +665,6 @@ class AccountTest extends IntegrationTestBase {
     @Test
     @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = ADD_USERS_SCRIPT)
     void testV2SystemAdminDeletesSuperAdminUser() throws Exception {
-        superAdminUser.setUserProvenance(UserProvenances.CFT_IDAM);
         String superAdminUserId = getSuperAdminUserId(superAdminUser);
         String systemAdminUserId = getSystemAdminUserId("test_account_system-admin2@hmcts.net");
 
@@ -680,11 +680,11 @@ class AccountTest extends IntegrationTestBase {
 
     @Test
     void testV2SuperAdminDeletesVerifiedUser() throws Exception {
-        validUser.setUserProvenance(UserProvenances.CFT_IDAM);
+        verifiedUser.setUserProvenance(UserProvenances.CFT_IDAM);
         MockHttpServletRequestBuilder createRequest =
             MockMvcRequestBuilders
                 .post(PI_URL)
-                .content(OBJECT_MAPPER.writeValueAsString(List.of(validUser)))
+                .content(OBJECT_MAPPER.writeValueAsString(List.of(verifiedUser)))
                 .header(ISSUER_HEADER, SYSTEM_ADMIN_ISSUER_ID)
                 .contentType(MediaType.APPLICATION_JSON);
 
@@ -708,12 +708,13 @@ class AccountTest extends IntegrationTestBase {
     }
 
     @Test
+    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = ADD_USERS_SCRIPT)
     void testV2SuperAdminDeletesSuperAdminUser() throws Exception {
         String superAdminUserId = getSuperAdminUserId(superAdminUser);
 
-        superAdminUser.setUserProvenance(UserProvenances.CFT_IDAM);
         superAdminUser.setEmail("superAdminToDelete@justice.gov.uk");
-        String superAdminUserIdToDelete = getSuperAdminUserId(superAdminUser);
+        String superAdminUserIdToDelete = getSuperAdminUserId(createAdminUser(true,
+                                                                              Roles.INTERNAL_SUPER_ADMIN_CTSC));
 
         MockHttpServletRequestBuilder deleteRequest = MockMvcRequestBuilders
             .delete(ROOT_URL + DELETE_PATH_V2 + superAdminUserIdToDelete)
@@ -741,12 +742,12 @@ class AccountTest extends IntegrationTestBase {
     }
 
     @Test
-    void testUpdateAccountRoleByIdWithAdminProvided() throws Exception {
-        validUser.setUserProvenance(UserProvenances.CFT_IDAM);
+    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = ADD_USERS_SCRIPT)
+    void testUpdateAccountThirdPartyRoleByIdWithAdminProvided() throws Exception {
         MockHttpServletRequestBuilder createRequest =
             MockMvcRequestBuilders
                 .post(PI_URL)
-                .content(OBJECT_MAPPER.writeValueAsString(List.of(validUser)))
+                .content(OBJECT_MAPPER.writeValueAsString(List.of(createThirdPartyUser())))
                 .header(ISSUER_HEADER, SYSTEM_ADMIN_ISSUER_ID)
                 .contentType(MediaType.APPLICATION_JSON);
 
@@ -761,28 +762,27 @@ class AccountTest extends IntegrationTestBase {
             );
 
         String createdUserId = mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).get(0).toString();
-        String superAdminUserId = getSuperAdminUserId(superAdminUser);
 
         MockHttpServletRequestBuilder updateRequest = MockMvcRequestBuilders
-            .put(ROOT_URL + UPDATE_PATH + createdUserId + "/" + Roles.INTERNAL_ADMIN_LOCAL)
-            .header(ADMIN_HEADER, superAdminUserId);
+            .put(ROOT_URL + UPDATE_PATH + createdUserId + "/" + Roles.VERIFIED_THIRD_PARTY_CFT_PRESS)
+            .header(ADMIN_HEADER, SYSTEM_ADMIN_ISSUER_ID);
 
         MvcResult responseUpdatedUser = mockMvc.perform(updateRequest)
             .andExpect(status().isOk()).andReturn();
 
         assertEquals(
-            "User with ID " + createdUserId + " has been updated to a " + Roles.INTERNAL_ADMIN_LOCAL,
+            "User with ID " + createdUserId + " has been updated to a " + Roles.VERIFIED_THIRD_PARTY_CFT_PRESS,
             responseUpdatedUser.getResponse().getContentAsString(), "Failed to update account"
         );
     }
 
     @Test
     void testUpdateAccountRoleByIdWithoutAdminIdReturnsForbidden() throws Exception {
-        validUser.setUserProvenance(UserProvenances.CFT_IDAM);
+        verifiedUser.setUserProvenance(UserProvenances.CFT_IDAM);
         MockHttpServletRequestBuilder createRequest =
             MockMvcRequestBuilders
                 .post(PI_URL)
-                .content(OBJECT_MAPPER.writeValueAsString(List.of(validUser)))
+                .content(OBJECT_MAPPER.writeValueAsString(List.of(verifiedUser)))
                 .header(ISSUER_HEADER, SYSTEM_ADMIN_ISSUER_ID)
                 .contentType(MediaType.APPLICATION_JSON);
 
@@ -806,11 +806,11 @@ class AccountTest extends IntegrationTestBase {
 
     @Test
     void testUpdateAccountRoleByIdWithForbiddenAdminRole() throws Exception {
-        validUser.setUserProvenance(UserProvenances.CFT_IDAM);
+        verifiedUser.setUserProvenance(UserProvenances.CFT_IDAM);
         MockHttpServletRequestBuilder createRequest =
             MockMvcRequestBuilders
                 .post(PI_URL)
-                .content(OBJECT_MAPPER.writeValueAsString(List.of(validUser)))
+                .content(OBJECT_MAPPER.writeValueAsString(List.of(verifiedUser)))
                 .header(ISSUER_HEADER, SYSTEM_ADMIN_ISSUER_ID)
                 .contentType(MediaType.APPLICATION_JSON);
 
@@ -837,11 +837,11 @@ class AccountTest extends IntegrationTestBase {
 
     @Test
     void testUpdateAccountRoleByIdWithSameAdminId() throws Exception {
-        validUser.setUserProvenance(UserProvenances.CFT_IDAM);
+        verifiedUser.setUserProvenance(UserProvenances.CFT_IDAM);
         MockHttpServletRequestBuilder createRequest =
             MockMvcRequestBuilders
                 .post(PI_URL)
-                .content(OBJECT_MAPPER.writeValueAsString(List.of(validUser)))
+                .content(OBJECT_MAPPER.writeValueAsString(List.of(verifiedUser)))
                 .header(ISSUER_HEADER, SYSTEM_ADMIN_ISSUER_ID)
                 .contentType(MediaType.APPLICATION_JSON);
 
@@ -927,7 +927,7 @@ class AccountTest extends IntegrationTestBase {
     void testUnauthorizedCreateAccount() throws Exception {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(PI_URL)
-            .content(OBJECT_MAPPER.writeValueAsString(List.of(validUser)))
+            .content(OBJECT_MAPPER.writeValueAsString(List.of(verifiedUser)))
             .header(ISSUER_HEADER, SYSTEM_ADMIN_ISSUER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
@@ -973,8 +973,8 @@ class AccountTest extends IntegrationTestBase {
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testUnauthorizedUpdateAccount() throws Exception {
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
-            .put(UPDATE_ACCOUNT_URL + validUser.getUserProvenance() + "/"
-                     + validUser.getProvenanceUserId())
+            .put(UPDATE_ACCOUNT_URL + verifiedUser.getUserProvenance() + "/"
+                     + verifiedUser.getProvenanceUserId())
             .content(OBJECT_MAPPER.writeValueAsString(Collections.singletonMap(
                 "email", "test@test.com")))
             .contentType(MediaType.APPLICATION_JSON);
@@ -1090,6 +1090,7 @@ class AccountTest extends IntegrationTestBase {
         systemAdmin.setFirstName(FIRST_NAME);
         systemAdmin.setSurname(SURNAME);
         systemAdmin.setEmail(email);
+        systemAdmin.setProvenanceUserId(UUID.randomUUID().toString());
 
         MockHttpServletRequestBuilder createRequest =
             MockMvcRequestBuilders

@@ -81,27 +81,6 @@ class InactiveAccountManagementTest {
     }
 
     @Test
-    void testNotifyInactiveAdminAccountsSuccess() throws Exception {
-        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
-            .post(NOTIFY_INACTIVE_ADMIN_ACCOUNTS_URL);
-
-        mockMvc.perform(request).andExpect(status().isNoContent());
-    }
-
-    @Test
-    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
-    void testUnauthorizedNotifyInactiveAdminAccounts() throws Exception {
-        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
-            .post(NOTIFY_INACTIVE_ADMIN_ACCOUNTS_URL);
-
-        MvcResult mvcResult = mockMvc.perform(request).andExpect(status().isForbidden()).andReturn();
-
-        assertEquals(FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
-                     FORBIDDEN_STATUS_CODE
-        );
-    }
-
-    @Test
     void testDeleteExpiredAdminAccountsSuccess() throws Exception {
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .delete(DELETE_EXPIRED_ADMIN_ACCOUNTS_URL);
