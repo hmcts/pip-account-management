@@ -344,7 +344,7 @@ class AccountTest extends AccountHelperBase {
     }
 
     @Test
-    void shouldNotBeAbleToUpdateRoleWhenUserNotProvidedAndRoleIsNotSSO() throws JsonProcessingException {
+    void shouldNotBeAbleToUpdateRoleWhenUserNotProvidedAndRoleIsNotSso() throws JsonProcessingException {
         List<PiUser> thirdParty = generateThirdParty();
         Map<String, String> headers = new ConcurrentHashMap<>(bearer);
         headers.put(ISSUER_ID, systemAdminUser.getUserId());
