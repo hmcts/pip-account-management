@@ -60,12 +60,8 @@ public class AccountHelperBase extends FunctionalTestBase {
         return response.getBody().as(PiUser.class);
     }
 
-    protected Response createAccount(String email, String provenanceId) throws JsonProcessingException {
+    protected Response createVerifiedAccount(String email, String provenanceId) throws JsonProcessingException {
         return createAccount(email, provenanceId, Roles.VERIFIED, UserProvenances.PI_AAD);
-    }
-
-    protected Response createAccount(String email, String provenanceId, Roles role) throws JsonProcessingException {
-        return createAccount(email, provenanceId, role, UserProvenances.PI_AAD);
     }
 
     protected Response createAccount(String email, String provenanceId, Roles role, UserProvenances userProvenance)

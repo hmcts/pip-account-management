@@ -66,7 +66,7 @@ class AzureAccountTest extends AccountHelperBase {
             .as(AZURE_ACCOUNT_RESPONSE_TYPE).get(CreationEnum.CREATED_ACCOUNTS).get(0);
 
         assertThat(createdAccount.getEmail()).isEqualTo(email);
-        createAccount(email, createdAccount.getAzureAccountId());
+        createVerifiedAccount(email, createdAccount.getAzureAccountId());
 
         Response getResponse = doGetRequest(String.format(GET_AZURE_ACCOUNT_INFO, createdAccount.getAzureAccountId()),
                      bearer);
