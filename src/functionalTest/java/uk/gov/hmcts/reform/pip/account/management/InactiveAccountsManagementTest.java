@@ -70,11 +70,10 @@ class InactiveAccountsManagementTest extends FunctionalTestBase {
     private static final String UPDATE_USER_INFO = ACCOUNT_URL + "/provenance";
     private static final String NOTIFY_INACTIVE_MEDIA_ACCOUNT = ACCOUNT_URL + "/media/inactive/notify";
     private static final String DELETE_INACTIVE_MEDIA_ACCOUNT = ACCOUNT_URL + "/media/inactive";
-    private static final String NOTIFY_INACTIVE_ADMIN_ACCOUNT = ACCOUNT_URL + "/admin/inactive/notify";
     private static final String DELETE_INACTIVE_ADMIN_ACCOUNT = ACCOUNT_URL + "/admin/inactive";
     private static final String NOTIFY_INACTIVE_IDAM_ACCOUNT = ACCOUNT_URL + "/idam/inactive/notify";
     private static final String DELETE_INACTIVE_IDAM_ACCOUNT = ACCOUNT_URL + "/idam/inactive";
-    private static final String ADD_SYSTEM_ADMIN_B2C_URL = ACCOUNT_URL + "/add/system-admin";
+    private static final String ADD_SYSTEM_ADMIN_URL = ACCOUNT_URL + "/system-admin";
     private static final String TESTING_SUPPORT_ACCOUNT_URL = "/testing-support/account/";
     private static final String GET_PI_USER_URL = "/account/%s";
     private static final String SYSTEM_ADMIN_SSO_URL = ACCOUNT_URL + "/system-admin";
@@ -157,7 +156,7 @@ class InactiveAccountsManagementTest extends FunctionalTestBase {
             """.formatted(email, FIRST_NAME, SURNAME);
 
 
-        Response response = doPostRequestForB2C(ADD_SYSTEM_ADMIN_B2C_URL, headers, issuerId, requestBody);
+        Response response = doPostRequestForB2C(ADD_SYSTEM_ADMIN_URL, headers, issuerId, requestBody);
         PiUser piUser = response.getBody().as(PiUser.class);
         assertThat(response.getStatusCode()).isEqualTo(OK.value());
 
@@ -229,19 +228,6 @@ class InactiveAccountsManagementTest extends FunctionalTestBase {
 
     @Test
     @Order(3)
-    void shouldBeAbleToNotifyInactiveAdminAccounts() {
-        ZonedDateTime localDateTime = ZonedDateTime.now(CL).minusDays(76);
-        Map<String, String> updateParameters = Map.of(
-            LAST_SINGED_IN_DATE, localDateTime.toString()
-        );
-        updateUserAccountLastVerifiedDate(adminProvenanceId,
-                                          UserProvenances.PI_AAD, updateParameters);
-        Response response = doPostRequest(NOTIFY_INACTIVE_ADMIN_ACCOUNT, headers, "");
-        assertThat(response.getStatusCode()).isEqualTo(NO_CONTENT.value());
-    }
-
-    @Test
-    @Order(4)
     void shouldBeAbleToDeleteInactiveAdminAccounts() {
         ZonedDateTime localDateTime = ZonedDateTime.now(CL).minusDays(90);
         Map<String, String> updateParameters = Map.of(
