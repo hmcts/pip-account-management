@@ -120,9 +120,10 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(UpdateUserException.class)
-    public ResponseEntity<String> handle(UpdateUserException ex) {
+    public ResponseEntity<ExceptionResponse> handle(UpdateUserException ex) {
         log.error(writeLog("400, Invalid role provided for user and provenance"));
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+            .body(generateExceptionResponse(ex.getMessage()));
     }
 
     private ExceptionResponse generateExceptionResponse(String message) {

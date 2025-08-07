@@ -14,7 +14,7 @@ import java.lang.annotation.Target;
 @Target({ ElementType.TYPE })
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ValidProvenance {
-    String message() default "VERIFIED role is only allowed when provenance is PI_AAD";
+    String message() default "Invalid provenance and role combination provided";
     Class<?>[] groups() default {};
     Class<? extends Payload>[] payload() default {};
 }

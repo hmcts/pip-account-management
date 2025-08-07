@@ -285,6 +285,10 @@ class AuthorisationServiceTest {
                 .as(CAN_DELETE_ACCOUNT_MESSAGE)
                 .isTrue();
 
+            softly.assertThat(authorisationService.userCanUpdateAccount(USER_ID, ADMIN_USER_ID))
+                .as(CAN_UPDATE_ACCOUNT_MESSAGE)
+                .isTrue();
+
             softly.assertThat(logCaptor.getErrorLogs())
                 .as(LOG_EMPTY_MESSAGE)
                 .isEmpty();
@@ -294,7 +298,7 @@ class AuthorisationServiceTest {
     }
 
     @Test
-    void testSystemAdminUserCannotDeleteSystemAdminWhenUnauthorized() {
+    void testSystemAdminUserCannotUpdateAndDeleteSystemAdminWhenUnauthorized() {
         setupWithoutAuth();
         user.setRoles(Roles.SYSTEM_ADMIN);
         user.setUserProvenance(UserProvenances.PI_AAD);
@@ -306,11 +310,15 @@ class AuthorisationServiceTest {
             .as(UNAUTHORIZED_MESSAGE)
             .isFalse();
 
+        softly.assertThat(authorisationService.userCanUpdateAccount(USER_ID, ADMIN_USER_ID))
+            .as(UNAUTHORIZED_MESSAGE)
+            .isFalse();
+
         softly.assertAll();
     }
 
     @Test
-    void testSystemAdminUserCanDeleteSuperAdmin() {
+    void testSystemAdminUserCanUpdateAndDeleteSuperAdmin() {
         setupWithAuth();
         user.setRoles(Roles.INTERNAL_SUPER_ADMIN_LOCAL);
         user.setUserProvenance(UserProvenances.PI_AAD);
@@ -326,6 +334,10 @@ class AuthorisationServiceTest {
                 .as(CAN_DELETE_ACCOUNT_MESSAGE)
                 .isTrue();
 
+            softly.assertThat(authorisationService.userCanUpdateAccount(USER_ID, ADMIN_USER_ID))
+                .as(CAN_UPDATE_ACCOUNT_MESSAGE)
+                .isTrue();
+
             softly.assertThat(logCaptor.getErrorLogs())
                 .as(LOG_EMPTY_MESSAGE)
                 .isEmpty();
@@ -335,7 +347,7 @@ class AuthorisationServiceTest {
     }
 
     @Test
-    void testSystemAdminUserCanDeleteAdmin() {
+    void testSystemAdminUserCanUpdateAndDeleteAdmin() {
         setupWithAuth();
         user.setRoles(Roles.INTERNAL_ADMIN_CTSC);
         user.setUserProvenance(UserProvenances.PI_AAD);
@@ -351,6 +363,10 @@ class AuthorisationServiceTest {
                 .as(CAN_DELETE_ACCOUNT_MESSAGE)
                 .isTrue();
 
+            softly.assertThat(authorisationService.userCanUpdateAccount(USER_ID, ADMIN_USER_ID))
+                .as(CAN_UPDATE_ACCOUNT_MESSAGE)
+                .isTrue();
+
             softly.assertThat(logCaptor.getErrorLogs())
                 .as(LOG_EMPTY_MESSAGE)
                 .isEmpty();
@@ -360,7 +376,7 @@ class AuthorisationServiceTest {
     }
 
     @Test
-    void testSystemAdminUserCanDeleteVerifiedAccount() {
+    void testSystemAdminUserCanUpdateAndDeleteVerifiedAccount() {
         setupWithAuth();
         user.setRoles(Roles.VERIFIED);
         user.setUserProvenance(UserProvenances.PI_AAD);
@@ -376,6 +392,10 @@ class AuthorisationServiceTest {
                 .as(CAN_DELETE_ACCOUNT_MESSAGE)
                 .isTrue();
 
+            softly.assertThat(authorisationService.userCanUpdateAccount(USER_ID, ADMIN_USER_ID))
+                .as(CAN_UPDATE_ACCOUNT_MESSAGE)
+                .isTrue();
+
             softly.assertThat(logCaptor.getErrorLogs())
                 .as(LOG_EMPTY_MESSAGE)
                 .isEmpty();
@@ -385,7 +405,7 @@ class AuthorisationServiceTest {
     }
 
     @Test
-    void testSystemAdminUserCanDeleteThirdPartyAccount() {
+    void testSystemAdminUserCanUpdateAndDeleteThirdPartyAccount() {
         setupWithAuth();
         user.setRoles(Roles.VERIFIED_THIRD_PARTY_ALL);
         user.setUserProvenance(UserProvenances.PI_AAD);
@@ -399,6 +419,10 @@ class AuthorisationServiceTest {
 
             softly.assertThat(authorisationService.userCanDeleteAccount(USER_ID, ADMIN_USER_ID))
                 .as(CAN_DELETE_ACCOUNT_MESSAGE)
+                .isTrue();
+
+            softly.assertThat(authorisationService.userCanUpdateAccount(USER_ID, ADMIN_USER_ID))
+                .as(CAN_UPDATE_ACCOUNT_MESSAGE)
                 .isTrue();
 
             softly.assertThat(logCaptor.getErrorLogs())
