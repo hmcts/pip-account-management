@@ -151,9 +151,10 @@ class InactiveAccountsManagementTest extends FunctionalTestBase {
             {
                 "email": "%s",
                 "firstName": "%s",
-                "surname": "%s"
+                "surname": "%s",
+                "provenanceUserId": "%s"
             }
-            """.formatted(email, FIRST_NAME, SURNAME);
+            """.formatted(email, FIRST_NAME, SURNAME, UUID.randomUUID());
 
 
         Response response = doPostRequestForB2C(ADD_SYSTEM_ADMIN_URL, headers, issuerId, requestBody);
@@ -234,7 +235,7 @@ class InactiveAccountsManagementTest extends FunctionalTestBase {
             LAST_SINGED_IN_DATE, localDateTime.toString()
         );
         updateUserAccountLastVerifiedDate(adminProvenanceId,
-                                          UserProvenances.PI_AAD, updateParameters);
+                                          UserProvenances.SSO, updateParameters);
         Response response = doDeleteRequest(DELETE_INACTIVE_ADMIN_ACCOUNT, headers);
         assertThat(response.getStatusCode()).isEqualTo(NO_CONTENT.value());
         final Response getPiUserResponse = doGetRequest(String.format(GET_PI_USER_URL, adminUserId),
@@ -243,7 +244,7 @@ class InactiveAccountsManagementTest extends FunctionalTestBase {
     }
 
     @Test
-    @Order(5)
+    @Order(4)
     void shouldBeAbleToNotifyInactiveIdamAccounts() {
         ZonedDateTime localDateTime = ZonedDateTime.now(CL).minusDays(118);
         Map<String, String> updateParameters = Map.of(
@@ -256,7 +257,7 @@ class InactiveAccountsManagementTest extends FunctionalTestBase {
     }
 
     @Test
-    @Order(6)
+    @Order(5)
     void shouldBeAbleToDeleteInactiveIdamAccounts() {
         ZonedDateTime localDateTime = ZonedDateTime.now(CL).minusDays(132);
         Map<String, String> updateParameters = Map.of(
