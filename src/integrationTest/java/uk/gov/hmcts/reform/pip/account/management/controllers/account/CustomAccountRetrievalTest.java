@@ -55,7 +55,7 @@ class CustomAccountRetrievalTest {
     private static final String INVALID_EMAIL = "ab";
     private static final String SURNAME = "Surname";
     private static final String FORENAME = "Forename";
-    private static final String ISSUER_ID = "87f907d2-eb28-42cc-b6e1-ae2b03f7bba2";
+    private static final String ISSUER_ID = "87f907d2-eb28-42cc-b6e1-ae2b03f7bba4";
     private static final String ISSUER_HEADER = "x-issuer-id";
 
     private static final String NOT_FOUND_STATUS_CODE_MESSAGE = "Status code does not match not found";
@@ -75,7 +75,7 @@ class CustomAccountRetrievalTest {
         PiUser user = new PiUser();
         user.setEmail(valid ? EMAIL : INVALID_EMAIL);
         user.setProvenanceUserId(id);
-        user.setUserProvenance(UserProvenances.PI_AAD);
+        user.setUserProvenance(UserProvenances.SSO);
         user.setRoles(Roles.INTERNAL_ADMIN_CTSC);
         user.setForenames(FORENAME);
         user.setSurname(SURNAME);
@@ -123,7 +123,7 @@ class CustomAccountRetrievalTest {
             .as("Returned account MI data must match user object")
             .anyMatch(account -> createdUserId.equals(account.getUserId().toString())
                 && provenanceId.equals(account.getProvenanceUserId())
-                && UserProvenances.PI_AAD.equals(account.getUserProvenance())
+                && UserProvenances.SSO.equals(account.getUserProvenance())
                 && Roles.INTERNAL_ADMIN_CTSC.equals(account.getRoles())
                 && account.getCreatedDate() != null
                 && account.getLastSignedInDate() != null);

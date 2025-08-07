@@ -45,7 +45,7 @@ class SensitivityTest {
 
     private static final String ROOT_URL = "/account";
     private static final String PI_URL = ROOT_URL + "/add/pi";
-    private static final String ISSUER_ID = "87f907d2-eb28-42cc-b6e1-ae2b03f7bba2";
+    private static final String ISSUER_ID = "87f907d2-eb28-42cc-b6e1-ae2b03f7bba4";
     private static final String ISSUER_HEADER = "x-issuer-id";
     private static final String EMAIL = "a@b.com";
     private static final String URL_FORMAT = "%s/isAuthorised/%s/%s/%s";
@@ -91,7 +91,7 @@ class SensitivityTest {
 
     @Test
     void testIsUserAuthenticatedReturnsTrueWhenPublicListAndAdmin() throws Exception {
-        user.setUserProvenance(UserProvenances.PI_AAD);
+        user.setUserProvenance(UserProvenances.SSO);
         user.setRoles(Roles.INTERNAL_ADMIN_CTSC);
 
         MvcResult response = callIsAuthorised(user, Sensitivity.PUBLIC);
@@ -119,10 +119,19 @@ class SensitivityTest {
 
     @Test
     void testIsUserAuthenticatedReturnsFalseWhenPrivateListAndAdmin() throws Exception {
-        user.setUserProvenance(UserProvenances.PI_AAD);
+        user.setUserProvenance(UserProvenances.SSO);
         user.setRoles(Roles.INTERNAL_ADMIN_CTSC);
 
         MvcResult response = callIsAuthorised(user, Sensitivity.PRIVATE);
+        assertFalse(Boolean.parseBoolean(response.getResponse().getContentAsString()), FALSE_MESSAGE);
+    }
+
+    @Test
+    void testIsUserAuthenticatedReturnsFalseWhenClassifiedListAndAdmin() throws Exception {
+        user.setUserProvenance(UserProvenances.SSO);
+        user.setRoles(Roles.INTERNAL_ADMIN_CTSC);
+
+        MvcResult response = callIsAuthorised(user, Sensitivity.CLASSIFIED);
         assertFalse(Boolean.parseBoolean(response.getResponse().getContentAsString()), FALSE_MESSAGE);
     }
 
@@ -149,15 +158,6 @@ class SensitivityTest {
     void testIsUserAuthenticatedReturnsFalseWhenClassifiedListAndVerifiedAndIncorrectProvenance() throws Exception {
         user.setUserProvenance(UserProvenances.CFT_IDAM);
         user.setRoles(Roles.VERIFIED);
-
-        MvcResult response = callIsAuthorised(user, Sensitivity.CLASSIFIED);
-        assertFalse(Boolean.parseBoolean(response.getResponse().getContentAsString()), FALSE_MESSAGE);
-    }
-
-    @Test
-    void testIsUserAuthenticatedReturnsFalseWhenClassifiedListAndAdminAndCorrectProvenance() throws Exception {
-        user.setUserProvenance(UserProvenances.CFT_IDAM);
-        user.setRoles(Roles.INTERNAL_ADMIN_CTSC);
 
         MvcResult response = callIsAuthorised(user, Sensitivity.CLASSIFIED);
         assertFalse(Boolean.parseBoolean(response.getResponse().getContentAsString()), FALSE_MESSAGE);

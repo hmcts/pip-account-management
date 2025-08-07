@@ -150,10 +150,10 @@ class AccountFilteringTest extends AccountHelperBase {
     @Test
     void testGetAdminUserByEmailAndProvenance() throws JsonProcessingException {
         String email = generateEmail();
-        createAccount(email, UUID.randomUUID().toString(), Roles.INTERNAL_ADMIN_LOCAL, UserProvenances.PI_AAD);
+        createAccount(email, UUID.randomUUID().toString(), Roles.INTERNAL_ADMIN_LOCAL, UserProvenances.SSO);
 
         Response response = doGetRequest(String.format(GET_ADMIN_USER_BY_EMAIL_AND_PROVENANCE, email,
-                                                       UserProvenances.PI_AAD
+                                                       UserProvenances.SSO
         ), bearer);
 
         assertThat(response.getStatusCode()).isEqualTo(OK.value());

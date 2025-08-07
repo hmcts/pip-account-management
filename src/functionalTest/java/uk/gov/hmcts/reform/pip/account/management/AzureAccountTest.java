@@ -10,7 +10,6 @@ import org.junit.jupiter.api.Test;
 import uk.gov.hmcts.reform.pip.account.management.model.account.AzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.account.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.utils.AccountHelperBase;
-import uk.gov.hmcts.reform.pip.model.account.Roles;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -50,7 +49,6 @@ class AzureAccountTest extends AccountHelperBase {
         azureAccount.setFirstName(TEST_FIRST_NAME);
         azureAccount.setSurname(TEST_LAST_NAME);
         azureAccount.setDisplayName(TEST_DISPLAY_NAME);
-        azureAccount.setRole(Roles.VERIFIED);
         azureAccount.setEmail(email);
 
         List<AzureAccount> azureAccounts = new ArrayList<>();
@@ -68,7 +66,7 @@ class AzureAccountTest extends AccountHelperBase {
             .as(AZURE_ACCOUNT_RESPONSE_TYPE).get(CreationEnum.CREATED_ACCOUNTS).get(0);
 
         assertThat(createdAccount.getEmail()).isEqualTo(email);
-        createAccount(email, createdAccount.getAzureAccountId());
+        createVerifiedAccount(email, createdAccount.getAzureAccountId());
 
         Response getResponse = doGetRequest(String.format(GET_AZURE_ACCOUNT_INFO, createdAccount.getAzureAccountId()),
                      bearer);

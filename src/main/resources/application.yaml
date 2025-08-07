@@ -108,7 +108,6 @@ testingSupport:
 verification:
   media-account-verification-email-days: 350
   media-account-deletion-days: 365
-  aad-admin-account-sign-in-notification-days: 76
   aad-admin-account-deletion-days: 90
   sso-admin-account-deletion-days: 90
   cft-idam-account-sign-in-notification-days: 118

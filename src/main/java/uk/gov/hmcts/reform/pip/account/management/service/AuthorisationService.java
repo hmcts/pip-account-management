@@ -20,7 +20,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
-import static uk.gov.hmcts.reform.pip.model.account.Roles.ALL_NON_RESTRICTED_ADMIN_ROLES;
 
 @Service("authorisationService")
 @Slf4j
@@ -125,15 +124,9 @@ public class AuthorisationService {
         if (adminUserId == null) {
             return false;
         }
-        PiUser adminUser = getUser(adminUserId);
 
-        if (adminUser.getRoles() == Roles.SYSTEM_ADMIN) {
-            return true;
-        } else if (adminUser.getRoles() == Roles.INTERNAL_SUPER_ADMIN_LOCAL
-            || adminUser.getRoles() == Roles.INTERNAL_SUPER_ADMIN_CTSC) {
-            return ALL_NON_RESTRICTED_ADMIN_ROLES.contains(user.getRoles());
-        }
-        return false;
+        PiUser adminUser = getUser(adminUserId);
+        return adminUser.getRoles() == Roles.SYSTEM_ADMIN;
     }
 
     private PiUser getUser(UUID userId) {
