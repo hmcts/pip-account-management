@@ -36,7 +36,6 @@ public class SystemAdminAccountController {
     @ApiResponse(responseCode = "200", description = PI_USER)
     @ApiResponse(responseCode = "400", description = "{ErroredSystemAdminAccount}")
     @ApiResponse(responseCode = "401", description = "Invalid access credential")
-    @ApiResponse(responseCode = "403", description = "User has not been authorized")
     @PostMapping("/system-admin")
     public ResponseEntity<? extends PiUser> createSystemAdminAccount(//NOSONAR
         @RequestBody SystemAdminAccount account) {

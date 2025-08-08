@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -12,21 +13,26 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import uk.gov.hmcts.reform.pip.account.management.model.CustomPageImpl;
 import uk.gov.hmcts.reform.pip.account.management.model.account.AuditLog;
+import uk.gov.hmcts.reform.pip.account.management.service.authorisation.AuditAuthorisationService;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
 import uk.gov.hmcts.reform.pip.model.enums.AuditAction;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 import static org.springframework.http.HttpStatus.FORBIDDEN;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -48,19 +54,30 @@ class AuditTest {
     private static final String AUDIT_DETAILS = "User requested to view all third party users";
     private static final String USER_ID = "1234";
     private static final String ADDITIONAL_USER_ID = "3456";
+    private static final UUID REQUESTER_ID = UUID.randomUUID();
+    private static final String REQUESTER_ID_HEADER = "x-requester-id";
     private static final String UNAUTHORIZED_ROLE = "APPROLE_unknown.authorized";
     private static final String UNAUTHORIZED_USERNAME = "unauthorized_isAuthorized";
     private static final String FORBIDDEN_STATUS_CODE = "Status code does not match forbidden";
     private static final String GET_AUDIT_LOG_FAILED = "Failed to retrieve audit log";
+    private static final String CREATE_AUDIT_LOG_FAILED = "Failed to create audit log";
     private static final AuditAction AUDIT_ACTION = AuditAction.MANAGE_THIRD_PARTY_USER_VIEW;
     private static final AuditAction ADDITIONAL_USER_AUDIT_ACTION = AuditAction.MANAGE_USER;
     private static final String ADDITIONAL_USER_AUDIT_DETAILS = "Manage user";
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
+    @MockitoBean
+    private AuditAuthorisationService auditAuthorisationService;
+
     @BeforeAll
     static void startup() {
         OBJECT_MAPPER.findAndRegisterModules();
+    }
+
+    @BeforeEach
+    void beforeEach() {
+        when(auditAuthorisationService.userCanViewAuditLogs(any())).thenReturn(true);
     }
 
     private AuditLog createAuditLog() {
@@ -96,7 +113,7 @@ class AuditTest {
             .contentType(MediaType.APPLICATION_JSON);
         mockMvc.perform(mockHttpServletRequestBuilder2).andExpect(status().isOk());
 
-        MvcResult mvcResult = mockMvc.perform(get(ROOT_URL))
+        MvcResult mvcResult = mockMvc.perform(get(ROOT_URL).header(REQUESTER_ID_HEADER, REQUESTER_ID))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -106,7 +123,7 @@ class AuditTest {
                 new TypeReference<>() {
                 }
             );
-        AuditLog auditLog1 = pageResponse.getContent().get(0);
+        AuditLog auditLog1 = pageResponse.getContent().getFirst();
 
         assertEquals(EMAIL, auditLog1.getUserEmail(), GET_AUDIT_LOG_FAILED);
         assertEquals(ADDITIONAL_USER_ID, auditLog1.getUserId(), GET_AUDIT_LOG_FAILED);
@@ -141,7 +158,8 @@ class AuditTest {
             .contentType(MediaType.APPLICATION_JSON);
         mockMvc.perform(mockHttpServletRequestBuilder2).andExpect(status().isOk());
 
-        MvcResult mvcResult = mockMvc.perform(get(ROOT_URL + "?email=" + EMAIL))
+        MvcResult mvcResult = mockMvc.perform(get(ROOT_URL + "?email=" + EMAIL)
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -151,7 +169,7 @@ class AuditTest {
                 new TypeReference<>() {
                 }
             );
-        AuditLog auditLog1 = pageResponse.getContent().get(0);
+        AuditLog auditLog1 = pageResponse.getContent().getFirst();
 
         assertEquals(EMAIL, auditLog1.getUserEmail(), GET_AUDIT_LOG_FAILED);
         assertEquals(USER_ID, auditLog1.getUserId(), GET_AUDIT_LOG_FAILED);
@@ -180,7 +198,8 @@ class AuditTest {
             .contentType(MediaType.APPLICATION_JSON);
         mockMvc.perform(mockHttpServletRequestBuilder2).andExpect(status().isOk());
 
-        MvcResult mvcResult = mockMvc.perform(get(ROOT_URL + "?email=test_account_admin"))
+        MvcResult mvcResult = mockMvc.perform(get(ROOT_URL + "?email=test_account_admin")
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -191,7 +210,7 @@ class AuditTest {
                 }
             );
 
-        AuditLog auditLog1 = pageResponse.getContent().get(0);
+        AuditLog auditLog1 = pageResponse.getContent().getFirst();
 
         assertEquals(EMAIL, auditLog1.getUserEmail(), GET_AUDIT_LOG_FAILED);
         assertEquals(ADDITIONAL_USER_ID, auditLog1.getUserId(), GET_AUDIT_LOG_FAILED);
@@ -226,7 +245,8 @@ class AuditTest {
             .contentType(MediaType.APPLICATION_JSON);
         mockMvc.perform(mockHttpServletRequestBuilder2).andExpect(status().isOk());
 
-        MvcResult mvcResult = mockMvc.perform(get(ROOT_URL + "?userId=" + ADDITIONAL_USER_ID))
+        MvcResult mvcResult = mockMvc.perform(get(ROOT_URL + "?userId=" + ADDITIONAL_USER_ID)
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -236,7 +256,7 @@ class AuditTest {
                 new TypeReference<>() {
                 }
             );
-        AuditLog auditLog1 = pageResponse.getContent().get(0);
+        AuditLog auditLog1 = pageResponse.getContent().getFirst();
 
         assertEquals(ADDITIONAL_USER_EMAIL, auditLog1.getUserEmail(), GET_AUDIT_LOG_FAILED);
         assertEquals(ADDITIONAL_USER_ID, auditLog1.getUserId(), GET_AUDIT_LOG_FAILED);
@@ -265,7 +285,8 @@ class AuditTest {
             .contentType(MediaType.APPLICATION_JSON);
         mockMvc.perform(mockHttpServletRequestBuilder2).andExpect(status().isOk());
 
-        MvcResult mvcResult = mockMvc.perform(get(ROOT_URL + "?actions=" + ADDITIONAL_USER_AUDIT_ACTION))
+        MvcResult mvcResult = mockMvc.perform(get(ROOT_URL + "?actions=" + ADDITIONAL_USER_AUDIT_ACTION)
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -275,10 +296,10 @@ class AuditTest {
                 new TypeReference<>() {
                 }
             );
-        AuditLog auditLog1 = pageResponse.getContent().get(0);
+        AuditLog auditLog1 = pageResponse.getContent().getFirst();
 
 
-        assertEquals(pageResponse.getContent().size(), 1, GET_AUDIT_LOG_FAILED);
+        assertEquals(1, pageResponse.getContent().size(), GET_AUDIT_LOG_FAILED);
         assertEquals(ADDITIONAL_USER_EMAIL, auditLog1.getUserEmail(), GET_AUDIT_LOG_FAILED);
         assertEquals(ADDITIONAL_USER_ID, auditLog1.getUserId(), GET_AUDIT_LOG_FAILED);
         assertEquals(ADDITIONAL_USER_AUDIT_DETAILS, auditLog1.getDetails(), GET_AUDIT_LOG_FAILED);
@@ -309,7 +330,8 @@ class AuditTest {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         LocalDate filterDate = LocalDate.parse(LocalDate.now().toString(), formatter);
 
-        MvcResult mvcResult = mockMvc.perform(get(ROOT_URL + "?filterDate=" + filterDate))
+        MvcResult mvcResult = mockMvc.perform(get(ROOT_URL + "?filterDate=" + filterDate)
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -320,7 +342,7 @@ class AuditTest {
                 }
             );
 
-        AuditLog auditLog1 = pageResponse.getContent().get(0);
+        AuditLog auditLog1 = pageResponse.getContent().getFirst();
 
         assertEquals(ADDITIONAL_USER_EMAIL, auditLog1.getUserEmail(), GET_AUDIT_LOG_FAILED);
         assertEquals(ADDITIONAL_USER_ID, auditLog1.getUserId(), GET_AUDIT_LOG_FAILED);
@@ -360,7 +382,7 @@ class AuditTest {
 
         MvcResult mvcResult = mockMvc.perform(get(ROOT_URL + "?email=" + ADDITIONAL_USER_EMAIL
              + "&userId=" + ADDITIONAL_USER_ID + "&actions=" + ADDITIONAL_USER_AUDIT_ACTION
-                                                      + "&filterDate=" + filterDate))
+                + "&filterDate=" + filterDate).header(REQUESTER_ID_HEADER, REQUESTER_ID))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -370,7 +392,7 @@ class AuditTest {
                 new TypeReference<>() {
                 }
             );
-        AuditLog auditLog1 = pageResponse.getContent().get(0);
+        AuditLog auditLog1 = pageResponse.getContent().getFirst();
 
         assertEquals(ADDITIONAL_USER_EMAIL, auditLog1.getUserEmail(), GET_AUDIT_LOG_FAILED);
         assertEquals(ADDITIONAL_USER_ID, auditLog1.getUserId(), GET_AUDIT_LOG_FAILED);
@@ -380,7 +402,9 @@ class AuditTest {
     @Test
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testUnauthorizedGetAllAuditLogs() throws Exception {
-        MvcResult mvcResult = mockMvc.perform(get(ROOT_URL))
+        when(auditAuthorisationService.userCanViewAuditLogs(REQUESTER_ID)).thenReturn(false);
+
+        MvcResult mvcResult = mockMvc.perform(get(ROOT_URL).header(REQUESTER_ID_HEADER, REQUESTER_ID))
             .andExpect(status().isForbidden()).andReturn();
 
         assertEquals(FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
@@ -402,9 +426,9 @@ class AuditTest {
             AuditLog.class
         );
 
-        assertEquals(EMAIL, auditLog.getUserEmail(), "Failed to create audit log");
-        assertEquals(USER_ID, auditLog.getUserId(), "Failed to create audit log");
-        assertEquals(AUDIT_DETAILS, auditLog.getDetails(), "Failed to create audit log");
+        assertEquals(EMAIL, auditLog.getUserEmail(), CREATE_AUDIT_LOG_FAILED);
+        assertEquals(USER_ID, auditLog.getUserId(), CREATE_AUDIT_LOG_FAILED);
+        assertEquals(AUDIT_DETAILS, auditLog.getDetails(), CREATE_AUDIT_LOG_FAILED);
     }
 
     @Test

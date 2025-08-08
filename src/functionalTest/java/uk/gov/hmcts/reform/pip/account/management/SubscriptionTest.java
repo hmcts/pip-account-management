@@ -11,6 +11,7 @@ import uk.gov.hmcts.reform.pip.account.management.model.subscription.Subscriptio
 import uk.gov.hmcts.reform.pip.account.management.model.subscription.usersubscription.UserSubscription;
 import uk.gov.hmcts.reform.pip.account.management.utils.AccountHelperBase;
 import uk.gov.hmcts.reform.pip.model.account.PiUser;
+import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.publication.ListType;
 import uk.gov.hmcts.reform.pip.model.report.AllSubscriptionMiData;
 import uk.gov.hmcts.reform.pip.model.report.LocationSubscriptionMiData;
@@ -53,21 +54,23 @@ class SubscriptionTest extends AccountHelperBase {
 
     private static final String LOCATION_ID = randomLocationId();
     private static final String LOCATION_NAME = "TestLocation" + LOCATION_ID;
-    private static final String USER_ID_HEADER = "x-user-id";
     private static final String BEARER = "Bearer ";
     private static final String LIST_LANGUAGE = "ENGLISH";
     private static final String LIST_LANGUAGE_CONFIGURE = "WELSH";
     private static final ListType LIST_TYPE = ListType.CIVIL_DAILY_CAUSE_LIST;
 
-    private PiUser systemAdminAccount;
     private UUID verifiedUserId = UUID.randomUUID();
+    private String systemAdminUserId;
 
     @BeforeAll
     public void setup() throws JsonProcessingException {
         bearer = Map.of(AUTHORIZATION, BEARER + accessToken);
-        systemAdminAccount = createSystemAdminAccount();
+
+        PiUser systemAdminAccount = createSystemAdminAccount();
+        systemAdminUserId = systemAdminAccount.getUserId();
+
         String createdUserId = getCreatedAccountUserId(
-            createAccount(generateEmail(), UUID.randomUUID().toString())
+            createAccount(generateEmail(), UUID.randomUUID().toString(), Roles.GENERAL_THIRD_PARTY, systemAdminUserId)
         );
 
         verifiedUserId = UUID.fromString(createdUserId);
@@ -91,14 +94,13 @@ class SubscriptionTest extends AccountHelperBase {
     @Test
     void testGetSubscription() {
 
-        Map<String, String> headerMap = new ConcurrentHashMap<>();
-        headerMap.putAll(bearer);
-        headerMap.put(USER_ID_HEADER, systemAdminAccount.getUserId());
+        Map<String, String> headerMap = new ConcurrentHashMap<>(bearer);
+        headerMap.put(REQUESTER_ID_HEADER, String.valueOf(verifiedUserId));
 
         Response responseCreateSubscription = doPostRequest(
             SUBSCRIPTION_URL,
             headerMap,
-            createTestSubscription(LOCATION_ID, verifiedUserId, LOCATION_NAME)
+            createTestSubscription(verifiedUserId)
         );
         assertThat(responseCreateSubscription.getStatusCode()).isEqualTo(CREATED.value());
         assertThat(responseCreateSubscription.asString().contains(verifiedUserId.toString()));
@@ -110,13 +112,13 @@ class SubscriptionTest extends AccountHelperBase {
         assertThat(returnedSubscriptionBySubId.getUserId()).isEqualTo(verifiedUserId);
         assertThat(returnedSubscriptionBySubId.getLocationName()).isEqualTo(LOCATION_NAME);
 
-        Response responseFindByUserId = doGetRequest(FIND_SUBSCRIPTION_BY_USER_ID_URL + verifiedUserId, bearer);
+        Response responseFindByUserId = doGetRequest(FIND_SUBSCRIPTION_BY_USER_ID_URL + verifiedUserId, headerMap);
         assertThat(responseFindByUserId.getStatusCode()).isEqualTo(OK.value());
         UserSubscription returnedSubscriptionByUserId = responseFindByUserId.as(UserSubscription.class);
         assertThat(returnedSubscriptionByUserId.getCaseSubscriptions().size()).isEqualTo(0);
-        assertThat(returnedSubscriptionByUserId.getLocationSubscriptions().get(0).getLocationId())
+        assertThat(returnedSubscriptionByUserId.getLocationSubscriptions().getFirst().getLocationId())
             .isEqualTo(LOCATION_ID);
-        assertThat(returnedSubscriptionByUserId.getLocationSubscriptions().get(0).getLocationName()).isEqualTo(
+        assertThat(returnedSubscriptionByUserId.getLocationSubscriptions().getFirst().getLocationName()).isEqualTo(
             LOCATION_NAME);
 
         Response responseUserCanDeleteSubscription = doDeleteRequest(
@@ -133,12 +135,12 @@ class SubscriptionTest extends AccountHelperBase {
 
         Map<String, String> headerMap = new ConcurrentHashMap<>();
         headerMap.putAll(bearer);
-        headerMap.put(USER_ID_HEADER, systemAdminAccount.getUserId());
+        headerMap.put(REQUESTER_ID_HEADER, String.valueOf(verifiedUserId));
 
         doPostRequest(
             SUBSCRIPTION_URL,
             headerMap,
-            createTestSubscription(LOCATION_ID, verifiedUserId, LOCATION_NAME)
+            createTestSubscription(verifiedUserId)
         );
 
         SubscriptionListType listType = new SubscriptionListType(
@@ -183,12 +185,12 @@ class SubscriptionTest extends AccountHelperBase {
 
         Map<String, String> headerMap = new ConcurrentHashMap<>();
         headerMap.putAll(bearer);
-        headerMap.put(USER_ID_HEADER, systemAdminAccount.getUserId());
+        headerMap.put(REQUESTER_ID_HEADER, String.valueOf(verifiedUserId));
 
         Response responseCreateSubscription = doPostRequest(
             SUBSCRIPTION_URL,
             headerMap,
-            createTestSubscription(LOCATION_ID, verifiedUserId, LOCATION_NAME)
+            createTestSubscription(verifiedUserId)
         );
         assertThat(responseCreateSubscription.getStatusCode()).isEqualTo(CREATED.value());
 
@@ -197,13 +199,17 @@ class SubscriptionTest extends AccountHelperBase {
         assertThat(responseFindByLocationId.getStatusCode()).isEqualTo(OK.value());
         List<Subscription> returnedSubscriptionsByLocationId = List.of(responseFindByLocationId.getBody().as(
             Subscription[].class));
-        assertThat(returnedSubscriptionsByLocationId.get(0).getUserId()).isEqualTo(verifiedUserId);
-        assertThat(returnedSubscriptionsByLocationId.get(0).getLocationName()).isEqualTo(LOCATION_NAME);
+        assertThat(returnedSubscriptionsByLocationId.getFirst().getUserId()).isEqualTo(verifiedUserId);
+        assertThat(returnedSubscriptionsByLocationId.getFirst().getLocationName()).isEqualTo(LOCATION_NAME);
 
         headerMap.put("x-provenance-user-id", systemAdminProvenanceId);
+
+        Map<String, String> deleteHeader = new ConcurrentHashMap<>(bearer);
+        deleteHeader.put(REQUESTER_ID_HEADER, String.valueOf(systemAdminUserId));
+
         final Response responseDeleteSubscriptionByLocationId = doDeleteRequest(
             SUBSCRIPTION_BY_LOCATION_URL + LOCATION_ID,
-            headerMap
+            deleteHeader
         );
         assertThat(responseDeleteSubscriptionByLocationId.getStatusCode()).isEqualTo(OK.value());
         assertThat(responseDeleteSubscriptionByLocationId.asString().contains(String.format(
@@ -218,12 +224,12 @@ class SubscriptionTest extends AccountHelperBase {
 
         Map<String, String> headerMap = new ConcurrentHashMap<>();
         headerMap.putAll(bearer);
-        headerMap.put(USER_ID_HEADER, systemAdminAccount.getUserId());
+        headerMap.put(REQUESTER_ID_HEADER, String.valueOf(verifiedUserId));
 
         Response responseCreateSubscription = doPostRequest(
             SUBSCRIPTION_URL,
             headerMap,
-            createTestSubscription(LOCATION_ID, verifiedUserId, LOCATION_NAME)
+            createTestSubscription(verifiedUserId)
         );
         String subscriptionId = responseCreateSubscription.asString().split(" ")[5];
 
@@ -261,12 +267,12 @@ class SubscriptionTest extends AccountHelperBase {
     void testGetMiDataAll() {
         Map<String, String> headerMap = new ConcurrentHashMap<>();
         headerMap.putAll(bearer);
-        headerMap.put(USER_ID_HEADER, verifiedUserId.toString());
+        headerMap.put(REQUESTER_ID_HEADER, verifiedUserId.toString());
 
         Response responseCreateSubscription = doPostRequest(
             SUBSCRIPTION_URL,
             headerMap,
-            createTestSubscription(LOCATION_ID, verifiedUserId, LOCATION_NAME)
+            createTestSubscription(verifiedUserId)
         );
 
         final String subscriptionId = responseCreateSubscription.asString().split(" ")[5];
@@ -288,12 +294,12 @@ class SubscriptionTest extends AccountHelperBase {
     void testGetMiDataLocationSubscription() {
         Map<String, String> headerMap = new ConcurrentHashMap<>();
         headerMap.putAll(bearer);
-        headerMap.put(USER_ID_HEADER, verifiedUserId.toString());
+        headerMap.put(REQUESTER_ID_HEADER, verifiedUserId.toString());
 
         doPostRequest(
             SUBSCRIPTION_URL,
             headerMap,
-            createTestSubscription(LOCATION_ID, verifiedUserId, LOCATION_NAME)
+            createTestSubscription(verifiedUserId)
         );
 
         final Response responseGetLocationSubscriptionMetadata = doGetRequest(
@@ -311,14 +317,14 @@ class SubscriptionTest extends AccountHelperBase {
         );
     }
 
-    private Subscription createTestSubscription(String locationId, UUID userId, String locationName) {
+    private Subscription createTestSubscription(UUID userId) {
         Subscription subscription = new Subscription();
         subscription.setUserId(userId);
         subscription.setSearchType(SearchType.LOCATION_ID);
-        subscription.setSearchValue(locationId);
+        subscription.setSearchValue(LOCATION_ID);
         subscription.setChannel(Channel.EMAIL);
         subscription.setCreatedDate(LocalDateTime.now());
-        subscription.setLocationName(locationName);
+        subscription.setLocationName(LOCATION_NAME);
         subscription.setLastUpdatedDate(LocalDateTime.now());
         return subscription;
     }
