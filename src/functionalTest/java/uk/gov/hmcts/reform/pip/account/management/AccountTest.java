@@ -186,21 +186,39 @@ class AccountTest extends AccountHelperBase {
 
     @ParameterizedTest
     @CsvSource({
-        "SYSTEM_ADMIN,PI_AAD,VERIFIED",
-        "INTERNAL_SUPER_ADMIN_CTSC,SSO,INTERNAL_ADMIN_LOCAL",
-        "INTERNAL_SUPER_ADMIN_LOCAL,SSO,INTERNAL_ADMIN_LOCAL",
-        "INTERNAL_ADMIN_LOCAL,SSO,INTERNAL_ADMIN_LOCAL",
+        "PI_AAD,VERIFIED",
+        "SSO,INTERNAL_ADMIN_LOCAL",
     })
-    void shouldBeAbleToDeleteAccount(String role, String provenance, String createdUserRole)
+    void shouldBeAbleToDeleteAccountV2(String provenance, String createdUserRole)
         throws Exception {
         String createdUserId = getCreatedAccountUserId(createAccount(email, provenanceId,
                                                                      Roles.valueOf(createdUserRole),
                                                                      UserProvenances.valueOf(provenance)));
 
         Map<String, String> headers = new ConcurrentHashMap<>(bearer);
-        headers.put(ADMIN_ID, idMap.get(Roles.valueOf(role)));
+        headers.put(ADMIN_ID, idMap.get(Roles.SYSTEM_ADMIN));
 
         Response deleteResponse = doDeleteRequest(String.format(DELETE_ENDPOINT_V2, createdUserId), headers);
+
+        assertThat(deleteResponse.getStatusCode()).isEqualTo(OK.value());
+
+        Response getUserResponse = doGetRequest(String.format(GET_BY_PROVENANCE_ID, provenanceId), bearer);
+        assertThat(getUserResponse.getStatusCode()).isEqualTo(NOT_FOUND.value());
+    }
+
+    @Test
+    void shouldBeAbleToDeleteAccountV2WhenSystemAdminAndThirdParty() throws JsonProcessingException {
+        List<PiUser> thirdParty = generateThirdParty();
+        Map<String, String> headers = new ConcurrentHashMap<>(bearer);
+        headers.put(ISSUER_ID, idMap.get(Roles.SYSTEM_ADMIN));
+
+        final Response createdResponse = doPostRequest(CREATE_PI_ACCOUNT,
+                                                       headers, objectMapper.writeValueAsString(thirdParty));
+        thirdPartyUserId = (String) createdResponse.getBody()
+            .as(CREATED_RESPONSE_TYPE).get(CreationEnum.CREATED_ACCOUNTS).get(0);
+
+        headers.put(ADMIN_ID, idMap.get(Roles.SYSTEM_ADMIN));
+        Response deleteResponse = doDeleteRequest(String.format(DELETE_ENDPOINT_V2, thirdPartyUserId), headers);
 
         assertThat(deleteResponse.getStatusCode()).isEqualTo(OK.value());
 
@@ -230,23 +248,7 @@ class AccountTest extends AccountHelperBase {
     }
 
     @Test
-    void shouldBeAbleToDeleteAccountWhenSso() throws Exception {
-        String createdUserId = getCreatedAccountUserId(
-            createAccount(email, provenanceId, Roles.INTERNAL_ADMIN_LOCAL, UserProvenances.SSO));
-
-        Map<String, String> headers = new ConcurrentHashMap<>(bearer);
-        headers.put(ADMIN_ID, idMap.get(Roles.INTERNAL_ADMIN_LOCAL));
-
-        Response deleteResponse = doDeleteRequest(String.format(DELETE_ENDPOINT_V2, createdUserId), headers);
-
-        assertThat(deleteResponse.getStatusCode()).isEqualTo(OK.value());
-
-        Response getUserResponse = doGetRequest(String.format(GET_BY_PROVENANCE_ID, provenanceId), bearer);
-        assertThat(getUserResponse.getStatusCode()).isEqualTo(NOT_FOUND.value());
-    }
-
-    @Test
-    void shouldNotBeAbleToDeleteVerifiedAccountV2WhenNonSystemAdmin()
+    void shouldNotBeAbleToDeleteVerifiedAccountWhenNonSystemAdmin()
         throws Exception {
         String createdUserId = getCreatedAccountUserId(createVerifiedAccount(email, provenanceId));
 
@@ -262,7 +264,7 @@ class AccountTest extends AccountHelperBase {
     }
 
     @Test
-    void shouldNotBeAbleToDeleteAccountWhenUserNotProvided() throws Exception {
+    void shouldNotBeAbleToDeleteAccountWhenUserNotProvidedAndNotSso() throws Exception {
         String createdUserId = getCreatedAccountUserId(createVerifiedAccount(email, provenanceId));
 
         Response deleteResponse = doDeleteRequest(String.format(DELETE_ENDPOINT_V2, createdUserId), bearer);
@@ -271,6 +273,19 @@ class AccountTest extends AccountHelperBase {
 
         Response getUserResponse = doGetRequest(String.format(GET_BY_PROVENANCE_ID, provenanceId), bearer);
         assertThat(getUserResponse.getStatusCode()).isEqualTo(OK.value());
+    }
+
+    @Test
+    void shouldBeAbleToDeleteAccountWhenUserNotProvidedAndSso() throws Exception {
+        String createdUserId = getCreatedAccountUserId(createAccount(email, provenanceId,
+                                                                     Roles.INTERNAL_ADMIN_LOCAL, UserProvenances.SSO));
+
+        Response deleteResponse = doDeleteRequest(String.format(DELETE_ENDPOINT_V2, createdUserId), bearer);
+
+        assertThat(deleteResponse.getStatusCode()).isEqualTo(OK.value());
+
+        Response getUserResponse = doGetRequest(String.format(GET_BY_PROVENANCE_ID, provenanceId), bearer);
+        assertThat(getUserResponse.getStatusCode()).isEqualTo(NOT_FOUND.value());
     }
 
     @Test
@@ -320,7 +335,7 @@ class AccountTest extends AccountHelperBase {
         "SYSTEM_ADMIN",
         "INTERNAL_ADMIN_LOCAL"
     })
-    void shouldBeAbleToUpdateRole(String role) throws JsonProcessingException {
+    void shouldNotBeAbleToUpdateRoleIfAdminAndNotThirdParty(String role) throws JsonProcessingException {
         String createdUserId = getCreatedAccountUserId(
             createAccount(email, provenanceId, Roles.INTERNAL_ADMIN_LOCAL, UserProvenances.SSO));
 
@@ -330,12 +345,7 @@ class AccountTest extends AccountHelperBase {
         Response updateResponse = doPutRequest(
             String.format(UPDATE_ACCOUNT_ROLE, createdUserId, SUPER_ADMIN_CTSC_ROLE_NAME), headers);
 
-        assertThat(updateResponse.getStatusCode()).isEqualTo(OK.value());
-
-        PiUser getUserResponse =
-            doGetRequest(String.format(GET_BY_USER_ID, createdUserId), bearer).getBody().as(PiUser.class);
-
-        assertThat(getUserResponse.getRoles()).isEqualTo(Roles.INTERNAL_SUPER_ADMIN_CTSC);
+        assertThat(updateResponse.getStatusCode()).isEqualTo(FORBIDDEN.value());
     }
 
     @Test
@@ -381,15 +391,12 @@ class AccountTest extends AccountHelperBase {
     }
 
     @Test
-    void shouldBeAbleToUpdateRoleIfSso() throws JsonProcessingException {
+    void shouldBeAbleToUpdateRoleIfSsoAndNoAdminProvided() throws JsonProcessingException {
         String createdUserId = getCreatedAccountUserId(
             createAccount(email, provenanceId, Roles.INTERNAL_ADMIN_LOCAL, UserProvenances.SSO));
 
-        Map<String, String> headers = new ConcurrentHashMap<>(bearer);
-        headers.put(ADMIN_ID, idMap.get(Roles.INTERNAL_ADMIN_LOCAL));
-
         Response updateResponse = doPutRequest(
-            String.format(UPDATE_ACCOUNT_ROLE, createdUserId, SUPER_ADMIN_CTSC_ROLE_NAME), headers);
+            String.format(UPDATE_ACCOUNT_ROLE, createdUserId, SUPER_ADMIN_CTSC_ROLE_NAME), bearer);
 
         assertThat(updateResponse.getStatusCode()).isEqualTo(OK.value());
 

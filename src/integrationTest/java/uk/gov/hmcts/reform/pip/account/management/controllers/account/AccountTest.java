@@ -77,7 +77,6 @@ class AccountTest extends IntegrationTestBase {
     private static final String SURNAME = "Surname";
     private static final String FIRST_NAME = "firstname";
     private static final UserProvenances PROVENANCE = UserProvenances.PI_AAD;
-    private static final Roles ROLE = Roles.INTERNAL_ADMIN_CTSC;
     private static final String SUPER_ADMIN_ISSUER_ID = "87f907d2-eb28-42cc-b6e1-ae2b03f7bba3";
     private static final String ISSUER_HEADER = "x-issuer-id";
     private static final String ADMIN_HEADER = "x-admin-id";
@@ -577,10 +576,7 @@ class AccountTest extends IntegrationTestBase {
                 .delete(ROOT_URL + DELETE_PATH_V2 + superAdminUserIdToDelete)
                 .header(ADMIN_HEADER, superAdminUserId);
 
-            MvcResult mvcResult = mockMvc.perform(deleteRequest).andExpect(status().isOk()).andReturn();
-            assertEquals(DELETE_USER_SUCCESS, mvcResult.getResponse().getContentAsString(),
-                         DELETE_USER_FAILURE
-            );
+            mockMvc.perform(deleteRequest).andExpect(status().isForbidden()).andReturn();
         }
 
         @Test
@@ -597,11 +593,24 @@ class AccountTest extends IntegrationTestBase {
         @Test
         @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD,
             scripts = {ADD_USERS_SCRIPT, ADD_VERIFIED_USERS_SCRIPT})
-        void testUnauthorizedDeleteAccountV2WhenNoUserId() throws Exception {
+        void testUnauthorizedDeleteAccountV2WhenNoUserIdAndNotSso() throws Exception {
             MockHttpServletRequestBuilder request = MockMvcRequestBuilders
                 .delete(ROOT_URL + DELETE_PATH_V2 + VERIFIED_USER_ID);
 
             assertRequestResponseStatus(mockMvc, request, FORBIDDEN.value());
+        }
+
+        @Test
+        void testDeleteAccountV2WhenNoUserIdAndSso() throws Exception {
+            String superAdminUserId = getSuperAdminUserId(superAdminUser);
+
+            MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+                .delete(ROOT_URL + DELETE_PATH_V2 + superAdminUserId);
+
+            MvcResult mvcResult = mockMvc.perform(request).andExpect(status().isOk()).andReturn();
+            assertEquals(DELETE_USER_SUCCESS, mvcResult.getResponse().getContentAsString(),
+                         DELETE_USER_FAILURE
+            );
         }
 
         @Test
@@ -641,7 +650,7 @@ class AccountTest extends IntegrationTestBase {
         }
 
         @Test
-        void testUpdateAccountRoleByIdWithoutAdminIdReturnsForbidden() throws Exception {
+        void testUpdateAccountRoleByIdWithoutAdminIdReturnsForbiddenWhenNonSso() throws Exception {
             verifiedUser.setUserProvenance(UserProvenances.CFT_IDAM);
 
             MockHttpServletRequestBuilder updateRequest = MockMvcRequestBuilders
@@ -650,6 +659,23 @@ class AccountTest extends IntegrationTestBase {
 
             mockMvc.perform(updateRequest)
                 .andExpect(status().isForbidden());
+        }
+
+        @Test
+        void testUpdateAccountRoleByIdWithoutAdminIdReturnsOkWhenSso() throws Exception {
+            PiUser superAdminUser = createAdminUser(true, Roles.INTERNAL_ADMIN_LOCAL);
+            String superAdminUserId = getSuperAdminUserId(superAdminUser);
+
+            MockHttpServletRequestBuilder updateRequest = MockMvcRequestBuilders
+                .put(ROOT_URL + UPDATE_PATH + superAdminUserId
+                         + "/" + Roles.INTERNAL_ADMIN_LOCAL);
+
+            MvcResult updateResponse = mockMvc.perform(updateRequest).andExpect(status().isOk()).andReturn();
+
+            assertEquals(
+                "User with ID " + superAdminUserId + " has been updated to a " + Roles.INTERNAL_ADMIN_LOCAL,
+                updateResponse.getResponse().getContentAsString(), "Failed to update account"
+            );
         }
 
         @Test
