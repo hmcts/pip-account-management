@@ -2,7 +2,6 @@ package uk.gov.hmcts.reform.pip.account.management.utils;
 
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.restassured.common.mapper.TypeRef;
 import io.restassured.response.Response;
 import uk.gov.hmcts.reform.pip.account.management.model.account.CreationEnum;
@@ -25,21 +24,10 @@ import static org.springframework.http.HttpStatus.OK;
 public class AccountHelperBase extends FunctionalTestBase {
 
     //Header Values
-    protected static final String BEARER = "Bearer ";
     protected static final String ISSUER_ID = "x-issuer-id";
 
     //Utils
-    protected static final String TEST_EMAIL_PREFIX = String.format(
-        "pip-am-test-email-%s", ThreadLocalRandom.current().nextInt(1000, 9999));
-    protected ObjectMapper objectMapper = new ObjectMapper();
     protected static final TypeRef<Map<CreationEnum, List<?>>> CREATED_RESPONSE_TYPE = new TypeRef<>() {};
-
-    //Endpoints
-    protected static final String TESTING_SUPPORT_DELETE_ACCOUNT_URL = "/testing-support/account/";
-    protected static final String CREATE_PI_ACCOUNT = "/account/add/pi";
-    private static final String CREATE_SYSTEM_ADMIN_SSO = "/account/system-admin";
-
-    protected Map<String, String> bearer;
 
     protected String generateEmail() {
         return TEST_EMAIL_PREFIX + "-"

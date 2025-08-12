@@ -6,12 +6,9 @@ import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -20,6 +17,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.testcontainers.shaded.org.apache.commons.lang3.RandomUtils;
 import uk.gov.hmcts.reform.pip.account.management.model.account.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.account.PiUser;
+import uk.gov.hmcts.reform.pip.account.management.utils.IntegrationTestBase;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
 import uk.gov.hmcts.reform.pip.model.report.AccountMiData;
@@ -36,14 +34,11 @@ import static org.springframework.http.HttpStatus.FORBIDDEN;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
-@AutoConfigureMockMvc
-@ActiveProfiles("integration")
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @WithMockUser(username = "admin", authorities = {"APPROLE_api.request.admin"})
 @SuppressWarnings("PMD.TooManyMethods")
-class CustomAccountRetrievalTest {
+class CustomAccountRetrievalTest extends IntegrationTestBase {
     private static final String ROOT_URL = "/account";
     private static final String ADMIN_ROOT_URL = "/account/admin/";
     private static final String THIRD_PARTY_URL = ROOT_URL + "/all/third-party";
@@ -58,9 +53,7 @@ class CustomAccountRetrievalTest {
     private static final String ISSUER_ID = "87f907d2-eb28-42cc-b6e1-ae2b03f7bba4";
     private static final String ISSUER_HEADER = "x-issuer-id";
 
-    private static final String NOT_FOUND_STATUS_CODE_MESSAGE = "Status code does not match not found";
     private static final String USER_SHOULD_MATCH = "Users should match";
-    private static final String FORBIDDEN_STATUS_CODE = "Status code does not match forbidden";
 
     private static final String UNAUTHORIZED_ROLE = "APPROLE_unknown.authorized";
     private static final String UNAUTHORIZED_USERNAME = "unauthorized_isAuthorized";
@@ -135,10 +128,7 @@ class CustomAccountRetrievalTest {
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .get(MI_REPORTING_ACCOUNT_DATA_URL);
 
-        MvcResult response = mockMvc.perform(request).andExpect(status().isForbidden()).andReturn();
-        assertEquals(FORBIDDEN.value(), response.getResponse().getStatus(),
-                     FORBIDDEN_STATUS_CODE
-        );
+        assertRequestResponseStatus(mockMvc, request, FORBIDDEN.value());
     }
 
     @Test
@@ -184,15 +174,10 @@ class CustomAccountRetrievalTest {
     @Test
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testUnauthorizedGetAllThirdPartyAccounts() throws Exception {
-        MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .get(THIRD_PARTY_URL);
 
-        MvcResult mvcResult =
-            mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isForbidden()).andReturn();
-
-        assertEquals(FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
-                     FORBIDDEN_STATUS_CODE
-        );
+        assertRequestResponseStatus(mockMvc, request, FORBIDDEN.value());
     }
 
     @Test
@@ -236,11 +221,7 @@ class CustomAccountRetrievalTest {
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .get(GET_ALL_ACCOUNTS_EXCEPT_THIRD_PARTY);
 
-        MvcResult mvcResult = mockMvc.perform(request).andExpect(status().isForbidden()).andReturn();
-
-        assertEquals(FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
-                     FORBIDDEN_STATUS_CODE
-        );
+        assertRequestResponseStatus(mockMvc, request, FORBIDDEN.value());
     }
 
     @Test
@@ -281,11 +262,7 @@ class CustomAccountRetrievalTest {
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .get(ADMIN_ROOT_URL + VALID_USER.getEmail() + "/" + UserProvenances.SSO);
 
-        MvcResult mvcResult = mockMvc.perform(request).andExpect(status().isNotFound()).andReturn();
-
-        assertEquals(NOT_FOUND.value(), mvcResult.getResponse().getStatus(),
-                     NOT_FOUND_STATUS_CODE_MESSAGE
-        );
+        assertRequestResponseStatus(mockMvc, request, NOT_FOUND.value());
     }
 
     @Test
@@ -294,10 +271,6 @@ class CustomAccountRetrievalTest {
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .get(ADMIN_ROOT_URL + VALID_USER.getEmail() + "/" + VALID_USER.getUserProvenance());
 
-        MvcResult mvcResult = mockMvc.perform(request).andExpect(status().isForbidden()).andReturn();
-
-        assertEquals(FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
-                     FORBIDDEN_STATUS_CODE
-        );
+        assertRequestResponseStatus(mockMvc, request, FORBIDDEN.value());
     }
 }

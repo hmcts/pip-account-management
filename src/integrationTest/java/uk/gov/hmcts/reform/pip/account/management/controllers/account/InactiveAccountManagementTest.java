@@ -3,26 +3,19 @@ package uk.gov.hmcts.reform.pip.account.management.controllers.account;
 import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import uk.gov.hmcts.reform.pip.account.management.utils.IntegrationTestBase;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.http.HttpStatus.FORBIDDEN;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
-@AutoConfigureMockMvc
-@ActiveProfiles("integration")
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
 @WithMockUser(username = "admin", authorities = {"APPROLE_api.request.admin"})
 @SuppressWarnings({"PMD.UnitTestShouldIncludeAssert"})
-class InactiveAccountManagementTest {
+class InactiveAccountManagementTest extends IntegrationTestBase {
     private static final String ROOT_URL = "/account";
     private static final String NOTIFY_INACTIVE_MEDIA_ACCOUNTS_URL = ROOT_URL + "/media/inactive/notify";
     private static final String DELETE_EXPIRED_MEDIA_ACCOUNTS_URL = ROOT_URL + "/media/inactive";
@@ -32,7 +25,6 @@ class InactiveAccountManagementTest {
 
     private static final String UNAUTHORIZED_ROLE = "APPROLE_unknown.authorized";
     private static final String UNAUTHORIZED_USERNAME = "unauthorized_isAuthorized";
-    private static final String FORBIDDEN_STATUS_CODE = "Status code does not match forbidden";
 
     @Autowired
     private MockMvc mockMvc;
@@ -51,11 +43,7 @@ class InactiveAccountManagementTest {
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .post(NOTIFY_INACTIVE_MEDIA_ACCOUNTS_URL);
 
-        MvcResult mvcResult = mockMvc.perform(request).andExpect(status().isForbidden()).andReturn();
-
-        assertEquals(FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
-                     FORBIDDEN_STATUS_CODE
-        );
+        assertRequestResponseStatus(mockMvc, request, FORBIDDEN.value());
     }
 
     @Test
@@ -72,11 +60,7 @@ class InactiveAccountManagementTest {
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .delete(DELETE_EXPIRED_MEDIA_ACCOUNTS_URL);
 
-        MvcResult mvcResult = mockMvc.perform(request).andExpect(status().isForbidden()).andReturn();
-
-        assertEquals(FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
-                     FORBIDDEN_STATUS_CODE
-        );
+        assertRequestResponseStatus(mockMvc, request, FORBIDDEN.value());
     }
 
     @Test
@@ -93,11 +77,7 @@ class InactiveAccountManagementTest {
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .delete(DELETE_EXPIRED_ADMIN_ACCOUNTS_URL);
 
-        MvcResult mvcResult = mockMvc.perform(request).andExpect(status().isForbidden()).andReturn();
-
-        assertEquals(FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
-                     FORBIDDEN_STATUS_CODE
-        );
+        assertRequestResponseStatus(mockMvc, request, FORBIDDEN.value());
     }
 
     @Test
@@ -114,11 +94,7 @@ class InactiveAccountManagementTest {
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .post(NOTIFY_INACTIVE_IDAM_ACCOUNTS_URL);
 
-        MvcResult mvcResult = mockMvc.perform(request).andExpect(status().isForbidden()).andReturn();
-
-        assertEquals(FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
-                     FORBIDDEN_STATUS_CODE
-        );
+        assertRequestResponseStatus(mockMvc, request, FORBIDDEN.value());
     }
 
     @Test
@@ -135,10 +111,6 @@ class InactiveAccountManagementTest {
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .delete(DELETE_EXPIRED_IDAM_ACCOUNTS_URL);
 
-        MvcResult mvcResult = mockMvc.perform(request).andExpect(status().isForbidden()).andReturn();
-
-        assertEquals(FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
-                     FORBIDDEN_STATUS_CODE
-        );
+        assertRequestResponseStatus(mockMvc, request, FORBIDDEN.value());
     }
 }
