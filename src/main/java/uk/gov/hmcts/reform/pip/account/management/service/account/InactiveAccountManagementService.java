@@ -25,9 +25,6 @@ public class InactiveAccountManagementService {
     @Value("${verification.media-account-deletion-days}")
     private int mediaAccountDeletionDays;
 
-    @Value("${verification.aad-admin-account-sign-in-notification-days}")
-    private int aadAdminAccountSignInNotificationDays;
-
     @Value("${verification.aad-admin-account-deletion-days}")
     private int aadAdminAccountDeletionDays;
 
@@ -70,26 +67,6 @@ public class InactiveAccountManagementService {
                 log.error(writeLog("Error when getting user from azure: " + ex.getMessage()));
             }
         });
-    }
-
-    /**
-     * Method that gets all admin users who last signed in at least 76 days ago.
-     * Then send their details on to publication services to send them a notification email.
-     */
-    public void notifyAdminUsersToSignIn() {
-        userRepository.findAdminUsersFortNotificationByLastSignedInDate(aadAdminAccountSignInNotificationDays)
-            .forEach(user -> {
-                try {
-                    publicationService.sendInactiveAccountSignInNotificationEmail(
-                        user.getEmail(),
-                        azureUserService.getUser(user.getEmail()).getGivenName(),
-                        user.getUserProvenance(),
-                        DateTimeHelper.localDateTimeToDateString(user.getLastSignedInDate())
-                    );
-                } catch (AzureCustomException ex) {
-                    log.error(writeLog("Error when getting user from azure: " + ex.getMessage()));
-                }
-            });
     }
 
     /**

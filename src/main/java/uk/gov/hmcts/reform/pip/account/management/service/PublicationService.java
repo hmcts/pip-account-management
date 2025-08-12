@@ -59,33 +59,6 @@ public class PublicationService {
     }
 
     /**
-     * Method which sends a request to the publication-services microservice which will send email to the user
-     * upon creation of a new admin account.
-     * @param emailAddress - email address
-     * @param forename - forename
-     * @param surname - surname
-     * @return string for logging success or failure
-     */
-    public boolean sendNotificationEmail(String emailAddress, String forename, String surname) {
-        JSONObject jsonObject = new JSONObject();
-        jsonObject.put(EMAIL, emailAddress);
-        jsonObject.put("forename", forename);
-        jsonObject.put("surname", surname);
-        try {
-            webClient.post().uri(url + "/notify/created/admin")
-                .body(BodyInserters.fromValue(jsonObject)).retrieve()
-                .bodyToMono(String.class)
-                .block();
-            return true;
-        } catch (WebClientException ex) {
-            log.error(writeLog(
-                String.format("Admin account welcome email failed to send with error: %s", ex.getMessage())
-            ));
-            return false;
-        }
-    }
-
-    /**
      * Method which sends a request to the publication-services microservice to send a media account rejection email.
      *
      * @param mediaApplication - MediaApplication object containing applicant details

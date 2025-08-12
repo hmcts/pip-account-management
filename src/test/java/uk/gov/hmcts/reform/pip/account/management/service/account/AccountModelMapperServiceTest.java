@@ -34,7 +34,6 @@ class AccountModelMapperServiceTest {
         expected.setEmail(EMAIL);
         expected.setFirstName(FIRST_NAME);
         expected.setSurname(SURNAME);
-        expected.setRole(Roles.VERIFIED);
 
         assertEquals(List.of(expected),
                      accountModelMapperService.createAzureUsersFromCsv(List.of(mediaCsv)),
@@ -52,7 +51,6 @@ class AccountModelMapperServiceTest {
         expected.setEmail(EMAIL);
         expected.setFirstName(EMAIL);
         expected.setSurname(EMPTY);
-        expected.setRole(Roles.VERIFIED);
 
         assertEquals(List.of(expected, expected),
                      accountModelMapperService.createAzureUsersFromCsv(List.of(mediaCsv, mediaCsv)),
@@ -75,7 +73,6 @@ class AccountModelMapperServiceTest {
         expected.setEmail(EMAIL);
         expected.setFirstName(EMAIL);
         expected.setSurname(EMPTY);
-        expected.setRole(Roles.VERIFIED);
 
         assertEquals(List.of(expected, expected),
                      accountModelMapperService.createAzureUsersFromCsv(List.of(mediaCsv, mediaCsv)),
@@ -88,7 +85,6 @@ class AccountModelMapperServiceTest {
         azureAccount.setEmail(EMAIL);
         azureAccount.setFirstName(FIRST_NAME);
         azureAccount.setSurname(SURNAME);
-        azureAccount.setRole(Roles.VERIFIED);
         azureAccount.setAzureAccountId(ID);
 
         PiUser expected = new PiUser();
@@ -108,7 +104,6 @@ class AccountModelMapperServiceTest {
         azureAccount.setEmail(EMAIL);
         azureAccount.setFirstName(FIRST_NAME);
         azureAccount.setSurname(SURNAME);
-        azureAccount.setRole(Roles.VERIFIED);
         azureAccount.setAzureAccountId(ID);
 
         PiUser expected = new PiUser();

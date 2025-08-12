@@ -69,10 +69,7 @@ public class SystemAdminAccountService {
             throw new SystemAdminAccountException(erroredSystemAdminAccount);
         }
 
-        List<PiUser> systemAdminUsers = userRepository.findByRoles(Roles.SYSTEM_ADMIN)
-            .stream()
-            .filter(u -> UserProvenances.SSO.equals(u.getUserProvenance()))
-            .toList();
+        List<PiUser> systemAdminUsers = userRepository.findByRoles(Roles.SYSTEM_ADMIN);
         if (systemAdminUsers.size() >= maxSystemAdminValue) {
             ErroredSystemAdminAccount erroredSystemAdminAccount = new ErroredSystemAdminAccount(account);
             erroredSystemAdminAccount.setAboveMaxSystemAdmin(true);

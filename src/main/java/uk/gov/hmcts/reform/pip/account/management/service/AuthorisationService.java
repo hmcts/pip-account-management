@@ -20,10 +20,10 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
-import static uk.gov.hmcts.reform.pip.model.account.Roles.ALL_NON_RESTRICTED_ADMIN_ROLES;
 
 @Service("authorisationService")
 @Slf4j
+@SuppressWarnings("PMD.TooManyMethods")
 public class AuthorisationService {
     private final UserRepository userRepository;
     private final SubscriptionRepository subscriptionRepository;
@@ -62,7 +62,7 @@ public class AuthorisationService {
             return false;
         }
 
-        boolean isAuthorised = isAuthorisedRole(userId, adminUserId);
+        boolean isAuthorised = isAuthorisedRoleDelete(userId, adminUserId);
 
         if (!isAuthorised) {
             log.error(writeLog(
@@ -84,7 +84,7 @@ public class AuthorisationService {
             return false;
         }
 
-        boolean isAuthorised = isAuthorisedRole(userId, adminUserId);
+        boolean isAuthorised = isAuthorisedRoleUpdate(userId, adminUserId);
 
         if (!isAuthorised) {
             log.error(writeLog(
@@ -116,24 +116,36 @@ public class AuthorisationService {
 
     }
 
-    private boolean isAuthorisedRole(UUID userId, UUID adminUserId) {
+    private boolean isAuthorisedRoleUpdate(UUID userId, UUID adminUserId) {
         PiUser user = getUser(userId);
-        if (UserProvenances.SSO.equals(user.getUserProvenance())) {
+
+        //Triggered by the user creation process for SSO
+        if (UserProvenances.SSO.equals(user.getUserProvenance()) && adminUserId == null) {
             return true;
         }
 
         if (adminUserId == null) {
             return false;
         }
-        PiUser adminUser = getUser(adminUserId);
 
-        if (adminUser.getRoles() == Roles.SYSTEM_ADMIN) {
+        PiUser adminUser = getUser(adminUserId);
+        return adminUser.getRoles() == Roles.SYSTEM_ADMIN && Roles.getAllThirdPartyRoles().contains(user.getRoles());
+    }
+
+    private boolean isAuthorisedRoleDelete(UUID userId, UUID adminUserId) {
+        PiUser user = getUser(userId);
+
+        //Triggered by the user creation process for SSO
+        if (UserProvenances.SSO.equals(user.getUserProvenance()) && adminUserId == null) {
             return true;
-        } else if (adminUser.getRoles() == Roles.INTERNAL_SUPER_ADMIN_LOCAL
-            || adminUser.getRoles() == Roles.INTERNAL_SUPER_ADMIN_CTSC) {
-            return ALL_NON_RESTRICTED_ADMIN_ROLES.contains(user.getRoles());
         }
-        return false;
+
+        if (adminUserId == null) {
+            return false;
+        }
+
+        PiUser adminUser = getUser(adminUserId);
+        return adminUser.getRoles() == Roles.SYSTEM_ADMIN;
     }
 
     private PiUser getUser(UUID userId) {

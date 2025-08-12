@@ -73,7 +73,6 @@ class AzureUserServiceTest {
     @BeforeEach
     public void setup() {
         azureAccount = new AzureAccount();
-        azureAccount.setRole(Roles.INTERNAL_ADMIN_CTSC);
     }
 
     @Test
@@ -134,7 +133,7 @@ class AzureUserServiceTest {
         assertEquals(FIRST_NAME, user.getGivenName(), "Given name is set as the firstname");
         assertEquals(SURNAME, user.getSurname(), "Lastname is set as the surname");
         assertEquals(
-            Roles.INTERNAL_ADMIN_CTSC.name(),
+            Roles.VERIFIED.name(),
             user.getAdditionalData().get("extension_" + EXTENSION_ID.replace("-", "") + "_UserRole").toString(),
             "User role has not been returned as expected"
         );
@@ -271,39 +270,6 @@ class AzureUserServiceTest {
 
         assertEquals("Error when deleting account in Azure.",
                      azureCustomException.getMessage(), ERROR_MESSAGE);
-    }
-
-    @Test
-    void testUpdateUser() throws AzureCustomException {
-        User userToReturn = new User();
-        userToReturn.setId(ID);
-
-        when(clientConfiguration.getExtensionId()).thenReturn(EXTENSION_ID);
-        when(graphClient.users()).thenReturn(usersRequestBuilder);
-        when(usersRequestBuilder.byUserId(userToReturn.getId())).thenReturn(userItemRequestBuilder);
-        when(userItemRequestBuilder.patch(any())).thenReturn(userToReturn);
-
-        assertEquals(userToReturn, azureUserService.updateUserRole(userToReturn.getId(), Roles.SYSTEM_ADMIN.toString()),
-                     "Returned user does not match expected");
-    }
-
-    @Test
-    void testUpdateUserError() {
-        User userToReturn = new User();
-        userToReturn.setId(ID);
-
-        when(clientConfiguration.getExtensionId()).thenReturn(EXTENSION_ID);
-        when(graphClient.users()).thenReturn(usersRequestBuilder);
-        when(usersRequestBuilder.byUserId(userToReturn.getId())).thenReturn(userItemRequestBuilder);
-        doThrow(apiException).when(userItemRequestBuilder).patch(any());
-
-        AzureCustomException azureCustomException = assertThrows(AzureCustomException.class, () -> {
-            azureUserService.updateUserRole(userToReturn.getId(), Roles.SYSTEM_ADMIN.toString());
-        });
-
-        assertEquals("Error when updating account in Azure.",
-                     azureCustomException.getMessage(),
-                     ERROR_MESSAGE);
     }
 
 }
