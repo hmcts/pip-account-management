@@ -168,7 +168,7 @@ class AccountTest extends IntegrationTestBase {
         when(usersRequestBuilder.post(any())).thenReturn(userToReturn, additionalUser);
 
         when(accountAuthorisationService.userCanCreateAccount(any(), any())).thenReturn(true);
-        when(accountAuthorisationService.userCanViewAccounts(any())).thenReturn(true);
+        when(accountAuthorisationService.userCanViewAccounts(any(), any())).thenReturn(true);
         when(accountAuthorisationService.userCanDeleteAccount(any(), any())).thenReturn(true);
     }
 
@@ -954,7 +954,7 @@ class AccountTest extends IntegrationTestBase {
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .get(ROOT_URL + "/" + UUID.randomUUID()).header(REQUESTER_ID_HEADER, SUPER_ADMIN_ISSUER_ID);
 
-        when(accountAuthorisationService.userCanViewAccounts(any())).thenReturn(false);
+        when(accountAuthorisationService.userCanViewAccounts(any(), any())).thenReturn(false);
         MvcResult mvcResult = mockMvc.perform(request).andExpect(status().isForbidden()).andReturn();
 
         assertEquals(FORBIDDEN.value(), mvcResult.getResponse().getStatus(),

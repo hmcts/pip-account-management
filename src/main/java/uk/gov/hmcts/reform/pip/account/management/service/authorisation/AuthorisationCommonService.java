@@ -51,12 +51,14 @@ public class AuthorisationCommonService {
         return false;
     }
 
-    public boolean isUserVerified(UUID userId) {
-        if (userId == null) {
+    public boolean isUserVerified(UUID requesterId, UUID userId) {
+        if (requesterId == null) {
             return false;
         }
 
-        PiUser user = accountService.getUserById(userId);
-        return user != null && Roles.VERIFIED.equals(user.getRoles()) && user.getUserId().equals(userId);
+        PiUser requesterUser = accountService.getUserById(requesterId);
+        return requesterUser != null
+            && Roles.VERIFIED.equals(requesterUser.getRoles())
+            && requesterUser.getUserId().equals(userId);
     }
 }

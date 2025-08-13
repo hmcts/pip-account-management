@@ -76,7 +76,7 @@ public class AccountController {
     @ApiResponse(responseCode = FORBIDDEN_ERROR_CODE,
         description = "User with ID {requesterId} is not authorised to view accounts")
     @Operation(summary = "Get a user based on their user ID")
-    @PreAuthorize("@accountAuthorisationService.userCanViewAccounts(#requesterId)")
+    @PreAuthorize("@accountAuthorisationService.userCanViewAccounts(#requesterId, #userId)")
     @GetMapping("/{userId}")
     public ResponseEntity<PiUser> getUserById(
         @RequestHeader(REQUESTER_ID) String requesterId,

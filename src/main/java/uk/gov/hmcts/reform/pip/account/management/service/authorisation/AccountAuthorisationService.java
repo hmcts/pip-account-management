@@ -118,14 +118,14 @@ public class AccountAuthorisationService {
         return isSystemAdmin;
     }
 
-    public boolean userCanViewAccounts(UUID userId) {
+    public boolean userCanViewAccounts(UUID requesterId, UUID userId) {
         if (!authorisationCommonService.hasOAuthAdminRole()) {
             return false;
         }
 
-        if (!authorisationCommonService.isUserAdmin(userId)
-            && !authorisationCommonService.isUserVerified(userId)) {
-            log.error(writeLog(String.format("User with ID %s is not authorised to view accounts", userId)));
+        if (!authorisationCommonService.isUserAdmin(requesterId)
+            && !authorisationCommonService.isUserVerified(requesterId, userId)) {
+            log.error(writeLog(String.format("User with ID %s is not authorised to view accounts", requesterId)));
             return false;
         }
         return true;

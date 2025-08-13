@@ -156,7 +156,7 @@ class AuthorisationCommonServiceTest {
     void testIsUserVerified() {
         user.setRoles(VERIFIED);
         when(accountService.getUserById(USER_ID)).thenReturn(user);
-        assertTrue(authorisationCommonService.isUserVerified(USER_ID));
+        assertTrue(authorisationCommonService.isUserVerified(USER_ID, USER_ID));
     }
 
     @Test
@@ -164,7 +164,7 @@ class AuthorisationCommonServiceTest {
         PiUser randomUser = new PiUser();
         randomUser.setRoles(VERIFIED);
         randomUser.setUserId(UUID.randomUUID());
-        when(accountService.getUserById(USER_ID)).thenReturn(randomUser);
-        assertFalse(authorisationCommonService.isUserVerified(USER_ID));
+        when(accountService.getUserById(randomUser.getUserId())).thenReturn(randomUser);
+        assertFalse(authorisationCommonService.isUserVerified(randomUser.getUserId(), USER_ID));
     }
 }
