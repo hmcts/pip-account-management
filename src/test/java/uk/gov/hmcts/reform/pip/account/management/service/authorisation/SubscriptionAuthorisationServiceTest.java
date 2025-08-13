@@ -665,28 +665,6 @@ class SubscriptionAuthorisationServiceTest {
 
     @ParameterizedTest
     @MethodSource("uk.gov.hmcts.reform.pip.model.account.Roles#getAllThirdPartyRoles")
-    void testSystemAdminUserCanDeleteLocationSubscriptionsForThirdPartyAccount(Roles role) {
-        adminUser.setRoles(SYSTEM_ADMIN);
-        user.setRoles(role);
-        subscription.setUserId(USER_ID);
-        when(accountService.getUserById(USER_ID)).thenReturn(user);
-        when(authorisationCommonService.isSystemAdmin(ADMIN_USER_ID)).thenReturn(true);
-        when(subscriptionRepository.findSubscriptionsByLocationId("123"))
-            .thenReturn(List.of(subscription));
-
-        try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionAuthorisationService.class)) {
-            assertThat(subscriptionAuthorisationService.userCanDeleteLocationSubscriptions(ADMIN_USER_ID, 123))
-                .as(CAN_DELETE_SUBSCRIPTION_MESSAGE)
-                .isTrue();
-
-            assertThat(logCaptor.getErrorLogs())
-                .as(LOG_EMPTY_MESSAGE)
-                .isEmpty();
-        }
-    }
-
-    @ParameterizedTest
-    @MethodSource("uk.gov.hmcts.reform.pip.model.account.Roles#getAllThirdPartyRoles")
     void testSystemAdminUserCanNotDeleteLocationSubscriptionsForThirdPartyAccountWhenNotLoggedIn(Roles role) {
         adminUser.setRoles(SYSTEM_ADMIN);
         user.setRoles(role);

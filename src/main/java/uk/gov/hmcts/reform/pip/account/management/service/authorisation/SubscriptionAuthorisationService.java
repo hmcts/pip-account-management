@@ -68,17 +68,16 @@ public class SubscriptionAuthorisationService {
     }
 
     public boolean userCanDeleteLocationSubscriptions(UUID requesterId, Integer locationId) {
-        if (!authorisationCommonService.hasOAuthAdminRole()
-            || !authorisationCommonService.isSystemAdmin(requesterId)
-            || locationId == null) {
-            log.error(writeLog(
-                String.format("User with ID %s is not authorised to remove these subscriptions", requesterId)
-            ));
-            return false;
+        if (authorisationCommonService.hasOAuthAdminRole()
+            && authorisationCommonService.isSystemAdmin(requesterId)
+            && locationId != null) {
+            return true;
         }
 
-        return subscriptionRepository.findSubscriptionsByLocationId(locationId.toString())
-                .stream().allMatch(this::isThirdPartySubscription);
+        log.error(writeLog(
+            String.format("User with ID %s is not authorised to remove these subscriptions", requesterId)
+        ));
+        return false;
     }
 
     public boolean userCanBulkDeleteSubscriptions(UUID requesterId, List<UUID> subscriptionIds) {
