@@ -4,6 +4,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -16,6 +18,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import uk.gov.hmcts.reform.pip.account.management.model.account.PiUser;
 import uk.gov.hmcts.reform.pip.account.management.model.subscription.Subscription;
 import uk.gov.hmcts.reform.pip.account.management.service.account.AccountService;
+import uk.gov.hmcts.reform.pip.model.account.Roles;
 
 import java.util.List;
 import java.util.UUID;
@@ -132,4 +135,36 @@ class AuthorisationCommonServiceTest {
         assertFalse(authorisationCommonService.isSystemAdmin(ADMIN_USER_ID));
     }
 
+    @ParameterizedTest
+    @EnumSource(value = Roles.class,
+        names = { "INTERNAL_SUPER_ADMIN_CTSC",
+            "INTERNAL_SUPER_ADMIN_LOCAL",
+            "INTERNAL_ADMIN_CTSC",
+            "INTERNAL_ADMIN_LOCAL",
+            "SYSTEM_ADMIN" },
+        mode = EnumSource.Mode.INCLUDE)
+    void testUserIsAdminAndLoggedIn(Roles role) {
+        setupWithAuth();
+        adminUser.setRoles(role);
+        when(accountService.getUserById(ADMIN_USER_ID)).thenReturn(adminUser);
+
+        assertTrue(authorisationCommonService.isUserAdmin(ADMIN_USER_ID));
+        assertTrue(authorisationCommonService.hasOAuthAdminRole());
+    }
+
+    @Test
+    void testIsUserVerified() {
+        user.setRoles(VERIFIED);
+        when(accountService.getUserById(USER_ID)).thenReturn(user);
+        assertTrue(authorisationCommonService.isUserVerified(USER_ID));
+    }
+
+    @Test
+    void testIsUserCanVerifiedItSelfOnly() {
+        PiUser randomUser = new PiUser();
+        randomUser.setRoles(VERIFIED);
+        randomUser.setUserId(UUID.randomUUID());
+        when(accountService.getUserById(USER_ID)).thenReturn(randomUser);
+        assertFalse(authorisationCommonService.isUserVerified(USER_ID));
+    }
 }

@@ -119,7 +119,12 @@ public class AccountAuthorisationService {
     }
 
     public boolean userCanViewAccounts(UUID userId) {
-        if (!(authorisationCommonService.hasOAuthAdminRole() && authorisationCommonService.isSystemAdmin(userId))) {
+        if (!authorisationCommonService.hasOAuthAdminRole()) {
+            return false;
+        }
+
+        if (!authorisationCommonService.isUserAdmin(userId)
+            && !authorisationCommonService.isUserVerified(userId)) {
             log.error(writeLog(String.format("User with ID %s is not authorised to view accounts", userId)));
             return false;
         }

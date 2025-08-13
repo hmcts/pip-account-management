@@ -7,6 +7,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import uk.gov.hmcts.reform.pip.account.management.model.account.PiUser;
 import uk.gov.hmcts.reform.pip.account.management.service.account.AccountService;
+import uk.gov.hmcts.reform.pip.model.account.Roles;
 
 import java.util.UUID;
 
@@ -36,5 +37,26 @@ public class AuthorisationCommonService {
 
         PiUser user = accountService.getUserById(userId);
         return user != null && user.getRoles() == SYSTEM_ADMIN;
+    }
+
+    public boolean isUserAdmin(UUID userId) {
+        if (userId == null) {
+            return false;
+        }
+
+        PiUser user = accountService.getUserById(userId);
+        if (user != null && user.getRoles() != null) {
+            return Roles.ALL_ADMINS.contains(user.getRoles());
+        }
+        return false;
+    }
+
+    public boolean isUserVerified(UUID userId) {
+        if (userId == null) {
+            return false;
+        }
+
+        PiUser user = accountService.getUserById(userId);
+        return user != null && Roles.VERIFIED.equals(user.getRoles()) && user.getUserId().equals(userId);
     }
 }

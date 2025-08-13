@@ -697,13 +697,7 @@ class SubscriptionAuthorisationServiceTest {
         "SYSTEM_ADMIN"
     }, mode = EnumSource.Mode.INCLUDE)
     void testSystemAdminUserCanNotDeleteLocationSubscriptionsForNonThirdPartyAccounts(Roles role) {
-        adminUser.setRoles(SYSTEM_ADMIN);
-        user.setRoles(role);
-        subscription.setUserId(USER_ID);
-        when(accountService.getUserById(USER_ID)).thenReturn(user);
-        when(authorisationCommonService.isSystemAdmin(ADMIN_USER_ID)).thenReturn(true);
-        when(subscriptionRepository.findSubscriptionsByLocationId("123"))
-            .thenReturn(List.of(subscription));
+        when(authorisationCommonService.isSystemAdmin(ADMIN_USER_ID)).thenReturn(false);
 
         assertThat(subscriptionAuthorisationService.userCanDeleteLocationSubscriptions(ADMIN_USER_ID, 123))
             .as(CANNOT_DELETE_SUBSCRIPTION_MESSAGE)

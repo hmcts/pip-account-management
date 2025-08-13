@@ -46,6 +46,7 @@ import static uk.gov.hmcts.reform.pip.model.account.Roles.VERIFIED_THIRD_PARTY_P
 class AccountAuthorisationServiceTest {
     private static final UUID USER_ID = UUID.randomUUID();
     private static final UUID ADMIN_USER_ID = UUID.randomUUID();
+    private static final UUID VERIFIED_USER_ID = UUID.randomUUID();
     private static final String SYSTEM_ADMIN_ROLE = "SYSTEM_ADMIN";
     private static final String INTERNAL_ADMIN_CTSC_ROLE = "INTERNAL_ADMIN_CTSC";
 
@@ -66,6 +67,7 @@ class AccountAuthorisationServiceTest {
 
     private static PiUser user = new PiUser();
     private static PiUser adminUser = new PiUser();
+    private static PiUser verifiedUser = new PiUser();
 
     @Mock
     private UserRepository userRepository;
@@ -88,6 +90,7 @@ class AccountAuthorisationServiceTest {
     static void setup() {
         user.setUserId(USER_ID);
         adminUser.setUserId(ADMIN_USER_ID);
+        verifiedUser.setUserId(VERIFIED_USER_ID);
     }
 
     @ParameterizedTest
@@ -128,9 +131,18 @@ class AccountAuthorisationServiceTest {
     @Test
     void testSystemAdminUserCanViewAccounts() {
         adminUser.setRoles(SYSTEM_ADMIN);
-        when(authorisationCommonService.isSystemAdmin(ADMIN_USER_ID)).thenReturn(true);
+        when(authorisationCommonService.isUserAdmin(ADMIN_USER_ID)).thenReturn(true);
 
         assertTrue(accountAuthorisationService.userCanViewAccounts(ADMIN_USER_ID));
+    }
+
+    @Test
+    void testVerifiedUserCanViewAccounts() {
+        verifiedUser.setRoles(VERIFIED);
+        when(authorisationCommonService.isUserVerified(VERIFIED_USER_ID)).thenReturn(true);
+        when(authorisationCommonService.isUserAdmin(VERIFIED_USER_ID)).thenReturn(false);
+
+        assertTrue(accountAuthorisationService.userCanViewAccounts(VERIFIED_USER_ID));
     }
 
     @ParameterizedTest
