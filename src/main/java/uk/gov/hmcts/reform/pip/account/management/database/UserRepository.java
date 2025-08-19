@@ -32,11 +32,15 @@ public interface UserRepository extends JpaRepository<PiUser, Long> {
 
     @Query(value = "SELECT * FROM pi_user WHERE CAST(last_verified_date AS DATE) = CURRENT_DATE - (interval '1' day)"
         + " * :daysAgo AND user_provenance = 'PI_AAD' AND roles = 'VERIFIED'", nativeQuery = true)
-    List<PiUser> findVerifiedUsersByLastVerifiedDate(@Param("daysAgo") int daysSinceLastVerified);
+    List<PiUser> findVerifiedUsersForNotificationByLastVerifiedDate(@Param("daysAgo") int daysSinceLastVerified);
+
+    @Query(value = "SELECT * FROM pi_user WHERE CAST(last_verified_date AS DATE) <= CURRENT_DATE - (interval '1' day)"
+        + " * :daysAgo AND user_provenance = 'PI_AAD' AND roles = 'VERIFIED'", nativeQuery = true)
+    List<PiUser> findVerifiedUsersForDeletionByLastVerifiedDate(@Param("daysAgo") int daysSinceLastVerified);
 
     @Query(value = "SELECT * FROM pi_user WHERE user_provenance = 'PI_AAD' AND roles <> 'VERIFIED' AND "
         + "CAST(last_signed_in_date AS DATE) = CURRENT_DATE - (interval '1' day) * :aadDays", nativeQuery = true)
-    List<PiUser> findAdminUsersFortNotificationByLastSignedInDate(@Param("aadDays") int aadNumberOfDays);
+    List<PiUser> findAdminUsersForNotificationByLastSignedInDate(@Param("aadDays") int aadNumberOfDays);
 
     @Query(value = "SELECT * FROM pi_user WHERE (user_provenance = 'PI_AAD' AND roles <> 'VERIFIED' AND "
         + "CAST(last_signed_in_date AS DATE) <= CURRENT_DATE - (interval '1' day) * :aadDays) OR "
@@ -49,8 +53,15 @@ public interface UserRepository extends JpaRepository<PiUser, Long> {
         + " * :cftDaysAgo AND user_provenance = 'CFT_IDAM') "
         + " OR (CAST(last_signed_in_date AS DATE) = CURRENT_DATE - (interval '1' day)"
         + " * :crimeDaysAgo AND user_provenance = 'CRIME_IDAM') ", nativeQuery = true)
-    List<PiUser> findIdamUsersByLastSignedInDate(@Param("cftDaysAgo") int cftDaysSinceLastSignedIn,
-                                                 @Param("crimeDaysAgo") int crimeDaysSinceLastSignedIn);
+    List<PiUser> findIdamUsersForNotificationByLastSignedInDate(@Param("cftDaysAgo") int cftDaysSinceLastSignedIn,
+                                                                @Param("crimeDaysAgo") int crimeDaysSinceLastSignedIn);
+
+    @Query(value = "SELECT * FROM pi_user WHERE (CAST(last_signed_in_date AS DATE) <= CURRENT_DATE - (interval '1' day)"
+        + " * :cftDaysAgo AND user_provenance = 'CFT_IDAM') "
+        + " OR (CAST(last_signed_in_date AS DATE) <= CURRENT_DATE - (interval '1' day)"
+        + " * :crimeDaysAgo AND user_provenance = 'CRIME_IDAM') ", nativeQuery = true)
+    List<PiUser> findIdamUsersForDeletionByLastSignedInDate(@Param("cftDaysAgo") int cftDaysSinceLastSignedIn,
+                                                            @Param("crimeDaysAgo") int crimeDaysSinceLastSignedIn);
 
     Optional<PiUser> findByEmailIgnoreCaseAndUserProvenanceAndRolesIn(String email, UserProvenances userProvenances,
                                                                       List<Roles> roles);
