@@ -6,12 +6,9 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -36,9 +33,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
-@AutoConfigureMockMvc
-@ActiveProfiles("integration")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @WithMockUser(username = "admin", authorities = {"APPROLE_api.request.admin"})
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
@@ -55,8 +49,6 @@ class SubscriptionLocationTest extends IntegrationTestBase {
     private static final String ACTIONING_USER_ID = "87f907d2-eb28-42cc-b6e1-ae2b03f7bba5";
 
     private static final String VALIDATION_EMPTY_RESPONSE = "Returned response is empty";
-    private static final String FORBIDDEN_STATUS_CODE = "Status code does not match forbidden";
-    private static final String NOT_FOUND_STATUS_CODE = "Status code does not match not found";
     private static final String UNAUTHORIZED_ROLE = "APPROLE_unknown.authorized";
     private static final String UNAUTHORIZED_USERNAME = "unauthorized_isAuthorized";
 
@@ -110,21 +102,14 @@ class SubscriptionLocationTest extends IntegrationTestBase {
 
     @Test
     void testFindSubscriptionsByLocationIdNotFound() throws Exception {
-        MvcResult response = mvc.perform(get(SUBSCRIPTIONS_BY_LOCATION + LOCATION_ID))
-            .andExpect(status().isNotFound())
-            .andReturn();
-
-        assertEquals(NOT_FOUND.value(), response.getResponse().getStatus(), FORBIDDEN_STATUS_CODE);
+        assertRequestResponseStatus(mvc, get(SUBSCRIPTIONS_BY_LOCATION + LOCATION_ID), NOT_FOUND.value());
     }
 
     @Test
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testFindSubscriptionsByLocationIdUnauthorized() throws Exception {
-        MvcResult response = mvc.perform(get(SUBSCRIPTIONS_BY_LOCATION + LOCATION_ID))
-            .andExpect(status().isForbidden())
-            .andReturn();
+        assertRequestResponseStatus(mvc, get(SUBSCRIPTIONS_BY_LOCATION + LOCATION_ID), FORBIDDEN.value());
 
-        assertEquals(FORBIDDEN.value(), response.getResponse().getStatus(), FORBIDDEN_STATUS_CODE);
     }
 
     @Test
@@ -163,23 +148,14 @@ class SubscriptionLocationTest extends IntegrationTestBase {
 
     @Test
     void testDeleteSubscriptionByLocationNotFound() throws Exception {
-        MvcResult response = mvc.perform(delete(
-                SUBSCRIPTIONS_BY_LOCATION + LOCATION_ID)
-                                             .header(USER_ID_HEADER, SYSTEM_ADMIN_USER_ID))
-            .andExpect(status().isNotFound())
-            .andReturn();
-
-        assertEquals(NOT_FOUND.value(), response.getResponse().getStatus(), NOT_FOUND_STATUS_CODE);
+        assertRequestResponseStatus(mvc, delete(SUBSCRIPTIONS_BY_LOCATION + LOCATION_ID)
+            .header(USER_ID_HEADER, SYSTEM_ADMIN_USER_ID), NOT_FOUND.value());
     }
 
     @Test
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testDeleteSubscriptionByLocationUnauthorized() throws Exception {
-        MvcResult response = mvc.perform(delete(SUBSCRIPTIONS_BY_LOCATION + LOCATION_ID)
-                                             .header(USER_ID_HEADER, SYSTEM_ADMIN_USER_ID))
-            .andExpect(status().isForbidden())
-            .andReturn();
-
-        assertEquals(FORBIDDEN.value(), response.getResponse().getStatus(), FORBIDDEN_STATUS_CODE);
+        assertRequestResponseStatus(mvc, delete(SUBSCRIPTIONS_BY_LOCATION + LOCATION_ID)
+            .header(USER_ID_HEADER, SYSTEM_ADMIN_USER_ID), FORBIDDEN.value());
     }
 }
