@@ -104,28 +104,6 @@ class InactiveAccountManagementServiceTest {
     }
 
     @Test
-    void testNotifyAdminUsersToSignIn() throws AzureCustomException {
-        when(userRepository.findAdminUsersFortNotificationByLastSignedInDate(anyInt()))
-            .thenReturn(Collections.singletonList(AAD_ADMIN_USER));
-        when(azureUserService.getUser(AAD_ADMIN_USER_EMAIL)).thenReturn(azureAdminUser);
-
-        inactiveAccountManagementService.notifyAdminUsersToSignIn();
-        verify(publicationService).sendInactiveAccountSignInNotificationEmail(
-            AAD_ADMIN_USER_EMAIL, AZURE_ADMIN_USER_NAME, UserProvenances.PI_AAD, LAST_SIGNED_IN_DATE_STRING
-        );
-    }
-
-    @Test
-    void testNoNotificationOfAdminUsersToSignIn() {
-        when(userRepository.findAdminUsersFortNotificationByLastSignedInDate(anyInt()))
-            .thenReturn(Collections.emptyList());
-
-        inactiveAccountManagementService.notifyAdminUsersToSignIn();
-        verifyNoInteractions(publicationService);
-        verifyNoInteractions(azureUserService);
-    }
-
-    @Test
     void testNotifyIdamUsersToSignIn() {
         when(userRepository.findIdamUsersByLastSignedInDate(anyInt(), anyInt()))
             .thenReturn(List.of(CFT_IDAM_USER, CRIME_IDAM_USER));

@@ -52,7 +52,7 @@ class SubscriptionTest extends AccountHelperBase {
     public void setup() throws JsonProcessingException {
         systemAdminAccount = createSystemAdminAccount();
         String createdUserId = getCreatedAccountUserId(
-            createAccount(generateEmail(), UUID.randomUUID().toString())
+            createVerifiedAccount(generateEmail(), UUID.randomUUID().toString())
         );
 
         verifiedUserId = UUID.fromString(createdUserId);

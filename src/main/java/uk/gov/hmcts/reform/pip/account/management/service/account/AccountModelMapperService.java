@@ -22,7 +22,6 @@ public class AccountModelMapperService {
             azureAccount.setSurname(csvEntry.getSurname());
             azureAccount.setFirstName(Strings.isNullOrEmpty(csvEntry.getFirstName())
                                           ? csvEntry.getEmail() : csvEntry.getFirstName());
-            azureAccount.setRole(Roles.VERIFIED);
             azureAccounts.add(azureAccount);
         });
         return azureAccounts;

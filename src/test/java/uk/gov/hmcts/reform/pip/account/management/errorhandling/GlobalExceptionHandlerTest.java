@@ -19,8 +19,12 @@ import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.CsvPa
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.NotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.SubscriptionNotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.SystemAdminAccountException;
+import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.UpdateUserException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.UserWithProvenanceNotFoundException;
+import uk.gov.hmcts.reform.pip.account.management.model.account.PiUser;
 import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredSystemAdminAccount;
+import uk.gov.hmcts.reform.pip.model.account.Roles;
+import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
 
 import java.util.List;
 import java.util.Map;
@@ -147,6 +151,22 @@ class GlobalExceptionHandlerTest {
         assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode(), SHOULD_BE_BAD_REQUEST_EXCEPTION);
         assertNotNull(responseEntity.getBody(), NOT_NULL_MESSAGE);
         assertTrue(responseEntity.getBody().getMessage().contains(ERROR_MESSAGE), EXCEPTION_BODY_NOT_MATCH);
+    }
+
+    @Test
+    void testUpdateUserException() {
+        PiUser piUser = new PiUser();
+        piUser.setRoles(Roles.INTERNAL_ADMIN_CTSC);
+        piUser.setUserProvenance(UserProvenances.PI_AAD);
+
+        UpdateUserException updateUserException = new UpdateUserException(piUser);
+        ResponseEntity<ExceptionResponse> responseEntity = globalExceptionHandler.handle(updateUserException);
+
+        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode(), SHOULD_BE_BAD_REQUEST_EXCEPTION);
+        assertNotNull(responseEntity.getBody(), NOT_NULL_MESSAGE);
+        assertTrue(responseEntity.getBody().getMessage().contains("Invalid role INTERNAL_ADMIN_CTSC "
+                                                                      + "for user with provenance PI_AAD"),
+                   EXCEPTION_BODY_NOT_MATCH);
     }
 
     @Test
