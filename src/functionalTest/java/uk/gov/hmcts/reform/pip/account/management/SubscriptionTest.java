@@ -39,22 +39,8 @@ class SubscriptionTest extends AccountHelperBase {
     @Value("${system-admin-provenance-id}")
     private String systemAdminProvenanceId;
 
-    private static final String SUBSCRIPTION_URL = "/subscription";
-    private static final String FIND_SUBSCRIPTION_BY_USER_ID_URL = "/subscription/user/";
-    private static final String BUILD_SUBSCRIBER_LIST_URL = SUBSCRIPTION_URL + "/artefact-recipients";
-    private static final String BUILD_DELETED_ARTEFACT_SUBSCRIBER_URL = SUBSCRIPTION_URL + "/deleted-artefact";
-    private static final String CONFIGURE_LIST_TYPE_URL = SUBSCRIPTION_URL + "/configure-list-types/";
-    private static final String ADD_LIST_TYPE_URL = SUBSCRIPTION_URL + "/add-list-types/";
-    private static final String SUBSCRIPTION_BY_LOCATION_URL = SUBSCRIPTION_URL + "/location/";
-    private static final String MI_DATA_URL = SUBSCRIPTION_URL + "/mi-data-all";
-    private static final String MI_DATA_LOCATION_URL = SUBSCRIPTION_URL + "/mi-data-location";
-
-    private static final String TESTING_SUPPORT_SUBSCRIPTION_URL = "/testing-support/subscription/";
-    private static final String TESTING_SUPPORT_LOCATION_URL = "/testing-support/location/";
-
     private static final String LOCATION_ID = randomLocationId();
     private static final String LOCATION_NAME = "TestLocation" + LOCATION_ID;
-    private static final String BEARER = "Bearer ";
     private static final String LIST_LANGUAGE = "ENGLISH";
     private static final String LIST_LANGUAGE_CONFIGURE = "WELSH";
     private static final ListType LIST_TYPE = ListType.CIVIL_DAILY_CAUSE_LIST;
@@ -64,8 +50,6 @@ class SubscriptionTest extends AccountHelperBase {
 
     @BeforeAll
     public void setup() throws JsonProcessingException {
-        bearer = Map.of(AUTHORIZATION, BEARER + accessToken);
-
         PiUser systemAdminAccount = createSystemAdminAccount();
         systemAdminUserId = systemAdminAccount.getUserId();
 
@@ -278,7 +262,7 @@ class SubscriptionTest extends AccountHelperBase {
         final String subscriptionId = responseCreateSubscription.asString().split(" ")[5];
 
         final Response responseGetSubscriptionMetadata = doGetRequest(
-            MI_DATA_URL, headerMap
+            SUBSCRIPTION_MI_DATA_URL, headerMap
         );
 
         assertThat(responseGetSubscriptionMetadata.getStatusCode()).isEqualTo(OK.value());

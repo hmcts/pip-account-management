@@ -6,12 +6,9 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
@@ -36,9 +33,6 @@ import static org.mockito.Mockito.when;
 import static org.springframework.http.HttpStatus.FORBIDDEN;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
-@AutoConfigureMockMvc
-@ActiveProfiles("integration")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @WithMockUser(username = "admin", authorities = {"APPROLE_api.request.admin"})
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
@@ -56,7 +50,6 @@ class SubscriptionListTypeTest extends IntegrationTestBase {
 
     private static final String UNAUTHORIZED_ROLE = "APPROLE_unknown.authorized";
     private static final String UNAUTHORIZED_USERNAME = "unauthorized_isAuthorized";
-    private static final String FORBIDDEN_STATUS_CODE = "Status code does not match forbidden";
     private static final String RESPONSE_MATCH = "Response should match";
 
     private static final String ADD_VERIFIED_USERS_SCRIPT = "classpath:add-verified-users.sql";
@@ -122,9 +115,8 @@ class SubscriptionListTypeTest extends IntegrationTestBase {
             .header(REQUESTER_ID_HEADER, ACTIONING_USER_ID)
             .contentType(MediaType.APPLICATION_JSON)
             .content(OBJECT_MAPPER.writeValueAsString(subscriptionListType));
-        MvcResult mvcResult = mvc.perform(request).andExpect(status().isForbidden()).andReturn();
 
-        assertEquals(FORBIDDEN.value(), mvcResult.getResponse().getStatus(), FORBIDDEN_STATUS_CODE);
+        assertRequestResponseStatus(mvc, request, FORBIDDEN.value());
     }
 
     @Test
@@ -183,8 +175,7 @@ class SubscriptionListTypeTest extends IntegrationTestBase {
             .header(REQUESTER_ID_HEADER, ACTIONING_USER_ID)
             .contentType(MediaType.APPLICATION_JSON)
             .content(OBJECT_MAPPER.writeValueAsString(subscriptionListType));
-        MvcResult mvcResult = mvc.perform(request).andExpect(status().isForbidden()).andReturn();
 
-        assertEquals(FORBIDDEN.value(), mvcResult.getResponse().getStatus(), FORBIDDEN_STATUS_CODE);
+        assertRequestResponseStatus(mvc, request, FORBIDDEN.value());
     }
 }

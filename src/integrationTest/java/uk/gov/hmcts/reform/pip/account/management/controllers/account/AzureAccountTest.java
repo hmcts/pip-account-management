@@ -15,11 +15,8 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -52,12 +49,9 @@ import static org.springframework.http.HttpStatus.FORBIDDEN;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
-@AutoConfigureMockMvc
-@ActiveProfiles("integration")
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
 @WithMockUser(username = "admin", authorities = {"APPROLE_api.request.admin"})
-@SuppressWarnings({"PMD.ExcessiveImports"})
+@SuppressWarnings("PMD.ExcessiveImports")
 class AzureAccountTest extends IntegrationTestBase {
     private static final String ROOT_URL = "/account";
     private static final String AZURE_URL = ROOT_URL + "/add/azure";
@@ -88,9 +82,7 @@ class AzureAccountTest extends IntegrationTestBase {
     private static final String TEST_MESSAGE_ROLE = "Role matches sent account";
     private static final String ZERO_CREATED_ACCOUNTS = "0 created accounts should be returned";
     private static final String SINGLE_ERRORED_ACCOUNT = "1 errored account should be returned";
-    private static final String NOT_FOUND_STATUS_CODE_MESSAGE = "Status code does not match not found";
     private static final String INVALID_EMAIL_ERROR = "Error message is displayed for an invalid email";
-    private static final String FORBIDDEN_STATUS_CODE = "Status code does not match forbidden";
     private static final String MESSAGE_ERROR = "Error message does not match";
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
@@ -688,18 +680,13 @@ class AzureAccountTest extends IntegrationTestBase {
     void testUnauthorizedCreateAccount() throws Exception {
         when(accountAuthorisationService.userCanCreateAzureAccount(any())).thenReturn(false);
 
-        MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .post(AZURE_URL)
             .content("[]")
             .header(REQUESTER_ID_HEADER, REQUESTER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
-        MvcResult mvcResult =
-            mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isForbidden()).andReturn();
-
-        assertEquals(FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
-                     FORBIDDEN_STATUS_CODE
-        );
+        assertRequestResponseStatus(mockMvc, request, FORBIDDEN.value());
     }
 
     @Test
@@ -707,11 +694,7 @@ class AzureAccountTest extends IntegrationTestBase {
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .get(ROOT_URL + AZURE_PATH + VALID_USER.getProvenanceUserId());
 
-        MvcResult mvcResult = mockMvc.perform(request).andExpect(status().isNotFound()).andReturn();
-
-        assertEquals(NOT_FOUND.value(), mvcResult.getResponse().getStatus(),
-                     NOT_FOUND_STATUS_CODE_MESSAGE
-        );
+        assertRequestResponseStatus(mockMvc, request, NOT_FOUND.value());
     }
 
     @Test
@@ -720,10 +703,6 @@ class AzureAccountTest extends IntegrationTestBase {
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .get(ROOT_URL + AZURE_PATH + VALID_USER.getProvenanceUserId());
 
-        MvcResult mvcResult = mockMvc.perform(request).andExpect(status().isForbidden()).andReturn();
-
-        assertEquals(FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
-                     FORBIDDEN_STATUS_CODE
-        );
+        assertRequestResponseStatus(mockMvc, request, FORBIDDEN.value());
     }
 }

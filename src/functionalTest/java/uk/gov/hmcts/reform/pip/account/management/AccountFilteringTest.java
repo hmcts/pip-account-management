@@ -1,7 +1,6 @@
 package uk.gov.hmcts.reform.pip.account.management;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.github.dockerjava.zerodep.shaded.org.apache.hc.core5.http.HttpHeaders;
 import io.restassured.common.mapper.TypeRef;
 import io.restassured.response.Response;
 import org.assertj.core.api.Assertions;
@@ -34,16 +33,8 @@ class AccountFilteringTest extends AccountHelperBase {
     private String thirdPartyUserId;
     private Map<String, String> headers;
 
-    private static final String GET_ALL_THIRD_PARTY_ACCOUNTS = "/account/all/third-party";
-    private static final String DELETE_ACCOUNT = "/account/delete/%s";
-    private static final String GET_ADMIN_USER_BY_EMAIL_AND_PROVENANCE = "/account/admin/%s/%s";
-    private static final String GET_ACCOUNTS_EXCEPT_THIRD_PARTY = "/account/all";
-    private static final String MI_DATA_URL = "/account/mi-data";
-
     @BeforeAll
     public void startUp() throws JsonProcessingException {
-        bearer = Map.of(HttpHeaders.AUTHORIZATION, BEARER + accessToken);
-
         systemAdminUser = createSystemAdminAccount();
 
         PiUser piUser = new PiUser();

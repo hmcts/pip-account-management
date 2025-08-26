@@ -5,11 +5,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -23,15 +19,12 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static org.springframework.http.HttpStatus.FORBIDDEN;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
-@AutoConfigureMockMvc
-@ActiveProfiles("integration-basic")
 @WithMockUser(username = "admin", authorities = {"APPROLE_api.request.admin"})
 class SubscriptionChannelTest extends IntegrationBasicTestBase {
-    private static final String FORBIDDEN_STATUS_CODE = "Status code does not match forbidden";
     private static final String SUBSCRIPTION_CHANNEL_URL = "/subscription/channel";
     private static final String REQUESTER_ID_HEADER = "x-requester-id";
     private static final UUID USER_ID = UUID.randomUUID();
@@ -71,12 +64,7 @@ class SubscriptionChannelTest extends IntegrationBasicTestBase {
     @Test
     @WithMockUser(username = "unauthorized_delete", authorities = {"APPROLE_unknown.delete"})
     void testUnauthorizedGetAllChannels() throws Exception {
-        MvcResult mvcResult = mvc.perform(get(SUBSCRIPTION_CHANNEL_URL + "?userId=" + USER_ID)
-                                              .header(REQUESTER_ID_HEADER, USER_ID))
-            .andExpect(status().isForbidden()).andReturn();
-
-        assertEquals(HttpStatus.FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
-                     FORBIDDEN_STATUS_CODE
-        );
+        assertRequestResponseStatus(mvc, get(SUBSCRIPTION_CHANNEL_URL + "?userId=" + USER_ID)
+            .header(REQUESTER_ID_HEADER, USER_ID), FORBIDDEN.value());
     }
 }

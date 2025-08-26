@@ -2,7 +2,6 @@ package uk.gov.hmcts.reform.pip.account.management;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.dockerjava.zerodep.shaded.org.apache.hc.core5.http.HttpHeaders;
 import io.restassured.response.Response;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -31,17 +30,6 @@ class MediaApplicationCreationTest extends AccountHelperBase {
     private static final String TEST_EMPLOYER = "E2E Account Management Test Employer";
     private static final String TEST_EMAIL = TEST_EMAIL_PREFIX + "@justice.gov.uk";
     private static final String STATUS = "PENDING";
-
-    private static final String TESTING_SUPPORT_APPLICATION_URL = "/testing-support/application/";
-    private static final String MEDIA_APPLICATION_URL = "/application";
-    private static final String GET_IMAGE_BY_ID = "/application/image/%s";
-    private static final String GET_MEDIA_APPLICATION_URL = "/application/%s";
-    private static final String APPROVE_APPLICATION = "/application/%s/APPROVED";
-    private static final String REJECT_APPLICATION = "/application/%s/REJECTED";
-    private static final String REJECT_APPLICATION_WITH_REASONS = "/application/%s/REJECTED/reasons";
-    private static final String GET_APPLICATIONS_BY_STATUS = "/application/status/PENDING";
-    private static final String REPORTING = "/application/reporting";
-    private static final String GET_ALL_APPLICATIONS = "/application";
     private static final String MOCK_FILE = "files/test-image.png";
 
     Map<String, List<String>> reasons =
@@ -52,8 +40,6 @@ class MediaApplicationCreationTest extends AccountHelperBase {
 
     @BeforeAll
     public void startUp() throws JsonProcessingException {
-        bearer = Map.of(HttpHeaders.AUTHORIZATION, BEARER + accessToken);
-
         String systemAdminUserId;
         PiUser systemAdminUser = createSystemAdminAccount();
         systemAdminUserId = systemAdminUser.getUserId();
@@ -133,8 +119,7 @@ class MediaApplicationCreationTest extends AccountHelperBase {
         doPutRequest(String.format(APPROVE_APPLICATION, approvedMediaApplication.getId()),
                      bearer);
 
-        final Response getResponse = doGetRequest(GET_ALL_APPLICATIONS,
-                                                  bearer);
+        final Response getResponse = doGetRequest(MEDIA_APPLICATION_URL, bearer);
 
         assertThat(getResponse.getStatusCode()).isEqualTo(OK.value());
         MediaApplication[] retrievedApplications = getResponse.getBody().as(MediaApplication[].class);
@@ -257,8 +242,7 @@ class MediaApplicationCreationTest extends AccountHelperBase {
         Response reportingResponse = doPostRequest(REPORTING, headers, "");
         assertThat(reportingResponse.getStatusCode()).isEqualTo(NO_CONTENT.value());
 
-        final Response getResponse = doGetRequest(GET_ALL_APPLICATIONS,
-                                                  headers);
+        final Response getResponse = doGetRequest(MEDIA_APPLICATION_URL, headers);
 
         MediaApplication[] retrievedApplications = getResponse.getBody().as(MediaApplication[].class);
 

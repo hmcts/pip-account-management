@@ -8,11 +8,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -21,6 +18,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import uk.gov.hmcts.reform.pip.account.management.model.CustomPageImpl;
 import uk.gov.hmcts.reform.pip.account.management.model.account.AuditLog;
 import uk.gov.hmcts.reform.pip.account.management.service.authorisation.AuditAuthorisationService;
+import uk.gov.hmcts.reform.pip.account.management.utils.IntegrationTestBase;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
 import uk.gov.hmcts.reform.pip.model.enums.AuditAction;
@@ -34,15 +32,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.http.HttpStatus.FORBIDDEN;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
-@AutoConfigureMockMvc
-@ActiveProfiles("integration")
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
 @WithMockUser(username = "admin", authorities = {"APPROLE_api.request.admin"})
-class AuditTest {
+class AuditTest extends IntegrationTestBase {
     @Autowired
     private MockMvc mockMvc;
 
@@ -58,7 +54,6 @@ class AuditTest {
     private static final String REQUESTER_ID_HEADER = "x-requester-id";
     private static final String UNAUTHORIZED_ROLE = "APPROLE_unknown.authorized";
     private static final String UNAUTHORIZED_USERNAME = "unauthorized_isAuthorized";
-    private static final String FORBIDDEN_STATUS_CODE = "Status code does not match forbidden";
     private static final String GET_AUDIT_LOG_FAILED = "Failed to retrieve audit log";
     private static final String CREATE_AUDIT_LOG_FAILED = "Failed to create audit log";
     private static final AuditAction AUDIT_ACTION = AuditAction.MANAGE_THIRD_PARTY_USER_VIEW;
@@ -403,13 +398,8 @@ class AuditTest {
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testUnauthorizedGetAllAuditLogs() throws Exception {
         when(auditAuthorisationService.userCanViewAuditLogs(REQUESTER_ID)).thenReturn(false);
-
-        MvcResult mvcResult = mockMvc.perform(get(ROOT_URL).header(REQUESTER_ID_HEADER, REQUESTER_ID))
-            .andExpect(status().isForbidden()).andReturn();
-
-        assertEquals(FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
-                     FORBIDDEN_STATUS_CODE
-        );
+        assertRequestResponseStatus(mockMvc, get(ROOT_URL).header(REQUESTER_ID_HEADER, REQUESTER_ID),
+                                    FORBIDDEN.value());
     }
 
     @Test
@@ -502,17 +492,12 @@ class AuditTest {
     @Test
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testUnauthorizedCreateAuditLog() throws Exception {
-        MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .post(ROOT_URL)
             .content(OBJECT_MAPPER.writeValueAsString(createAuditLog()))
             .contentType(MediaType.APPLICATION_JSON);
 
-        MvcResult mvcResult = mockMvc.perform(mockHttpServletRequestBuilder)
-            .andExpect(status().isForbidden()).andReturn();
-
-        assertEquals(FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
-                     FORBIDDEN_STATUS_CODE
-        );
+        assertRequestResponseStatus(mockMvc, request, FORBIDDEN.value());
     }
 
     @Test
@@ -524,8 +509,7 @@ class AuditTest {
 
         mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isOk());
 
-        MockHttpServletRequestBuilder deleteRequest = MockMvcRequestBuilders
-            .delete(ROOT_URL);
+        MockHttpServletRequestBuilder deleteRequest = delete(ROOT_URL);
 
         MvcResult mvcResult = mockMvc.perform(deleteRequest).andExpect(status().isOk()).andReturn();
         assertEquals(
@@ -538,14 +522,6 @@ class AuditTest {
     @Test
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testUnauthorizedDeleteAuditLogs() throws Exception {
-        MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
-            .delete(ROOT_URL);
-
-        MvcResult mvcResult = mockMvc.perform(mockHttpServletRequestBuilder)
-            .andExpect(status().isForbidden()).andReturn();
-
-        assertEquals(FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
-                     FORBIDDEN_STATUS_CODE
-        );
+        assertRequestResponseStatus(mockMvc, delete(ROOT_URL), FORBIDDEN.value());
     }
 }

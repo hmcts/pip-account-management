@@ -11,12 +11,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
@@ -38,9 +35,6 @@ import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.FORBIDDEN;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
-@AutoConfigureMockMvc
-@ActiveProfiles("integration")
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @WithMockUser(username = "admin", authorities = {"APPROLE_api.request.admin"})
@@ -57,7 +51,6 @@ class SystemAdminB2CAccountTest extends IntegrationTestBase {
     private static final String TEST_SYS_ADMIN_SURNAME = "testSysAdminSurname";
     private static final String TEST_SYS_ADMIN_FIRSTNAME = "testSysAdminFirstname";
     private static final String TEST_SYS_ADMIN_EMAIL = "testSysAdminEmail@justice.gov.uk";
-    private static final String FORBIDDEN_STATUS_CODE = "Status code does not match forbidden";
     private static final String UNAUTHORIZED_ROLE = "APPROLE_unknown.authorized";
     private static final String UNAUTHORIZED_USERNAME = "unauthorized_isAuthorized";
 
@@ -209,19 +202,14 @@ class SystemAdminB2CAccountTest extends IntegrationTestBase {
         systemAdmin.setSurname(TEST_SYS_ADMIN_SURNAME);
         systemAdmin.setEmail(TEST_SYS_ADMIN_EMAIL);
 
-        MockHttpServletRequestBuilder createRequest =
+        MockHttpServletRequestBuilder request =
             MockMvcRequestBuilders
                 .post(CREATE_SYSTEM_ADMIN_URL)
                 .content(OBJECT_MAPPER.writeValueAsString(systemAdmin))
                 .header(REQUESTER_ID_HEADER, SYSTEM_ADMIN_ISSUER_ID)
                 .contentType(MediaType.APPLICATION_JSON);
 
-        MvcResult responseCreateSystemAdminUser = mockMvc.perform(createRequest)
-            .andExpect(status().isForbidden()).andReturn();
-
-        assertEquals(FORBIDDEN.value(), responseCreateSystemAdminUser.getResponse().getStatus(),
-                     FORBIDDEN_STATUS_CODE
-        );
+        assertRequestResponseStatus(mockMvc, request, FORBIDDEN.value());
     }
 
     @Test
@@ -231,18 +219,13 @@ class SystemAdminB2CAccountTest extends IntegrationTestBase {
         systemAdmin.setSurname(TEST_SYS_ADMIN_SURNAME);
         systemAdmin.setEmail(TEST_SYS_ADMIN_EMAIL);
 
-        MockHttpServletRequestBuilder createRequest =
+        MockHttpServletRequestBuilder request =
             MockMvcRequestBuilders
                 .post(CREATE_SYSTEM_ADMIN_URL)
                 .content(OBJECT_MAPPER.writeValueAsString(systemAdmin))
                 .header(REQUESTER_ID_HEADER, SUPER_ADMIN_ISSUER_ID)
                 .contentType(MediaType.APPLICATION_JSON);
 
-        MvcResult responseCreateSystemAdminUser = mockMvc.perform(createRequest)
-            .andExpect(status().isForbidden()).andReturn();
-
-        assertEquals(FORBIDDEN.value(), responseCreateSystemAdminUser.getResponse().getStatus(),
-                     FORBIDDEN_STATUS_CODE
-        );
+        assertRequestResponseStatus(mockMvc, request, FORBIDDEN.value());
     }
 }

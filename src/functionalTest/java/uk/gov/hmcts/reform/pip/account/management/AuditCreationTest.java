@@ -1,7 +1,6 @@
 package uk.gov.hmcts.reform.pip.account.management;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.github.dockerjava.zerodep.shaded.org.apache.hc.core5.http.HttpHeaders;
 import io.restassured.response.Response;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -14,7 +13,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ThreadLocalRandom;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
@@ -22,8 +20,6 @@ import static org.springframework.http.HttpStatus.OK;
 
 class AuditCreationTest extends AccountHelperBase {
     private static final UUID USER_ID = UUID.randomUUID();
-    private static final String TEST_EMAIL_PREFIX = String.format(
-        "pip-am-test-email-%s", ThreadLocalRandom.current().nextInt(1000, 9999));
     private static final String TEST_EMAIL = TEST_EMAIL_PREFIX + "@justice.gov.uk";
     private static final String ROLES = "SYSTEM_ADMIN";
     private static final String USER_PROVENANCE = "PI_AAD";
@@ -31,19 +27,12 @@ class AuditCreationTest extends AccountHelperBase {
     private static final String DETAILS = "Publication with artefact id %s successfully uploaded";
     private static final Integer PAGE_NUMBER = 0;
     private static final Integer PAGE_SIZE = 2;
-
-    private static final String AUDIT_URL = "/audit";
-    private static final String GET_AUDIT_URL = "/audit/%s";
-    private static final String TESTING_SUPPORT_AUDIT_URL = "/testing-support/audit/";
     private static final String CONTENT = "content";
-
 
     private Map<String, String> headers;
 
     @BeforeAll
     public void startUp() throws JsonProcessingException {
-        bearer = Map.of(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken);
-
         PiUser systemAdminUser;
         systemAdminUser = createSystemAdminAccount();
 

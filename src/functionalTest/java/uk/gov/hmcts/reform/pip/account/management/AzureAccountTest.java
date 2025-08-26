@@ -1,7 +1,6 @@
 package uk.gov.hmcts.reform.pip.account.management;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.github.dockerjava.zerodep.shaded.org.apache.hc.core5.http.HttpHeaders;
 import io.restassured.common.mapper.TypeRef;
 import io.restassured.response.Response;
 import org.junit.jupiter.api.AfterAll;
@@ -23,9 +22,6 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.springframework.http.HttpStatus.OK;
 
 class AzureAccountTest extends AccountHelperBase {
-    private static final String CREATE_AZURE_ACCOUNT = "/account/add/azure";
-    private static final String GET_AZURE_ACCOUNT_INFO = "/account/azure/%s";
-
     private static final String TEST_FIRST_NAME = "E2E_TEST_AM_FIRST_NAME";
     private static final String TEST_LAST_NAME = "E2E_TEST_AM_LAST_NAME";
     private static final String TEST_DISPLAY_NAME = "E2E_TEST_AM_DISPLAY_NAME";
@@ -39,8 +35,6 @@ class AzureAccountTest extends AccountHelperBase {
     @BeforeAll
     public void startUp() throws JsonProcessingException {
         String systemAdminUserId;
-        bearer = Map.of(HttpHeaders.AUTHORIZATION, BEARER + accessToken);
-
         PiUser systemAdminUser = createSystemAdminAccount();
         systemAdminUserId = systemAdminUser.getUserId();
 

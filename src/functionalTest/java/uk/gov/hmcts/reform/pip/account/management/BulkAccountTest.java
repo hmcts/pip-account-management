@@ -1,6 +1,5 @@
 package uk.gov.hmcts.reform.pip.account.management;
 
-import com.github.dockerjava.zerodep.shaded.org.apache.hc.core5.http.HttpHeaders;
 import io.restassured.response.Response;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -16,25 +15,16 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ThreadLocalRandom;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 class BulkAccountTest extends AccountHelperBase {
-    private static final String EMAIL_PREFIX = "pip-am-test-email-";
-    private static final String TEST_SUITE_PREFIX = String.format("%s-",
-        ThreadLocalRandom.current().nextInt(1000, 9999));
-    private static final String TEST_SUITE_EMAIL_PREFIX = EMAIL_PREFIX + TEST_SUITE_PREFIX;
-    private static final String BULK_UPLOAD_URL = "account/media-bulk-upload";
-
     private String mockFile;
     private Map<String, String> issuerId;
     private String systemAdminId;
 
     @BeforeAll
     void startUp() throws IOException {
-        bearer = Map.of(HttpHeaders.AUTHORIZATION, BEARER + accessToken);
-
         PiUser systemAdminUser = createSystemAdminAccount();
         systemAdminId = systemAdminUser.getUserId();
 
@@ -44,8 +34,7 @@ class BulkAccountTest extends AccountHelperBase {
         csvContent.append("email,firstName,surname\n");
 
         for (int i = 0; i < 5; i++) {
-            String email = generateTestEmail();
-            csvContent.append(email).append(",testBulkFirstName,testBulkSurname\n");
+            csvContent.append(generateEmail()).append(",testBulkFirstName,testBulkSurname\n");
         }
 
         Path mockFilePath = Files.createTempFile("mock-bulk-upload", ".csv");
@@ -56,16 +45,11 @@ class BulkAccountTest extends AccountHelperBase {
         mockFile = mockFilePath.toString();
     }
 
-    private String generateTestEmail() {
-        String prefix = String.format("%s", ThreadLocalRandom.current().nextInt(1000, 9999));
-        return TEST_SUITE_EMAIL_PREFIX + prefix + "@justice.gov.uk";
-    }
-
     @AfterAll
     public void teardown() throws IOException {
         Map<String, String> headers = new ConcurrentHashMap<>(bearer);
         headers.put(REQUESTER_ID_HEADER, systemAdminId);
-        doDeleteRequest(TESTING_SUPPORT_DELETE_ACCOUNT_URL + TEST_SUITE_EMAIL_PREFIX, headers);
+        doDeleteRequest(TESTING_SUPPORT_DELETE_ACCOUNT_URL + TEST_EMAIL_PREFIX, headers);
         Files.deleteIfExists(Path.of(mockFile));
     }
 
