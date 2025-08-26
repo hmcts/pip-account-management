@@ -272,6 +272,7 @@ class SubscriptionTest extends IntegrationTestBase {
         @Test
         @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
         void testUnauthorizedCreateSubscription() throws Exception {
+            when(subscriptionAuthorisationService.userCanAddSubscriptions(any(), any())).thenReturn(false);
             MockHttpServletRequestBuilder mappedSubscription = setupMockSubscription(LOCATION_ID);
 
             assertRequestResponseStatus(mvc, get(String.format("/subscription/%s", UUID.randomUUID())),
@@ -307,6 +308,7 @@ class SubscriptionTest extends IntegrationTestBase {
         void testDeleteSubscriptionByIdReturnsForbiddenIfUserMismatched() throws Exception {
             Subscription returnedSubscription = createdAndExtractSubscription(UUID_STRING.toString());
 
+            when(subscriptionAuthorisationService.userCanDeleteSubscriptions(any(), any())).thenReturn(false);
             mvc.perform(delete(SUBSCRIPTION_BASE_URL + returnedSubscription.getId())
                             .header(REQUESTER_ID_HEADER, INVALID_ACTIONING_USER_ID))
                 .andExpect(status().isForbidden());
@@ -342,6 +344,7 @@ class SubscriptionTest extends IntegrationTestBase {
         void testUnauthorizedDeleteById() throws Exception {
             Subscription returnedSubscription = createdAndExtractSubscription(ACTIONING_USER_ID);
 
+            when(subscriptionAuthorisationService.userCanDeleteSubscriptions(any(), any())).thenReturn(false);
             MvcResult mvcResult = mvc.perform(delete(SUBSCRIPTION_BASE_URL + returnedSubscription.getId())
                                                   .header(REQUESTER_ID_HEADER, SYSTEM_ADMIN_USER_ID)
                                                   .with(user(UNAUTHORIZED_USERNAME).authorities(
@@ -407,6 +410,7 @@ class SubscriptionTest extends IntegrationTestBase {
             String subscriptionIdRequest = OPENING_BRACKET + caseSubscriptionId + DOUBLE_QUOTE_COMMA
                 + locationSubscriptionId + CLOSING_BRACKET;
 
+            when(subscriptionAuthorisationService.userCanBulkDeleteSubscriptions(any(), any())).thenReturn(false);
             MvcResult response = mvc.perform(delete(DELETE_BULK_SUBSCRIPTION_PATH)
                                                  .contentType(MediaType.APPLICATION_JSON)
                                                  .content(subscriptionIdRequest)
@@ -435,6 +439,7 @@ class SubscriptionTest extends IntegrationTestBase {
         void testUnauthorizedBulkDeleteSubscription() throws Exception {
             String subscriptionIdRequest = OPENING_BRACKET + UUID_STRING + CLOSING_BRACKET;
 
+            when(subscriptionAuthorisationService.userCanBulkDeleteSubscriptions(any(), any())).thenReturn(false);
             MvcResult response = mvc.perform(delete(DELETE_BULK_SUBSCRIPTION_PATH)
                                                  .contentType(MediaType.APPLICATION_JSON)
                                                  .content(subscriptionIdRequest)
@@ -608,6 +613,7 @@ class SubscriptionTest extends IntegrationTestBase {
         @Test
         @WithMockUser(username = "unauthorized_find_by_user_id", authorities = {"APPROLE_unknown.find"})
         void testUnauthorizedFindByUserId() throws Exception {
+            when(subscriptionAuthorisationService.userCanViewSubscriptions(any(), any())).thenReturn(false);
             assertRequestResponseStatus(mvc, get(SUBSCRIPTION_USER_PATH)
                 .header(REQUESTER_ID_HEADER, ACTIONING_USER_ID), FORBIDDEN.value());
         }
