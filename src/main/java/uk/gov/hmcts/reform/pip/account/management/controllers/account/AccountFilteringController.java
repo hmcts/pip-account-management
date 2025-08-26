@@ -61,8 +61,7 @@ public class AccountFilteringController {
     @ResponseStatus(HttpStatus.OK)
     @PreAuthorize("@accountAuthorisationService.userCanViewAccounts(#requesterId)")
     @GetMapping("/all/third-party")
-    public ResponseEntity<List<PiUser>> getAllThirdPartyAccounts(
-        @RequestHeader(REQUESTER_ID) String requesterId) {
+    public ResponseEntity<List<PiUser>> getAllThirdPartyAccounts(@RequestHeader(REQUESTER_ID) String requesterId) {
         return ResponseEntity.ok(accountFilteringService.findAllThirdPartyAccounts());
     }
 

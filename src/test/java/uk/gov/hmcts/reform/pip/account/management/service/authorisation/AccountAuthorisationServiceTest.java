@@ -129,20 +129,34 @@ class AccountAuthorisationServiceTest {
     }
 
     @Test
-    void testSystemAdminUserCanViewAccounts() {
-        adminUser.setRoles(SYSTEM_ADMIN);
+    void testAdminUserCanGetAccountByUserId() {
+        adminUser.setRoles(INTERNAL_ADMIN_CTSC);
         when(authorisationCommonService.isUserAdmin(ADMIN_USER_ID)).thenReturn(true);
 
-        assertTrue(accountAuthorisationService.userCanViewAccounts(ADMIN_USER_ID, ADMIN_USER_ID));
+        assertTrue(accountAuthorisationService.userCanGetAccountByUserId(ADMIN_USER_ID, USER_ID));
     }
 
     @Test
-    void testVerifiedUserCanViewAccounts() {
-        verifiedUser.setRoles(VERIFIED);
-        when(authorisationCommonService.isUserVerified(VERIFIED_USER_ID, VERIFIED_USER_ID)).thenReturn(true);
-        when(authorisationCommonService.isUserAdmin(VERIFIED_USER_ID)).thenReturn(false);
+    void testVerifiedUserCanGetAccountByUserId() {
+        when(authorisationCommonService.isUserVerified(VERIFIED_USER_ID, USER_ID)).thenReturn(true);
 
-        assertTrue(accountAuthorisationService.userCanViewAccounts(VERIFIED_USER_ID, VERIFIED_USER_ID));
+        assertTrue(accountAuthorisationService.userCanGetAccountByUserId(VERIFIED_USER_ID, USER_ID));
+    }
+
+    @Test
+    void testUserCanNotGetAccountByUserIdWhenNotLoggedIn() {
+        adminUser.setRoles(SYSTEM_ADMIN);
+        when(authorisationCommonService.hasOAuthAdminRole()).thenReturn(false);
+
+        assertFalse(accountAuthorisationService.userCanGetAccountByUserId(ADMIN_USER_ID, USER_ID));
+    }
+
+    @Test
+    void testSystemAdminUserCanViewAccounts() {
+        adminUser.setRoles(SYSTEM_ADMIN);
+        when(authorisationCommonService.isSystemAdmin(ADMIN_USER_ID)).thenReturn(true);
+
+        assertTrue(accountAuthorisationService.userCanViewAccounts(ADMIN_USER_ID));
     }
 
     @ParameterizedTest
@@ -150,7 +164,7 @@ class AccountAuthorisationServiceTest {
     void testUserCanNotViewAccountsWhenNotSystemAdmin(Roles role) {
         user.setRoles(role);
 
-        assertFalse(accountAuthorisationService.userCanViewAccounts(USER_ID, USER_ID));
+        assertFalse(accountAuthorisationService.userCanViewAccounts(USER_ID));
     }
 
     @Test
@@ -158,7 +172,7 @@ class AccountAuthorisationServiceTest {
         adminUser.setRoles(SYSTEM_ADMIN);
         when(authorisationCommonService.hasOAuthAdminRole()).thenReturn(false);
 
-        assertFalse(accountAuthorisationService.userCanViewAccounts(ADMIN_USER_ID, ADMIN_USER_ID));
+        assertFalse(accountAuthorisationService.userCanViewAccounts(ADMIN_USER_ID));
     }
 
     @Test

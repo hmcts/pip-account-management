@@ -90,7 +90,7 @@ class CustomAccountRetrievalTest extends IntegrationTestBase {
     @BeforeEach
     void beforeEachSetUp() {
         when(accountAuthorisationService.userCanCreateAccount(any(), any())).thenReturn(true);
-        when(accountAuthorisationService.userCanViewAccounts(any(), any())).thenReturn(true);
+        when(accountAuthorisationService.userCanViewAccounts(any())).thenReturn(true);
     }
 
     @Test
@@ -187,7 +187,7 @@ class CustomAccountRetrievalTest extends IntegrationTestBase {
     @Test
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testUnauthorizedGetAllThirdPartyAccounts() throws Exception {
-        when(accountAuthorisationService.userCanViewAccounts(any(), any())).thenReturn(false);
+        when(accountAuthorisationService.userCanViewAccounts(any())).thenReturn(false);
 
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .get(THIRD_PARTY_URL).header(REQUESTER_ID_HEADER, REQUESTER_ID);
@@ -218,8 +218,8 @@ class CustomAccountRetrievalTest extends IntegrationTestBase {
 
         String createdUserId = mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).getFirst().toString();
 
-        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
-            .get(GET_ALL_ACCOUNTS_EXCEPT_THIRD_PARTY).header(REQUESTER_ID_HEADER, REQUESTER_ID);
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders.get(GET_ALL_ACCOUNTS_EXCEPT_THIRD_PARTY)
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID);
 
         MvcResult response =
             mockMvc.perform(request).andExpect(status().isOk()).andReturn();
@@ -233,7 +233,7 @@ class CustomAccountRetrievalTest extends IntegrationTestBase {
     @Test
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testUnauthorizedGetAllAccountsExceptThirdParty() throws Exception {
-        when(accountAuthorisationService.userCanViewAccounts(any(), any())).thenReturn(false);
+        when(accountAuthorisationService.userCanViewAccounts(any())).thenReturn(false);
 
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .get(GET_ALL_ACCOUNTS_EXCEPT_THIRD_PARTY)

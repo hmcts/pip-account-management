@@ -149,7 +149,7 @@ class TestingSupportApiTest extends IntegrationTestBase {
     @BeforeEach
     void beforeEachSetUp() {
         when(accountAuthorisationService.userCanCreateAzureAccount(any())).thenReturn(true);
-        when(accountAuthorisationService.userCanViewAccounts(any(), any())).thenReturn(true);
+        when(accountAuthorisationService.userCanGetAccountByUserId(any(), any())).thenReturn(true);
         when(auditAuthorisationService.userCanViewAuditLogs(any())).thenReturn(true);
         when(accountAuthorisationService.userCanCreateAccount(any(), any())).thenReturn(true);
         when(subscriptionAuthorisationService.userCanAddSubscriptions(any(), any())).thenReturn(true);
@@ -305,7 +305,7 @@ class TestingSupportApiTest extends IntegrationTestBase {
             .as("Media application delete response does not match")
             .isEqualTo("1 account(s) deleted with email starting with " + EMAIL_PREFIX);
 
-        when(accountAuthorisationService.userCanViewAccounts(any(), any())).thenReturn(true);
+        when(accountAuthorisationService.userCanGetAccountByUserId(any(), any())).thenReturn(true);
         mockMvc.perform(get(ACCOUNT_URL + userId)
             .header(REQUESTER_ID_HEADER, REQUESTER_ID))
             .andExpect(status().isNotFound());

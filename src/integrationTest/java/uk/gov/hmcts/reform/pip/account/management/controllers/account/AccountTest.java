@@ -159,7 +159,7 @@ class AccountTest extends IntegrationTestBase {
         when(usersRequestBuilder.post(any())).thenReturn(userToReturn, additionalUser);
 
         when(accountAuthorisationService.userCanCreateAccount(any(), any())).thenReturn(true);
-        when(accountAuthorisationService.userCanViewAccounts(any(), any())).thenReturn(true);
+        when(accountAuthorisationService.userCanGetAccountByUserId(any(), any())).thenReturn(true);
         when(accountAuthorisationService.userCanDeleteAccount(any(), any())).thenReturn(true);
     }
 
@@ -327,7 +327,7 @@ class AccountTest extends IntegrationTestBase {
         @Test
         @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
         void testUnauthorizedGetUserById() throws Exception {
-            when(accountAuthorisationService.userCanViewAccounts(any(), any())).thenReturn(false);
+            when(accountAuthorisationService.userCanGetAccountByUserId(any(), any())).thenReturn(false);
             assertRequestResponseStatus(mockMvc, MockMvcRequestBuilders
                 .get(ROOT_URL + "/" + UUID.randomUUID())
                 .header(REQUESTER_ID_HEADER, SYSTEM_ADMIN_ISSUER_ID), FORBIDDEN.value());
@@ -695,7 +695,7 @@ class AccountTest extends IntegrationTestBase {
                 .put(ROOT_URL + UPDATE_PATH + VERIFIED_USER_ID + "/" + Roles.INTERNAL_ADMIN_LOCAL)
                 .header(REQUESTER_ID_HEADER, SUPER_ADMIN_ISSUER_ID);
 
-            when(accountAuthorisationService.userCanViewAccounts(any(), any())).thenReturn(false);
+            when(accountAuthorisationService.userCanViewAccounts(any())).thenReturn(false);
             assertRequestResponseStatus(mockMvc, request, FORBIDDEN.value());
         }
     }

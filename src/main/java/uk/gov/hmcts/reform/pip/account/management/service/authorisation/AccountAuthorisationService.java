@@ -118,17 +118,22 @@ public class AccountAuthorisationService {
         return isSystemAdmin;
     }
 
-    public boolean userCanViewAccounts(UUID requesterId, UUID userId) {
-        if (!authorisationCommonService.hasOAuthAdminRole()) {
-            return false;
+    public boolean userCanGetAccountByUserId(UUID requesterId, UUID userId) {
+        if (authorisationCommonService.hasOAuthAdminRole()
+                && (authorisationCommonService.isUserAdmin(requesterId)
+                || authorisationCommonService.isUserVerified(requesterId, userId))) {
+            return true;
         }
+        log.error(writeLog(String.format("User with ID %s is not authorised to get account by user ID", requesterId)));
+        return false;
+    }
 
-        if (!authorisationCommonService.isUserAdmin(requesterId)
-            && !authorisationCommonService.isUserVerified(requesterId, userId)) {
-            log.error(writeLog(String.format("User with ID %s is not authorised to view accounts", requesterId)));
-            return false;
+    public boolean userCanViewAccounts(UUID requesterId) {
+        if (authorisationCommonService.hasOAuthAdminRole() && authorisationCommonService.isSystemAdmin(requesterId)) {
+            return true;
         }
-        return true;
+        log.error(writeLog(String.format("User with ID %s is not authorised to view accounts", requesterId)));
+        return false;
     }
 
     public boolean userCanBulkCreateMediaAccounts(UUID userId) {
