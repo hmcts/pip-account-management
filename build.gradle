@@ -210,7 +210,7 @@ dependencies {
   implementation group: 'com.opencsv', name: 'opencsv', version: '5.11.2'
   implementation group: 'commons-validator', name: 'commons-validator', version: '1.10.0'
 
-  implementation group: 'com.github.hmcts', name: 'pip-data-models', version: 'PUB-2961-Updated-Public-Mags-List-0b9ad66', {
+  implementation group: 'com.github.hmcts', name: 'pip-data-models', version: 'PUB-2961-Updated-Public-Mags-List-830dc75', {
     exclude group: 'org.springframework.boot', module: 'spring-boot-starter-data-jpa'
   }
   implementation group: 'io.hypersistence', name: 'hypersistence-utils-hibernate-63', version: '3.10.3'
