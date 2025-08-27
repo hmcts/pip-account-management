@@ -161,6 +161,7 @@ class AccountTest extends IntegrationTestBase {
         when(accountAuthorisationService.userCanCreateAccount(any(), any())).thenReturn(true);
         when(accountAuthorisationService.userCanGetAccountByUserId(any(), any())).thenReturn(true);
         when(accountAuthorisationService.userCanDeleteAccount(any(), any())).thenReturn(true);
+        when(accountAuthorisationService.userCanUpdateAccount(any(), any())).thenReturn(true);
     }
 
     @Nested
@@ -551,35 +552,18 @@ class AccountTest extends IntegrationTestBase {
         }
 
         @Test
-        void testV2SuperAdminDeletesVerifiedUser() throws Exception {
+        void testV2SuperAdminCannotDeletesUser() throws Exception {
             validUser.setUserProvenance(UserProvenances.CFT_IDAM);
             validUser.setRoles(Roles.VERIFIED);
 
             String superAdminUserId = getSuperAdminUserId(superAdminUser);
 
+            when(accountAuthorisationService.userCanDeleteAccount(any(), any())).thenReturn(false);
             MockHttpServletRequestBuilder deleteRequest = MockMvcRequestBuilders
                 .delete(ROOT_URL + DELETE_PATH_V2 + createTestUserValidAccount(validUser))
                 .header(REQUESTER_ID_HEADER, superAdminUserId);
 
             mockMvc.perform(deleteRequest).andExpect(status().isForbidden());
-        }
-
-        @Test
-        void testV2SuperAdminDeletesSuperAdminUser() throws Exception {
-            String superAdminUserId = getSuperAdminUserId(superAdminUser);
-
-            superAdminUser.setUserProvenance(UserProvenances.CFT_IDAM);
-            superAdminUser.setEmail("superAdminToDelete@justice.gov.uk");
-            String superAdminUserIdToDelete = getSuperAdminUserId(superAdminUser);
-
-            MockHttpServletRequestBuilder deleteRequest = MockMvcRequestBuilders
-                .delete(ROOT_URL + DELETE_PATH_V2 + superAdminUserIdToDelete)
-                .header(REQUESTER_ID_HEADER, superAdminUserId);
-
-            MvcResult mvcResult = mockMvc.perform(deleteRequest).andExpect(status().isOk()).andReturn();
-            assertEquals(DELETE_USER_SUCCESS, mvcResult.getResponse().getContentAsString(),
-                         DELETE_USER_FAILURE
-            );
         }
 
         @Test
@@ -641,6 +625,7 @@ class AccountTest extends IntegrationTestBase {
         void testUpdateAccountRoleByIdWithoutAdminIdReturnsForbidden() throws Exception {
             validUser.setUserProvenance(UserProvenances.CFT_IDAM);
 
+            when(accountAuthorisationService.userCanUpdateAccount(any(), any())).thenReturn(false);
             MockHttpServletRequestBuilder updateRequest = MockMvcRequestBuilders
                 .put(ROOT_URL + UPDATE_PATH + createTestUserValidAccount(validUser) + "/" + Roles.INTERNAL_ADMIN_LOCAL);
 
@@ -654,6 +639,7 @@ class AccountTest extends IntegrationTestBase {
             PiUser superAdminUser = createUser(true, Roles.INTERNAL_ADMIN_LOCAL);
             String superAdminUserId = getSuperAdminUserId(superAdminUser);
 
+            when(accountAuthorisationService.userCanUpdateAccount(any(), any())).thenReturn(false);
             MockHttpServletRequestBuilder updateRequest = MockMvcRequestBuilders
                 .put(ROOT_URL + UPDATE_PATH + createTestUserValidAccount(validUser) + "/" + Roles.INTERNAL_ADMIN_LOCAL)
                 .header(REQUESTER_ID_HEADER, superAdminUserId);
@@ -667,6 +653,7 @@ class AccountTest extends IntegrationTestBase {
             validUser.setUserProvenance(UserProvenances.CFT_IDAM);
             String createdUserId = createTestUserValidAccount(validUser);
 
+            when(accountAuthorisationService.userCanUpdateAccount(any(), any())).thenReturn(false);
             MockHttpServletRequestBuilder updateRequest = MockMvcRequestBuilders
                 .put(ROOT_URL + UPDATE_PATH + createdUserId + "/" + Roles.INTERNAL_ADMIN_LOCAL)
                 .header(REQUESTER_ID_HEADER, createdUserId);
@@ -691,6 +678,7 @@ class AccountTest extends IntegrationTestBase {
         @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD,
             scripts = {ADD_USERS_SCRIPT, ADD_VERIFIED_USERS_SCRIPT})
         void testUnauthorizedUpdateAccountRole() throws Exception {
+            when(accountAuthorisationService.userCanUpdateAccount(any(), any())).thenReturn(false);
             MockHttpServletRequestBuilder request = MockMvcRequestBuilders
                 .put(ROOT_URL + UPDATE_PATH + VERIFIED_USER_ID + "/" + Roles.INTERNAL_ADMIN_LOCAL)
                 .header(REQUESTER_ID_HEADER, SUPER_ADMIN_ISSUER_ID);
