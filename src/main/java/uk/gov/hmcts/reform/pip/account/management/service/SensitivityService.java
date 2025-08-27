@@ -6,6 +6,7 @@ import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.publication.ListType;
 import uk.gov.hmcts.reform.pip.model.publication.Sensitivity;
 
+import static uk.gov.hmcts.reform.pip.model.account.Roles.SYSTEM_ADMIN;
 import static uk.gov.hmcts.reform.pip.model.account.Roles.VERIFIED;
 import static uk.gov.hmcts.reform.pip.model.account.UserProvenances.THIRD_PARTY;
 
@@ -22,6 +23,9 @@ public class SensitivityService {
      * @return true if user has permission to see the publication, false if not.
      */
     public boolean checkAuthorisation(PiUser user, ListType listType, Sensitivity sensitivity) {
+        if(SYSTEM_ADMIN.equals(user.getRoles())) {
+            return true;
+        }
         return switch (sensitivity) {
             case PUBLIC -> true;
             case PRIVATE -> Roles.getAllVerifiedRoles().contains(user.getRoles());
