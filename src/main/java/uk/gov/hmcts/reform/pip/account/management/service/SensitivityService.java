@@ -23,10 +23,7 @@ public class SensitivityService {
      * @return true if user has permission to see the publication, false if not.
      */
     public boolean checkAuthorisation(PiUser user, ListType listType, Sensitivity sensitivity) {
-        if (SYSTEM_ADMIN.equals(user.getRoles())) {
-            return true;
-        }
-        return switch (sensitivity) {
+        return SYSTEM_ADMIN.equals(user.getRoles()) || switch (sensitivity) {
             case PUBLIC -> true;
             case PRIVATE -> Roles.getAllVerifiedRoles().contains(user.getRoles());
             case CLASSIFIED -> VERIFIED.equals(user.getRoles())
