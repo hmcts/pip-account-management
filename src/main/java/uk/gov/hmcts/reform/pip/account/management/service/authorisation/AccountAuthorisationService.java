@@ -17,6 +17,8 @@ import java.util.UUID;
 import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
 import static uk.gov.hmcts.reform.pip.model.account.Roles.ALL_NON_RESTRICTED_ADMIN_ROLES;
 import static uk.gov.hmcts.reform.pip.model.account.Roles.INTERNAL_ADMIN_CTSC;
+import static uk.gov.hmcts.reform.pip.model.account.Roles.INTERNAL_SUPER_ADMIN_CTSC;
+import static uk.gov.hmcts.reform.pip.model.account.Roles.INTERNAL_SUPER_ADMIN_LOCAL;
 import static uk.gov.hmcts.reform.pip.model.account.Roles.SYSTEM_ADMIN;
 import static uk.gov.hmcts.reform.pip.model.account.UserProvenances.PI_AAD;
 
@@ -51,10 +53,10 @@ public class AccountAuthorisationService {
                 }
                 return true;
             }
-            // Restrict PI AAD Verified user creation to CTSC Admin only
+            // Restrict PI AAD Verified user creation to CTSC Admins only
             if (Roles.getAllVerifiedRoles().contains(user.getRoles()) && user.getUserProvenance() == PI_AAD) {
                 Roles adminUserRole = getUser(adminUserId).getRoles();
-                if (!INTERNAL_ADMIN_CTSC.equals(adminUserRole)) {
+                if (!List.of(INTERNAL_SUPER_ADMIN_CTSC, INTERNAL_ADMIN_CTSC).contains(adminUserRole)) {
                     log.error(writeLog(
                         String.format("User with ID %s is forbidden to create this verified user", adminUserId)
                     ));
@@ -166,8 +168,8 @@ public class AccountAuthorisationService {
 
         if (adminUser.getRoles() == SYSTEM_ADMIN) {
             return true;
-        } else if (adminUser.getRoles() == Roles.INTERNAL_SUPER_ADMIN_LOCAL
-            || adminUser.getRoles() == Roles.INTERNAL_SUPER_ADMIN_CTSC) {
+        } else if (adminUser.getRoles() == INTERNAL_SUPER_ADMIN_LOCAL
+            || adminUser.getRoles() == INTERNAL_SUPER_ADMIN_CTSC) {
             return ALL_NON_RESTRICTED_ADMIN_ROLES.contains(user.getRoles());
         }
         return false;

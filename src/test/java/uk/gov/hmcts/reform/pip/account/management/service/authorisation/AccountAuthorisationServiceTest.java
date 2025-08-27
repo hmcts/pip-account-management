@@ -48,6 +48,7 @@ class AccountAuthorisationServiceTest {
     private static final UUID ADMIN_USER_ID = UUID.randomUUID();
     private static final UUID VERIFIED_USER_ID = UUID.randomUUID();
     private static final String SYSTEM_ADMIN_ROLE = "SYSTEM_ADMIN";
+    private static final String INTERNAL_SUPER_ADMIN_CTSC_ROLE = "INTERNAL_SUPER_ADMIN_CTSC";
     private static final String INTERNAL_ADMIN_CTSC_ROLE = "INTERNAL_ADMIN_CTSC";
 
     private static final String UNAUTHORIZED_MESSAGE = "User should not be able to perform action when unauthorised";
@@ -282,8 +283,9 @@ class AccountAuthorisationServiceTest {
     }
 
     @ParameterizedTest
-    @EnumSource(value = Roles.class, names = { INTERNAL_ADMIN_CTSC_ROLE }, mode = EnumSource.Mode.EXCLUDE)
-    void testUserCanNotCreatePiAadVerifiedUserWhenNotAdminCtsc(Roles role) {
+    @EnumSource(value = Roles.class, names = { INTERNAL_SUPER_ADMIN_CTSC_ROLE, INTERNAL_ADMIN_CTSC_ROLE },
+        mode = EnumSource.Mode.EXCLUDE)
+    void testUserCanNotCreatePiAadVerifiedUserWhenNotCtscAdmin(Roles role) {
         adminUser.setRoles(role);
         adminUser.setUserId(ADMIN_USER_ID);
         user.setRoles(VERIFIED);
