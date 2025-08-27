@@ -37,6 +37,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @WithMockUser(username = "admin", authorities = { "APPROLE_api.request.admin" })
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@SuppressWarnings("PMD.SignatureDeclareThrowsException")
 class AccountIsAuthorisedTest extends IntegrationTestBase {
 
     @Autowired
@@ -60,7 +61,6 @@ class AccountIsAuthorisedTest extends IntegrationTestBase {
     private final ObjectMapper objectMapper = new ObjectMapper();
     private PiUser user;
 
-    @SuppressWarnings("PMD.SignatureDeclareThrowsException")
     private String createUserAndGetId(PiUser validUser) throws Exception {
         MockHttpServletRequestBuilder setupRequest = MockMvcRequestBuilders
             .post(PI_URL)
