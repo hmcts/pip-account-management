@@ -1,17 +1,23 @@
 package uk.gov.hmcts.reform.pip.account.management;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.restassured.response.Response;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.io.ClassPathResource;
 import uk.gov.hmcts.reform.pip.account.management.model.MediaApplication;
 import uk.gov.hmcts.reform.pip.account.management.model.MediaApplicationStatus;
 import uk.gov.hmcts.reform.pip.account.management.utils.AccountHelperBase;
+import uk.gov.hmcts.reform.pip.model.account.PiUser;
+import uk.gov.hmcts.reform.pip.model.account.Roles;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
@@ -29,13 +35,29 @@ class MediaApplicationCreationTest extends AccountHelperBase {
     Map<String, List<String>> reasons =
         Map.of("Reason 1", List.of("Reason 1", "Reason 2"), "Reason 2", List.of("Reason 3", "Reason 4"));
 
+
+    private Map<String, String> headers;
+
+    @BeforeAll
+    public void startUp() throws JsonProcessingException {
+        String systemAdminUserId;
+        PiUser systemAdminUser = createSystemAdminAccount();
+        systemAdminUserId = systemAdminUser.getUserId();
+
+        String adminCtscUserId = getCreatedAccountUserId(
+            createAccount(generateEmail(), UUID.randomUUID().toString(), Roles.INTERNAL_ADMIN_CTSC, systemAdminUserId));
+
+        headers = new ConcurrentHashMap<>(bearer);
+        headers.put(REQUESTER_ID_HEADER, adminCtscUserId);
+    }
+
     @AfterAll
     public void teardown() {
-        doDeleteRequest(TESTING_SUPPORT_APPLICATION_URL + TEST_EMAIL, bearer);
+        doDeleteRequest(TESTING_SUPPORT_APPLICATION_URL + TEST_EMAIL, headers);
     }
 
     private MediaApplication createApplication() throws IOException {
-        Response response = doPostMultipartForApplication(MEDIA_APPLICATION_URL, bearer,
+        Response response = doPostMultipartForApplication(MEDIA_APPLICATION_URL, headers,
                                       new ClassPathResource(MOCK_FILE).getFile(),
                                                           TEST_NAME, TEST_EMAIL, TEST_EMPLOYER, STATUS);
 
@@ -49,7 +71,7 @@ class MediaApplicationCreationTest extends AccountHelperBase {
         MediaApplication mediaApplication = createApplication();
 
         final Response getResponse = doGetRequest(String.format(GET_MEDIA_APPLICATION_URL, mediaApplication.getId()),
-                                   bearer);
+                                   headers);
 
         assertThat(getResponse.getStatusCode()).isEqualTo(OK.value());
         MediaApplication retrievedMediaApplication = getResponse.getBody().as(MediaApplication.class);
@@ -63,7 +85,7 @@ class MediaApplicationCreationTest extends AccountHelperBase {
         MediaApplication mediaApplication = createApplication();
 
         final Response getResponse = doGetRequest(String.format(GET_IMAGE_BY_ID, mediaApplication.getImage()),
-                                                  bearer);
+                                                  headers);
 
         assertThat(getResponse.getStatusCode()).isEqualTo(OK.value());
         byte[] retrievedImage = getResponse.getBody().asByteArray();
@@ -77,16 +99,16 @@ class MediaApplicationCreationTest extends AccountHelperBase {
         MediaApplication approvedMediaApplication = createApplication();
 
         doPutRequest(String.format(APPROVE_APPLICATION, approvedMediaApplication.getId()),
-                     bearer);
+                     headers);
 
         final Response getResponse = doGetRequest(GET_APPLICATIONS_BY_STATUS,
-                                                  bearer);
+                                                  headers);
 
         assertThat(getResponse.getStatusCode()).isEqualTo(OK.value());
-        MediaApplication[] retrievedApplciations = getResponse.getBody().as(MediaApplication[].class);
+        MediaApplication[] retrievedApplications = getResponse.getBody().as(MediaApplication[].class);
 
-        assertThat(retrievedApplciations).anyMatch(app -> app.getId().equals(mediaApplication.getId()));
-        assertThat(retrievedApplciations).noneMatch(app -> app.getId().equals(approvedMediaApplication.getId()));
+        assertThat(retrievedApplications).anyMatch(app -> app.getId().equals(mediaApplication.getId()));
+        assertThat(retrievedApplications).noneMatch(app -> app.getId().equals(approvedMediaApplication.getId()));
     }
 
     @Test
@@ -111,14 +133,14 @@ class MediaApplicationCreationTest extends AccountHelperBase {
         MediaApplication mediaApplication = createApplication();
 
         Response approvedMediaApplication = doPutRequest(String.format(APPROVE_APPLICATION, mediaApplication.getId()),
-                     bearer);
+                     headers);
 
         assertThat(approvedMediaApplication.getStatusCode()).isEqualTo(OK.value());
         assertThat(approvedMediaApplication.getBody().as(MediaApplication.class).getStatus())
             .isEqualTo(MediaApplicationStatus.APPROVED);
 
         MediaApplication getApprovedApplication = doGetRequest(String.format(GET_MEDIA_APPLICATION_URL,
-                                                                             mediaApplication.getId()), bearer)
+                                                                             mediaApplication.getId()), headers)
             .getBody().as(MediaApplication.class);
 
         assertThat(getApprovedApplication.getStatus()).isEqualTo(MediaApplicationStatus.APPROVED);
@@ -129,10 +151,10 @@ class MediaApplicationCreationTest extends AccountHelperBase {
         MediaApplication mediaApplication = createApplication();
 
         doPutRequest(String.format(APPROVE_APPLICATION, mediaApplication.getId()),
-                     bearer);
+                     headers);
 
         final Response getResponse = doGetRequest(String.format(GET_IMAGE_BY_ID, mediaApplication.getImage()),
-                                                  bearer);
+                                                  headers);
 
         assertThat(getResponse.getStatusCode()).isEqualTo(NOT_FOUND.value());
     }
@@ -142,10 +164,10 @@ class MediaApplicationCreationTest extends AccountHelperBase {
         MediaApplication mediaApplication = createApplication();
 
         doPutRequest(String.format(REJECT_APPLICATION, mediaApplication.getId()),
-                     bearer);
+                     headers);
 
         final Response getResponse = doGetRequest(String.format(GET_IMAGE_BY_ID, mediaApplication.getImage()),
-                                                  bearer);
+                                                  headers);
 
         assertThat(getResponse.getStatusCode()).isEqualTo(NOT_FOUND.value());
     }
@@ -155,17 +177,17 @@ class MediaApplicationCreationTest extends AccountHelperBase {
         MediaApplication mediaApplication = createApplication();
 
         Response deleteResponse = doDeleteRequest(String.format(GET_MEDIA_APPLICATION_URL, mediaApplication.getId()),
-                     bearer);
+                     headers);
 
         assertThat(deleteResponse.getStatusCode()).isEqualTo(OK.value());
 
         final Response getImageResponse = doGetRequest(String.format(GET_IMAGE_BY_ID, mediaApplication.getImage()),
-                                                  bearer);
+                                                  headers);
 
         assertThat(getImageResponse.getStatusCode()).isEqualTo(NOT_FOUND.value());
 
         final Response getApplicationResponse = doGetRequest(String.format(GET_MEDIA_APPLICATION_URL,
-                                                                           mediaApplication.getId()), bearer);
+                                                                           mediaApplication.getId()), headers);
 
         assertThat(getApplicationResponse.getStatusCode()).isEqualTo(NOT_FOUND.value());
     }
@@ -176,14 +198,14 @@ class MediaApplicationCreationTest extends AccountHelperBase {
 
         Response rejectedApplicationResponse =
             doPutRequestWithBody(String.format(REJECT_APPLICATION_WITH_REASONS, mediaApplication.getId()),
-                     bearer, new ObjectMapper().writeValueAsString(reasons));
+                     headers, new ObjectMapper().writeValueAsString(reasons));
 
         assertThat(rejectedApplicationResponse.getStatusCode()).isEqualTo(OK.value());
         assertThat(rejectedApplicationResponse.getBody().as(MediaApplication.class).getStatus())
             .isEqualTo(MediaApplicationStatus.REJECTED);
 
         MediaApplication getRejectedApplication = doGetRequest(String.format(GET_MEDIA_APPLICATION_URL,
-                                                                             mediaApplication.getId()), bearer)
+                                                                             mediaApplication.getId()), headers)
             .getBody().as(MediaApplication.class);
 
         assertThat(getRejectedApplication.getStatus()).isEqualTo(MediaApplicationStatus.REJECTED);
@@ -194,11 +216,11 @@ class MediaApplicationCreationTest extends AccountHelperBase {
         MediaApplication mediaApplication = createApplication();
 
         doPutRequestWithBody(String.format(REJECT_APPLICATION_WITH_REASONS, mediaApplication.getId()),
-                                     bearer,
+                                     headers,
                                  new ObjectMapper().writeValueAsString(reasons));
 
         final Response getImageResponse = doGetRequest(String.format(GET_IMAGE_BY_ID, mediaApplication.getImage()),
-                                                       bearer);
+                                                       headers);
 
         assertThat(getImageResponse.getStatusCode()).isEqualTo(NOT_FOUND.value());
     }
@@ -208,19 +230,19 @@ class MediaApplicationCreationTest extends AccountHelperBase {
         MediaApplication rejectedApplication = createApplication();
 
         doPutRequest(String.format(REJECT_APPLICATION, rejectedApplication.getId()),
-                     bearer);
+                     headers);
 
         MediaApplication approvedApplication = createApplication();
 
         doPutRequest(String.format(APPROVE_APPLICATION, approvedApplication.getId()),
-                     bearer);
+                     headers);
 
         MediaApplication pendingApplication = createApplication();
 
-        Response reportingResponse = doPostRequest(REPORTING, bearer, "");
+        Response reportingResponse = doPostRequest(REPORTING, headers, "");
         assertThat(reportingResponse.getStatusCode()).isEqualTo(NO_CONTENT.value());
 
-        final Response getResponse = doGetRequest(MEDIA_APPLICATION_URL, bearer);
+        final Response getResponse = doGetRequest(MEDIA_APPLICATION_URL, headers);
 
         MediaApplication[] retrievedApplications = getResponse.getBody().as(MediaApplication[].class);
 

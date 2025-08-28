@@ -21,7 +21,7 @@ class SystemAdminB2CAccountCreationTest extends AccountHelperBase {
 
     @BeforeAll
     public void startUp() throws JsonProcessingException {
-        issuerId = Map.of(ISSUER_ID, createSystemAdminAccount().getUserId());
+        issuerId = Map.of(REQUESTER_ID_HEADER, createSystemAdminAccount().getUserId());
     }
 
     @BeforeEach

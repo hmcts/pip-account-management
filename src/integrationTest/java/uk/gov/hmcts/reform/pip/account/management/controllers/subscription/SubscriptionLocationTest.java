@@ -3,18 +3,21 @@ package uk.gov.hmcts.reform.pip.account.management.controllers.subscription;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import uk.gov.hmcts.reform.pip.account.management.model.subscription.Subscription;
+import uk.gov.hmcts.reform.pip.account.management.service.authorisation.SubscriptionAuthorisationService;
 import uk.gov.hmcts.reform.pip.account.management.utils.IntegrationTestBase;
 import uk.gov.hmcts.reform.pip.model.subscription.Channel;
 import uk.gov.hmcts.reform.pip.model.subscription.SearchType;
@@ -26,7 +29,9 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.when;
 import static org.springframework.http.HttpStatus.FORBIDDEN;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -54,13 +59,16 @@ class SubscriptionLocationTest extends IntegrationTestBase {
 
     private static final String SYSTEM_ADMIN_PROVENANCE_ID = "e5f1cc77-6e9a-40ab-8da0-a9666b328466";
     private static final String SYSTEM_ADMIN_USER_ID = "87f907d2-eb28-42cc-b6e1-ae2b03f7bba4";
-    private static final String USER_ID_HEADER = "x-user-id";
+    private static final String REQUESTER_ID_HEADER = "x-requester-id";
     private static final String TEST_EMAIL = "test-email-cath@justice.gov.uk";
 
     private static final Subscription SUBSCRIPTION = new Subscription();
 
     @Autowired
     protected MockMvc mvc;
+
+    @MockitoBean
+    private SubscriptionAuthorisationService subscriptionAuthorisationService;
 
     @BeforeAll
     void setup() {
@@ -74,12 +82,20 @@ class SubscriptionLocationTest extends IntegrationTestBase {
         SUBSCRIPTION.setCreatedDate(LocalDateTime.now());
     }
 
+    @BeforeEach
+    public void setupEach() {
+        when(subscriptionAuthorisationService.userCanAddSubscriptions(any(), any())).thenReturn(true);
+        when(subscriptionAuthorisationService.userCanDeleteSubscriptions(any(), any())).thenReturn(true);
+        when(subscriptionAuthorisationService.userCanViewSubscriptions(any(), any())).thenReturn(true);
+        when(subscriptionAuthorisationService.userCanDeleteLocationSubscriptions(any(), any())).thenReturn(true);
+    }
+
     @Test
     @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = "classpath:add-verified-users.sql")
     void testFindSubscriptionsByLocationId() throws Exception {
         MockHttpServletRequestBuilder createSubscriptionRequest = MockMvcRequestBuilders.post(SUBSCRIPTION_PATH)
             .content(OBJECT_MAPPER.writeValueAsString(SUBSCRIPTION))
-            .header(USER_ID_HEADER, ACTIONING_USER_ID)
+            .header(REQUESTER_ID_HEADER, ACTIONING_USER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
         mvc.perform(createSubscriptionRequest)
@@ -96,7 +112,7 @@ class SubscriptionLocationTest extends IntegrationTestBase {
 
         assertEquals(1, userSubscriptions.size(),
                      "Subscriptions list for location id " + LOCATION_ID + " not found");
-        assertEquals(LOCATION_ID, userSubscriptions.get(0).getSearchValue(),
+        assertEquals(LOCATION_ID, userSubscriptions.getFirst().getSearchValue(),
                      "Subscriptions list for location id " + LOCATION_ID + " not found");
     }
 
@@ -125,7 +141,7 @@ class SubscriptionLocationTest extends IntegrationTestBase {
 
         MockHttpServletRequestBuilder createSubscriptionRequest = MockMvcRequestBuilders.post(SUBSCRIPTION_PATH)
             .content(OBJECT_MAPPER.writeValueAsString(SUBSCRIPTION))
-            .header(USER_ID_HEADER, ACTIONING_USER_ID)
+            .header(REQUESTER_ID_HEADER, ACTIONING_USER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
         mvc.perform(createSubscriptionRequest)
@@ -136,7 +152,7 @@ class SubscriptionLocationTest extends IntegrationTestBase {
 
         MvcResult deleteResponse = mvc.perform(delete(
                 SUBSCRIPTIONS_BY_LOCATION + LOCATION_ID)
-                                                   .header(USER_ID_HEADER, SYSTEM_ADMIN_USER_ID))
+                                                   .header(REQUESTER_ID_HEADER, SYSTEM_ADMIN_USER_ID))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -149,13 +165,14 @@ class SubscriptionLocationTest extends IntegrationTestBase {
     @Test
     void testDeleteSubscriptionByLocationNotFound() throws Exception {
         assertRequestResponseStatus(mvc, delete(SUBSCRIPTIONS_BY_LOCATION + LOCATION_ID)
-            .header(USER_ID_HEADER, SYSTEM_ADMIN_USER_ID), NOT_FOUND.value());
+            .header(REQUESTER_ID_HEADER, SYSTEM_ADMIN_USER_ID), NOT_FOUND.value());
     }
 
     @Test
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testDeleteSubscriptionByLocationUnauthorized() throws Exception {
+        when(subscriptionAuthorisationService.userCanDeleteLocationSubscriptions(any(), any())).thenReturn(false);
         assertRequestResponseStatus(mvc, delete(SUBSCRIPTIONS_BY_LOCATION + LOCATION_ID)
-            .header(USER_ID_HEADER, SYSTEM_ADMIN_USER_ID), FORBIDDEN.value());
+            .header(REQUESTER_ID_HEADER, SYSTEM_ADMIN_USER_ID), FORBIDDEN.value());
     }
 }

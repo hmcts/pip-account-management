@@ -4,10 +4,12 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import io.restassured.common.mapper.TypeRef;
 import io.restassured.response.Response;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import uk.gov.hmcts.reform.pip.account.management.model.account.AzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.account.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.utils.AccountHelperBase;
+import uk.gov.hmcts.reform.pip.model.account.PiUser;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 
 import java.util.ArrayList;
@@ -26,6 +28,22 @@ class AzureAccountTest extends AccountHelperBase {
 
     private static final TypeRef<Map<CreationEnum, List<? extends AzureAccount>>> AZURE_ACCOUNT_RESPONSE_TYPE
         = new TypeRef<>() {};
+
+    private Map<String, String> headers;
+    private String adminCtscUserId;
+
+    @BeforeAll
+    public void startUp() throws JsonProcessingException {
+        String systemAdminUserId;
+        PiUser systemAdminUser = createSystemAdminAccount();
+        systemAdminUserId = systemAdminUser.getUserId();
+
+        adminCtscUserId = getCreatedAccountUserId(
+            createAccount(generateEmail(), UUID.randomUUID().toString(), Roles.INTERNAL_ADMIN_CTSC, systemAdminUserId));
+
+        headers = new ConcurrentHashMap<>(bearer);
+        headers.put(REQUESTER_ID_HEADER, adminCtscUserId);
+    }
 
     @AfterAll
     public void tearDown() {
@@ -46,19 +64,16 @@ class AzureAccountTest extends AccountHelperBase {
         List<AzureAccount> azureAccounts = new ArrayList<>();
         azureAccounts.add(azureAccount);
 
-        Map<String, String> headers = new ConcurrentHashMap<>(bearer);
-        headers.put(ISSUER_ID, UUID.randomUUID().toString());
-
         Response response =
             doPostRequest(CREATE_AZURE_ACCOUNT, headers, objectMapper.writeValueAsString(azureAccounts));
 
         assertThat(response.getStatusCode()).isEqualTo(OK.value());
 
         AzureAccount createdAccount = response.getBody()
-            .as(AZURE_ACCOUNT_RESPONSE_TYPE).get(CreationEnum.CREATED_ACCOUNTS).get(0);
+            .as(AZURE_ACCOUNT_RESPONSE_TYPE).get(CreationEnum.CREATED_ACCOUNTS).getFirst();
 
         assertThat(createdAccount.getEmail()).isEqualTo(email);
-        createAccount(email, createdAccount.getAzureAccountId());
+        createAccount(email, createdAccount.getAzureAccountId(), adminCtscUserId);
 
         Response getResponse = doGetRequest(String.format(GET_AZURE_ACCOUNT_INFO, createdAccount.getAzureAccountId()),
                      bearer);

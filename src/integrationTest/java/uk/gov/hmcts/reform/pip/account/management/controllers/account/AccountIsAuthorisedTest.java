@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -16,6 +17,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import uk.gov.hmcts.reform.pip.account.management.model.account.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.account.PiUser;
+import uk.gov.hmcts.reform.pip.account.management.service.authorisation.AccountAuthorisationService;
 import uk.gov.hmcts.reform.pip.account.management.utils.IntegrationTestBase;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
@@ -28,6 +30,8 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 import static org.springframework.http.HttpStatus.FORBIDDEN;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -39,10 +43,13 @@ class AccountIsAuthorisedTest extends IntegrationTestBase {
     @Autowired
     private MockMvc mockMvc;
 
+    @MockitoBean
+    private AccountAuthorisationService accountAuthorisationService;
+
     private static final String ROOT_URL = "/account";
     private static final String PI_URL = ROOT_URL + "/add/pi";
-    private static final String ISSUER_ID = "87f907d2-eb28-42cc-b6e1-ae2b03f7bba2";
-    private static final String ISSUER_HEADER = "x-issuer-id";
+    private static final String REQUESTER_ID = "87f907d2-eb28-42cc-b6e1-ae2b03f7bba2";
+    private static final String REQUESTER_ID_HEADER = "x-requester-id";
     private static final String EMAIL = "a@b.com";
     private static final String URL_FORMAT = "%s/isAuthorised/%s/%s/%s";
     private static final String UNAUTHORIZED_ROLE = "APPROLE_unknown.authorized";
@@ -61,14 +68,16 @@ class AccountIsAuthorisedTest extends IntegrationTestBase {
         MockHttpServletRequestBuilder setupRequest = MockMvcRequestBuilders
             .post(PI_URL)
             .content(objectMapper.writeValueAsString(List.of(validUser)))
-            .header(ISSUER_HEADER, ISSUER_ID)
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID)
             .contentType(MediaType.APPLICATION_JSON);
+
+        when(accountAuthorisationService.userCanCreateAccount(any(), any())).thenReturn(true);
 
         MvcResult userResponse = mockMvc.perform(setupRequest).andExpect(status().isCreated()).andReturn();
         Map<CreationEnum, List<Object>> mappedResponse =
             objectMapper.readValue(userResponse.getResponse().getContentAsString(),
                                    new TypeReference<>() {});
-        return mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).get(0).toString();
+        return mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).getFirst().toString();
     }
 
     @BeforeEach

@@ -50,17 +50,16 @@ class SmokeTest extends SmokeTestBase {
     private static final String TESTING_SUPPORT_APPLICATION_URL = "/testing-support/application/";
     private static final String TESTING_SUPPORT_SUBSCRIPTION_URL = "/testing-support/subscription/";
 
-    private static final String ISSUER_ID_HEADER = "x-issuer-id";
-    private static final String USER_ID_HEADER = "x-user-id";
-    private static final String ISSUER_ID = UUID.randomUUID().toString();
-    private static final UUID USER_ID = UUID.randomUUID();
+    private static final String REQUESTER_ID_HEADER = "x-requester-id";
+    private static final String REQUESTER_ID = UUID.randomUUID().toString();
     private static final String TEST_FIRST_NAME = "SmokeTestFirstName";
     private static final String TEST_SURNAME = "SmokeTestSurname";
     private static final String TEST_DISPLAY_NAME = "SmokeTestName";
     private static final String TEST_EMPLOYER = "SmokeTestEmployer";
     private static final String TEST_EMAIL_PREFIX = "SmokeTestEmail-"
         + ThreadLocalRandom.current().nextInt(1000, 9999);
-    private static final String TEST_EMAIL = TEST_EMAIL_PREFIX + "@justice.gov.uk";
+    private static final String TEST_EMAIL_SUFFIX = "@justice.gov.uk";
+    private static final String TEST_EMAIL = TEST_EMAIL_PREFIX + TEST_EMAIL_SUFFIX;
     private static final String LOCATION_ID = createRandomId();
     private static final String LOCATION_NAME = "TestLocation" + LOCATION_ID;
     protected static final TypeRef<Map<CreationEnum, List<?>>> CREATED_RESPONSE_TYPE = new TypeRef<>() {};
@@ -71,7 +70,8 @@ class SmokeTest extends SmokeTestBase {
 
     private static final String STATUS_CODE_MATCH = "Status code does not match";
     private static final String RESPONSE_BODY_MATCH = "Response body does not match";
-    private static String verifiedUserId;
+    private String verifiedUserId;
+    private String adminUserId;
 
     @BeforeAll
     public void setup() throws JsonProcessingException {
@@ -80,20 +80,37 @@ class SmokeTest extends SmokeTestBase {
 
         PiUser piUser = new PiUser();
         piUser.setEmail(TEST_EMAIL_PREFIX + "-"
-                            + ThreadLocalRandom.current().nextInt(1000, 9999) + "@justice.gov.uk");
+                            + ThreadLocalRandom.current().nextInt(1000, 9999) + TEST_EMAIL_SUFFIX);
         piUser.setRoles(Roles.VERIFIED);
         piUser.setForenames("SmokeTestSubscription-Firstname");
         piUser.setSurname("SmokeTestSubscription-Surname");
-        piUser.setUserProvenance(UserProvenances.PI_AAD);
+        piUser.setUserProvenance(UserProvenances.SSO);
         piUser.setProvenanceUserId(UUID.randomUUID().toString());
 
         verifiedUserId = (String)
-            doPostRequest(CREATE_PI_ACCOUNT_URL, Map.of(ISSUER_ID_HEADER, ISSUER_ID),
+            doPostRequest(CREATE_PI_ACCOUNT_URL, Map.of(REQUESTER_ID_HEADER, REQUESTER_ID),
                           OBJECT_MAPPER.writeValueAsString(List.of(piUser)))
                 .getBody()
                 .as(CREATED_RESPONSE_TYPE)
                 .get(CreationEnum.CREATED_ACCOUNTS)
-                .get(0);
+                .getFirst();
+
+        PiUser adminCtscUser = new PiUser();
+        adminCtscUser.setEmail(TEST_EMAIL_PREFIX + "-"
+                                   + ThreadLocalRandom.current().nextInt(1000, 9999) + TEST_EMAIL_SUFFIX);
+        adminCtscUser.setRoles(Roles.INTERNAL_ADMIN_CTSC);
+        adminCtscUser.setForenames("SmokeTestAdminCtsc-Firstname");
+        adminCtscUser.setSurname("SmokeTestAdminCtsc-Surname");
+        adminCtscUser.setUserProvenance(UserProvenances.SSO);
+        adminCtscUser.setProvenanceUserId(UUID.randomUUID().toString());
+
+        adminUserId = (String)
+            doPostRequest(CREATE_PI_ACCOUNT_URL, Map.of(REQUESTER_ID_HEADER, REQUESTER_ID),
+                          OBJECT_MAPPER.writeValueAsString(List.of(adminCtscUser)))
+                .getBody()
+                .as(CREATED_RESPONSE_TYPE)
+                .get(CreationEnum.CREATED_ACCOUNTS)
+                .getFirst();
     }
 
     @AfterAll
@@ -126,12 +143,16 @@ class SmokeTest extends SmokeTestBase {
         azureAccount.setRole(Roles.VERIFIED);
         azureAccount.setEmail(TEST_EMAIL);
 
-        Response response = doPostRequest(CREATE_AZURE_ACCOUNT_URL, Map.of(ISSUER_ID_HEADER, ISSUER_ID),
+        Response response = doPostRequest(CREATE_AZURE_ACCOUNT_URL, Map.of(REQUESTER_ID_HEADER, adminUserId),
                                           OBJECT_MAPPER.writeValueAsString(List.of(azureAccount)));
+
+        assertThat(response.getStatusCode())
+            .as(STATUS_CODE_MATCH)
+            .isEqualTo(OK.value());
 
         String azureAccountId = response.getBody().as(AZURE_ACCOUNT_RESPONSE_TYPE)
             .get(CreationEnum.CREATED_ACCOUNTS)
-            .get(0)
+            .getFirst()
             .getAzureAccountId();
 
         PiUser piUser = new PiUser();
@@ -142,7 +163,7 @@ class SmokeTest extends SmokeTestBase {
         piUser.setUserProvenance(UserProvenances.PI_AAD);
         piUser.setProvenanceUserId(azureAccountId);
 
-        response = doPostRequest(CREATE_PI_ACCOUNT_URL, Map.of(ISSUER_ID_HEADER, ISSUER_ID),
+        response = doPostRequest(CREATE_PI_ACCOUNT_URL, Map.of(REQUESTER_ID_HEADER, adminUserId),
                                  OBJECT_MAPPER.writeValueAsString(List.of(piUser)));
 
         assertThat(response.getStatusCode())
@@ -152,7 +173,7 @@ class SmokeTest extends SmokeTestBase {
 
     @Test
     void testCreateMediaApplication() throws IOException {
-        Response response = doPostMultipartForApplication(MEDIA_APPLICATION_URL,
+        Response response = doPostMultipartForApplication(MEDIA_APPLICATION_URL, REQUESTER_ID,
                                                           new ClassPathResource(MOCK_FILE).getFile(),
                                                           TEST_DISPLAY_NAME, TEST_EMAIL, TEST_EMPLOYER,
                                                           MediaApplicationStatus.PENDING.toString());
@@ -173,7 +194,7 @@ class SmokeTest extends SmokeTestBase {
         subscription.setLocationName(LOCATION_NAME);
         subscription.setLastUpdatedDate(LocalDateTime.now());
 
-        Response response = doPostRequest(SUBSCRIPTION_URL, Map.of(USER_ID_HEADER, USER_ID.toString()), subscription);
+        Response response = doPostRequest(SUBSCRIPTION_URL, Map.of(REQUESTER_ID_HEADER, verifiedUserId), subscription);
 
         assertThat(response.getStatusCode())
             .as(STATUS_CODE_MATCH)
