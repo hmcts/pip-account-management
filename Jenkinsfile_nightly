@@ -44,6 +44,7 @@ withNightlyPipeline(type, product, component) {
   setupTestSecrets()
   enableFortifyScan('pip-ss-kv-stg')
   enableDbMigration(kv)
+  enableAksStagingDeployment()
   enableFullFunctionalTest()
 
   afterSuccess('fortify-scan') {
