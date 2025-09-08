@@ -11,8 +11,38 @@ def type = "java"
 def product = "pip"
 def component = "account-management"
 
+def setupTestSecrets() {
+  azureKeyVault(
+    keyVaultURL: "https://pip-bootstrap-stg-kv.vault.azure.net/",
+    secrets: [
+      secret('app-pip-account-management-scope', 'APP_URI'),
+      secret('app-pip-data-management-scope', 'DATA_MANAGEMENT_AZ_API'),
+      secret('app-tenant', 'TENANT_ID'),
+      secret('app-pip-publication-services-id', 'CLIENT_ID_FT'),
+      secret('app-pip-publication-services-pwd', 'CLIENT_SECRET_FT'),
+    ]) {
+    env.APP_URI = "${APP_URI}"
+    env.DATA_MANAGEMENT_AZ_API = "${DATA_MANAGEMENT_AZ_API}"
+    env.TENANT_ID = "${TENANT_ID}"
+    env.CLIENT_ID_FT = "${CLIENT_ID_FT}"
+    env.CLIENT_SECRET_FT = "${CLIENT_SECRET_FT}"
+    env.NIGHTLY_BUILD = true
+  }
+}
+
+static LinkedHashMap<String, Object> secret(String secretName, String envVar) {
+  [ $class: 'AzureKeyVaultSecret',
+    secretType: 'Secret',
+    name: secretName,
+    version: '',
+    envVariable: envVar
+  ]
+}
+
 withNightlyPipeline(type, product, component) {
+  setupTestSecrets()
   enableFortifyScan('pip-ss-kv-stg')
+  enableFullFunctionalTest()
 
   afterSuccess('fortify-scan') {
     steps.archiveArtifacts allowEmptyArchive: true, artifacts: '**/Fortify Scan/**/*'
