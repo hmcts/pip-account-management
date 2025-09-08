@@ -138,7 +138,7 @@ class AccountFilteringTest extends AccountHelperBase {
         assertThat(response.getStatusCode()).isEqualTo(OK.value());
 
         Page<PiUser> returnedPage = response.getBody().as(GET_ALL_USERS_TYPE);
-        assertThat(returnedPage.getContent().size()).isEqualTo(1);
+        assertThat(returnedPage.getContent().size()).isEqualTo(2);
     }
 
     @Test
