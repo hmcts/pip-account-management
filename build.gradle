@@ -106,11 +106,35 @@ test {
   failFast = true
 }
 
-tasks.register('functional', Test) {
+tasks.register('runFunctionalTests', Test) {
+  onlyIf {
+    return System.env.NIGHTLY_BUILD != 'true'
+  }
+
   description = "Runs functional tests"
   group = "Verification"
   testClassesDirs = sourceSets.functionalTest.output.classesDirs
   classpath = sourceSets.functionalTest.runtimeClasspath
+
+  useJUnitPlatform {
+    excludeTags 'Nightly'
+  }
+}
+
+tasks.register('runNightlyFunctionalTests', Test) {
+  onlyIf {
+    return System.env.NIGHTLY_BUILD == 'true'
+  }
+
+  description = "Runs nightly functional tests"
+  group = "Verification"
+  testClassesDirs = sourceSets.functionalTest.output.classesDirs
+  classpath = sourceSets.functionalTest.runtimeClasspath
+
+}
+
+tasks.register('functional', Test) {
+  dependsOn(runFunctionalTests, runNightlyFunctionalTests)
 }
 
 tasks.register('integration', Test) {

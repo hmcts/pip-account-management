@@ -6,6 +6,7 @@ import io.restassured.response.Response;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.Page;
 import uk.gov.hmcts.reform.pip.account.management.utils.AccountHelperBase;
@@ -71,6 +72,7 @@ class AccountFilteringTest extends AccountHelperBase {
     }
 
     @Test
+    @Tag("Nightly")
     void testGetAllThirdPartyAccounts() {
         Response getThirdParties = doGetRequest(GET_ALL_THIRD_PARTY_ACCOUNTS, bearer);
 
@@ -83,6 +85,7 @@ class AccountFilteringTest extends AccountHelperBase {
     }
 
     @Test
+    @Tag("Nightly")
     void testGetAllAccountsExceptThirdPartyDoesNotContainThirdParty() {
         Map<String, String> requestParams = new ConcurrentHashMap<>();
         requestParams.put("provenances", UserProvenances.THIRD_PARTY.toString());
