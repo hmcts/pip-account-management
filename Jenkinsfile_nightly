@@ -10,6 +10,7 @@ properties([
 def type = "java"
 def product = "pip"
 def component = "account-management"
+def kv = product + '-ss-kv'
 
 def setupTestSecrets() {
   azureKeyVault(
@@ -42,6 +43,7 @@ static LinkedHashMap<String, Object> secret(String secretName, String envVar) {
 withNightlyPipeline(type, product, component) {
   setupTestSecrets()
   enableFortifyScan('pip-ss-kv-stg')
+  enableDbMigration(kv)
   enableFullFunctionalTest()
 
   afterSuccess('fortify-scan') {
