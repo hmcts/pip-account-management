@@ -26,6 +26,18 @@ class SensitivityServiceTest {
 
     private static final String SENSITIVITY_MESSAGE = "Returned false for public sensitivity";
 
+    @ParameterizedTest
+    @EnumSource(Sensitivity.class)
+    void checkSystemAdminReturnsTrueForAllSensitivities(Sensitivity sensitivity) {
+        PiUser piUser = new PiUser();
+        piUser.setRoles(Roles.SYSTEM_ADMIN);
+        piUser.setUserProvenance(UserProvenances.PI_AAD);
+
+        assertTrue(
+            sensitivityService.checkAuthorisation(piUser, ListType.CIVIL_DAILY_CAUSE_LIST, sensitivity),
+            SENSITIVITY_MESSAGE);
+    }
+
     @Test
     void checkPublicReturnsTrueWhenVerified() {
         PiUser piUser = new PiUser();
