@@ -24,6 +24,7 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class AccountFilteringControllerTest {
     private static final String EMAIL = "a@b.com";
+    private static final String USER_ID = "1234";
     private static final String STATUS_CODE_MATCH = "Status code responses should match";
 
     @Mock
@@ -35,7 +36,7 @@ class AccountFilteringControllerTest {
     @Test
     void testMiDataReturnsOk() {
         AccountMiData accountMiData = new AccountMiData();
-        accountMiData.setProvenanceUserId("1234");
+        accountMiData.setProvenanceUserId("5678");
 
         when(accountFilteringService.getAccountDataForMi()).thenReturn(List.of(accountMiData));
         ResponseEntity<List<AccountMiData>> listAccountMiData = accountFilteringController.getMiData();
@@ -52,7 +53,7 @@ class AccountFilteringControllerTest {
         List<PiUser> users = List.of(piUser);
         when(accountFilteringService.findAllThirdPartyAccounts()).thenReturn(users);
 
-        ResponseEntity<List<PiUser>> response = accountFilteringController.getAllThirdPartyAccounts();
+        ResponseEntity<List<PiUser>> response = accountFilteringController.getAllThirdPartyAccounts(USER_ID);
 
         assertEquals(HttpStatus.OK, response.getStatusCode(), "Expected status code does not match");
         assertEquals(users, response.getBody(), "Expected users do not match");
@@ -60,9 +61,9 @@ class AccountFilteringControllerTest {
 
     @Test
     void testGetAllAccountsExceptThirdParty() {
-        assertThat(accountFilteringController.getAllAccountsExceptThirdParty(
-            0, 25, "test", "1234",
-            List.of(UserProvenances.PI_AAD), List.of(Roles.VERIFIED), "1234").getStatusCode())
+        assertThat(accountFilteringController.getAllAccountsExceptThirdParty(USER_ID,
+            0, 25, "test", "5678",
+            List.of(UserProvenances.PI_AAD), List.of(Roles.VERIFIED), USER_ID).getStatusCode())
             .as(STATUS_CODE_MATCH)
             .isEqualTo(HttpStatus.OK);
     }
