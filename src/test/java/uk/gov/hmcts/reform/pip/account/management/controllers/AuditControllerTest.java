@@ -38,7 +38,7 @@ class AuditControllerTest {
 
     @Test
     void testGetAllAuditLogs() {
-        ResponseEntity<Page<AuditLog>> response = auditController.getAllAuditLogs(0, 25,
+        ResponseEntity<Page<AuditLog>> response = auditController.getAllAuditLogs(USER_ID, 0, 25,
             EMAIL, USER_ID, AUDIT_ACTIONS, FILTER_DATE);
         assertEquals(HttpStatus.OK, response.getStatusCode(), STATUS_CODE_MATCH);
     }
@@ -48,7 +48,7 @@ class AuditControllerTest {
         UUID id = UUID.randomUUID();
         when(auditService.getAuditLogById(id)).thenReturn(new AuditLog());
 
-        ResponseEntity<AuditLog> response = auditController.getAuditLogById(id);
+        ResponseEntity<AuditLog> response = auditController.getAuditLogById(USER_ID, id);
         assertEquals(HttpStatus.OK, response.getStatusCode(), STATUS_CODE_MATCH);
     }
 

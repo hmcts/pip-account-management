@@ -9,6 +9,7 @@ import com.microsoft.graph.users.UsersRequestBuilder;
 import com.microsoft.graph.users.item.UserItemRequestBuilder;
 import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +31,10 @@ import uk.gov.hmcts.reform.pip.account.management.model.account.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.account.PiUser;
 import uk.gov.hmcts.reform.pip.account.management.model.subscription.Subscription;
 import uk.gov.hmcts.reform.pip.account.management.model.subscription.usersubscription.UserSubscription;
+import uk.gov.hmcts.reform.pip.account.management.service.authorisation.AccountAuthorisationService;
+import uk.gov.hmcts.reform.pip.account.management.service.authorisation.AuditAuthorisationService;
+import uk.gov.hmcts.reform.pip.account.management.service.authorisation.MediaApplicationAuthorisationService;
+import uk.gov.hmcts.reform.pip.account.management.service.authorisation.SubscriptionAuthorisationService;
 import uk.gov.hmcts.reform.pip.account.management.utils.IntegrationTestBase;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
@@ -75,8 +80,9 @@ class TestingSupportApiTest extends IntegrationTestBase {
     private static final String APPLICATION_URL = "/application";
     private static final String B2C_URL = "URL";
 
-    private static final String ISSUER_HEADER = "x-issuer-id";
-    private static final String ISSUER_ID = "87f907d2-eb28-42cc-b6e1-ae2b03f7bba2";
+    private static final String REQUESTER_ID_HEADER = "x-requester-id";
+    private static final String SYSTEM_ADMIN_USER_ID = "87f907d2-eb28-42cc-b6e1-ae2b03f7bba2";
+    private static final UUID REQUESTER_ID = UUID.randomUUID();
 
     private static final String EMAIL_PREFIX = "TEST_789_";
     private static final String EMAIL = EMAIL_PREFIX + "user123@test.com";
@@ -97,8 +103,6 @@ class TestingSupportApiTest extends IntegrationTestBase {
     private static final String SUBSCRIPTION_BY_USER_PATH = "/subscription/user/%s";
     private static final String LOCATION_NAME_PREFIX = "TEST_123_";
     private static final String LOCATION_NAME = "Court1";
-    private static final String USER_ID_HEADER = "x-user-id";
-    private static final String ACTIONING_USER_ID = "1234-1234";
 
     private static final UUID USER_ID = UUID.fromString("87f907d2-eb28-42cc-b6e1-ae2b03f7bba5");
     private static final String CASE_ID = "T485913";
@@ -125,9 +129,31 @@ class TestingSupportApiTest extends IntegrationTestBase {
     @Mock
     private ClientConfiguration clientConfiguration;
 
+    @MockitoBean
+    private AccountAuthorisationService accountAuthorisationService;
+
+    @MockitoBean
+    private MediaApplicationAuthorisationService mediaApplicationAuthorisationService;
+
+    @MockitoBean
+    private AuditAuthorisationService auditAuthorisationService;
+
+    @MockitoBean
+    private SubscriptionAuthorisationService subscriptionAuthorisationService;
+
     @BeforeAll
     static void startup() {
         OBJECT_MAPPER.findAndRegisterModules();
+    }
+
+    @BeforeEach
+    void beforeEachSetUp() {
+        when(accountAuthorisationService.userCanCreateAzureAccount(any())).thenReturn(true);
+        when(accountAuthorisationService.userCanGetAccountByUserId(any(), any())).thenReturn(true);
+        when(auditAuthorisationService.userCanViewAuditLogs(any())).thenReturn(true);
+        when(accountAuthorisationService.userCanCreateAccount(any(), any())).thenReturn(true);
+        when(subscriptionAuthorisationService.userCanAddSubscriptions(any(), any())).thenReturn(true);
+        when(subscriptionAuthorisationService.userCanViewSubscriptions(any(), any())).thenReturn(true);
     }
 
     @Test
@@ -153,7 +179,6 @@ class TestingSupportApiTest extends IntegrationTestBase {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(TESTING_SUPPORT_CREATE_ACCOUNT_URL)
             .content(OBJECT_MAPPER.writeValueAsString(newAccount))
-            .header(ISSUER_HEADER, ISSUER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult postResponse = mockMvc.perform(mockHttpServletRequestBuilder)
@@ -162,9 +187,7 @@ class TestingSupportApiTest extends IntegrationTestBase {
 
         PiUser createdAccount = OBJECT_MAPPER.readValue(postResponse.getResponse().getContentAsString(), PiUser.class);
 
-        assertEquals(EMAIL, createdAccount.getEmail(),
-                     "Azure account creation error"
-        );
+        assertEquals(EMAIL, createdAccount.getEmail(), "Azure account creation error");
 
         //User mock setup
         when(graphClient.users()).thenReturn(usersRequestBuilder);
@@ -172,7 +195,8 @@ class TestingSupportApiTest extends IntegrationTestBase {
         when(userItemRequestBuilder.get()).thenReturn(new User());
 
         //Check whether account is created in Pi user table
-        MockHttpServletRequestBuilder getPiUserRequest = get(ACCOUNT_URL + createdAccount.getUserId());
+        MockHttpServletRequestBuilder getPiUserRequest = get(ACCOUNT_URL + createdAccount.getUserId())
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID);
 
         MvcResult responseGetUser = mockMvc.perform(getPiUserRequest).andExpect(status().isOk()).andReturn();
 
@@ -192,7 +216,8 @@ class TestingSupportApiTest extends IntegrationTestBase {
             .isEqualTo("1 account(s) deleted with email starting with " + EMAIL_PREFIX);
 
         //Check whether the user deleted in Pi user table
-        mockMvc.perform(get(ACCOUNT_URL + createdAccount.getUserId()))
+        mockMvc.perform(get(ACCOUNT_URL + createdAccount.getUserId())
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID))
             .andExpect(status().isNotFound());
     }
 
@@ -217,7 +242,6 @@ class TestingSupportApiTest extends IntegrationTestBase {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(TESTING_SUPPORT_CREATE_ACCOUNT_URL)
             .content(OBJECT_MAPPER.writeValueAsString(newAccount))
-            .header(ISSUER_HEADER, ISSUER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
         mockMvc.perform(mockHttpServletRequestBuilder)
@@ -233,7 +257,6 @@ class TestingSupportApiTest extends IntegrationTestBase {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(TESTING_SUPPORT_CREATE_ACCOUNT_URL)
             .content(OBJECT_MAPPER.writeValueAsString(newAccount))
-            .header(ISSUER_HEADER, ISSUER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
         mockMvc.perform(mockHttpServletRequestBuilder)
@@ -252,7 +275,7 @@ class TestingSupportApiTest extends IntegrationTestBase {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(ACCOUNT_ADD_USER_URL)
             .content(OBJECT_MAPPER.writeValueAsString(List.of(user)))
-            .header(ISSUER_HEADER, ISSUER_ID)
+            .header(REQUESTER_ID_HEADER, SYSTEM_ADMIN_USER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult postResponse = mockMvc.perform(mockHttpServletRequestBuilder)
@@ -268,10 +291,12 @@ class TestingSupportApiTest extends IntegrationTestBase {
             .as("No account created")
             .hasSize(1);
 
-        String userId = mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).get(0);
-        mockMvc.perform(get(ACCOUNT_URL + userId))
+        String userId = mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).getFirst();
+        mockMvc.perform(get(ACCOUNT_URL + userId)
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID))
             .andExpect(status().isOk());
 
+        when(accountAuthorisationService.userCanDeleteAccount(any(), any())).thenReturn(true);
         MvcResult deleteResponse = mockMvc.perform(delete(TESTING_SUPPORT_ACCOUNT_URL + EMAIL_PREFIX))
             .andExpect(status().isOk())
             .andReturn();
@@ -280,7 +305,9 @@ class TestingSupportApiTest extends IntegrationTestBase {
             .as("Media application delete response does not match")
             .isEqualTo("1 account(s) deleted with email starting with " + EMAIL_PREFIX);
 
-        mockMvc.perform(get(ACCOUNT_URL + userId))
+        when(accountAuthorisationService.userCanGetAccountByUserId(any(), any())).thenReturn(true);
+        mockMvc.perform(get(ACCOUNT_URL + userId)
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID))
             .andExpect(status().isNotFound());
     }
 
@@ -288,7 +315,9 @@ class TestingSupportApiTest extends IntegrationTestBase {
     void testTestingSupportDeleteApplicationsWithEmailPrefix() throws Exception {
         MediaApplication application = createApplication();
 
-        mockMvc.perform(get(APPLICATION_URL + "/" + application.getId()))
+        when(mediaApplicationAuthorisationService.userCanViewMediaApplications(any())).thenReturn(true);
+        mockMvc.perform(get(APPLICATION_URL + "/" + application.getId())
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID))
             .andExpect(status().isOk());
 
         MvcResult deleteResponse = mockMvc.perform(delete(TESTING_SUPPORT_APPLICATION_URL + EMAIL_PREFIX))
@@ -299,7 +328,9 @@ class TestingSupportApiTest extends IntegrationTestBase {
             .as("Media application delete response does not match")
             .isEqualTo("1 media application(s) deleted with email starting with " + EMAIL_PREFIX);
 
-        mockMvc.perform(get(APPLICATION_URL + "/" + application.getId()))
+        when(mediaApplicationAuthorisationService.userCanViewMediaApplications(any())).thenReturn(true);
+        mockMvc.perform(get(APPLICATION_URL + "/" + application.getId())
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID))
             .andExpect(status().isNotFound());
     }
 
@@ -310,7 +341,7 @@ class TestingSupportApiTest extends IntegrationTestBase {
 
         MockHttpServletRequestBuilder postRequest = MockMvcRequestBuilders.post(SUBSCRIPTION_PATH)
             .content(OBJECT_MAPPER.writeValueAsString(subscription))
-            .header(USER_ID_HEADER, ACTIONING_USER_ID)
+            .header(REQUESTER_ID_HEADER, USER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
         mockMvc.perform(postRequest)
@@ -324,7 +355,8 @@ class TestingSupportApiTest extends IntegrationTestBase {
             .as("Subscription response does not match")
             .isEqualTo("1 subscription(s) deleted for location name starting with " + LOCATION_NAME_PREFIX);
 
-        MvcResult mvcResult = mockMvc.perform(get(String.format(SUBSCRIPTION_BY_USER_PATH,  USER_ID))).andReturn();
+        MvcResult mvcResult = mockMvc.perform(get(String.format(SUBSCRIPTION_BY_USER_PATH,  USER_ID))
+                                                  .header(REQUESTER_ID_HEADER, USER_ID)).andReturn();
         UserSubscription userSubscription =
             OBJECT_MAPPER.readValue(mvcResult.getResponse().getContentAsString(), UserSubscription.class);
 
@@ -337,7 +369,8 @@ class TestingSupportApiTest extends IntegrationTestBase {
     void testTestingSupportDeleteAuditLogsWithEmailPrefix() throws Exception {
         AuditLog auditLog = createAuditLog();
 
-        mockMvc.perform(get(AUDIT_URL + "/" + auditLog.getId()))
+        mockMvc.perform(get(AUDIT_URL + "/" + auditLog.getId())
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID))
             .andExpect(status().isOk());
 
         MvcResult deleteResponse = mockMvc.perform(delete(TESTING_SUPPORT_AUDIT_URL + EMAIL_PREFIX))
@@ -348,7 +381,8 @@ class TestingSupportApiTest extends IntegrationTestBase {
             .as("Audit Log delete response does not match")
             .isEqualTo("2 audit log(s) deleted with user email starting with " + EMAIL_PREFIX);
 
-        mockMvc.perform(get(AUDIT_URL + "/" + auditLog.getId()))
+        mockMvc.perform(get(AUDIT_URL + "/" + auditLog.getId())
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID))
             .andExpect(status().isNotFound());
     }
 
@@ -357,10 +391,12 @@ class TestingSupportApiTest extends IntegrationTestBase {
         AuditLog auditLog = createAuditLog();
         LocalDate expiredDate = auditLog.getTimestamp().minusDays(200).toLocalDate();
 
-        mockMvc.perform(get(AUDIT_URL + "/" + auditLog.getId()))
+        mockMvc.perform(get(AUDIT_URL + "/" + auditLog.getId())
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID))
             .andExpect(status().isOk());
 
-        MvcResult updateAudit = mockMvc.perform(put(TESTING_SUPPORT_AUDIT_URL + auditLog.getId()))
+        MvcResult updateAudit = mockMvc.perform(put(TESTING_SUPPORT_AUDIT_URL + auditLog.getId())
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -474,7 +510,7 @@ class TestingSupportApiTest extends IntegrationTestBase {
         MockHttpServletRequestBuilder postRequest = MockMvcRequestBuilders
             .post(AUDIT_URL)
             .content(OBJECT_MAPPER.writeValueAsString(auditLog))
-            .header(ISSUER_HEADER, ISSUER_ID)
+            .header(REQUESTER_ID_HEADER, SYSTEM_ADMIN_USER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult mvcResult = mockMvc.perform(postRequest)

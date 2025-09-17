@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,14 +24,14 @@ import java.util.List;
 @Tag(name = "Account Management - API for managing subscriptions for location")
 @RequestMapping("/subscription/location")
 @ApiResponse(responseCode = "401", description = "Invalid access credential")
-@ApiResponse(responseCode = "403", description = "User has not been authorized")
 @Valid
 @IsAdmin
 @SecurityRequirement(name = "bearerAuth")
 public class SubscriptionLocationController {
     private static final String OK_CODE = "200";
     private static final String NOT_FOUND_ERROR_CODE = "404";
-    private static final String X_USER_ID_HEADER = "x-user-id";
+    private static final String FORBIDDEN_ERROR_CODE = "403";
+    private static final String X_REQUESTER_ID_HEADER = "x-requester-id";
 
     private final SubscriptionLocationService subscriptionLocationService;
 
@@ -51,14 +52,16 @@ public class SubscriptionLocationController {
 
     @ApiResponse(responseCode = OK_CODE, description = "Subscription for location {locationId} has been deleted")
     @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description = "No subscription found for location {locationId}")
+    @ApiResponse(responseCode = FORBIDDEN_ERROR_CODE,
+        description = "User with ID {requesterId} is not authorised to remove these subscriptions")
     @Transactional
+    @PreAuthorize("@subscriptionAuthorisationService.userCanDeleteLocationSubscriptions(#requesterId, #locationId)")
     @DeleteMapping("/{locationId}")
-    @IsAdmin
-    public ResponseEntity<String> deleteSubscriptionByLocation(@RequestHeader(X_USER_ID_HEADER) String userId,
+    public ResponseEntity<String> deleteSubscriptionByLocation(@RequestHeader(X_REQUESTER_ID_HEADER) String requesterId,
                                                                @PathVariable Integer locationId) {
         return ResponseEntity.ok(subscriptionLocationService.deleteSubscriptionByLocation(
             locationId.toString(),
-            userId
+            requesterId
         ));
     }
 }
