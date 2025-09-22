@@ -4,15 +4,17 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -27,26 +29,23 @@ import uk.gov.hmcts.reform.pip.model.report.AccountMiData;
 import java.util.List;
 
 @RestController
+@AllArgsConstructor
 @Tag(name = "Account Management - API for retrieving custom user accounts")
 @RequestMapping("/account")
 @ApiResponse(responseCode = "401", description = "Invalid access credential")
-@ApiResponse(responseCode = "403", description = "User has not been authorized")
 @Validated
 @IsAdmin
 @SecurityRequirement(name = "bearerAuth")
-@SuppressWarnings("squid:S1133")
+@SuppressWarnings({"squid:S1133", "PMD.UseObjectForClearerAPI"})
 public class AccountFilteringController {
-    private static final String OK_CODE = "200";
-    private static final String NOT_FOUND_ERROR_CODE = "404";
-
-    private static final String PI_USER = "{piUser}";
 
     private final AccountFilteringService accountFilteringService;
 
-    @Autowired
-    public AccountFilteringController(AccountFilteringService accountFilteringService) {
-        this.accountFilteringService = accountFilteringService;
-    }
+    private static final String OK_CODE = "200";
+    private static final String NOT_FOUND_ERROR_CODE = "404";
+    private static final String FORBIDDEN_ERROR_CODE = "403";
+    private static final String PI_USER = "{piUser}";
+    private static final String REQUESTER_ID = "x-requester-id";
 
     @ApiResponse(responseCode = OK_CODE, description = "List of Accounts MI Data")
     @Operation(summary = "Returns anonymized account data for MI reporting")
@@ -56,16 +55,24 @@ public class AccountFilteringController {
     }
 
     @ApiResponse(responseCode = OK_CODE, description = "List of third party accounts")
+    @ApiResponse(responseCode = FORBIDDEN_ERROR_CODE,
+        description = "User with ID {requesterId} is not authorised to view accounts")
     @Operation(summary = "Get all third party accounts")
     @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("@accountAuthorisationService.userCanViewAccounts(#requesterId)")
     @GetMapping("/all/third-party")
-    public ResponseEntity<List<PiUser>> getAllThirdPartyAccounts() {
+    public ResponseEntity<List<PiUser>> getAllThirdPartyAccounts(@RequestHeader(REQUESTER_ID) String requesterId) {
         return ResponseEntity.ok(accountFilteringService.findAllThirdPartyAccounts());
     }
 
+    @ApiResponse(responseCode = OK_CODE, description = "List of accounts")
+    @ApiResponse(responseCode = FORBIDDEN_ERROR_CODE,
+        description = "User with ID {requesterId} is not authorised to view accounts")
     @Operation(summary = "Get all accounts except third party in a page with filtering")
+    @PreAuthorize("@accountAuthorisationService.userCanViewAccounts(#requesterId)")
     @GetMapping("/all")
     public ResponseEntity<Page<PiUser>> getAllAccountsExceptThirdParty(
+        @RequestHeader(REQUESTER_ID) String requesterId,
         @RequestParam(name = "pageNumber", defaultValue = "0") int pageNumber,
         @RequestParam(name = "pageSize", defaultValue = "25") int pageSize,
         @RequestParam(name = "email", defaultValue = "", required = false) String email,

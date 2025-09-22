@@ -23,6 +23,7 @@ import static org.mockito.Mockito.when;
 import static uk.gov.hmcts.reform.pip.account.management.helpers.MediaApplicationHelper.FILE;
 import static uk.gov.hmcts.reform.pip.account.management.helpers.MediaApplicationHelper.STATUS;
 import static uk.gov.hmcts.reform.pip.account.management.helpers.MediaApplicationHelper.TEST_ID;
+import static uk.gov.hmcts.reform.pip.account.management.helpers.MediaApplicationHelper.USER_ID;
 import static uk.gov.hmcts.reform.pip.account.management.helpers.MediaApplicationHelper.createApplication;
 import static uk.gov.hmcts.reform.pip.account.management.helpers.MediaApplicationHelper.createApplicationList;
 
@@ -58,10 +59,10 @@ class MediaApplicationControllerTest {
             MediaApplicationStatus.PENDING)).thenReturn(applicationList);
 
         assertEquals(HttpStatus.OK, mediaApplicationController.getApplicationsByStatus(
-            MediaApplicationStatus.PENDING).getStatusCode(), STATUS_CODE_MATCH);
+            USER_ID, MediaApplicationStatus.PENDING).getStatusCode(), STATUS_CODE_MATCH);
 
         assertEquals(applicationList, mediaApplicationController.getApplicationsByStatus(
-                         MediaApplicationStatus.PENDING).getBody(),
+             USER_ID, MediaApplicationStatus.PENDING).getBody(),
                      "Should return list of found applications");
     }
 
@@ -71,10 +72,10 @@ class MediaApplicationControllerTest {
 
         when(mediaApplicationService.getApplicationById(TEST_ID)).thenReturn(application);
 
-        assertEquals(HttpStatus.OK, mediaApplicationController.getApplicationById(TEST_ID)
+        assertEquals(HttpStatus.OK, mediaApplicationController.getApplicationById(USER_ID, TEST_ID)
             .getStatusCode(), STATUS_CODE_MATCH);
 
-        assertEquals(application, mediaApplicationController.getApplicationById(TEST_ID).getBody(),
+        assertEquals(application, mediaApplicationController.getApplicationById(USER_ID, TEST_ID).getBody(),
                      "Should return the correct application");
     }
 
@@ -144,8 +145,8 @@ class MediaApplicationControllerTest {
         when(mediaApplicationService.updateApplication(testUuid, MediaApplicationStatus.REJECTED, reasons))
             .thenReturn(mediaApplication);
 
-        ResponseEntity<MediaApplication> response =
-            mediaApplicationController.updateApplicationRejection(reasons, MediaApplicationStatus.REJECTED, testUuid);
+        ResponseEntity<MediaApplication> response = mediaApplicationController.updateApplicationRejection(
+            USER_ID, reasons, MediaApplicationStatus.REJECTED, testUuid);
 
         assertEquals(HttpStatus.OK, response.getStatusCode(), STATUS_CODE_MATCH);
         assertEquals(mediaApplication, response.getBody(), "Returned media application does not match");
