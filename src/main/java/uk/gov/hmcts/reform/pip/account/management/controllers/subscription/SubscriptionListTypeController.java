@@ -53,7 +53,7 @@ public class SubscriptionListTypeController {
     @ApiResponse(responseCode = FORBIDDEN_ERROR_CODE,
         description = "User with ID {requesterId} is not authorised to update subscriptions for user with ID {userId}")
     public ResponseEntity<String> addListTypesForSubscription(@RequestHeader(X_REQUESTER_ID_HEADER) UUID requesterId,
-                                                              @PathVariable String userId,
+                                                              @PathVariable UUID userId,
                                                               @RequestBody SubscriptionListType subscriptionListType) {
         subscriptionListTypeService.addListTypesForSubscription(subscriptionListType, userId);
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -73,7 +73,7 @@ public class SubscriptionListTypeController {
         description = "User with ID {requesterId} is not authorised to update subscriptions for user with ID {userId}")
     public ResponseEntity<String> configureListTypesForSubscription(
         @RequestHeader(X_REQUESTER_ID_HEADER) UUID requesterId,
-        @PathVariable String userId,
+        @PathVariable UUID userId,
         @RequestBody SubscriptionListType subscriptionListType
     ) {
         subscriptionListTypeService.configureListTypesForSubscription(subscriptionListType, userId);

@@ -28,7 +28,7 @@ public class SubscriptionListTypeService {
         this.userRepository = userRepository;
     }
 
-    public void addListTypesForSubscription(SubscriptionListType subscriptionListType, String userId) {
+    public void addListTypesForSubscription(SubscriptionListType subscriptionListType, UUID userId) {
         log.info(writeLog(userId, UserActions.CREATE_SUBSCRIPTION, LOCATION_ID.name()));
 
         if (userRepository.findByUserId(subscriptionListType.getUserId()).isEmpty()) {
@@ -39,7 +39,7 @@ public class SubscriptionListTypeService {
         subscriptionListTypeRepository.save(subscriptionListType);
     }
 
-    public void configureListTypesForSubscription(SubscriptionListType subscriptionListType, String userId) {
+    public void configureListTypesForSubscription(SubscriptionListType subscriptionListType, UUID userId) {
         log.info(writeLog(userId, UserActions.CREATE_SUBSCRIPTION, LOCATION_ID.name()));
 
         if (userRepository.findByUserId(subscriptionListType.getUserId()).isEmpty()) {

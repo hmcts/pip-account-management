@@ -88,14 +88,13 @@ public class AzureAccountService {
                     azureAccount.setAzureAccountId(user.getId());
                     createdAzureAccounts.add(azureAccount);
 
-                    log.info(writeLog(issuerId.toString(), UserActions.CREATE_ACCOUNT,
-                                      azureAccount.getAzureAccountId()));
+                    log.info(writeLog(issuerId, UserActions.CREATE_ACCOUNT, azureAccount.getAzureAccountId()));
                     boolean emailSent = handleAccountCreationEmail(azureAccount, user.getGivenName(), isExisting);
                     checkAndAddToErrorAccount(emailSent, azureAccount, List.of(EMAIL_NOT_SENT_MESSAGE),
                                               erroredAccounts);
                 }
             } catch (AzureCustomException azureCustomException) {
-                log.error(writeLog(issuerId.toString(), UserActions.CREATE_ACCOUNT, azureAccount.getAzureAccountId()));
+                log.error(writeLog(issuerId, UserActions.CREATE_ACCOUNT, azureAccount.getAzureAccountId()));
                 checkAndAddToErrorAccount(false, azureAccount, List.of(azureCustomException.getMessage()),
                                           erroredAccounts);
             }

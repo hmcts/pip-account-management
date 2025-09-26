@@ -106,7 +106,7 @@ public class AccountService {
             } else if (constraintViolationSet.isEmpty()) {
                 PiUser addedUser = userRepository.save(user);
                 createdAccounts.add(addedUser.getUserId());
-                log.info(writeLog(requesterId.toString(), UserActions.CREATE_ACCOUNT,
+                log.info(writeLog(requesterId, UserActions.CREATE_ACCOUNT,
                                   addedUser.getUserId().toString()));
             } else {
                 ErroredPiUser erroredUser = new ErroredPiUser(user);

@@ -41,7 +41,7 @@ public class SubscriptionService {
     }
 
     public Subscription createSubscription(Subscription subscription, UUID actioningUserId) {
-        log.info(writeLog(actioningUserId.toString(), UserActions.CREATE_SUBSCRIPTION,
+        log.info(writeLog(actioningUserId, UserActions.CREATE_SUBSCRIPTION,
                           subscription.getSearchType().toString()));
 
         if (userRepository.findByUserId(subscription.getUserId()).isEmpty()) {
@@ -66,7 +66,7 @@ public class SubscriptionService {
             subscriptionListTypeService.deleteListTypesForSubscription(subscription.getUserId());
         }
 
-        log.info(writeLog(actioningUserId.toString(), UserActions.DELETE_SUBSCRIPTION,
+        log.info(writeLog(actioningUserId, UserActions.DELETE_SUBSCRIPTION,
                           id.toString()));
     }
 
@@ -88,7 +88,7 @@ public class SubscriptionService {
             subscriptionListTypeService.deleteListTypesForSubscription(userID);
         }
 
-        subscriptions.forEach(s -> log.info(writeLog(s.getUserId().toString(), UserActions.DELETE_SUBSCRIPTION,
+        subscriptions.forEach(s -> log.info(writeLog(s.getUserId(), UserActions.DELETE_SUBSCRIPTION,
                                                      s.getId().toString())));
     }
 
