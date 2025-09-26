@@ -51,7 +51,7 @@ class SubscriptionListTypeControllerTest {
                 HttpStatus.CREATED
             ),
             subscriptionListTypeController.addListTypesForSubscription(
-                USER_ID.toString(), USER_ID.toString(), subscriptionListType
+                USER_ID, USER_ID.toString(), subscriptionListType
             ),
             RETURNED_SUBSCRIPTION_NOT_MATCHED
         );
@@ -68,7 +68,7 @@ class SubscriptionListTypeControllerTest {
                 HttpStatus.OK
             ),
             subscriptionListTypeController.configureListTypesForSubscription(
-                USER_ID.toString(), USER_ID.toString(), subscriptionListType
+                USER_ID, USER_ID.toString(), subscriptionListType
             ),
             RETURNED_SUBSCRIPTION_NOT_MATCHED
         );

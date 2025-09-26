@@ -64,7 +64,7 @@ public class AzureAccountService {
      * @return Returns a map which contains two lists, Errored and Created accounts. Created will have object ID set.
      **/
     public Map<CreationEnum, List<? extends AzureAccount>> addAzureAccounts(//NOSONAR
-        List<AzureAccount> azureAccounts, String issuerId, boolean isExisting, boolean useSuppliedPassword) {
+        List<AzureAccount> azureAccounts, UUID issuerId, boolean isExisting, boolean useSuppliedPassword) {
 
         Map<CreationEnum, List<? extends AzureAccount>> processedAccounts = new ConcurrentHashMap<>();
 
@@ -88,13 +88,14 @@ public class AzureAccountService {
                     azureAccount.setAzureAccountId(user.getId());
                     createdAzureAccounts.add(azureAccount);
 
-                    log.info(writeLog(issuerId, UserActions.CREATE_ACCOUNT, azureAccount.getAzureAccountId()));
+                    log.info(writeLog(issuerId.toString(), UserActions.CREATE_ACCOUNT,
+                                      azureAccount.getAzureAccountId()));
                     boolean emailSent = handleAccountCreationEmail(azureAccount, user.getGivenName(), isExisting);
                     checkAndAddToErrorAccount(emailSent, azureAccount, List.of(EMAIL_NOT_SENT_MESSAGE),
                                               erroredAccounts);
                 }
             } catch (AzureCustomException azureCustomException) {
-                log.error(writeLog(issuerId, UserActions.CREATE_ACCOUNT, azureAccount.getAzureAccountId()));
+                log.error(writeLog(issuerId.toString(), UserActions.CREATE_ACCOUNT, azureAccount.getAzureAccountId()));
                 checkAndAddToErrorAccount(false, azureAccount, List.of(azureCustomException.getMessage()),
                                           erroredAccounts);
             }

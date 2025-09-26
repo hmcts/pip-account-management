@@ -37,7 +37,6 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 @IsAdmin
 @AllArgsConstructor
 @SecurityRequirement(name = "bearerAuth")
-@SuppressWarnings("PMD.UseObjectForClearerAPI")
 public class AuditController {
 
     private final AuditService auditService;
@@ -55,7 +54,7 @@ public class AuditController {
     @PreAuthorize("@auditAuthorisationService.userCanViewAuditLogs(#requesterId)")
     @GetMapping
     public ResponseEntity<Page<AuditLog>> getAllAuditLogs(
-        @RequestHeader(REQUESTER_ID) String requesterId,
+        @RequestHeader(REQUESTER_ID) UUID requesterId,
         @RequestParam(name = "pageNumber", defaultValue = "0") int pageNumber,
         @RequestParam(name = "pageSize", defaultValue = "25") int pageSize,
         @RequestParam(name = "email", defaultValue = "", required = false) String email,
@@ -75,7 +74,7 @@ public class AuditController {
     @PreAuthorize("@auditAuthorisationService.userCanViewAuditLogs(#requesterId)")
     @GetMapping(value = "/{id}", produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<AuditLog> getAuditLogById(
-        @RequestHeader(REQUESTER_ID) String requesterId,
+        @RequestHeader(REQUESTER_ID) UUID requesterId,
         @PathVariable UUID id) {
         return ResponseEntity.ok(auditService.getAuditLogById(id));
     }

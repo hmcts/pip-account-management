@@ -16,7 +16,7 @@ public final class MediaApplicationHelper {
 
     public static final MultipartFile FILE = new MockMultipartFile("test", (byte[]) null);
     public static final UUID TEST_ID = UUID.randomUUID();
-    public static final String USER_ID = "1234";
+    public static final UUID USER_ID = UUID.randomUUID();
     private static final String FULL_NAME = "Test User";
     private static final String EMAIL = "test@email.com";
     private static final String EMPLOYER = "Test employer";

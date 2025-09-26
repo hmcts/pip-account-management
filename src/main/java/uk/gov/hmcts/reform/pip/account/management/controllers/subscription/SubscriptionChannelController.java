@@ -18,6 +18,7 @@ import uk.gov.hmcts.reform.pip.model.authentication.roles.IsAdmin;
 import uk.gov.hmcts.reform.pip.model.subscription.Channel;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @Tag(name = "Account Management - API for managing subscription channels")
@@ -42,7 +43,7 @@ public class SubscriptionChannelController {
     @ApiResponse(responseCode = "403",
         description = "User with ID {requesterId} is not authorised to retrieve these channel")
     @PreAuthorize("@subscriptionAuthorisationService.userCanRetrieveChannels(#requesterId, #userId)")
-    public ResponseEntity<List<Channel>> retrieveChannels(@RequestHeader(X_REQUESTER_ID_HEADER) String requesterId,
+    public ResponseEntity<List<Channel>> retrieveChannels(@RequestHeader(X_REQUESTER_ID_HEADER) UUID requesterId,
                                                           @RequestParam(name = "userId") String userId) {
         return ResponseEntity.ok(subscriptionChannelService.retrieveChannels());
     }

@@ -122,7 +122,7 @@ class SystemAdminB2CAccountServiceTest {
         when(validator.validate(SYSTEM_ADMIN_ACCOUNT)).thenReturn(Set.of());
         when(userRepository.findByRoles(Roles.SYSTEM_ADMIN)).thenReturn(List.of(expectedPiUser));
 
-        PiUser returnedUser = systemAdminAccountService.addSystemAdminAccount(SYSTEM_ADMIN_ACCOUNT, ID.toString());
+        PiUser returnedUser = systemAdminAccountService.addSystemAdminAccount(SYSTEM_ADMIN_ACCOUNT, ID);
 
         assertEquals(expectedPiUser, returnedUser, USER_MESSAGE);
     }
@@ -138,7 +138,7 @@ class SystemAdminB2CAccountServiceTest {
 
         SystemAdminAccountException systemAdminAccountException =
             assertThrows(SystemAdminAccountException.class, () ->
-                systemAdminAccountService.addSystemAdminAccount(SYSTEM_ADMIN_ACCOUNT, ID.toString()));
+                systemAdminAccountService.addSystemAdminAccount(SYSTEM_ADMIN_ACCOUNT, ID));
 
 
         assertEquals("Test error",
@@ -161,7 +161,7 @@ class SystemAdminB2CAccountServiceTest {
 
         SystemAdminAccountException systemAdminAccountException =
             assertThrows(SystemAdminAccountException.class, () ->
-                systemAdminAccountService.addSystemAdminAccount(ERRORED_SYSTEM_ADMIN_ACCOUNT, ID.toString()));
+                systemAdminAccountService.addSystemAdminAccount(ERRORED_SYSTEM_ADMIN_ACCOUNT, ID));
 
         assertNotEquals(0, systemAdminAccountException.getErroredSystemAdminAccount().getErrorMessages().size(),
                    "Constraint violation error messages not displayed");
@@ -183,7 +183,7 @@ class SystemAdminB2CAccountServiceTest {
         doNothing().when(publicationService)
             .sendSystemAdminAccountAction(argThat(arg -> arg.getRequesterEmail() == null));
 
-        PiUser returnedUser = systemAdminAccountService.addSystemAdminAccount(SYSTEM_ADMIN_ACCOUNT, ID.toString());
+        PiUser returnedUser = systemAdminAccountService.addSystemAdminAccount(SYSTEM_ADMIN_ACCOUNT, ID);
 
         assertEquals(expectedPiUser, returnedUser, USER_MESSAGE);
     }
@@ -201,7 +201,7 @@ class SystemAdminB2CAccountServiceTest {
 
         SystemAdminAccountException systemAdminAccountException =
             assertThrows(SystemAdminAccountException.class, () ->
-                systemAdminAccountService.addSystemAdminAccount(SYSTEM_ADMIN_ACCOUNT, ID.toString()));
+                systemAdminAccountService.addSystemAdminAccount(SYSTEM_ADMIN_ACCOUNT, ID));
 
         assertTrue(systemAdminAccountException.getErroredSystemAdminAccount().isDuplicate(), "Duplicate account flag "
             + "not set");
@@ -223,7 +223,7 @@ class SystemAdminB2CAccountServiceTest {
 
         SystemAdminAccountException systemAdminAccountException =
             assertThrows(SystemAdminAccountException.class, () ->
-                systemAdminAccountService.addSystemAdminAccount(SYSTEM_ADMIN_ACCOUNT, ID.toString()));
+                systemAdminAccountService.addSystemAdminAccount(SYSTEM_ADMIN_ACCOUNT, ID));
 
         assertTrue(systemAdminAccountException.getErroredSystemAdminAccount().isAboveMaxSystemAdmin(), "Max system "
             + "admin flag not set");
@@ -246,7 +246,7 @@ class SystemAdminB2CAccountServiceTest {
             .thenReturn(expectedUser);
         when(userRepository.save(any())).thenReturn(expectedPiUser);
 
-        PiUser returnedUser = systemAdminAccountService.addSystemAdminAccount(SYSTEM_ADMIN_ACCOUNT, ID.toString());
+        PiUser returnedUser = systemAdminAccountService.addSystemAdminAccount(SYSTEM_ADMIN_ACCOUNT, ID);
 
         assertEquals(expectedPiUser, returnedUser, USER_MESSAGE);
     }
@@ -261,7 +261,7 @@ class SystemAdminB2CAccountServiceTest {
         doNothing().when(publicationService).sendSystemAdminAccountAction(systemAdminAccountArgumentCaptor.capture());
 
         systemAdminAccountService.handleNewSystemAdminAccountAction(SYSTEM_ADMIN_ACCOUNT,
-                                                                    ID.toString(),
+                                                                    ID,
                                                                     ActionResult.ATTEMPTED,
                                                                     EMAIL);
 
