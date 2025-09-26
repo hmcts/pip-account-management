@@ -13,6 +13,7 @@ import uk.gov.hmcts.reform.pip.account.management.service.account.BulkAccountCre
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -20,7 +21,7 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class BulkAccountCreationControllerTest {
-    private static final String TEST_EMAIL = "test@user.com";
+    private static final UUID USER_ID = UUID.randomUUID();
     private static final String STATUS_CODE_MATCH = "Status code responses should match";
 
     @Mock
@@ -35,12 +36,12 @@ class BulkAccountCreationControllerTest {
             MultipartFile multipartFile = new MockMultipartFile("file",
                                                                 "TestFileName", "text/plain",
                                                                 IOUtils.toByteArray(is));
-            when(bulkAccountCreationService.uploadMediaFromCsv(multipartFile, TEST_EMAIL))
+            when(bulkAccountCreationService.uploadMediaFromCsv(multipartFile, USER_ID))
                 .thenReturn(new ConcurrentHashMap<>());
 
             assertEquals(
                 HttpStatus.OK,
-                bulkAccountCreationController.createMediaAccountsBulk(TEST_EMAIL, multipartFile).getStatusCode(),
+                bulkAccountCreationController.createMediaAccountsBulk(USER_ID, multipartFile).getStatusCode(),
                 STATUS_CODE_MATCH);
         }
     }
@@ -51,11 +52,11 @@ class BulkAccountCreationControllerTest {
             MultipartFile multipartFile = new MockMultipartFile("file",
                                                                 "TestFileName", "text/plain",
                                                                 IOUtils.toByteArray(is));
-            when(bulkAccountCreationService.uploadMediaFromCsv(multipartFile, TEST_EMAIL))
+            when(bulkAccountCreationService.uploadMediaFromCsv(multipartFile, USER_ID))
                 .thenReturn(new ConcurrentHashMap<>());
 
             assertEquals(new ConcurrentHashMap<>(),
-                         bulkAccountCreationController.createMediaAccountsBulk(TEST_EMAIL, multipartFile).getBody(),
+                         bulkAccountCreationController.createMediaAccountsBulk(USER_ID, multipartFile).getBody(),
                          "Maps should match");
         }
     }

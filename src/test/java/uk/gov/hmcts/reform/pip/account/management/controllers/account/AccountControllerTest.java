@@ -29,7 +29,7 @@ import static org.mockito.Mockito.when;
 class AccountControllerTest {
 
     private static final String EMAIL = "a@b.com";
-    private static final String ISSUER_ID = "123";
+    private static final UUID ISSUER_ID = UUID.randomUUID();
     private static final String STATUS_CODE_MATCH = "Status code responses should match";
     private static final String TEST_ID_STRING_1 = "0b8968b4-5c79-4e4e-8f66-f6a552d9fa67";
 

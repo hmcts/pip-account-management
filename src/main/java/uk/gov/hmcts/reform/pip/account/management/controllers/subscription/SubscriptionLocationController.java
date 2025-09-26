@@ -19,6 +19,7 @@ import uk.gov.hmcts.reform.pip.account.management.service.subscription.Subscript
 import uk.gov.hmcts.reform.pip.model.authentication.roles.IsAdmin;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @Tag(name = "Account Management - API for managing subscriptions for location")
@@ -57,7 +58,7 @@ public class SubscriptionLocationController {
     @Transactional
     @PreAuthorize("@subscriptionAuthorisationService.userCanDeleteLocationSubscriptions(#requesterId, #locationId)")
     @DeleteMapping("/{locationId}")
-    public ResponseEntity<String> deleteSubscriptionByLocation(@RequestHeader(X_REQUESTER_ID_HEADER) String requesterId,
+    public ResponseEntity<String> deleteSubscriptionByLocation(@RequestHeader(X_REQUESTER_ID_HEADER) UUID requesterId,
                                                                @PathVariable Integer locationId) {
         return ResponseEntity.ok(subscriptionLocationService.deleteSubscriptionByLocation(
             locationId.toString(),

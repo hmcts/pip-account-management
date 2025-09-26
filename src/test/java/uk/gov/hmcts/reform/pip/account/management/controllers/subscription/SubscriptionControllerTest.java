@@ -44,7 +44,7 @@ class SubscriptionControllerTest {
     private static final Channel EMAIL = Channel.EMAIL;
     private static final List<String> LIST_TYPES = List.of(ListType.CIVIL_DAILY_CAUSE_LIST.name());
     private static final List<String> LIST_LANGUAGE = List.of("ENGLISH");
-    private static final String ACTIONING_USER_ID = "1234-1234";
+    private static final UUID ACTIONING_USER_ID = UUID.randomUUID();
     private static final UUID USER_ID = UUID.randomUUID();
 
     @Mock

@@ -40,7 +40,7 @@ public class SubscriptionService {
         this.userRepository = userRepository;
     }
 
-    public Subscription createSubscription(Subscription subscription, String actioningUserId) {
+    public Subscription createSubscription(Subscription subscription, UUID actioningUserId) {
         log.info(writeLog(actioningUserId, UserActions.CREATE_SUBSCRIPTION,
                           subscription.getSearchType().toString()));
 
@@ -54,7 +54,7 @@ public class SubscriptionService {
         return subscriptionRepository.save(subscription);
     }
 
-    public void deleteById(UUID id, String actioningUserId) {
+    public void deleteById(UUID id, UUID actioningUserId) {
         Subscription subscription = subscriptionRepository.findById(id)
             .orElseThrow(() -> new SubscriptionNotFoundException(String.format(
                 "No subscription found with the subscription id %s", id
@@ -88,7 +88,7 @@ public class SubscriptionService {
             subscriptionListTypeService.deleteListTypesForSubscription(userID);
         }
 
-        subscriptions.forEach(s -> log.info(writeLog(s.getUserId().toString(), UserActions.DELETE_SUBSCRIPTION,
+        subscriptions.forEach(s -> log.info(writeLog(s.getUserId(), UserActions.DELETE_SUBSCRIPTION,
                                                      s.getId().toString())));
     }
 

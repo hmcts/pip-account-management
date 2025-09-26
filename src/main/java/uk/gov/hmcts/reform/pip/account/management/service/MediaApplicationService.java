@@ -106,7 +106,7 @@ public class MediaApplicationService {
 
         MediaApplication createdMediaApplication = mediaApplicationRepository.save(application);
 
-        log.info(writeLog(createdMediaApplication.getId().toString(), UserActions.CREATE_MEDIA_APPLICATION,
+        log.info(writeLog(createdMediaApplication.getId(), UserActions.CREATE_MEDIA_APPLICATION,
                 createdMediaApplication.getId().toString()
         ));
 

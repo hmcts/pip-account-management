@@ -32,7 +32,8 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class BulkAccountCreationServiceTest {
     private static final String EMAIL = "test@hmcts.net";
-    private static final String ID = "1234";
+    private static final UUID REQUESTER_ID = UUID.randomUUID();
+    private static final String PROVENANCE_ID = "1234";
 
     private static final PiUser PI_USER = new PiUser();
     private static final AzureAccount AZURE_ACCOUNT = new AzureAccount();
@@ -53,7 +54,7 @@ class BulkAccountCreationServiceTest {
     static void setup() {
         PI_USER.setUserId(UUID.randomUUID());
         PI_USER.setUserProvenance(UserProvenances.PI_AAD);
-        PI_USER.setProvenanceUserId(ID);
+        PI_USER.setProvenanceUserId(PROVENANCE_ID);
         PI_USER.setEmail(EMAIL);
 
         AZURE_ACCOUNT.setEmail(EMAIL);
@@ -67,12 +68,12 @@ class BulkAccountCreationServiceTest {
 
         when(accountModelMapperService.createAzureUsersFromCsv(any())).thenReturn(azureAccounts);
         when(accountModelMapperService.createPiUsersFromAzureAccounts(azureAccounts)).thenReturn(azureUsers);
-        when(azureAccountService.addAzureAccounts(azureAccounts, EMAIL, true, false))
+        when(azureAccountService.addAzureAccounts(azureAccounts, REQUESTER_ID, true, false))
             .thenReturn(Map.of(
                 CreationEnum.CREATED_ACCOUNTS, azureAccounts,
                 CreationEnum.ERRORED_ACCOUNTS, Collections.emptyList()
             ));
-        when(accountService.addUsers(azureUsers, EMAIL))
+        when(accountService.addUsers(azureUsers, REQUESTER_ID))
             .thenReturn(Map.of(
                 CreationEnum.CREATED_ACCOUNTS, azureUsers,
                 CreationEnum.ERRORED_ACCOUNTS, Collections.emptyList()
@@ -85,7 +86,8 @@ class BulkAccountCreationServiceTest {
                                                                 IOUtils.toByteArray(inputStream)
             );
 
-            Map<CreationEnum, List<?>> results = bulkAccountCreationService.uploadMediaFromCsv(multipartFile, EMAIL);
+            Map<CreationEnum, List<?>> results = bulkAccountCreationService.uploadMediaFromCsv(
+                multipartFile, REQUESTER_ID);
             assertThat(results.get(CreationEnum.CREATED_ACCOUNTS))
                 .as("Created accounts should match")
                 .hasSize(2)
@@ -106,7 +108,8 @@ class BulkAccountCreationServiceTest {
             );
 
             CsvParseException ex = assertThrows(CsvParseException.class, () ->
-                                                    bulkAccountCreationService.uploadMediaFromCsv(multipartFile, EMAIL),
+                                                    bulkAccountCreationService.uploadMediaFromCsv(
+                                                        multipartFile, REQUESTER_ID),
                                                 "Should throw CsvParseException");
             assertTrue(ex.getMessage().contains("Failed to parse CSV File due to"), "Messages should match");
         }

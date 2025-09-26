@@ -24,7 +24,7 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class AccountFilteringControllerTest {
     private static final String EMAIL = "a@b.com";
-    private static final String USER_ID = "1234";
+    private static final UUID USER_ID = UUID.randomUUID();
     private static final String STATUS_CODE_MATCH = "Status code responses should match";
 
     @Mock
@@ -63,7 +63,7 @@ class AccountFilteringControllerTest {
     void testGetAllAccountsExceptThirdParty() {
         assertThat(accountFilteringController.getAllAccountsExceptThirdParty(USER_ID,
             0, 25, "test", "5678",
-            List.of(UserProvenances.PI_AAD), List.of(Roles.VERIFIED), USER_ID).getStatusCode())
+            List.of(UserProvenances.PI_AAD), List.of(Roles.VERIFIED), UUID.randomUUID().toString()).getStatusCode())
             .as(STATUS_CODE_MATCH)
             .isEqualTo(HttpStatus.OK);
     }

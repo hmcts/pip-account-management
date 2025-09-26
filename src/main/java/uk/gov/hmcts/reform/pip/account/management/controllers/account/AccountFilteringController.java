@@ -27,6 +27,7 @@ import uk.gov.hmcts.reform.pip.model.authentication.roles.IsAdmin;
 import uk.gov.hmcts.reform.pip.model.report.AccountMiData;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @AllArgsConstructor
@@ -36,7 +37,7 @@ import java.util.List;
 @Validated
 @IsAdmin
 @SecurityRequirement(name = "bearerAuth")
-@SuppressWarnings({"squid:S1133", "PMD.UseObjectForClearerAPI"})
+@SuppressWarnings({"squid:S1133"})
 public class AccountFilteringController {
 
     private final AccountFilteringService accountFilteringService;
@@ -61,7 +62,7 @@ public class AccountFilteringController {
     @ResponseStatus(HttpStatus.OK)
     @PreAuthorize("@accountAuthorisationService.userCanViewAccounts(#requesterId)")
     @GetMapping("/all/third-party")
-    public ResponseEntity<List<PiUser>> getAllThirdPartyAccounts(@RequestHeader(REQUESTER_ID) String requesterId) {
+    public ResponseEntity<List<PiUser>> getAllThirdPartyAccounts(@RequestHeader(REQUESTER_ID) UUID requesterId) {
         return ResponseEntity.ok(accountFilteringService.findAllThirdPartyAccounts());
     }
 
@@ -72,7 +73,7 @@ public class AccountFilteringController {
     @PreAuthorize("@accountAuthorisationService.userCanViewAccounts(#requesterId)")
     @GetMapping("/all")
     public ResponseEntity<Page<PiUser>> getAllAccountsExceptThirdParty(
-        @RequestHeader(REQUESTER_ID) String requesterId,
+        @RequestHeader(REQUESTER_ID) UUID requesterId,
         @RequestParam(name = "pageNumber", defaultValue = "0") int pageNumber,
         @RequestParam(name = "pageSize", defaultValue = "25") int pageSize,
         @RequestParam(name = "email", defaultValue = "", required = false) String email,

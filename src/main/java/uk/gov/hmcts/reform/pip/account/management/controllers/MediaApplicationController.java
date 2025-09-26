@@ -71,7 +71,7 @@ public class MediaApplicationController {
     @PreAuthorize("@mediaApplicationAuthorisationService.userCanViewMediaApplications(#requesterId)")
     @GetMapping(value = "/status/{status}", produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<List<MediaApplication>> getApplicationsByStatus(
-        @RequestHeader(REQUESTER_ID) String requesterId,
+        @RequestHeader(REQUESTER_ID) UUID requesterId,
         @PathVariable MediaApplicationStatus status) {
         return ResponseEntity.ok(mediaApplicationService.getApplicationsByStatus(status));
     }
@@ -83,7 +83,7 @@ public class MediaApplicationController {
     @PreAuthorize("@mediaApplicationAuthorisationService.userCanViewMediaApplications(#requesterId)")
     @GetMapping(value = "/{id}", produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<MediaApplication> getApplicationById(
-        @RequestHeader(REQUESTER_ID) String requesterId,
+        @RequestHeader(REQUESTER_ID) UUID requesterId,
         @PathVariable UUID id) {
         return ResponseEntity.ok(mediaApplicationService.getApplicationById(id));
     }
@@ -95,7 +95,7 @@ public class MediaApplicationController {
     @PreAuthorize("@mediaApplicationAuthorisationService.userCanViewMediaApplications(#requesterId)")
     @GetMapping("/image/{id}")
     public ResponseEntity<Resource> getImageById(
-        @RequestHeader(REQUESTER_ID) String requesterId,
+        @RequestHeader(REQUESTER_ID) UUID requesterId,
         @PathVariable String id) {
         return ResponseEntity.ok()
             .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_OCTET_STREAM_VALUE)
@@ -130,7 +130,7 @@ public class MediaApplicationController {
     @PreAuthorize("@mediaApplicationAuthorisationService.userCanUpdateMediaApplications(#requesterId)")
     @PutMapping(value = "/{id}/{status}/reasons", consumes = APPLICATION_JSON_VALUE)
     public ResponseEntity<MediaApplication> updateApplicationRejection(
-        @RequestHeader(REQUESTER_ID) String requesterId,
+        @RequestHeader(REQUESTER_ID) UUID requesterId,
         @RequestBody Map<String, List<String>> reasons,
         @PathVariable MediaApplicationStatus status, @PathVariable UUID id) {
         return ResponseEntity.ok(mediaApplicationService.updateApplication(id, status, reasons));

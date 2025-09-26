@@ -45,7 +45,7 @@ class SubscriptionServiceTest {
     private static final UUID UNKNOWN_USER_ID = UUID.randomUUID();
     private static final String SEARCH_VALUE = "193254";
     private static final Channel EMAIL = Channel.EMAIL;
-    private static final String ACTIONING_USER_ID = "1234-1234";
+    private static final UUID ACTIONING_USER_ID = UUID.randomUUID();
 
     private static final LocalDateTime DATE_ADDED = LocalDateTime.now();
     private static final String SUBSCRIPTION_CREATED_ERROR = "The returned subscription does "

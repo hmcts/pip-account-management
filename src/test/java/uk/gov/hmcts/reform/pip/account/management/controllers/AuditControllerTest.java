@@ -32,14 +32,14 @@ class AuditControllerTest {
 
     private static final String STATUS_CODE_MATCH = "Status code responses should match";
     private static final String EMAIL = "a@b.com";
-    private static final String USER_ID = "123";
+    private static final UUID USER_ID = UUID.randomUUID();
     private static final List<AuditAction> AUDIT_ACTIONS = new ArrayList<>();
     private static final String FILTER_DATE = "2023-11-01";
 
     @Test
     void testGetAllAuditLogs() {
         ResponseEntity<Page<AuditLog>> response = auditController.getAllAuditLogs(USER_ID, 0, 25,
-            EMAIL, USER_ID, AUDIT_ACTIONS, FILTER_DATE);
+            EMAIL, USER_ID.toString(), AUDIT_ACTIONS, FILTER_DATE);
         assertEquals(HttpStatus.OK, response.getStatusCode(), STATUS_CODE_MATCH);
     }
 

@@ -87,7 +87,7 @@ class AccountServiceTest {
     private AccountService accountService;
 
     private static final String FULL_NAME = "Full name";
-    private static final String ISSUER_ID = "abcdef";
+    private static final UUID ISSUER_ID = UUID.randomUUID();
     private static final String EMAIL = "test@hmcts.net";
     private static final String PASSWORD = "Password123!";
     private static final UUID USER_UUID = UUID.randomUUID();
@@ -148,7 +148,7 @@ class AccountServiceTest {
         when(validator.validate(user)).thenReturn(Set.of());
         when(userRepository.save(user)).thenReturn(user);
 
-        assertEquals(expected, accountService.addUsers(List.of(user), EMAIL), "Returned maps should match");
+        assertEquals(expected, accountService.addUsers(List.of(user), ISSUER_ID), "Returned maps should match");
     }
 
     @Test
@@ -176,7 +176,7 @@ class AccountServiceTest {
         when(validator.validate(user2)).thenReturn(Set.of());
         when(userRepository.save(user2)).thenReturn(user2);
 
-        assertEquals(expected, accountService.addUsers(users, EMAIL), "Returned maps should match");
+        assertEquals(expected, accountService.addUsers(users, ISSUER_ID), "Returned maps should match");
     }
 
     @Test
@@ -191,10 +191,10 @@ class AccountServiceTest {
 
         doReturn(Set.of(constraintViolation)).when(validator).validate(user);
 
-        assertEquals(1, accountService.addUsers(List.of(user), EMAIL)
+        assertEquals(1, accountService.addUsers(List.of(user), ISSUER_ID)
                        .get(CreationEnum.ERRORED_ACCOUNTS).size(), "Errored accounts not expected value");
 
-        assertEquals(0, accountService.addUsers(List.of(user), EMAIL)
+        assertEquals(0, accountService.addUsers(List.of(user), ISSUER_ID)
                        .get(CreationEnum.CREATED_ACCOUNTS).size(), "Created accounts not expected value");
     }
 

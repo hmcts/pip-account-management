@@ -24,6 +24,7 @@ import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredSystemAdm
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -67,12 +68,12 @@ class GlobalExceptionHandlerTest {
     void testMissingRequestHeaderException() throws NoSuchMethodException {
         MissingRequestHeaderException missingRequestHeaderException =
             new MissingRequestHeaderException("test", MethodParameter.forExecutable(AccountController.class.getMethod(
-                "createUsers", String.class, List.class), 0));
+                "createUsers", UUID.class, List.class), 0));
         ResponseEntity<ExceptionResponse> responseEntity = globalExceptionHandler.handle(missingRequestHeaderException);
 
         assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode(), "Status code should be bad request");
         assertNotNull(responseEntity.getBody(), RESPONSE_SHOULD_CONTAIN_A_BODY);
-        assertEquals("Required request header 'test' for method parameter type String is not present",
+        assertEquals("Required request header 'test' for method parameter type UUID is not present",
                      responseEntity.getBody().getMessage(), EXCEPTION_BODY_NOT_MATCH);
     }
 

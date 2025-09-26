@@ -1,6 +1,5 @@
 package uk.gov.hmcts.reform.pip.account.management.controllers.subscription;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -23,7 +22,7 @@ class SubscriptionLocationControllerTest {
 
     private static final String STATUS_CODE_MATCH = "Status codes should match";
     private static final String LOCATION_ID = "1";
-    private static final String USER_ID = UUID.randomUUID().toString();
+    private static final UUID USER_ID = UUID.randomUUID();
 
     @Mock
     SubscriptionLocationService subscriptionLocationService;
@@ -49,7 +48,7 @@ class SubscriptionLocationControllerTest {
     }
 
     @Test
-    void testDeleteSubscriptionByLocationReturnsOk() throws JsonProcessingException {
+    void testDeleteSubscriptionByLocationReturnsOk() {
         when(subscriptionLocationService.deleteSubscriptionByLocation(LOCATION_ID, USER_ID))
             .thenReturn("Total 10 subscriptions deleted for location id");
 

@@ -17,6 +17,8 @@ import uk.gov.hmcts.reform.pip.account.management.model.account.SystemAdminAccou
 import uk.gov.hmcts.reform.pip.account.management.service.account.SystemAdminB2CAccountService;
 import uk.gov.hmcts.reform.pip.model.authentication.roles.IsAdmin;
 
+import java.util.UUID;
+
 @RestController
 @Tag(name = "Account Management - API for managing B2C system admin accounts")
 @RequestMapping("/account")
@@ -49,7 +51,7 @@ public class SystemAdminB2CAccountController {
     @PostMapping("/add/system-admin")
     @PreAuthorize("@accountAuthorisationService.userCanCreateSystemAdmin(#requesterId)")
     public ResponseEntity<? extends PiUser> createSystemAdminAccount(//NOSONAR
-        @RequestHeader(REQUESTER_ID) String requesterId, @RequestBody SystemAdminAccount account) {
+        @RequestHeader(REQUESTER_ID) UUID requesterId, @RequestBody SystemAdminAccount account) {
         return ResponseEntity.ok(systemAdminB2CAccountService.addSystemAdminAccount(account, requesterId));
     }
 }

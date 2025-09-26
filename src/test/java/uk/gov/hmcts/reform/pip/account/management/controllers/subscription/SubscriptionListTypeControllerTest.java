@@ -42,34 +42,28 @@ class SubscriptionListTypeControllerTest {
 
     @Test
     void testAddListTypesForSubscription() {
-        doNothing().when(subscriptionListTypeService).addListTypesForSubscription(subscriptionListType,
-                                                                                  USER_ID.toString());
+        doNothing().when(subscriptionListTypeService).addListTypesForSubscription(subscriptionListType, USER_ID);
 
         assertEquals(
             new ResponseEntity<>(
                 String.format("Location list Type successfully added for user %s", USER_ID),
                 HttpStatus.CREATED
             ),
-            subscriptionListTypeController.addListTypesForSubscription(
-                USER_ID.toString(), USER_ID.toString(), subscriptionListType
-            ),
+            subscriptionListTypeController.addListTypesForSubscription(USER_ID, USER_ID, subscriptionListType),
             RETURNED_SUBSCRIPTION_NOT_MATCHED
         );
     }
 
     @Test
     void testConfigureListTypesForSubscription() {
-        doNothing().when(subscriptionListTypeService).configureListTypesForSubscription(subscriptionListType,
-                                                                                        USER_ID.toString());
+        doNothing().when(subscriptionListTypeService).configureListTypesForSubscription(subscriptionListType, USER_ID);
 
         assertEquals(
             new ResponseEntity<>(
                 String.format("Location list Type successfully updated for user %s", USER_ID),
                 HttpStatus.OK
             ),
-            subscriptionListTypeController.configureListTypesForSubscription(
-                USER_ID.toString(), USER_ID.toString(), subscriptionListType
-            ),
+            subscriptionListTypeController.configureListTypesForSubscription(USER_ID, USER_ID, subscriptionListType),
             RETURNED_SUBSCRIPTION_NOT_MATCHED
         );
     }

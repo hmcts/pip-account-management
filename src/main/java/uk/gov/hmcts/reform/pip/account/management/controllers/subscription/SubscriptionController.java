@@ -64,7 +64,7 @@ public class SubscriptionController {
     @PreAuthorize("@subscriptionAuthorisationService.userCanAddSubscriptions(#requesterId, #subscription)")
     public ResponseEntity<String> createSubscription(
         @RequestBody @Valid Subscription subscription,
-        @RequestHeader(X_REQUESTER_ID_HEADER) String requesterId
+        @RequestHeader(X_REQUESTER_ID_HEADER) UUID requesterId
     ) {
         Subscription createdSubscription = subscriptionService.createSubscription(subscription, requesterId);
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -83,7 +83,7 @@ public class SubscriptionController {
     @DeleteMapping("/{subId}")
     @PreAuthorize("@subscriptionAuthorisationService.userCanDeleteSubscriptions(#requesterId, #subId)")
     public ResponseEntity<String> deleteById(@Parameter @PathVariable UUID subId,
-                                             @RequestHeader(X_REQUESTER_ID_HEADER) String requesterId) {
+                                             @RequestHeader(X_REQUESTER_ID_HEADER) UUID requesterId) {
         subscriptionService.deleteById(subId, requesterId);
         return ResponseEntity.ok(String.format("Subscription: %s was deleted", subId));
     }
@@ -98,7 +98,7 @@ public class SubscriptionController {
     @DeleteMapping("/bulk")
     @PreAuthorize("@subscriptionAuthorisationService.userCanBulkDeleteSubscriptions(#requesterId, #subIds)")
     public ResponseEntity<String> bulkDeleteSubscriptions(@RequestBody List<UUID> subIds,
-                                                          @RequestHeader(X_REQUESTER_ID_HEADER) String requesterId) {
+                                                          @RequestHeader(X_REQUESTER_ID_HEADER) UUID requesterId) {
         subscriptionService.bulkDeleteSubscriptions(subIds);
         return ResponseEntity.ok(String.format(
             "Subscriptions with ID %s deleted",
