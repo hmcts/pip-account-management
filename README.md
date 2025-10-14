@@ -305,7 +305,7 @@ curl --request POST \
   --url http://localhost:6969/account/add/pi \
   --header 'Authorization: Bearer {BEARER_TOKEN_HERE}' \
   --header 'Content-Type: application/json' \
-  --header 'x-issuer-id: <UserIdOfTheUserSubmittingTheRequest>' \
+  --header 'x-requester-id: <UserIdOfTheUserSubmittingTheRequest>' \
   --data-raw '[
     {
     	"userProvenance": "PI_AAD",
@@ -346,6 +346,7 @@ For local development, flyway is turned off by default. This is due to all table
 ## Monitoring and Logging
 
 We utilise [Azure Application Insights](https://learn.microsoft.com/en-us/azure/azure-monitor/app/app-insights-overview) to store our logs. Ask a teammate for the specific resource in Azure to access these.
+
 Locally, we use [Log4j](https://logging.apache.org/log4j/2.x/).
 
 In addition, this service is also monitored in production and staging environments by [Dynatrace](https://www.dynatrace.com/). The URL for viewing our specific Dynatrace instance can be had by asking a team member.

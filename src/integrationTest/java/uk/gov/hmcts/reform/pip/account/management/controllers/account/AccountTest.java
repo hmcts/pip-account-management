@@ -25,6 +25,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import uk.gov.hmcts.reform.pip.account.management.model.account.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.account.PiUser;
 import uk.gov.hmcts.reform.pip.account.management.model.account.SystemAdminAccount;
+import uk.gov.hmcts.reform.pip.account.management.service.authorisation.AccountAuthorisationService;
 import uk.gov.hmcts.reform.pip.account.management.utils.IntegrationTestBase;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
@@ -63,6 +64,9 @@ class AccountTest extends IntegrationTestBase {
     @Mock
     private UserItemRequestBuilder userItemRequestBuilder;
 
+    @MockitoBean
+    private AccountAuthorisationService accountAuthorisationService;
+
     private static final String ROOT_URL = "/account";
     private static final String PI_URL = ROOT_URL + "/add/pi";
     private static final String CREATE_MEDIA_USER_URL = "/application";
@@ -71,15 +75,16 @@ class AccountTest extends IntegrationTestBase {
     private static final String CREATE_SYSTEM_ADMIN_URL = ROOT_URL + "/system-admin";
 
     private static final String EMAIL = "test_account_admin@hmcts.net";
-    private static final String SYSTEM_ADMIN_ISSUER_ID = "87f907d2-eb28-42cc-b6e1-ae2b03f7bba4";
+    private static final UUID SYSTEM_ADMIN_ISSUER_ID = UUID.randomUUID();
+    private static final String SYSTEM_ADMIN_ID = "87f907d2-eb28-42cc-b6e1-ae2b03f7bba2";
 
     private static final String INVALID_EMAIL = "ab";
     private static final String SURNAME = "Surname";
     private static final String FIRST_NAME = "firstname";
     private static final UserProvenances PROVENANCE = UserProvenances.PI_AAD;
     private static final String SUPER_ADMIN_ISSUER_ID = "87f907d2-eb28-42cc-b6e1-ae2b03f7bba3";
-    private static final String ISSUER_HEADER = "x-issuer-id";
-    private static final String ADMIN_HEADER = "x-admin-id";
+    private static final String REQUESTER_ID_HEADER = "x-requester-id";
+    private static final UUID USER_ID = UUID.randomUUID();
     private static final String GIVEN_NAME = "Given Name";
     private static final String ID = "1234";
     private static final String ADDITIONAL_ID = "4321";
@@ -155,6 +160,11 @@ class AccountTest extends IntegrationTestBase {
 
         when(graphClient.users()).thenReturn(usersRequestBuilder);
         when(usersRequestBuilder.post(any())).thenReturn(userToReturn, additionalUser);
+
+        when(accountAuthorisationService.userCanCreateAccount(any(), any())).thenReturn(true);
+        when(accountAuthorisationService.userCanGetAccountByUserId(any(), any())).thenReturn(true);
+        when(accountAuthorisationService.userCanDeleteAccount(any(), any())).thenReturn(true);
+        when(accountAuthorisationService.userCanUpdateAccount(any(), any())).thenReturn(true);
     }
 
     @Nested
@@ -264,7 +274,7 @@ class AccountTest extends IntegrationTestBase {
             MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
                 .post(PI_URL)
                 .content(OBJECT_MAPPER.writeValueAsString(List.of(superAdminUser)))
-                .header(ISSUER_HEADER, SYSTEM_ADMIN_ISSUER_ID)
+                .header(REQUESTER_ID_HEADER, SYSTEM_ADMIN_ISSUER_ID)
                 .contentType(MediaType.APPLICATION_JSON);
 
             MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder)
@@ -284,10 +294,11 @@ class AccountTest extends IntegrationTestBase {
         @Test
         @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
         void testUnauthorizedCreateAccount() throws Exception {
+            when(accountAuthorisationService.userCanCreateAccount(any(), any())).thenReturn(false);
             MockHttpServletRequestBuilder request = MockMvcRequestBuilders
                 .post(PI_URL)
                 .content(OBJECT_MAPPER.writeValueAsString(List.of(verifiedUser)))
-                .header(ISSUER_HEADER, SYSTEM_ADMIN_ISSUER_ID)
+                .header(REQUESTER_ID_HEADER, SYSTEM_ADMIN_ISSUER_ID)
                 .contentType(MediaType.APPLICATION_JSON);
 
             assertRequestResponseStatus(mockMvc, request, FORBIDDEN.value());
@@ -297,10 +308,11 @@ class AccountTest extends IntegrationTestBase {
         @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = ADD_USERS_SCRIPT)
         void testUnauthorizedCreateThirdPartyUser() throws Exception {
             PiUser thirdPartyUser = createThirdPartyUser();
+            when(accountAuthorisationService.userCanCreateAccount(any(), any())).thenReturn(false);
             MockHttpServletRequestBuilder request = MockMvcRequestBuilders
                 .post(PI_URL)
                 .content(OBJECT_MAPPER.writeValueAsString(List.of(thirdPartyUser)))
-                .header(ISSUER_HEADER, SUPER_ADMIN_ISSUER_ID)
+                .header(REQUESTER_ID_HEADER, SUPER_ADMIN_ISSUER_ID)
                 .contentType(MediaType.APPLICATION_JSON);
 
             assertRequestResponseStatus(mockMvc, request, FORBIDDEN.value());
@@ -315,7 +327,8 @@ class AccountTest extends IntegrationTestBase {
             String createdUserId = createTestUserValidAccount(verifiedUser);
 
             MockHttpServletRequestBuilder getRequest = MockMvcRequestBuilders
-                .get(ROOT_URL + "/" + createdUserId);
+                .get(ROOT_URL + "/" + createdUserId)
+                .header(REQUESTER_ID_HEADER, SYSTEM_ADMIN_ISSUER_ID);
 
             MvcResult responseGetUser = mockMvc.perform(getRequest).andExpect(status().isOk()).andReturn();
 
@@ -329,14 +342,17 @@ class AccountTest extends IntegrationTestBase {
         @Test
         void testGetUserByIdNotFound() throws Exception {
             assertRequestResponseStatus(mockMvc, MockMvcRequestBuilders
-                .get(ROOT_URL + "/" + UUID.randomUUID()), NOT_FOUND.value());
+                .get(ROOT_URL + "/" + UUID.randomUUID())
+                .header(REQUESTER_ID_HEADER, SYSTEM_ADMIN_ISSUER_ID), NOT_FOUND.value());
         }
 
         @Test
         @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
         void testUnauthorizedGetUserById() throws Exception {
+            when(accountAuthorisationService.userCanGetAccountByUserId(any(), any())).thenReturn(false);
             assertRequestResponseStatus(mockMvc, MockMvcRequestBuilders
-                .get(ROOT_URL + "/" + UUID.randomUUID()), FORBIDDEN.value());
+                .get(ROOT_URL + "/" + UUID.randomUUID())
+                .header(REQUESTER_ID_HEADER, SYSTEM_ADMIN_ISSUER_ID), FORBIDDEN.value());
         }
     }
 
@@ -384,7 +400,7 @@ class AccountTest extends IntegrationTestBase {
         @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
         void testUnauthorizedGetUserByProvenanceId() throws Exception {
             MockHttpServletRequestBuilder request = MockMvcRequestBuilders
-                .get(String.format("%s/%s/%s", GET_PROVENANCE_USER_URL, UserProvenances.CFT_IDAM, ID))
+                .get(String.format(REPLACE_STRING, GET_PROVENANCE_USER_URL, UserProvenances.CFT_IDAM, ID))
                 .contentType(MediaType.APPLICATION_JSON);
 
             assertRequestResponseStatus(mockMvc, request, FORBIDDEN.value());
@@ -479,7 +495,8 @@ class AccountTest extends IntegrationTestBase {
         void testDeleteAccount() throws Exception {
             verifiedUser.setUserProvenance(UserProvenances.CFT_IDAM);
             MockHttpServletRequestBuilder deleteRequest = MockMvcRequestBuilders
-                .delete(ROOT_URL + DELETE_PATH + createTestUserValidAccount(verifiedUser));
+                .delete(ROOT_URL + DELETE_PATH + createTestUserValidAccount(verifiedUser))
+                .header(REQUESTER_ID_HEADER, SYSTEM_ADMIN_ISSUER_ID);
 
             MvcResult mvcResult = mockMvc.perform(deleteRequest).andExpect(status().isOk()).andReturn();
             assertEquals(DELETE_USER_SUCCESS, mvcResult.getResponse().getContentAsString(),
@@ -490,14 +507,18 @@ class AccountTest extends IntegrationTestBase {
         @Test
         void testDeleteAccountNotFound() throws Exception {
             assertRequestResponseStatus(mockMvc, MockMvcRequestBuilders
-                .delete(ROOT_URL + DELETE_PATH + UUID.randomUUID()), NOT_FOUND.value());
+                .delete(ROOT_URL + DELETE_PATH + UUID.randomUUID())
+                .header(REQUESTER_ID_HEADER, SYSTEM_ADMIN_ISSUER_ID), NOT_FOUND.value());
+
         }
 
         @Test
         @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
         void testUnauthorizedDeleteAccount() throws Exception {
+            when(accountAuthorisationService.userCanDeleteAccount(any(), any())).thenReturn(false);
             assertRequestResponseStatus(mockMvc, MockMvcRequestBuilders
-                .delete(ROOT_URL + "/delete/" + UUID.randomUUID()), FORBIDDEN.value());
+                .delete(ROOT_URL + "/delete/" + USER_ID)
+                .header(REQUESTER_ID_HEADER, USER_ID), FORBIDDEN.value());
         }
     }
 
@@ -511,7 +532,7 @@ class AccountTest extends IntegrationTestBase {
 
             MockHttpServletRequestBuilder deleteRequest = MockMvcRequestBuilders
                 .delete(ROOT_URL + DELETE_PATH_V2 + createTestUserValidAccount(verifiedUser))
-                .header(ADMIN_HEADER, SYSTEM_ADMIN_ISSUER_ID);
+                .header(REQUESTER_ID_HEADER, SYSTEM_ADMIN_ISSUER_ID);
 
             MvcResult mvcResult = mockMvc.perform(deleteRequest).andExpect(status().isOk()).andReturn();
             assertEquals(DELETE_USER_SUCCESS, mvcResult.getResponse().getContentAsString(),
@@ -526,7 +547,7 @@ class AccountTest extends IntegrationTestBase {
 
             MockHttpServletRequestBuilder deleteRequest = MockMvcRequestBuilders
                 .delete(ROOT_URL + DELETE_PATH_V2 + createTestUserValidAccount(thirdPartyUser))
-                .header(ADMIN_HEADER, SYSTEM_ADMIN_ISSUER_ID);
+                .header(REQUESTER_ID_HEADER, SYSTEM_ADMIN_ISSUER_ID);
 
             MvcResult mvcResult = mockMvc.perform(deleteRequest).andExpect(status().isOk()).andReturn();
             assertEquals(DELETE_USER_SUCCESS, mvcResult.getResponse().getContentAsString(),
@@ -538,11 +559,11 @@ class AccountTest extends IntegrationTestBase {
         @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = ADD_USERS_SCRIPT)
         void testV2SystemAdminDeletesSuperAdminUser() throws Exception {
             String superAdminUserId = getSuperAdminUserId(superAdminUser);
-            String systemAdminUserId = getSystemAdminUserId("test_account_system-admin2@hmcts.net");
+            String systemAdminUserId = getSystemAdminUserId();
 
             MockHttpServletRequestBuilder deleteRequest = MockMvcRequestBuilders
                 .delete(ROOT_URL + DELETE_PATH_V2 + superAdminUserId)
-                .header(ADMIN_HEADER, systemAdminUserId);
+                .header(REQUESTER_ID_HEADER, systemAdminUserId);
 
             MvcResult mvcResult = mockMvc.perform(deleteRequest).andExpect(status().isOk()).andReturn();
             assertEquals(DELETE_USER_SUCCESS, mvcResult.getResponse().getContentAsString(),
@@ -551,14 +572,15 @@ class AccountTest extends IntegrationTestBase {
         }
 
         @Test
-        void testV2SuperAdminDeletesVerifiedUser() throws Exception {
+        void testV2SuperAdminCannotDeleteUser() throws Exception {
             verifiedUser.setUserProvenance(UserProvenances.CFT_IDAM);
 
             String superAdminUserId = getSuperAdminUserId(superAdminUser);
 
+            when(accountAuthorisationService.userCanDeleteAccount(any(), any())).thenReturn(false);
             MockHttpServletRequestBuilder deleteRequest = MockMvcRequestBuilders
                 .delete(ROOT_URL + DELETE_PATH_V2 + createTestUserValidAccount(verifiedUser))
-                .header(ADMIN_HEADER, superAdminUserId);
+                .header(REQUESTER_ID_HEADER, superAdminUserId);
 
             mockMvc.perform(deleteRequest).andExpect(status().isForbidden()).andReturn();
         }
@@ -574,18 +596,16 @@ class AccountTest extends IntegrationTestBase {
 
             MockHttpServletRequestBuilder deleteRequest = MockMvcRequestBuilders
                 .delete(ROOT_URL + DELETE_PATH_V2 + superAdminUserIdToDelete)
-                .header(ADMIN_HEADER, superAdminUserId);
+                .header(REQUESTER_ID_HEADER, superAdminUserId);
 
-            mockMvc.perform(deleteRequest).andExpect(status().isForbidden()).andReturn();
+            mockMvc.perform(deleteRequest).andExpect(status().isForbidden());
         }
 
         @Test
         void testV2DeleteAccountNotFound() throws Exception {
-            String superAdminUserId = getSuperAdminUserId(superAdminUser);
-
             MockHttpServletRequestBuilder request = MockMvcRequestBuilders
-                .delete(ROOT_URL + DELETE_PATH_V2 + UUID.randomUUID())
-                .header(ADMIN_HEADER, superAdminUserId);
+                .delete(ROOT_URL + DELETE_PATH_V2 + USER_ID)
+                .header(REQUESTER_ID_HEADER, SYSTEM_ADMIN_ISSUER_ID);
 
             assertRequestResponseStatus(mockMvc, request, NOT_FOUND.value());
         }
@@ -593,9 +613,11 @@ class AccountTest extends IntegrationTestBase {
         @Test
         @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD,
             scripts = {ADD_USERS_SCRIPT, ADD_VERIFIED_USERS_SCRIPT})
-        void testUnauthorizedDeleteAccountV2WhenNoUserIdAndNotSso() throws Exception {
+        void testUnauthorizedDeleteAccountV2WhenNoUserId() throws Exception {
+            when(accountAuthorisationService.userCanDeleteAccount(any(), any())).thenReturn(false);
             MockHttpServletRequestBuilder request = MockMvcRequestBuilders
-                .delete(ROOT_URL + DELETE_PATH_V2 + VERIFIED_USER_ID);
+                .delete(ROOT_URL + DELETE_PATH_V2 + USER_ID)
+                .header(REQUESTER_ID_HEADER, SYSTEM_ADMIN_ISSUER_ID);
 
             assertRequestResponseStatus(mockMvc, request, FORBIDDEN.value());
         }
@@ -618,9 +640,10 @@ class AccountTest extends IntegrationTestBase {
             scripts = {ADD_USERS_SCRIPT, ADD_VERIFIED_USERS_SCRIPT})
         @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
         void testUnauthorizedDeleteAccountV2() throws Exception {
+            when(accountAuthorisationService.userCanDeleteAccount(any(), any())).thenReturn(false);
             MockHttpServletRequestBuilder request = MockMvcRequestBuilders
-                .delete(ROOT_URL + DELETE_PATH_V2 + VERIFIED_USER_ID)
-                .header(ADMIN_HEADER, SYSTEM_ADMIN_ISSUER_ID);
+                .delete(ROOT_URL + DELETE_PATH_V2 + USER_ID)
+                .header(REQUESTER_ID_HEADER, SYSTEM_ADMIN_ISSUER_ID);
 
             assertRequestResponseStatus(mockMvc, request, FORBIDDEN.value());
         }
@@ -638,7 +661,25 @@ class AccountTest extends IntegrationTestBase {
 
             MockHttpServletRequestBuilder updateRequest = MockMvcRequestBuilders
                 .put(ROOT_URL + UPDATE_PATH + createdUserId + "/" + Roles.VERIFIED_THIRD_PARTY_CFT_PRESS)
-                .header(ADMIN_HEADER, SYSTEM_ADMIN_ISSUER_ID);
+                .header(REQUESTER_ID_HEADER, SYSTEM_ADMIN_ISSUER_ID);
+
+            MvcResult responseUpdatedUser = mockMvc.perform(updateRequest)
+                .andExpect(status().isOk()).andReturn();
+
+            assertEquals(
+                "User with ID " + createdUserId + " has been updated to a " + Roles.VERIFIED_THIRD_PARTY_CFT_PRESS,
+                responseUpdatedUser.getResponse().getContentAsString(), "Failed to update account"
+            );
+        }
+
+        @Test
+        void testUpdateAccountRoleByIdWithSystemAdminProvided() throws Exception {
+            verifiedUser.setUserProvenance(UserProvenances.CFT_IDAM);
+            String createdUserId = createTestUserValidAccount(verifiedUser);
+
+            MockHttpServletRequestBuilder updateRequest = MockMvcRequestBuilders
+                .put(ROOT_URL + UPDATE_PATH + createdUserId + "/" + Roles.INTERNAL_ADMIN_LOCAL)
+                .header(REQUESTER_ID_HEADER, SYSTEM_ADMIN_ID);
 
             MvcResult responseUpdatedUser = mockMvc.perform(updateRequest)
                 .andExpect(status().isOk()).andReturn();
@@ -653,6 +694,7 @@ class AccountTest extends IntegrationTestBase {
         void testUpdateAccountRoleByIdWithoutAdminIdReturnsForbiddenWhenNonSso() throws Exception {
             verifiedUser.setUserProvenance(UserProvenances.CFT_IDAM);
 
+            when(accountAuthorisationService.userCanUpdateAccount(any(), any())).thenReturn(false);
             MockHttpServletRequestBuilder updateRequest = MockMvcRequestBuilders
                 .put(ROOT_URL + UPDATE_PATH + createTestUserValidAccount(verifiedUser)
                          + "/" + Roles.INTERNAL_ADMIN_LOCAL);
@@ -666,6 +708,7 @@ class AccountTest extends IntegrationTestBase {
             PiUser superAdminUser = createAdminUser(true, Roles.INTERNAL_ADMIN_LOCAL);
             String superAdminUserId = getSuperAdminUserId(superAdminUser);
 
+            when(accountAuthorisationService.userCanUpdateAccount(any(), any())).thenReturn(false);
             MockHttpServletRequestBuilder updateRequest = MockMvcRequestBuilders
                 .put(ROOT_URL + UPDATE_PATH + superAdminUserId
                          + "/" + Roles.INTERNAL_ADMIN_LOCAL);
@@ -687,7 +730,7 @@ class AccountTest extends IntegrationTestBase {
             MockHttpServletRequestBuilder updateRequest = MockMvcRequestBuilders
                 .put(ROOT_URL + UPDATE_PATH + createTestUserValidAccount(verifiedUser)
                          + "/" + Roles.INTERNAL_ADMIN_LOCAL)
-                .header(ADMIN_HEADER, superAdminUserId);
+                .header(REQUESTER_ID_HEADER, superAdminUserId);
 
             mockMvc.perform(updateRequest)
                 .andExpect(status().isForbidden());
@@ -698,9 +741,10 @@ class AccountTest extends IntegrationTestBase {
             verifiedUser.setUserProvenance(UserProvenances.CFT_IDAM);
             String createdUserId = createTestUserValidAccount(verifiedUser);
 
+            when(accountAuthorisationService.userCanUpdateAccount(any(), any())).thenReturn(false);
             MockHttpServletRequestBuilder updateRequest = MockMvcRequestBuilders
                 .put(ROOT_URL + UPDATE_PATH + createdUserId + "/" + Roles.INTERNAL_ADMIN_LOCAL)
-                .header(ADMIN_HEADER, createdUserId);
+                .header(REQUESTER_ID_HEADER, createdUserId);
 
             mockMvc.perform(updateRequest)
                 .andExpect(status().isForbidden());
@@ -712,7 +756,7 @@ class AccountTest extends IntegrationTestBase {
 
             MockHttpServletRequestBuilder request = MockMvcRequestBuilders
                 .put(ROOT_URL + UPDATE_PATH + UUID.randomUUID() + "/" + Roles.INTERNAL_ADMIN_LOCAL)
-                .header(ADMIN_HEADER, superAdminUserId);
+                .header(REQUESTER_ID_HEADER, superAdminUserId);
 
             assertRequestResponseStatus(mockMvc, request, NOT_FOUND.value());
         }
@@ -722,10 +766,12 @@ class AccountTest extends IntegrationTestBase {
         @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD,
             scripts = {ADD_USERS_SCRIPT, ADD_VERIFIED_USERS_SCRIPT})
         void testUnauthorizedUpdateAccountRole() throws Exception {
+            when(accountAuthorisationService.userCanUpdateAccount(any(), any())).thenReturn(false);
             MockHttpServletRequestBuilder request = MockMvcRequestBuilders
                 .put(ROOT_URL + UPDATE_PATH + VERIFIED_USER_ID + "/" + Roles.INTERNAL_ADMIN_LOCAL)
-                .header(ADMIN_HEADER, SUPER_ADMIN_ISSUER_ID);
+                .header(REQUESTER_ID_HEADER, SUPER_ADMIN_ISSUER_ID);
 
+            when(accountAuthorisationService.userCanViewAccounts(any())).thenReturn(false);
             assertRequestResponseStatus(mockMvc, request, FORBIDDEN.value());
         }
     }
@@ -735,7 +781,7 @@ class AccountTest extends IntegrationTestBase {
             MockMvcRequestBuilders
                 .post(PI_URL)
                 .content(OBJECT_MAPPER.writeValueAsString(List.of(superAdminUser)))
-                .header(ISSUER_HEADER, SYSTEM_ADMIN_ISSUER_ID)
+                .header(REQUESTER_ID_HEADER, SYSTEM_ADMIN_ISSUER_ID)
                 .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult responseCreateUser = mockMvc.perform(createRequest)
@@ -748,21 +794,22 @@ class AccountTest extends IntegrationTestBase {
                 }
             );
 
-        return mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).get(0).toString();
+        return mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).getFirst().toString();
     }
 
-    private String getSystemAdminUserId(String email) throws Exception {
+    private String getSystemAdminUserId() throws Exception {
         SystemAdminAccount systemAdmin = new SystemAdminAccount();
         systemAdmin.setFirstName(FIRST_NAME);
         systemAdmin.setSurname(SURNAME);
-        systemAdmin.setEmail(email);
+        systemAdmin.setEmail("test_account_system-admin2@hmcts.net");
         systemAdmin.setProvenanceUserId(UUID.randomUUID().toString());
 
+        when(accountAuthorisationService.userCanCreateSystemAdmin(any())).thenReturn(true);
         MockHttpServletRequestBuilder createRequest =
             MockMvcRequestBuilders
                 .post(CREATE_SYSTEM_ADMIN_URL)
                 .content(OBJECT_MAPPER.writeValueAsString(systemAdmin))
-                .header(ISSUER_HEADER, SYSTEM_ADMIN_ISSUER_ID)
+                .header(REQUESTER_ID_HEADER, SYSTEM_ADMIN_ID)
                 .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult responseCreateSystemAdminUser = mockMvc.perform(createRequest)
@@ -780,7 +827,7 @@ class AccountTest extends IntegrationTestBase {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(PI_URL)
             .content(OBJECT_MAPPER.writeValueAsString(List.of(piUser)))
-            .header(ISSUER_HEADER, SYSTEM_ADMIN_ISSUER_ID)
+            .header(REQUESTER_ID_HEADER, SYSTEM_ADMIN_ISSUER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isCreated()).andReturn();
@@ -800,7 +847,7 @@ class AccountTest extends IntegrationTestBase {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(PI_URL)
             .content(OBJECT_MAPPER.writeValueAsString(List.of(piUser)))
-            .header(ISSUER_HEADER, SYSTEM_ADMIN_ISSUER_ID)
+            .header(REQUESTER_ID_HEADER, SYSTEM_ADMIN_ISSUER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult mvcResult =
@@ -810,7 +857,7 @@ class AccountTest extends IntegrationTestBase {
     }
 
     private String createTestUserValidAccount(PiUser piUser) throws Exception {
-        return createTestUser(piUser).get(CreationEnum.CREATED_ACCOUNTS).get(0).toString();
+        return createTestUser(piUser).get(CreationEnum.CREATED_ACCOUNTS).getFirst().toString();
     }
 
 }

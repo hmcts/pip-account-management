@@ -20,7 +20,6 @@ import uk.gov.hmcts.reform.pip.model.authentication.roles.IsAdmin;
 @Tag(name = "Account Management - API for managing inactive user accounts")
 @RequestMapping("/account")
 @ApiResponse(responseCode = "401", description = "Invalid access credential")
-@ApiResponse(responseCode = "403", description = "User has not been authorized")
 @Validated
 @IsAdmin
 @SecurityRequirement(name = "bearerAuth")

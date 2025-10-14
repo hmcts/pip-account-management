@@ -31,6 +31,7 @@ class AccountFilteringTest extends AccountHelperBase {
 
     private PiUser systemAdminUser;
     private String thirdPartyUserId;
+    private Map<String, String> headers;
 
     @BeforeAll
     public void startUp() throws JsonProcessingException {
@@ -44,8 +45,8 @@ class AccountFilteringTest extends AccountHelperBase {
         List<PiUser> thirdPartyList = new ArrayList<>();
         thirdPartyList.add(piUser);
 
-        Map<String, String> headers = new ConcurrentHashMap<>(bearer);
-        headers.put(ISSUER_ID, systemAdminUser.getUserId());
+        headers = new ConcurrentHashMap<>(bearer);
+        headers.put(REQUESTER_ID_HEADER, systemAdminUser.getUserId());
 
         Response createdResponse =
             doPostRequest(CREATE_PI_ACCOUNT, headers, objectMapper.writeValueAsString(thirdPartyList));
@@ -54,25 +55,24 @@ class AccountFilteringTest extends AccountHelperBase {
     }
 
     private void verifyFilteringController(Map<String, String> requestParams) {
-        Response response = doGetRequestWithRequestParams(GET_ACCOUNTS_EXCEPT_THIRD_PARTY, bearer, requestParams);
-
+        Response response = doGetRequestWithRequestParams(GET_ACCOUNTS_EXCEPT_THIRD_PARTY, headers, requestParams);
         assertThat(response.getStatusCode()).isEqualTo(OK.value());
 
         Page<PiUser> returnedPage = response.getBody().as(GET_ALL_USERS_TYPE);
         assertThat(returnedPage.getTotalElements()).isEqualTo(1);
-        assertThat(returnedPage.getContent().get(0))
+        assertThat(returnedPage.getContent().getFirst())
             .matches(user -> user.getUserId().equals(systemAdminUser.getUserId()));
     }
 
     @AfterAll
     public void teardown() {
-        doDeleteRequest(TESTING_SUPPORT_DELETE_ACCOUNT_URL + TEST_EMAIL_PREFIX, bearer);
-        doDeleteRequest(String.format(DELETE_ACCOUNT, thirdPartyUserId), bearer);
+        doDeleteRequest(TESTING_SUPPORT_DELETE_ACCOUNT_URL + TEST_EMAIL_PREFIX, headers);
+        doDeleteRequest(String.format(DELETE_ACCOUNT, thirdPartyUserId), headers);
     }
 
     @Test
     void testGetAllThirdPartyAccounts() {
-        Response getThirdParties = doGetRequest(GET_ALL_THIRD_PARTY_ACCOUNTS, bearer);
+        Response getThirdParties = doGetRequest(GET_ALL_THIRD_PARTY_ACCOUNTS, headers);
 
         assertThat(getThirdParties.getStatusCode()).isEqualTo(OK.value());
 
@@ -87,7 +87,7 @@ class AccountFilteringTest extends AccountHelperBase {
         Map<String, String> requestParams = new ConcurrentHashMap<>();
         requestParams.put("provenances", UserProvenances.THIRD_PARTY.toString());
 
-        Response response = doGetRequestWithRequestParams(GET_ACCOUNTS_EXCEPT_THIRD_PARTY, bearer, requestParams);
+        Response response = doGetRequestWithRequestParams(GET_ACCOUNTS_EXCEPT_THIRD_PARTY, headers, requestParams);
 
         assertThat(response.getStatusCode()).isEqualTo(OK.value());
 
@@ -130,7 +130,7 @@ class AccountFilteringTest extends AccountHelperBase {
         requestParams.put("pageSize", "1");
         requestParams.put("pageNumber", "1");
 
-        Response response = doGetRequestWithRequestParams(GET_ACCOUNTS_EXCEPT_THIRD_PARTY, bearer, requestParams);
+        Response response = doGetRequestWithRequestParams(GET_ACCOUNTS_EXCEPT_THIRD_PARTY, headers, requestParams);
 
         assertThat(response.getStatusCode()).isEqualTo(OK.value());
 
@@ -141,7 +141,8 @@ class AccountFilteringTest extends AccountHelperBase {
     @Test
     void testGetAdminUserByEmailAndProvenance() throws JsonProcessingException {
         String email = generateEmail();
-        createAccount(email, UUID.randomUUID().toString(), Roles.INTERNAL_ADMIN_LOCAL, UserProvenances.SSO);
+        createAccount(email, UUID.randomUUID().toString(), Roles.INTERNAL_ADMIN_LOCAL, UserProvenances.SSO,
+                      systemAdminUser.getUserId());
 
         Response response = doGetRequest(String.format(GET_ADMIN_USER_BY_EMAIL_AND_PROVENANCE, email,
                                                        UserProvenances.SSO

@@ -17,6 +17,7 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
@@ -27,6 +28,7 @@ import uk.gov.hmcts.reform.pip.account.management.model.account.AzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.account.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.account.PiUser;
 import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredAzureAccount;
+import uk.gov.hmcts.reform.pip.account.management.service.authorisation.AccountAuthorisationService;
 import uk.gov.hmcts.reform.pip.account.management.utils.IntegrationTestBase;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
@@ -49,6 +51,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
 @WithMockUser(username = "admin", authorities = {"APPROLE_api.request.admin"})
+@SuppressWarnings("PMD.ExcessiveImports")
 class AzureAccountTest extends IntegrationTestBase {
     private static final String ROOT_URL = "/account";
     private static final String AZURE_URL = ROOT_URL + "/add/azure";
@@ -56,11 +59,10 @@ class AzureAccountTest extends IntegrationTestBase {
     private static final String AZURE_PATH = "/azure/";
 
     private static final String EMAIL = "test_account_admin@hmcts.net";
-    private static final String INVALID_EMAIL = "ab";
     private static final String FIRST_NAME = "First name";
     private static final String SURNAME = "Surname";
-    private static final String ISSUER_ID = "1234-1234-1234-1234";
-    private static final String ISSUER_HEADER = "x-issuer-id";
+    private static final UUID REQUESTER_ID = UUID.randomUUID();
+    private static final String REQUESTER_ID_HEADER = "x-requester-id";
     private static final String GIVEN_NAME = "Given Name";
     private static final String ID = "1234";
     private static final String UNAUTHORIZED_ROLE = "APPROLE_unknown.authorized";
@@ -84,7 +86,7 @@ class AzureAccountTest extends IntegrationTestBase {
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-    private static final PiUser VALID_USER = createUser(true, UUID.randomUUID().toString());
+    private static final PiUser VALID_USER = createUser(UUID.randomUUID().toString());
 
     @Autowired
     private MockMvc mockMvc;
@@ -101,9 +103,12 @@ class AzureAccountTest extends IntegrationTestBase {
     @Mock
     private ClientConfiguration clientConfiguration;
 
-    private static PiUser createUser(boolean valid, String id) {
+    @MockitoBean
+    private AccountAuthorisationService accountAuthorisationService;
+
+    private static PiUser createUser(String id) {
         PiUser user = new PiUser();
-        user.setEmail(valid ? EMAIL : INVALID_EMAIL);
+        user.setEmail(EMAIL);
         user.setProvenanceUserId(id);
         user.setUserProvenance(UserProvenances.PI_AAD);
         user.setRoles(Roles.INTERNAL_ADMIN_CTSC);
@@ -142,6 +147,7 @@ class AzureAccountTest extends IntegrationTestBase {
 
         when(graphClient.users()).thenReturn(usersRequestBuilder);
         when(usersRequestBuilder.post(any())).thenReturn(userToReturn);
+        when(accountAuthorisationService.userCanCreateAzureAccount(any())).thenReturn(true);
     }
 
     @AfterEach
@@ -169,7 +175,7 @@ class AzureAccountTest extends IntegrationTestBase {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(AZURE_URL)
             .content(OBJECT_MAPPER.writeValueAsString(List.of(azureAccount)))
-            .header(ISSUER_HEADER, ISSUER_ID)
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isOk()).andReturn();
@@ -188,7 +194,7 @@ class AzureAccountTest extends IntegrationTestBase {
                      "1 Created account should be returned"
         );
 
-        AzureAccount returnedAzureAccount = accounts.get(CreationEnum.CREATED_ACCOUNTS).get(0);
+        AzureAccount returnedAzureAccount = accounts.get(CreationEnum.CREATED_ACCOUNTS).getFirst();
 
         assertEquals(ID, returnedAzureAccount.getAzureAccountId(), TEST_MESSAGE_ID);
         assertEquals(EMAIL, returnedAzureAccount.getEmail(), TEST_MESSAGE_EMAIL);
@@ -216,7 +222,7 @@ class AzureAccountTest extends IntegrationTestBase {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(AZURE_URL)
             .content(OBJECT_MAPPER.writeValueAsString(List.of(azureAccount)))
-            .header(ISSUER_HEADER, ISSUER_ID)
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isOk()).andReturn();
@@ -234,7 +240,7 @@ class AzureAccountTest extends IntegrationTestBase {
         );
 
         AzureAccount returnedValidAzureAccount = OBJECT_MAPPER.convertValue(
-            accounts.get(CreationEnum.CREATED_ACCOUNTS).get(0), AzureAccount.class
+            accounts.get(CreationEnum.CREATED_ACCOUNTS).getFirst(), AzureAccount.class
         );
 
         assertEquals(ID, returnedValidAzureAccount.getAzureAccountId(), TEST_MESSAGE_ID);
@@ -243,9 +249,9 @@ class AzureAccountTest extends IntegrationTestBase {
         assertEquals(SURNAME, returnedValidAzureAccount.getSurname(), TEST_MESSAGE_SURNAME);
 
         ErroredAzureAccount returnedInvalidAccount = OBJECT_MAPPER.convertValue(
-            accounts.get(CreationEnum.ERRORED_ACCOUNTS).get(0), ErroredAzureAccount.class);
+            accounts.get(CreationEnum.ERRORED_ACCOUNTS).getFirst(), ErroredAzureAccount.class);
 
-        assertEquals(UNSENT_EMAIL_MESSAGE, returnedInvalidAccount.getErrorMessages().get(0), MESSAGE_ERROR);
+        assertEquals(UNSENT_EMAIL_MESSAGE, returnedInvalidAccount.getErrorMessages().getFirst(), MESSAGE_ERROR);
     }
 
     @Test
@@ -263,7 +269,7 @@ class AzureAccountTest extends IntegrationTestBase {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(AZURE_URL)
             .content(OBJECT_MAPPER.writeValueAsString(List.of(azureAccount)))
-            .header(ISSUER_HEADER, ISSUER_ID)
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder)
@@ -294,7 +300,7 @@ class AzureAccountTest extends IntegrationTestBase {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(AZURE_URL)
             .content(OBJECT_MAPPER.writeValueAsString(List.of(azureAccount)))
-            .header(ISSUER_HEADER, ISSUER_ID)
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder)
@@ -316,7 +322,7 @@ class AzureAccountTest extends IntegrationTestBase {
 
         List<Object> accountList = accounts.get(CreationEnum.ERRORED_ACCOUNTS);
         ErroredAzureAccount erroredAccount = OBJECT_MAPPER.convertValue(
-            accountList.get(0),
+            accountList.getFirst(),
             ErroredAzureAccount.class
         );
 
@@ -324,7 +330,7 @@ class AzureAccountTest extends IntegrationTestBase {
         assertEquals("ab", erroredAccount.getEmail(), TEST_MESSAGE_EMAIL);
         assertEquals(FIRST_NAME, erroredAccount.getFirstName(), TEST_MESSAGE_FIRST_NAME);
         assertEquals(SURNAME, erroredAccount.getSurname(), TEST_MESSAGE_SURNAME);
-        assertEquals(EMAIL_VALIDATION_MESSAGE, erroredAccount.getErrorMessages().get(0),
+        assertEquals(EMAIL_VALIDATION_MESSAGE, erroredAccount.getErrorMessages().getFirst(),
                      INVALID_EMAIL_ERROR
         );
     }
@@ -338,7 +344,7 @@ class AzureAccountTest extends IntegrationTestBase {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(AZURE_URL)
             .content(OBJECT_MAPPER.writeValueAsString(List.of(azureAccount)))
-            .header(ISSUER_HEADER, ISSUER_ID)
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder)
@@ -360,7 +366,7 @@ class AzureAccountTest extends IntegrationTestBase {
 
         List<Object> accountList = accounts.get(CreationEnum.ERRORED_ACCOUNTS);
         ErroredAzureAccount erroredAccount = OBJECT_MAPPER.convertValue(
-            accountList.get(0),
+            accountList.getFirst(),
             ErroredAzureAccount.class
         );
 
@@ -368,7 +374,7 @@ class AzureAccountTest extends IntegrationTestBase {
         assertEquals(EMAIL, erroredAccount.getEmail(), TEST_MESSAGE_EMAIL);
         assertNull(erroredAccount.getFirstName(), "Firstname has not been sent");
         assertEquals(SURNAME, erroredAccount.getSurname(), TEST_MESSAGE_SURNAME);
-        assertEquals(INVALID_FIRST_NAME_MESSAGE, erroredAccount.getErrorMessages().get(0),
+        assertEquals(INVALID_FIRST_NAME_MESSAGE, erroredAccount.getErrorMessages().getFirst(),
                      "Error message is displayed for an invalid name"
         );
     }
@@ -398,7 +404,7 @@ class AzureAccountTest extends IntegrationTestBase {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(AZURE_URL)
             .content(OBJECT_MAPPER.writeValueAsString(List.of(azureAccount)))
-            .header(ISSUER_HEADER, ISSUER_ID)
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder)
@@ -444,7 +450,7 @@ class AzureAccountTest extends IntegrationTestBase {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(AZURE_URL)
             .content(OBJECT_MAPPER.writeValueAsString(List.of(azureAccount)))
-            .header(ISSUER_HEADER, ISSUER_ID)
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder)
@@ -465,10 +471,10 @@ class AzureAccountTest extends IntegrationTestBase {
         );
 
         ErroredAzureAccount returnedInvalidAccount = OBJECT_MAPPER.convertValue(
-            accounts.get(CreationEnum.ERRORED_ACCOUNTS).get(0), ErroredAzureAccount.class
+            accounts.get(CreationEnum.ERRORED_ACCOUNTS).getFirst(), ErroredAzureAccount.class
         );
 
-        assertEquals(UNSENT_EMAIL_MESSAGE, returnedInvalidAccount.getErrorMessages().get(0), MESSAGE_ERROR);
+        assertEquals(UNSENT_EMAIL_MESSAGE, returnedInvalidAccount.getErrorMessages().getFirst(), MESSAGE_ERROR);
     }
 
     @Test
@@ -491,7 +497,7 @@ class AzureAccountTest extends IntegrationTestBase {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(AZURE_URL)
             .content(OBJECT_MAPPER.writeValueAsString(List.of(azureAccount)))
-            .header(ISSUER_HEADER, ISSUER_ID)
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isOk()).andReturn();
@@ -507,13 +513,13 @@ class AzureAccountTest extends IntegrationTestBase {
         assertEquals(0, accounts.get(CreationEnum.CREATED_ACCOUNTS).size(), "0 created account returned");
 
         ErroredAzureAccount erroredAccount = OBJECT_MAPPER.convertValue(
-            accounts.get(CreationEnum.ERRORED_ACCOUNTS).get(0), ErroredAzureAccount.class);
+            accounts.get(CreationEnum.ERRORED_ACCOUNTS).getFirst(), ErroredAzureAccount.class);
 
         assertNull(erroredAccount.getAzureAccountId(), "Errored azureAccount does not have ID");
         assertEquals(EMAIL, erroredAccount.getEmail(), TEST_MESSAGE_EMAIL);
         assertEquals(FIRST_NAME, erroredAccount.getFirstName(), TEST_MESSAGE_FIRST_NAME);
         assertEquals(SURNAME, erroredAccount.getSurname(), TEST_MESSAGE_SURNAME);
-        assertEquals(DIRECTORY_ERROR, erroredAccount.getErrorMessages().get(0),
+        assertEquals(DIRECTORY_ERROR, erroredAccount.getErrorMessages().getFirst(),
                      "Error message matches directory message"
         );
     }
@@ -525,7 +531,7 @@ class AzureAccountTest extends IntegrationTestBase {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(AZURE_URL)
             .content(duplicateKeyString)
-            .header(ISSUER_HEADER, ISSUER_ID)
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder)
@@ -569,7 +575,7 @@ class AzureAccountTest extends IntegrationTestBase {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(AZURE_URL)
             .content(OBJECT_MAPPER.writeValueAsString(List.of(validAzureAccount, invalidAzureAccount)))
-            .header(ISSUER_HEADER, ISSUER_ID)
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult response = mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isOk()).andReturn();
@@ -589,7 +595,7 @@ class AzureAccountTest extends IntegrationTestBase {
         );
 
         AzureAccount returnedValidAzureAccount = OBJECT_MAPPER.convertValue(
-            accounts.get(CreationEnum.CREATED_ACCOUNTS).get(0), AzureAccount.class);
+            accounts.get(CreationEnum.CREATED_ACCOUNTS).getFirst(), AzureAccount.class);
 
         assertEquals(ID, returnedValidAzureAccount.getAzureAccountId(), TEST_MESSAGE_ID);
         assertEquals(EMAIL, returnedValidAzureAccount.getEmail(), TEST_MESSAGE_EMAIL);
@@ -597,13 +603,13 @@ class AzureAccountTest extends IntegrationTestBase {
         assertEquals(SURNAME, returnedValidAzureAccount.getSurname(), TEST_MESSAGE_SURNAME);
 
         ErroredAzureAccount returnedInvalidAccount = OBJECT_MAPPER.convertValue(
-            accounts.get(CreationEnum.ERRORED_ACCOUNTS).get(0), ErroredAzureAccount.class);
+            accounts.get(CreationEnum.ERRORED_ACCOUNTS).getFirst(), ErroredAzureAccount.class);
 
         assertNull(returnedInvalidAccount.getAzureAccountId(), "AzureAccount ID should be null");
         assertEquals("abc.test", returnedInvalidAccount.getEmail(), TEST_MESSAGE_EMAIL);
         assertEquals(FIRST_NAME, returnedInvalidAccount.getFirstName(), TEST_MESSAGE_FIRST_NAME);
         assertEquals(SURNAME, returnedInvalidAccount.getSurname(), TEST_MESSAGE_SURNAME);
-        assertEquals(EMAIL_VALIDATION_MESSAGE, returnedInvalidAccount.getErrorMessages().get(0),
+        assertEquals(EMAIL_VALIDATION_MESSAGE, returnedInvalidAccount.getErrorMessages().getFirst(),
                      INVALID_EMAIL_ERROR
         );
     }
@@ -611,10 +617,12 @@ class AzureAccountTest extends IntegrationTestBase {
     @Test
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testUnauthorizedCreateAccount() throws Exception {
+        when(accountAuthorisationService.userCanCreateAzureAccount(any())).thenReturn(false);
+
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .post(AZURE_URL)
             .content("[]")
-            .header(ISSUER_HEADER, ISSUER_ID)
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
         assertRequestResponseStatus(mockMvc, request, FORBIDDEN.value());
@@ -632,7 +640,7 @@ class AzureAccountTest extends IntegrationTestBase {
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testUnauthorizedGetAzureUserInfo() throws Exception {
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
-            .get(ROOT_URL + "/azure/" + VALID_USER.getProvenanceUserId());
+            .get(ROOT_URL + AZURE_PATH + VALID_USER.getProvenanceUserId());
 
         assertRequestResponseStatus(mockMvc, request, FORBIDDEN.value());
     }

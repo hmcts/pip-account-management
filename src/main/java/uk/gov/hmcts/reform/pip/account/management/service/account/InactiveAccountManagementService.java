@@ -57,16 +57,17 @@ public class InactiveAccountManagementService {
      * Then send their details on to publication services to send them a verification email.
      */
     public void sendMediaUsersForVerification() {
-        userRepository.findVerifiedUsersByLastVerifiedDate(mediaAccountVerificationDays).forEach(user -> {
-            try {
-                publicationService.sendAccountVerificationEmail(
-                    user.getEmail(),
-                    azureUserService.getUser(user.getEmail()).getGivenName()
-                );
-            } catch (AzureCustomException ex) {
-                log.error(writeLog("Error when getting user from azure: " + ex.getMessage()));
-            }
-        });
+        userRepository.findVerifiedUsersForNotificationByLastVerifiedDate(mediaAccountVerificationDays)
+            .forEach(user -> {
+                try {
+                    publicationService.sendAccountVerificationEmail(
+                        user.getEmail(),
+                        azureUserService.getUser(user.getEmail()).getGivenName()
+                    );
+                } catch (AzureCustomException ex) {
+                    log.error(writeLog("Error when getting user from azure: " + ex.getMessage()));
+                }
+            });
     }
 
     /**
@@ -75,8 +76,8 @@ public class InactiveAccountManagementService {
      * Then send their details on to publication services to send them a notification email.
      */
     public void notifyIdamUsersToSignIn() {
-        userRepository.findIdamUsersByLastSignedInDate(cftIdamAccountSignInNotificationDays,
-                                                       crimeIdamAccountSignInNotificationDays)
+        userRepository.findIdamUsersForNotificationByLastSignedInDate(cftIdamAccountSignInNotificationDays,
+                                                                      crimeIdamAccountSignInNotificationDays)
             .forEach(user -> publicationService.sendInactiveAccountSignInNotificationEmail(
                 user.getEmail(),
                 user.getForenames() + " " + user.getSurname(),
@@ -90,7 +91,7 @@ public class InactiveAccountManagementService {
      * Account service handles the deletion of their AAD, P&I user and subscriptions.
      */
     public void findMediaAccountsForDeletion() {
-        userRepository.findVerifiedUsersByLastVerifiedDate(mediaAccountDeletionDays)
+        userRepository.findVerifiedUsersForDeletionByLastVerifiedDate(mediaAccountDeletionDays)
             .forEach(user -> accountService.deleteAccount(user.getUserId()));
     }
 
@@ -110,7 +111,8 @@ public class InactiveAccountManagementService {
      * Account service handles the deletion of their P&I user and subscriptions.
      */
     public void findIdamAccountsForDeletion() {
-        userRepository.findIdamUsersByLastSignedInDate(cftIdamAccountDeletionDays, crimeIdamAccountDeletionDays)
+        userRepository.findIdamUsersForDeletionByLastSignedInDate(cftIdamAccountDeletionDays,
+                                                                  crimeIdamAccountDeletionDays)
             .forEach(user -> accountService.deleteAccount(user.getUserId()));
     }
 }

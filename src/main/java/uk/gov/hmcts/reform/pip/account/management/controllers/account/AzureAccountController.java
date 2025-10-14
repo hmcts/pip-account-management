@@ -4,9 +4,10 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -25,39 +26,38 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
+@AllArgsConstructor
 @Tag(name = "Account Management - API for managing Azure accounts")
 @RequestMapping("/account")
 @ApiResponse(responseCode = "401", description = "Invalid access credential")
-@ApiResponse(responseCode = "403", description = "User has not been authorized")
 @Validated
 @IsAdmin
 @SecurityRequirement(name = "bearerAuth")
 public class AzureAccountController {
-    private static final String ISSUER_ID = "x-issuer-id";
+    private static final String REQUESTER_ID = "x-requester-id";
 
     private static final String OK_CODE = "200";
     private static final String NOT_FOUND_ERROR_CODE = "404";
+    private static final String FORBIDDEN_ERROR_CODE = "403";
 
     private final AzureAccountService azureAccountService;
-
-    @Autowired
-    public AzureAccountController(AzureAccountService azureAccountService) {
-        this.azureAccountService = azureAccountService;
-    }
 
     /**
      * POST endpoint to create a new azure account. This is only for the creation of verified accounts.
      * This will also trigger any welcome emails.
      *
-     * @param issuerId The id of the user creating the accounts.
+     * @param requesterId The id of the user creating the accounts.
      * @param azureAccounts The accounts to add.
      * @return A list containing details of any created and errored azureAccounts.
      */
     @ApiResponse(responseCode = OK_CODE, description = "{AzureAccount}")
+    @ApiResponse(responseCode = FORBIDDEN_ERROR_CODE,
+        description = "User with ID %s {requesterId} forbidden to create user")
+    @PreAuthorize("@accountAuthorisationService.userCanCreateAzureAccount(#requesterId)")
     @PostMapping("/add/azure")
     public ResponseEntity<Map<CreationEnum, List<? extends AzureAccount>>> createAzureAccount(//NOSONAR
-        @RequestHeader(ISSUER_ID) String issuerId, @RequestBody List<AzureAccount> azureAccounts) {
-        return ResponseEntity.ok(azureAccountService.addAzureAccounts(azureAccounts, issuerId, false, false));
+        @RequestHeader(REQUESTER_ID) String requesterId, @RequestBody List<AzureAccount> azureAccounts) {
+        return ResponseEntity.ok(azureAccountService.addAzureAccounts(azureAccounts, requesterId, false, false));
     }
 
     @ApiResponse(responseCode = OK_CODE, description = "P&I Azure User Information")

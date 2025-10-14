@@ -85,7 +85,7 @@ class InactiveAccountManagementServiceTest {
 
     @Test
     void testSendMediaUsersForVerification() throws AzureCustomException {
-        when(userRepository.findVerifiedUsersByLastVerifiedDate(anyInt()))
+        when(userRepository.findVerifiedUsersForNotificationByLastVerifiedDate(anyInt()))
             .thenReturn(Collections.singletonList(MEDIA_USER));
         when(azureUserService.getUser(MEDIA_USER_EMAIL)).thenReturn(azureMediaUser);
 
@@ -95,7 +95,7 @@ class InactiveAccountManagementServiceTest {
 
     @Test
     void testNoMediaUsersForVerification() {
-        when(userRepository.findVerifiedUsersByLastVerifiedDate(anyInt()))
+        when(userRepository.findVerifiedUsersForNotificationByLastVerifiedDate(anyInt()))
             .thenReturn(Collections.emptyList());
 
         inactiveAccountManagementService.sendMediaUsersForVerification();
@@ -105,7 +105,7 @@ class InactiveAccountManagementServiceTest {
 
     @Test
     void testNotifyIdamUsersToSignIn() {
-        when(userRepository.findIdamUsersByLastSignedInDate(anyInt(), anyInt()))
+        when(userRepository.findIdamUsersForNotificationByLastSignedInDate(anyInt(), anyInt()))
             .thenReturn(List.of(CFT_IDAM_USER, CRIME_IDAM_USER));
 
         inactiveAccountManagementService.notifyIdamUsersToSignIn();
@@ -119,7 +119,7 @@ class InactiveAccountManagementServiceTest {
 
     @Test
     void testNoNotificationOfIdamUsersToSignIn() {
-        when(userRepository.findIdamUsersByLastSignedInDate(anyInt(), anyInt()))
+        when(userRepository.findIdamUsersForNotificationByLastSignedInDate(anyInt(), anyInt()))
             .thenReturn(Collections.emptyList());
 
         inactiveAccountManagementService.notifyIdamUsersToSignIn();
@@ -128,7 +128,7 @@ class InactiveAccountManagementServiceTest {
 
     @Test
     void testMediaAccountDeletion() {
-        when(userRepository.findVerifiedUsersByLastVerifiedDate(anyInt()))
+        when(userRepository.findVerifiedUsersForDeletionByLastVerifiedDate(anyInt()))
             .thenReturn(Collections.singletonList(MEDIA_USER));
 
         inactiveAccountManagementService.findMediaAccountsForDeletion();
@@ -137,7 +137,7 @@ class InactiveAccountManagementServiceTest {
 
     @Test
     void testNoMediaAccountDeletion() {
-        when(userRepository.findVerifiedUsersByLastVerifiedDate(anyInt()))
+        when(userRepository.findVerifiedUsersForDeletionByLastVerifiedDate(anyInt()))
             .thenReturn(Collections.emptyList());
 
         inactiveAccountManagementService.findMediaAccountsForDeletion();
@@ -165,7 +165,7 @@ class InactiveAccountManagementServiceTest {
 
     @Test
     void testIdamAccountDeletion() {
-        when(userRepository.findIdamUsersByLastSignedInDate(anyInt(), anyInt()))
+        when(userRepository.findIdamUsersForDeletionByLastSignedInDate(anyInt(), anyInt()))
             .thenReturn(List.of(CFT_IDAM_USER, CRIME_IDAM_USER));
 
         inactiveAccountManagementService.findIdamAccountsForDeletion();
@@ -175,7 +175,7 @@ class InactiveAccountManagementServiceTest {
 
     @Test
     void testNoIdamAccountDeletion() {
-        when(userRepository.findIdamUsersByLastSignedInDate(anyInt(), anyInt()))
+        when(userRepository.findIdamUsersForDeletionByLastSignedInDate(anyInt(), anyInt()))
             .thenReturn(Collections.emptyList());
 
         inactiveAccountManagementService.findIdamAccountsForDeletion();
