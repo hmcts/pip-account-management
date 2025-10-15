@@ -85,6 +85,7 @@ class UserRepositoryTest {
         user3.setUserProvenance(UserProvenances.SSO);
         user3.setRoles(Roles.INTERNAL_ADMIN_CTSC);
         user3.setLastSignedInDate(TIMESTAMP_NOW.minusDays(DAYS));
+        user3.setCreatedDate(TIMESTAMP_NOW.minusDays(DAYS));
         userId3 = userRepository.save(user3).getUserId();
 
         PiUser user4 = new PiUser();
@@ -206,7 +207,7 @@ class UserRepositoryTest {
             .as("Returned account MI data must match user object")
             .anyMatch(account -> userId3.equals(account.getUserId())
                 && PROVENANCE_USER_ID3.equals(account.getProvenanceUserId())
-                && UserProvenances.PI_AAD.equals(account.getUserProvenance())
+                && UserProvenances.SSO.equals(account.getUserProvenance())
                 && Roles.INTERNAL_ADMIN_CTSC.equals(account.getRoles())
                 && TIMESTAMP_NOW.minusDays(DAYS).truncatedTo(ChronoUnit.SECONDS)
                 .equals(account.getLastSignedInDate().truncatedTo(ChronoUnit.SECONDS))
