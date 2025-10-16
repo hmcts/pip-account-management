@@ -78,23 +78,6 @@ class SmokeTest extends SmokeTestBase {
         OBJECT_MAPPER.findAndRegisterModules();
         createTestLocation(LOCATION_ID, LOCATION_NAME);
 
-        PiUser piUser = new PiUser();
-        piUser.setEmail(TEST_EMAIL_PREFIX + "-"
-                            + ThreadLocalRandom.current().nextInt(1000, 9999) + TEST_EMAIL_SUFFIX);
-        piUser.setRoles(Roles.VERIFIED);
-        piUser.setForenames("SmokeTestSubscription-Firstname");
-        piUser.setSurname("SmokeTestSubscription-Surname");
-        piUser.setUserProvenance(UserProvenances.SSO);
-        piUser.setProvenanceUserId(UUID.randomUUID().toString());
-
-        verifiedUserId = (String)
-            doPostRequest(CREATE_PI_ACCOUNT_URL, Map.of(REQUESTER_ID_HEADER, REQUESTER_ID),
-                          OBJECT_MAPPER.writeValueAsString(List.of(piUser)))
-                .getBody()
-                .as(CREATED_RESPONSE_TYPE)
-                .get(CreationEnum.CREATED_ACCOUNTS)
-                .getFirst();
-
         PiUser adminCtscUser = new PiUser();
         adminCtscUser.setEmail(TEST_EMAIL_PREFIX + "-"
                                    + ThreadLocalRandom.current().nextInt(1000, 9999) + TEST_EMAIL_SUFFIX);
@@ -107,6 +90,23 @@ class SmokeTest extends SmokeTestBase {
         adminUserId = (String)
             doPostRequest(CREATE_PI_ACCOUNT_URL, Map.of(REQUESTER_ID_HEADER, REQUESTER_ID),
                           OBJECT_MAPPER.writeValueAsString(List.of(adminCtscUser)))
+                .getBody()
+                .as(CREATED_RESPONSE_TYPE)
+                .get(CreationEnum.CREATED_ACCOUNTS)
+                .getFirst();
+
+        PiUser piUser = new PiUser();
+        piUser.setEmail(TEST_EMAIL_PREFIX + "-"
+                            + ThreadLocalRandom.current().nextInt(1000, 9999) + TEST_EMAIL_SUFFIX);
+        piUser.setRoles(Roles.VERIFIED);
+        piUser.setForenames("SmokeTestSubscription-Firstname");
+        piUser.setSurname("SmokeTestSubscription-Surname");
+        piUser.setUserProvenance(UserProvenances.PI_AAD);
+        piUser.setProvenanceUserId(UUID.randomUUID().toString());
+
+        verifiedUserId = (String)
+            doPostRequest(CREATE_PI_ACCOUNT_URL, Map.of(REQUESTER_ID_HEADER, adminUserId),
+                          OBJECT_MAPPER.writeValueAsString(List.of(piUser)))
                 .getBody()
                 .as(CREATED_RESPONSE_TYPE)
                 .get(CreationEnum.CREATED_ACCOUNTS)
