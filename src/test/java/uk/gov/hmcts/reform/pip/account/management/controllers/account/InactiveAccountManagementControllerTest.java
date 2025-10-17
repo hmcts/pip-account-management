@@ -38,14 +38,6 @@ class InactiveAccountManagementControllerTest {
     }
 
     @Test
-    void testNotifyInactiveAdminAccounts() {
-        doNothing().when(inactiveAccountManagementService).notifyAdminUsersToSignIn();
-        assertThat(inactiveAccountManagementController.notifyInactiveAdminAccounts().getStatusCode())
-            .as(STATUS_CODE_MATCH)
-            .isEqualTo(HttpStatus.NO_CONTENT);
-    }
-
-    @Test
     void testDeleteExpiredAdminAccounts() {
         doNothing().when(inactiveAccountManagementService).findAdminAccountsForDeletion();
         assertThat(inactiveAccountManagementController.deleteExpiredAdminAccounts().getStatusCode())

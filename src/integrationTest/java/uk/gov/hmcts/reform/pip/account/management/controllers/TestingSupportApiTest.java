@@ -449,7 +449,6 @@ class TestingSupportApiTest extends IntegrationTestBase {
         newAccount.setEmail(EMAIL);
         newAccount.setPassword(password);
         newAccount.setDisplayName(GIVEN_NAME);
-        newAccount.setRole(ROLE);
         newAccount.setFirstName(GIVEN_NAME);
         newAccount.setSurname(SURNAME);
         return newAccount;

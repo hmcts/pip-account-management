@@ -42,21 +42,7 @@ public class SystemAdminAccount {
         azureAccount.setEmail(this.getEmail());
         azureAccount.setFirstName(firstName);
         azureAccount.setSurname(surname);
-        azureAccount.setRole(Roles.SYSTEM_ADMIN);
         return azureAccount;
-    }
-
-    public PiUser convertToPiUser(String provenanceUserId) {
-        LocalDateTime localDateTime = LocalDateTime.now(ZoneId.of("UTC"));
-        PiUser piUser = new PiUser();
-        piUser.setEmail(email);
-        piUser.setRoles(Roles.SYSTEM_ADMIN);
-        piUser.setUserProvenance(UserProvenances.PI_AAD);
-        piUser.setProvenanceUserId(provenanceUserId);
-        piUser.setLastVerifiedDate(localDateTime);
-        piUser.setLastSignedInDate(localDateTime);
-        piUser.setCreatedDate(localDateTime);
-        return piUser;
     }
 
     public PiUser convertToPiUser() {

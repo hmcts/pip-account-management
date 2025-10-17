@@ -46,7 +46,7 @@ public class AccountHelperBase extends FunctionalTestBase {
         return response.getBody().as(PiUser.class);
     }
 
-    protected Response createAccount(String email, String provenanceId, String requesterId)
+    protected Response createdVerifiedAccount(String email, String provenanceId, String requesterId)
         throws JsonProcessingException {
         return createAccount(email, provenanceId, Roles.VERIFIED, UserProvenances.PI_AAD, requesterId);
     }
@@ -57,8 +57,7 @@ public class AccountHelperBase extends FunctionalTestBase {
     }
 
     protected Response createAccount(String email, String provenanceId, Roles role, UserProvenances userProvenance,
-                                     String requesterId)
-        throws JsonProcessingException {
+                                     String requesterId) throws JsonProcessingException {
         PiUser piUser = new PiUser();
         piUser.setEmail(email);
         piUser.setRoles(role);
