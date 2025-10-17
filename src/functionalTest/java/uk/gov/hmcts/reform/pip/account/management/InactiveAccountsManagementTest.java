@@ -87,7 +87,8 @@ class InactiveAccountsManagementTest extends AccountHelperBase {
         adminUserId = systemAdminAccount.getUserId().toString();
 
         String ctscAdminId = getCreatedAccountUserId(
-            createAccount(generateEmail(), UUID.randomUUID().toString(), INTERNAL_ADMIN_CTSC, adminUserId));
+            createAccount(generateEmail(), UUID.randomUUID().toString(), INTERNAL_ADMIN_CTSC,
+                          UserProvenances.SSO, adminUserId));
         ctscAdminIssuerId = Map.of(REQUESTER_ID_HEADER, ctscAdminId);
 
         //ADD IDAM USER

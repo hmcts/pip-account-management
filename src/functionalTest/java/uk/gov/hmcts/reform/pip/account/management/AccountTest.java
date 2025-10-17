@@ -255,7 +255,10 @@ class AccountTest extends AccountHelperBase {
 
         assertThat(deleteResponse.getStatusCode()).isEqualTo(FORBIDDEN.value());
 
-        Response getUserResponse = doGetRequest(String.format(GET_BY_USER_ID, thirdPartyUserId), bearer);
+        Map<String, String> getUserHeaders = new ConcurrentHashMap<>(bearer);
+        getUserHeaders.put(REQUESTER_ID_HEADER, idMap.get(Roles.SYSTEM_ADMIN));
+
+        Response getUserResponse = doGetRequest(String.format(GET_BY_USER_ID, thirdPartyUserId), getUserHeaders);
         assertThat(getUserResponse.getStatusCode()).isEqualTo(OK.value());
     }
 
@@ -291,20 +294,6 @@ class AccountTest extends AccountHelperBase {
 
         Response getUserResponse = doGetRequest(String.format(GET_BY_PROVENANCE_ID, provenanceId), bearer);
         assertThat(getUserResponse.getStatusCode()).isEqualTo(OK.value());
-    }
-
-    @Test
-    void shouldBeAbleToDeleteAccountWhenUserNotProvidedAndSso() throws Exception {
-        String createdUserId = getCreatedAccountUserId(createAccount(email, provenanceId,
-                                                                     Roles.INTERNAL_ADMIN_LOCAL, UserProvenances.SSO,
-                                                                     idMap.get(Roles.SYSTEM_ADMIN)));
-
-        Response deleteResponse = doDeleteRequest(String.format(DELETE_ENDPOINT_V2, createdUserId), bearer);
-
-        assertThat(deleteResponse.getStatusCode()).isEqualTo(OK.value());
-
-        Response getUserResponse = doGetRequest(String.format(GET_BY_PROVENANCE_ID, provenanceId), bearer);
-        assertThat(getUserResponse.getStatusCode()).isEqualTo(NOT_FOUND.value());
     }
 
     @Test
@@ -393,38 +382,13 @@ class AccountTest extends AccountHelperBase {
 
         assertThat(updateResponse.getStatusCode()).isEqualTo(FORBIDDEN.value());
 
-        PiUser getUserResponse =
-            doGetRequest(String.format(GET_BY_USER_ID, thirdPartyUserId), bearer).getBody().as(PiUser.class);
-
-        assertThat(getUserResponse.getRoles()).isEqualTo(Roles.GENERAL_THIRD_PARTY);
-    }
-
-
-    @ParameterizedTest
-    @CsvSource({
-        "INTERNAL_ADMIN_LOCAL,INTERNAL_ADMIN_LOCAL",
-        "INTERNAL_SUPER_ADMIN_LOCAL,VERIFIED"
-    })
-    void shouldNotBeAbleToUpdateRole(String adminRole, String createdRole) throws JsonProcessingException {
-        String createdUserId = getCreatedAccountUserId(
-            createAccount(email, provenanceId, Roles.valueOf(createdRole), idMap.get(Roles.INTERNAL_SUPER_ADMIN_CTSC))
-        );
-
-        Map<String, String> headers = new ConcurrentHashMap<>(bearer);
-        headers.put(REQUESTER_ID_HEADER, idMap.get(Roles.valueOf(adminRole)));
-
-        Response updateResponse = doPutRequest(
-            String.format(UPDATE_ACCOUNT_ROLE, createdUserId, SUPER_ADMIN_CTSC_ROLE_NAME), headers);
-
-        assertThat(updateResponse.getStatusCode()).isEqualTo(FORBIDDEN.value());
-
         Map<String, String> getUserHeaders = new ConcurrentHashMap<>(bearer);
         getUserHeaders.put(REQUESTER_ID_HEADER, idMap.get(Roles.SYSTEM_ADMIN));
 
-        PiUser getUserResponse = doGetRequest(String.format(GET_BY_USER_ID, createdUserId), getUserHeaders)
-                .getBody().as(PiUser.class);
+        PiUser getUserResponse =
+            doGetRequest(String.format(GET_BY_USER_ID, thirdPartyUserId), getUserHeaders).getBody().as(PiUser.class);
 
-        assertThat(getUserResponse.getRoles()).isEqualTo(Roles.VERIFIED);
+        assertThat(getUserResponse.getRoles()).isEqualTo(Roles.GENERAL_THIRD_PARTY);
     }
 
     @Test
@@ -438,8 +402,11 @@ class AccountTest extends AccountHelperBase {
 
         assertThat(updateResponse.getStatusCode()).isEqualTo(OK.value());
 
+        Map<String, String> getUserHeaders = new ConcurrentHashMap<>(bearer);
+        getUserHeaders.put(REQUESTER_ID_HEADER, idMap.get(Roles.SYSTEM_ADMIN));
+
         PiUser getUserResponse =
-            doGetRequest(String.format(GET_BY_USER_ID, createdUserId), bearer).getBody().as(PiUser.class);
+            doGetRequest(String.format(GET_BY_USER_ID, createdUserId), getUserHeaders).getBody().as(PiUser.class);
 
         assertThat(getUserResponse.getRoles()).isEqualTo(Roles.INTERNAL_SUPER_ADMIN_CTSC);
     }

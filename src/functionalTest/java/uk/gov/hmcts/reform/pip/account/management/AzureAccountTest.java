@@ -11,6 +11,7 @@ import uk.gov.hmcts.reform.pip.account.management.model.account.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.utils.AccountHelperBase;
 import uk.gov.hmcts.reform.pip.model.account.PiUser;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
+import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,7 +40,7 @@ class AzureAccountTest extends AccountHelperBase {
         systemAdminUserId = systemAdminUser.getUserId();
 
         adminCtscUserId = getCreatedAccountUserId(
-            createAccount(generateEmail(), UUID.randomUUID().toString(), Roles.INTERNAL_ADMIN_CTSC, systemAdminUserId));
+            createAccount(generateEmail(), UUID.randomUUID().toString(), Roles.INTERNAL_ADMIN_CTSC, UserProvenances.SSO, systemAdminUserId));
 
         headers = new ConcurrentHashMap<>(bearer);
         headers.put(REQUESTER_ID_HEADER, adminCtscUserId);
