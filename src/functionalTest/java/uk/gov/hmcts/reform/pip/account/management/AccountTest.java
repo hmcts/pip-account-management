@@ -264,16 +264,36 @@ class AccountTest extends AccountHelperBase {
 
     @ParameterizedTest
     @CsvSource({
-        "INTERNAL_ADMIN_LOCAL,INTERNAL_ADMIN_LOCAL",
-        "INTERNAL_SUPER_ADMIN_CTSC,INTERNAL_ADMIN_LOCAL",
-        "INTERNAL_SUPER_ADMIN_CTSC,VERIFIED"
+        "INTERNAL_ADMIN_LOCAL",
+        "INTERNAL_ADMIN_CTSC",
+        "INTERNAL_SUPER_ADMIN_CTSC",
+        "INTERNAL_SUPER_ADMIN_LOCAL,"
     })
-    void shouldNotBeAbleToDeleteAccount(String adminRole, String createdRole) throws Exception {
-        String createdUserId = getCreatedAccountUserId(createAccount(email, provenanceId, Roles.valueOf(createdRole),
+    void shouldBeAbleToDeleteTheirOwnAccountWhenAdmin(String adminRole) throws Exception {
+        String createdUserId = getCreatedAccountUserId(createAccount(email, provenanceId, Roles.valueOf(adminRole),
+                                                                     UserProvenances.SSO,
                                                                      idMap.get(Roles.INTERNAL_SUPER_ADMIN_CTSC)));
 
         Map<String, String> headers = new ConcurrentHashMap<>(bearer);
-        headers.put(REQUESTER_ID_HEADER, idMap.get(Roles.valueOf(adminRole)));
+        headers.put(REQUESTER_ID_HEADER, createdUserId);
+
+        Response deleteResponse = doDeleteRequest(String.format(DELETE_ENDPOINT_V2, createdUserId), headers);
+
+        assertThat(deleteResponse.getStatusCode()).isEqualTo(OK.value());
+
+        headers.put(REQUESTER_ID_HEADER, idMap.get(Roles.SYSTEM_ADMIN));
+
+        Response getUserResponse = doGetRequest(String.format(GET_BY_PROVENANCE_ID, provenanceId), bearer);
+        assertThat(getUserResponse.getStatusCode()).isEqualTo(NOT_FOUND.value());
+    }
+
+    @Test
+    void shouldNotBeAbleToDeleteAccountWhenVerified() throws Exception {
+        String createdUserId = getCreatedAccountUserId(createdVerifiedAccount(email, provenanceId,
+                                                                     idMap.get(Roles.INTERNAL_SUPER_ADMIN_CTSC)));
+
+        Map<String, String> headers = new ConcurrentHashMap<>(bearer);
+        headers.put(REQUESTER_ID_HEADER, createdUserId);
 
         Response deleteResponse = doDeleteRequest(String.format(DELETE_ENDPOINT_V2, createdUserId), headers);
 
