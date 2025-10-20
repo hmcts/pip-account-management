@@ -73,7 +73,7 @@ public class AccountAuthorisationService {
         //System admins can delete any account, admin users can only delete their own account (via SSO process)
         if (authorisationCommonService.hasOAuthAdminRole()
             && (authorisationCommonService.isSystemAdmin(adminUserId)
-            || (authorisationCommonService.isUserAdmin(userId) && adminUserId.equals(userId)))) {
+            || (authorisationCommonService.isUserAdmin(adminUserId) && adminUserId.equals(userId)))) {
 
             return true;
         }

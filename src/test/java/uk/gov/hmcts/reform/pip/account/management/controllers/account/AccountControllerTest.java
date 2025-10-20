@@ -130,15 +130,8 @@ class AccountControllerTest {
     }
 
     @Test
-    void testDeleteAccount() {
-        assertThat(accountController.deleteAccount(UUID.randomUUID(), UUID.randomUUID()).getStatusCode())
-            .as(STATUS_CODE_MATCH)
-            .isEqualTo(HttpStatus.OK);
-    }
-
-    @Test
     void testDeleteV2Account() {
-        assertThat(accountController.deleteAccountV2(UUID.randomUUID(), UUID.randomUUID()).getStatusCode())
+        assertThat(accountController.deleteAccount(UUID.randomUUID(), UUID.randomUUID()).getStatusCode())
             .as(STATUS_CODE_MATCH)
             .isEqualTo(HttpStatus.OK);
     }

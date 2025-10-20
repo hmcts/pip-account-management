@@ -33,7 +33,6 @@ import static org.mockito.Mockito.when;
 import static uk.gov.hmcts.reform.pip.model.account.Roles.GENERAL_THIRD_PARTY;
 import static uk.gov.hmcts.reform.pip.model.account.Roles.INTERNAL_ADMIN_CTSC;
 import static uk.gov.hmcts.reform.pip.model.account.Roles.INTERNAL_ADMIN_LOCAL;
-import static uk.gov.hmcts.reform.pip.model.account.Roles.INTERNAL_SUPER_ADMIN_LOCAL;
 import static uk.gov.hmcts.reform.pip.model.account.Roles.SYSTEM_ADMIN;
 import static uk.gov.hmcts.reform.pip.model.account.Roles.VERIFIED;
 import static uk.gov.hmcts.reform.pip.model.account.Roles.VERIFIED_THIRD_PARTY_PRESS;
@@ -49,18 +48,10 @@ class AccountAuthorisationServiceTest {
     private static final String INTERNAL_ADMIN_CTSC_ROLE = "INTERNAL_ADMIN_CTSC";
 
     private static final String UNAUTHORIZED_MESSAGE = "User should not be able to perform action when unauthorised";
-    private static final String DELETE_ERROR_LOG = "User with ID %s is not authorised to delete this account";
-    private static final String UPDATE_ERROR_LOG = "Only SSO users can be updated via the automated process";
-    private static final String UPDATE_OWN_ACCOUNT_ERROR_LOG =
-        "User with ID %s is forbidden to update their own account";
-    private static final String CAN_DELETE_ACCOUNT_MESSAGE = "User should be able to delete account";
-    private static final String CANNOT_DELETE_ACCOUNT_MESSAGE = "User should not be able to delete account";
     private static final String CAN_UPDATE_ACCOUNT_MESSAGE = "User should be able to update account";
     private static final String CANNOT_UPDATE_ACCOUNT_MESSAGE = "User should not be able to update account";
     private static final String CANNOT_CREATE_ACCOUNT_MESSAGE = "User should not be able to create account";
-    private static final String LOG_EMPTY_MESSAGE = "Error log should be empty";
     private static final String LOG_NOT_EMPTY_MESSAGE = "Error log should not be empty";
-    private static final String LOG_MATCHED_MESSAGE = "Error log message does not match";
     private static final String EXCEPTION_MATCHED_MESSAGE = "Exception message does not match";
 
     private static PiUser user = new PiUser();
@@ -81,7 +72,7 @@ class AccountAuthorisationServiceTest {
 
     @BeforeEach
     void beforeEachSetup() {
-        when(authorisationCommonService.hasOAuthAdminRole()).thenReturn(true);
+        lenient().when(authorisationCommonService.hasOAuthAdminRole()).thenReturn(true);
     }
 
     @BeforeAll
@@ -101,22 +92,49 @@ class AccountAuthorisationServiceTest {
         assertTrue(accountAuthorisationService.userCanDeleteAccount(USER_ID, ADMIN_USER_ID));
     }
 
+    @Test
+    void testFalseWhenNoUserProvidedOnDelete() {
+        adminUser.setRoles(SYSTEM_ADMIN);
+        assertFalse(accountAuthorisationService.userCanDeleteAccount(null, ADMIN_USER_ID));
+    }
+
+    @Test
+    void testFalseWhenNoAdminProvidedOnDelete() {
+        adminUser.setRoles(SYSTEM_ADMIN);
+        assertFalse(accountAuthorisationService.userCanDeleteAccount(ADMIN_USER_ID, null));
+    }
+
     @ParameterizedTest
-    @EnumSource(value = Roles.class, names = { SYSTEM_ADMIN_ROLE }, mode = EnumSource.Mode.EXCLUDE)
-    void testUserCanNotDeleteAccountWhenNotSystemAdmin(Roles role) {
+    @EnumSource(value = Roles.class, names = { "INTERNAL_ADMIN_LOCAL", INTERNAL_ADMIN_CTSC_ROLE,
+        "INTERNAL_SUPER_ADMIN_LOCAL", INTERNAL_SUPER_ADMIN_CTSC_ROLE })
+    void testNonSystemAdminCanDeleteAccountWhenTheirOwnAccount(Roles role) {
         adminUser.setRoles(role);
+        when(authorisationCommonService.isSystemAdmin(ADMIN_USER_ID)).thenReturn(false);
+        when(authorisationCommonService.isUserAdmin(ADMIN_USER_ID)).thenReturn(true);
+
+        assertTrue(accountAuthorisationService.userCanDeleteAccount(ADMIN_USER_ID, ADMIN_USER_ID));
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = Roles.class, names = { "INTERNAL_ADMIN_LOCAL", INTERNAL_ADMIN_CTSC_ROLE,
+        "INTERNAL_SUPER_ADMIN_LOCAL", INTERNAL_SUPER_ADMIN_CTSC_ROLE })
+    void testNonSystemAdminsCannotDeleteAnotherAccount(Roles role) {
+        adminUser.setRoles(role);
+        when(authorisationCommonService.isSystemAdmin(ADMIN_USER_ID)).thenReturn(false);
+        when(authorisationCommonService.isUserAdmin(ADMIN_USER_ID)).thenReturn(true);
 
         assertFalse(accountAuthorisationService.userCanDeleteAccount(USER_ID, ADMIN_USER_ID));
     }
 
-    @Test
-    void testAdminUserCanDeleteTheirOwnAccount() {
-        adminUser.setRoles(INTERNAL_SUPER_ADMIN_LOCAL);
-        user.setRoles(INTERNAL_SUPER_ADMIN_LOCAL);
+    @ParameterizedTest
+    @EnumSource(value = Roles.class, names = { "INTERNAL_ADMIN_LOCAL", INTERNAL_ADMIN_CTSC_ROLE,
+        "INTERNAL_SUPER_ADMIN_LOCAL", INTERNAL_SUPER_ADMIN_CTSC_ROLE, "SYSTEM_ADMIN" }, mode = EnumSource.Mode.EXCLUDE)
+    void testNonAdminsCannotDeleteTheirOwnAccount(Roles role) {
+        adminUser.setRoles(role);
         when(authorisationCommonService.isSystemAdmin(ADMIN_USER_ID)).thenReturn(false);
-        when(authorisationCommonService.isUserAdmin(USER_ID)).thenReturn(true);
+        when(authorisationCommonService.isUserAdmin(ADMIN_USER_ID)).thenReturn(false);
 
-        assertFalse(accountAuthorisationService.userCanDeleteAccount(USER_ID, ADMIN_USER_ID));
+        assertFalse(accountAuthorisationService.userCanDeleteAccount(ADMIN_USER_ID, ADMIN_USER_ID));
     }
 
     @Test
@@ -357,9 +375,9 @@ class AccountAuthorisationServiceTest {
     }
 
     @Test
-    void testSystemAdminUserCannotUpdateUsers() {
+    void testCannotDeleteAccountWhenAdminIdProvided() {
         user.setRoles(SYSTEM_ADMIN);
-        user.setUserProvenance(UserProvenances.PI_AAD);
+        user.setUserProvenance(UserProvenances.SSO);
         adminUser.setRoles(SYSTEM_ADMIN);
 
         when(userRepository.findByUserId(USER_ID)).thenReturn(Optional.of(user));
@@ -381,33 +399,43 @@ class AccountAuthorisationServiceTest {
     }
 
     @Test
-    void testSystemAdminUserCannotUpdateSystemAdminWhenUnauthorized() {
-        user.setRoles(SYSTEM_ADMIN);
-        user.setUserProvenance(UserProvenances.PI_AAD);
+    void testCannotDeleteAccountWhenAdminIdNotProvidedAndNotSso() {
+        verifiedUser.setRoles(VERIFIED);
+        verifiedUser.setUserProvenance(UserProvenances.PI_AAD);
         adminUser.setRoles(SYSTEM_ADMIN);
+
+        when(userRepository.findByUserId(USER_ID)).thenReturn(Optional.of(verifiedUser));
+        when(authorisationCommonService.hasOAuthAdminRole()).thenReturn(true);
+
+        try (LogCaptor logCaptor = LogCaptor.forClass(AccountAuthorisationService.class)) {
+            SoftAssertions softly = new SoftAssertions();
+
+            softly.assertThat(accountAuthorisationService.userCanUpdateAccount(USER_ID, null))
+                .as(CANNOT_UPDATE_ACCOUNT_MESSAGE)
+                .isFalse();
+
+            softly.assertThat(logCaptor.getErrorLogs())
+                .as(LOG_NOT_EMPTY_MESSAGE)
+                .hasSize(1);
+
+            softly.assertAll();
+        }
+    }
+
+    @Test
+    void testCannotUpdateUserWhenAuthorised() {
+        user.setRoles(SYSTEM_ADMIN);
+        user.setUserProvenance(UserProvenances.SSO);
 
         when(authorisationCommonService.hasOAuthAdminRole()).thenReturn(false);
 
         SoftAssertions softly = new SoftAssertions();
 
-        softly.assertThat(accountAuthorisationService.userCanUpdateAccount(USER_ID, ADMIN_USER_ID))
+        softly.assertThat(accountAuthorisationService.userCanUpdateAccount(USER_ID, null))
             .as(UNAUTHORIZED_MESSAGE)
             .isFalse();
 
         softly.assertAll();
-    }
-
-    @ParameterizedTest
-    @EnumSource(Roles.class)
-    void testSystemAdminUserCannotUpdateAnyRoles(Roles role) {
-        user.setRoles(role);
-        user.setUserProvenance(UserProvenances.SSO);
-        adminUser.setRoles(SYSTEM_ADMIN);
-
-        when(userRepository.findByUserId(USER_ID)).thenReturn(Optional.of(user));
-
-        assertFalse(accountAuthorisationService.userCanUpdateAccount(USER_ID, ADMIN_USER_ID),
-                    CANNOT_UPDATE_ACCOUNT_MESSAGE);
     }
 
     @ParameterizedTest
@@ -422,261 +450,6 @@ class AccountAuthorisationServiceTest {
                     CAN_UPDATE_ACCOUNT_MESSAGE);
     }
 
-    @ParameterizedTest
-    @EnumSource(Roles.class)
-    void testCannotUpdateAccountIfBackgroundProcessAndNotSso(Roles role) {
-        user.setRoles(role);
-        user.setUserProvenance(UserProvenances.PI_AAD);
-
-        when(userRepository.findByUserId(USER_ID)).thenReturn(Optional.of(user));
-
-        assertFalse(accountAuthorisationService.userCanUpdateAccount(USER_ID, null),
-                   CAN_UPDATE_ACCOUNT_MESSAGE);
-    }
-
-    @Test
-    void testSuperAdminUserCannotUpdateAndDeleteSystemAdmin() {
-        user.setRoles(SYSTEM_ADMIN);
-        user.setUserProvenance(UserProvenances.PI_AAD);
-        adminUser.setRoles(INTERNAL_SUPER_ADMIN_LOCAL);
-
-        when(userRepository.findByUserId(USER_ID)).thenReturn(Optional.of(user));
-        when(authorisationCommonService.isSystemAdmin(ADMIN_USER_ID)).thenReturn(false);
-        when(authorisationCommonService.isUserAdmin(USER_ID)).thenReturn(true);
-
-        try (LogCaptor logCaptor = LogCaptor.forClass(AccountAuthorisationService.class)) {
-            SoftAssertions softly = new SoftAssertions();
-
-            softly.assertThat(accountAuthorisationService.userCanDeleteAccount(USER_ID, ADMIN_USER_ID))
-                .as(CANNOT_DELETE_ACCOUNT_MESSAGE)
-                .isFalse();
-
-            softly.assertThat(accountAuthorisationService.userCanUpdateAccount(USER_ID, ADMIN_USER_ID))
-                .as(CANNOT_UPDATE_ACCOUNT_MESSAGE)
-                .isFalse();
-
-            softly.assertThat(logCaptor.getErrorLogs())
-                .as(LOG_NOT_EMPTY_MESSAGE)
-                .hasSize(2);
-
-            softly.assertThat(logCaptor.getErrorLogs().get(0))
-                .as(LOG_MATCHED_MESSAGE)
-                .contains(String.format(DELETE_ERROR_LOG, ADMIN_USER_ID));
-
-            softly.assertThat(logCaptor.getErrorLogs().get(1))
-                .as(LOG_MATCHED_MESSAGE)
-                .contains(String.format(UPDATE_ERROR_LOG, ADMIN_USER_ID, USER_ID));
-
-            softly.assertAll();
-        }
-    }
-
-    @Test
-    void testSuperAdminUserCannotUpdateAndDeleteVerifiedAccount() {
-        user.setRoles(VERIFIED);
-        user.setUserProvenance(UserProvenances.PI_AAD);
-        adminUser.setRoles(INTERNAL_SUPER_ADMIN_LOCAL);
-
-        when(userRepository.findByUserId(USER_ID)).thenReturn(Optional.of(user));
-        when(authorisationCommonService.hasOAuthAdminRole()).thenReturn(true);
-
-        try (LogCaptor logCaptor = LogCaptor.forClass(AccountAuthorisationService.class)) {
-            SoftAssertions softly = new SoftAssertions();
-
-            softly.assertThat(accountAuthorisationService.userCanDeleteAccount(USER_ID, ADMIN_USER_ID))
-                .as(CANNOT_DELETE_ACCOUNT_MESSAGE)
-                .isFalse();
-
-            softly.assertThat(accountAuthorisationService.userCanUpdateAccount(USER_ID, ADMIN_USER_ID))
-                .as(CANNOT_UPDATE_ACCOUNT_MESSAGE)
-                .isFalse();
-
-            softly.assertThat(logCaptor.getErrorLogs())
-                .as(LOG_NOT_EMPTY_MESSAGE)
-                .hasSize(2);
-
-            softly.assertThat(logCaptor.getErrorLogs().get(0))
-                .as(LOG_MATCHED_MESSAGE)
-                .contains(String.format(DELETE_ERROR_LOG, ADMIN_USER_ID));
-
-            softly.assertThat(logCaptor.getErrorLogs().get(1))
-                .as(LOG_MATCHED_MESSAGE)
-                .contains(String.format(UPDATE_ERROR_LOG, ADMIN_USER_ID, USER_ID));
-
-            softly.assertAll();
-        }
-    }
-
-    @Test
-    void testSuperAdminUserCannotUpdateAndDeleteThirdPartyAccount() {
-        user.setRoles(GENERAL_THIRD_PARTY);
-        user.setUserProvenance(UserProvenances.PI_AAD);
-        adminUser.setRoles(INTERNAL_SUPER_ADMIN_LOCAL);
-
-        when(userRepository.findByUserId(USER_ID)).thenReturn(Optional.of(user));
-
-        try (LogCaptor logCaptor = LogCaptor.forClass(AccountAuthorisationService.class)) {
-            SoftAssertions softly = new SoftAssertions();
-
-            softly.assertThat(accountAuthorisationService.userCanDeleteAccount(USER_ID, ADMIN_USER_ID))
-                .as(CANNOT_DELETE_ACCOUNT_MESSAGE)
-                .isFalse();
-
-            softly.assertThat(accountAuthorisationService.userCanUpdateAccount(USER_ID, ADMIN_USER_ID))
-                .as(CANNOT_UPDATE_ACCOUNT_MESSAGE)
-                .isFalse();
-
-            softly.assertThat(logCaptor.getErrorLogs())
-                .as(LOG_NOT_EMPTY_MESSAGE)
-                .hasSize(2);
-
-            softly.assertThat(logCaptor.getErrorLogs().get(0))
-                .as(LOG_MATCHED_MESSAGE)
-                .contains(String.format(DELETE_ERROR_LOG, ADMIN_USER_ID));
-
-            softly.assertThat(logCaptor.getErrorLogs().get(1))
-                .as(LOG_MATCHED_MESSAGE)
-                .contains(String.format(UPDATE_ERROR_LOG, ADMIN_USER_ID, USER_ID));
-
-            softly.assertAll();
-        }
-    }
-
-    @Test
-    void testAdminUserCannotUpdateAndDeleteAccount() {
-        user.setRoles(INTERNAL_ADMIN_LOCAL);
-        user.setUserProvenance(UserProvenances.PI_AAD);
-        adminUser.setRoles(INTERNAL_ADMIN_LOCAL);
-
-        when(userRepository.findByUserId(USER_ID)).thenReturn(Optional.of(user));
-
-        try (LogCaptor logCaptor = LogCaptor.forClass(AccountAuthorisationService.class)) {
-            SoftAssertions softly = new SoftAssertions();
-
-            softly.assertThat(accountAuthorisationService.userCanDeleteAccount(USER_ID, ADMIN_USER_ID))
-                .as(CANNOT_DELETE_ACCOUNT_MESSAGE)
-                .isFalse();
-
-            softly.assertThat(accountAuthorisationService.userCanUpdateAccount(USER_ID, ADMIN_USER_ID))
-                .as(CANNOT_UPDATE_ACCOUNT_MESSAGE)
-                .isFalse();
-
-            softly.assertThat(logCaptor.getErrorLogs())
-                .as(LOG_NOT_EMPTY_MESSAGE)
-                .hasSize(2);
-
-            softly.assertThat(logCaptor.getErrorLogs().get(0))
-                .as(LOG_MATCHED_MESSAGE)
-                .contains(String.format(DELETE_ERROR_LOG, ADMIN_USER_ID));
-
-            softly.assertThat(logCaptor.getErrorLogs().get(1))
-                .as(LOG_MATCHED_MESSAGE)
-                .contains(String.format(UPDATE_ERROR_LOG, ADMIN_USER_ID, USER_ID));
-
-            softly.assertAll();
-        }
-    }
-
-    @Test
-    void testVerifiedUserCannotUpdateAndDeleteAccount() {
-        user.setRoles(VERIFIED);
-        user.setUserProvenance(UserProvenances.PI_AAD);
-        adminUser.setRoles(VERIFIED);
-
-        when(userRepository.findByUserId(USER_ID)).thenReturn(Optional.of(user));
-        when(authorisationCommonService.hasOAuthAdminRole()).thenReturn(true);
-
-        try (LogCaptor logCaptor = LogCaptor.forClass(AccountAuthorisationService.class)) {
-            SoftAssertions softly = new SoftAssertions();
-
-            softly.assertThat(accountAuthorisationService.userCanDeleteAccount(USER_ID, ADMIN_USER_ID))
-                .as(CANNOT_DELETE_ACCOUNT_MESSAGE)
-                .isFalse();
-
-            softly.assertThat(accountAuthorisationService.userCanUpdateAccount(USER_ID, ADMIN_USER_ID))
-                .as(CANNOT_UPDATE_ACCOUNT_MESSAGE)
-                .isFalse();
-
-            softly.assertThat(logCaptor.getErrorLogs())
-                .as(LOG_NOT_EMPTY_MESSAGE)
-                .hasSize(2);
-
-            softly.assertThat(logCaptor.getErrorLogs().get(0))
-                .as(LOG_MATCHED_MESSAGE)
-                .contains(String.format(DELETE_ERROR_LOG, ADMIN_USER_ID));
-
-            softly.assertThat(logCaptor.getErrorLogs().get(1))
-                .as(LOG_MATCHED_MESSAGE)
-                .contains(String.format(UPDATE_ERROR_LOG, ADMIN_USER_ID, USER_ID));
-
-            softly.assertAll();
-        }
-    }
-
-    @Test
-    void testThirdPartyUserCannotUpdateAndDeleteAccount() {
-        user.setRoles(INTERNAL_ADMIN_LOCAL);
-        user.setUserProvenance(UserProvenances.PI_AAD);
-        adminUser.setRoles(GENERAL_THIRD_PARTY);
-
-        when(userRepository.findByUserId(USER_ID)).thenReturn(Optional.of(user));
-        when(authorisationCommonService.isSystemAdmin(ADMIN_USER_ID)).thenReturn(false);
-        when(authorisationCommonService.isUserAdmin(USER_ID)).thenReturn(false);
-
-        try (LogCaptor logCaptor = LogCaptor.forClass(AccountAuthorisationService.class)) {
-            SoftAssertions softly = new SoftAssertions();
-
-            softly.assertThat(accountAuthorisationService.userCanDeleteAccount(USER_ID, ADMIN_USER_ID))
-                .as(CANNOT_DELETE_ACCOUNT_MESSAGE)
-                .isFalse();
-
-            softly.assertThat(accountAuthorisationService.userCanUpdateAccount(USER_ID, ADMIN_USER_ID))
-                .as(CANNOT_UPDATE_ACCOUNT_MESSAGE)
-                .isFalse();
-
-            softly.assertThat(logCaptor.getErrorLogs())
-                .as(LOG_NOT_EMPTY_MESSAGE)
-                .hasSize(2);
-
-            softly.assertThat(logCaptor.getErrorLogs().get(0))
-                .as(LOG_MATCHED_MESSAGE)
-                .contains(String.format(DELETE_ERROR_LOG, ADMIN_USER_ID));
-
-            softly.assertThat(logCaptor.getErrorLogs().get(1))
-                .as(LOG_MATCHED_MESSAGE)
-                .contains(String.format(UPDATE_ERROR_LOG, ADMIN_USER_ID, USER_ID));
-
-            softly.assertAll();
-        }
-    }
-
-    @Test
-    void testSsoUserCanBeUpdatedAndDeletedWhenDrivenFromSystemProcess() {
-        user.setRoles(INTERNAL_ADMIN_LOCAL);
-        user.setUserProvenance(UserProvenances.SSO);
-        adminUser.setRoles(SYSTEM_ADMIN);
-
-        when(userRepository.findByUserId(USER_ID)).thenReturn(Optional.of(user));
-        when(authorisationCommonService.isSystemAdmin(ADMIN_USER_ID)).thenReturn(true);
-
-        try (LogCaptor logCaptor = LogCaptor.forClass(AccountAuthorisationService.class)) {
-            SoftAssertions softly = new SoftAssertions();
-
-            softly.assertThat(accountAuthorisationService.userCanDeleteAccount(USER_ID, ADMIN_USER_ID))
-                .as(CAN_DELETE_ACCOUNT_MESSAGE)
-                .isTrue();
-
-            softly.assertThat(accountAuthorisationService.userCanUpdateAccount(USER_ID, null))
-                .as(CAN_UPDATE_ACCOUNT_MESSAGE)
-                .isTrue();
-
-            softly.assertThat(logCaptor.getErrorLogs())
-                .as(LOG_EMPTY_MESSAGE)
-                .isEmpty();
-
-            softly.assertAll();
-        }
-    }
 
     @Test
     void testExceptionThrowIfUserNotFound() {

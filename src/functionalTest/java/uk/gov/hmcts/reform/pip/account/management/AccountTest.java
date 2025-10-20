@@ -63,7 +63,11 @@ class AccountTest extends AccountHelperBase {
     @AfterAll
     public void teardown() {
         doDeleteRequest(TESTING_SUPPORT_DELETE_ACCOUNT_URL + TEST_EMAIL_PREFIX, bearer);
-        doDeleteRequest(String.format(DELETE_ACCOUNT, thirdPartyUserId), bearer);
+
+        Map<String, String> headers = new ConcurrentHashMap<>(bearer);
+        headers.put(REQUESTER_ID_HEADER, idMap.get(Roles.SYSTEM_ADMIN));
+
+        doDeleteRequest(String.format(DELETE_ACCOUNT, thirdPartyUserId), headers);
     }
 
     private List<PiUser> generateThirdParty() {
@@ -180,21 +184,6 @@ class AccountTest extends AccountHelperBase {
 
         assertThat(user.getLastVerifiedDate()).isEqualTo(LocalDateTime.parse("2024-12-01T01:01:01"));
         assertThat(user.getLastSignedInDate()).isEqualTo(LocalDateTime.parse("2024-12-02T01:01:01"));
-    }
-
-    @Test
-    void shouldBeAbleToDeleteAccount() throws Exception {
-        String createdUserId = getCreatedAccountUserId(createdVerifiedAccount(email, provenanceId,
-                                                                     idMap.get(Roles.INTERNAL_SUPER_ADMIN_CTSC)));
-
-        Map<String, String> headers = new ConcurrentHashMap<>(bearer);
-        headers.put(REQUESTER_ID_HEADER, idMap.get(Roles.SYSTEM_ADMIN));
-        Response deleteResponse = doDeleteRequest(String.format(DELETE_ACCOUNT, createdUserId), headers);
-
-        assertThat(deleteResponse.getStatusCode()).isEqualTo(OK.value());
-
-        Response getUserResponse = doGetRequest(String.format(GET_BY_PROVENANCE_ID, provenanceId), headers);
-        assertThat(getUserResponse.getStatusCode()).isEqualTo(NOT_FOUND.value());
     }
 
     @ParameterizedTest
@@ -385,7 +374,7 @@ class AccountTest extends AccountHelperBase {
     }
 
     @Test
-    void shouldNotBeAbleToUpdateThirdPartyRoleIfInternalAdminLocal() throws JsonProcessingException {
+    void shouldNotBeAbleToUpdateThirdPartyRole() throws JsonProcessingException {
         List<PiUser> thirdParty = generateThirdParty();
         Map<String, String> headers = new ConcurrentHashMap<>(bearer);
         headers.put(REQUESTER_ID_HEADER, idMap.get(Roles.SYSTEM_ADMIN));
