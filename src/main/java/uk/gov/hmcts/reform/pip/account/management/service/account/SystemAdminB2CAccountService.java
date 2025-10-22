@@ -60,8 +60,8 @@ public class SystemAdminB2CAccountService {
      * @param issuerId The ID of the user creating the account.
      * @return  The PiUser of the created system admin account.
      */
-    public PiUser addSystemAdminAccount(SystemAdminAccount account, String issuerId) {
-        PiUser piUser = accountService.getUserById(UUID.fromString(issuerId));
+    public PiUser addSystemAdminAccount(SystemAdminAccount account, UUID issuerId) {
+        PiUser piUser = accountService.getUserById(issuerId);
         validateSystemAdminAccount(account, issuerId, piUser.getEmail());
         try {
             User user = azureUserService.createUser(account.convertToAzureAccount(), false);
@@ -89,9 +89,9 @@ public class SystemAdminB2CAccountService {
      * @param adminId The ID of the admin user who is creating the account.
      * @param email The email of the admin user who is creating the account
      */
-    public void handleNewSystemAdminAccountAction(SystemAdminAccount systemAdminAccount, String adminId,
+    public void handleNewSystemAdminAccountAction(SystemAdminAccount systemAdminAccount, UUID adminId,
                                                   ActionResult result, String email) {
-        log.info(writeLog(UUID.fromString(adminId),
+        log.info(writeLog(adminId,
                           "has attempted to create a System Admin account, which has: " + result.toString()));
 
         List<String> existingAdminEmails = userRepository.findByRoles(Roles.SYSTEM_ADMIN)
@@ -112,7 +112,7 @@ public class SystemAdminB2CAccountService {
      * @param issuerId The ID of the admin user that is issuing the account.
      * @param email The email of the admin user requesting the account.
      */
-    private void validateSystemAdminAccount(SystemAdminAccount account, String issuerId, String email) {
+    private void validateSystemAdminAccount(SystemAdminAccount account, UUID issuerId, String email) {
         Set<ConstraintViolation<SystemAdminAccount>> constraintViolationSet = validator.validate(account);
 
         if (!constraintViolationSet.isEmpty()) {

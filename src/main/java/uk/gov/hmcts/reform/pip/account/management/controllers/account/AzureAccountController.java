@@ -24,6 +24,7 @@ import uk.gov.hmcts.reform.pip.model.authentication.roles.IsAdmin;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @AllArgsConstructor
@@ -56,7 +57,7 @@ public class AzureAccountController {
     @PreAuthorize("@accountAuthorisationService.userCanCreateAzureAccount(#requesterId)")
     @PostMapping("/add/azure")
     public ResponseEntity<Map<CreationEnum, List<? extends AzureAccount>>> createAzureAccount(//NOSONAR
-        @RequestHeader(REQUESTER_ID) String requesterId, @RequestBody List<AzureAccount> azureAccounts) {
+        @RequestHeader(REQUESTER_ID) UUID requesterId, @RequestBody List<AzureAccount> azureAccounts) {
         return ResponseEntity.ok(azureAccountService.addAzureAccounts(azureAccounts, requesterId, false, false));
     }
 
