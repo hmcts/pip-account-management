@@ -20,6 +20,8 @@ import uk.gov.hmcts.reform.pip.account.management.model.subscription.Subscriptio
 import uk.gov.hmcts.reform.pip.account.management.service.subscription.SubscriptionListTypeService;
 import uk.gov.hmcts.reform.pip.model.authentication.roles.IsAdmin;
 
+import java.util.UUID;
+
 @RestController
 @Tag(name = "Account Management - API for managing list types for subscription")
 @RequestMapping("/subscription")
@@ -50,8 +52,8 @@ public class SubscriptionListTypeController {
         description = "This request object has an invalid format. Please check again.")
     @ApiResponse(responseCode = FORBIDDEN_ERROR_CODE,
         description = "User with ID {requesterId} is not authorised to update subscriptions for user with ID {userId}")
-    public ResponseEntity<String> addListTypesForSubscription(@RequestHeader(X_REQUESTER_ID_HEADER) String requesterId,
-                                                              @PathVariable String userId,
+    public ResponseEntity<String> addListTypesForSubscription(@RequestHeader(X_REQUESTER_ID_HEADER) UUID requesterId,
+                                                              @PathVariable UUID userId,
                                                               @RequestBody SubscriptionListType subscriptionListType) {
         subscriptionListTypeService.addListTypesForSubscription(subscriptionListType, userId);
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -70,8 +72,8 @@ public class SubscriptionListTypeController {
     @ApiResponse(responseCode = FORBIDDEN_ERROR_CODE,
         description = "User with ID {requesterId} is not authorised to update subscriptions for user with ID {userId}")
     public ResponseEntity<String> configureListTypesForSubscription(
-        @RequestHeader(X_REQUESTER_ID_HEADER) String requesterId,
-        @PathVariable String userId,
+        @RequestHeader(X_REQUESTER_ID_HEADER) UUID requesterId,
+        @PathVariable UUID userId,
         @RequestBody SubscriptionListType subscriptionListType
     ) {
         subscriptionListTypeService.configureListTypesForSubscription(subscriptionListType, userId);

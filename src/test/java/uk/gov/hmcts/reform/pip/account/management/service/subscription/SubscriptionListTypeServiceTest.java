@@ -29,7 +29,7 @@ import static uk.gov.hmcts.reform.pip.model.publication.ListType.CIVIL_DAILY_CAU
 class SubscriptionListTypeServiceTest {
     private static final UUID USER_ID = UUID.randomUUID();
     private static final UUID UNKNOWN_USER_ID = UUID.randomUUID();
-    private static final String ACTIONED_USER_ID = "actionId1";
+    private static final UUID ACTIONED_USER_ID = UUID.randomUUID();
     private static final String SUBSCRIPTION_CREATED_ERROR = "The returned subscription does "
         + "not match the expected subscription";
 
@@ -84,7 +84,7 @@ class SubscriptionListTypeServiceTest {
     void testAddListTypesForLocationSubscription() {
         when(subscriptionListTypeRepository.save(mockSubscriptionListType))
             .thenReturn(mockSubscriptionListType);
-        subscriptionListTypeService.addListTypesForSubscription(mockSubscriptionListType, USER_ID.toString());
+        subscriptionListTypeService.addListTypesForSubscription(mockSubscriptionListType, ACTIONED_USER_ID);
 
         assertEquals(USER_ID, mockSubscriptionListType.getUserId(),
                      SUBSCRIPTION_CREATED_ERROR

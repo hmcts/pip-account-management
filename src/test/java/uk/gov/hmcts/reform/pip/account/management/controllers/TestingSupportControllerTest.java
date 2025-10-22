@@ -27,7 +27,7 @@ class TestingSupportControllerTest {
     private static final String EMAIL_PREFIX = "TEST_PIP_1234_";
     private static final String LOCATION_NAME_PREFIX = "TEST_PIP_1235_";
     private static final String EMAIL = "test@test.com";
-    private static final String ISSUER_ID = "TESTING-SUPPORT";
+    private static final UUID ISSUER_ID = UUID.fromString("7d709648-a0e3-46aa-9d33-7e68c77f02da");
     private static final String MESSAGE = "Failed to create user";
 
     private static final String RESPONSE_STATUS_MESSAGE = "Response status does not match";

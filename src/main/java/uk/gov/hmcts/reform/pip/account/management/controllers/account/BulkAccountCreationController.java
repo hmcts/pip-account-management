@@ -20,6 +20,7 @@ import uk.gov.hmcts.reform.pip.model.authentication.roles.IsAdmin;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @Tag(name = "Account Management - API for bulk create media accounts")
@@ -45,7 +46,7 @@ public class BulkAccountCreationController {
     @PreAuthorize("@accountAuthorisationService.userCanBulkCreateMediaAccounts(#requesterId)")
     @PostMapping("/media-bulk-upload")
     public ResponseEntity<Map<CreationEnum, List<?>>> createMediaAccountsBulk(//NOSONAR
-        @RequestHeader(REQUESTER_ID) String requesterId, @RequestPart MultipartFile mediaList) {
+        @RequestHeader(REQUESTER_ID) UUID requesterId, @RequestPart MultipartFile mediaList) {
         return ResponseEntity.ok(bulkAccountCreationService.uploadMediaFromCsv(mediaList, requesterId));
     }
 }
