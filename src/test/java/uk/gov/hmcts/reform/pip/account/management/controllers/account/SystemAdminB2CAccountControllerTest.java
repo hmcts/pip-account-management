@@ -13,6 +13,8 @@ import uk.gov.hmcts.reform.pip.account.management.service.account.SystemAdminB2C
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
 
+import java.util.UUID;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 
@@ -37,7 +39,7 @@ class SystemAdminB2CAccountControllerTest {
         SystemAdminAccount testAccount = new SystemAdminAccount(TEST_EMAIL,
                                                                 "Test", "User");
 
-        String testIssuerId = "1234";
+        UUID testIssuerId = UUID.randomUUID();
         when(systemAdminAccountService.addSystemAdminAccount(testAccount, testIssuerId)).thenReturn(testUser);
 
         ResponseEntity<? extends PiUser> response = systemAdminAccountController.createSystemAdminAccount(
