@@ -40,8 +40,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
-import static org.springframework.http.HttpStatus.FORBIDDEN;
-import static org.springframework.http.HttpStatus.NOT_FOUND;
+import static org.springframework.http.HttpStatus.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -49,6 +48,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @WithMockUser(username = "admin", authorities = {"APPROLE_api.request.admin"})
 @SuppressWarnings({"PMD.UnitTestShouldIncludeAssert", "PMD.SignatureDeclareThrowsException"})
+@Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = "classpath:add-admin-users.sql")
 class AccountTest extends IntegrationTestBase {
 
     @Autowired
@@ -93,8 +93,6 @@ class AccountTest extends IntegrationTestBase {
     private static final String REPLACE_STRING = "%s/%s/%s";
     private static final String DELETE_USER_FAILURE = "Failed to delete user account";
     private static final String DELETE_USER_SUCCESS = "User deleted";
-    private static final String ADD_USERS_SCRIPT = "classpath:add-admin-users.sql";
-    private static final String ADD_VERIFIED_USERS_SCRIPT = "classpath:add-verified-users.sql";
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
@@ -148,7 +146,6 @@ class AccountTest extends IntegrationTestBase {
     }
 
     @Nested
-    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = ADD_USERS_SCRIPT)
     class CreateUserTests {
 
         @Test
@@ -164,14 +161,45 @@ class AccountTest extends IntegrationTestBase {
         @Test
         void testCreateThirdPartyUser() throws Exception {
             PiUser thirdPartyUser = createThirdPartyUser();
-            Map<CreationEnum, List<Object>> mappedResponse = createTestUser(thirdPartyUser);
+            Map<CreationEnum, List<Object>> mappedResponse = createTestThirdPartyUser(thirdPartyUser);
             assertEquals(1, mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).size(),
                          "1 User should be created"
             );
         }
 
         @Test
-        @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = ADD_USERS_SCRIPT)
+        void testCreatePiAadUserWithoutRequestorIdFails() throws Exception {
+            PiUser verifiedUser = new PiUser();
+            verifiedUser.setEmail("a@test.com");
+            verifiedUser.setProvenanceUserId(UUID.randomUUID().toString());
+            verifiedUser.setUserProvenance(PROVENANCE);
+            verifiedUser.setRoles(Roles.VERIFIED);
+
+            MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
+                .post(PI_URL)
+                .content(OBJECT_MAPPER.writeValueAsString(List.of(verifiedUser)))
+                .contentType(MediaType.APPLICATION_JSON);
+
+            mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isNotFound()).andReturn();
+        }
+
+        @Test
+        void testCreateNonPiAadUserWithoutRequestorId() throws Exception {
+            PiUser validUser = new PiUser();
+            validUser.setEmail("sso-test-user-cath@justice.gov.uk");
+            validUser.setProvenanceUserId(UUID.randomUUID().toString());
+            validUser.setUserProvenance(UserProvenances.SSO);
+            validUser.setRoles(Roles.INTERNAL_ADMIN_CTSC);
+
+            MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
+                .post(PI_URL)
+                .content(OBJECT_MAPPER.writeValueAsString(List.of(validUser)))
+                .contentType(MediaType.APPLICATION_JSON);
+
+            mockMvc.perform(mockHttpServletRequestBuilder).andExpect(status().isCreated()).andReturn();
+        }
+
+        @Test
         void testCreateMultipleSuccessUsers() throws Exception {
             User userToReturn = new User();
             userToReturn.setId(ID);
@@ -285,7 +313,6 @@ class AccountTest extends IntegrationTestBase {
         }
 
         @Test
-        @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = ADD_USERS_SCRIPT)
         void testUnauthorizedCreateThirdPartyUser() throws Exception {
             PiUser thirdPartyUser = createThirdPartyUser();
             MockHttpServletRequestBuilder request = MockMvcRequestBuilders
@@ -299,7 +326,6 @@ class AccountTest extends IntegrationTestBase {
     }
 
     @Nested
-    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = ADD_USERS_SCRIPT)
     class GetUserByIdTests {
 
         @Test
@@ -336,7 +362,6 @@ class AccountTest extends IntegrationTestBase {
     }
 
     @Nested
-    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = ADD_USERS_SCRIPT)
     class GetUserByProvenanceIdTests {
 
         @Test
@@ -388,7 +413,6 @@ class AccountTest extends IntegrationTestBase {
     }
 
     @Nested
-    @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = ADD_USERS_SCRIPT)
     class UpdateAccountTests {
 
         @Test
@@ -473,7 +497,6 @@ class AccountTest extends IntegrationTestBase {
     class DeleteUserAccountV2Tests {
 
         @Test
-        @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = ADD_USERS_SCRIPT)
         void testV2SystemAdminDeletesVerifiedUser() throws Exception {
             verifiedUser.setUserProvenance(UserProvenances.CFT_IDAM);
 
@@ -488,12 +511,11 @@ class AccountTest extends IntegrationTestBase {
         }
 
         @Test
-        @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = ADD_USERS_SCRIPT)
         void testV2SystemAdminDeletesThirdPartyUser() throws Exception {
             PiUser thirdPartyUser = createThirdPartyUser();
 
             MockHttpServletRequestBuilder deleteRequest = MockMvcRequestBuilders
-                .delete(ROOT_URL + DELETE_PATH_V2 + createTestUserAccount(thirdPartyUser))
+                .delete(ROOT_URL + DELETE_PATH_V2 + createTestThirdPartyUserValidAccount(thirdPartyUser))
                 .header(REQUESTER_ID_HEADER, SYSTEM_ADMIN_ID);
 
             MvcResult mvcResult = mockMvc.perform(deleteRequest).andExpect(status().isOk()).andReturn();
@@ -503,7 +525,6 @@ class AccountTest extends IntegrationTestBase {
         }
 
         @Test
-        @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = ADD_USERS_SCRIPT)
         void testV2SystemAdminDeletesSuperAdminUser() throws Exception {
             String superAdminUserId = getSuperAdminUserId(superAdminUser);
             String systemAdminUserId = getSystemAdminUserId();
@@ -532,7 +553,6 @@ class AccountTest extends IntegrationTestBase {
         }
 
         @Test
-        @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = ADD_USERS_SCRIPT)
         void testV2AdminDeletesOwnUser() throws Exception {
             String superAdminUserIdToDelete = getSuperAdminUserId(createAdminUser(true,
                                                                                   Roles.INTERNAL_SUPER_ADMIN_CTSC));
@@ -556,19 +576,14 @@ class AccountTest extends IntegrationTestBase {
         }
 
         @Test
-        @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD,
-            scripts = {ADD_USERS_SCRIPT, ADD_VERIFIED_USERS_SCRIPT})
         void testUnauthorizedDeleteAccountV2WhenNoUserId() throws Exception {
             MockHttpServletRequestBuilder request = MockMvcRequestBuilders
-                .delete(ROOT_URL + DELETE_PATH_V2 + USER_ID)
-                .header(REQUESTER_ID_HEADER, SYSTEM_ADMIN_ID);
+                .delete(ROOT_URL + DELETE_PATH_V2 + USER_ID);
 
-            assertRequestResponseStatus(mockMvc, request, NOT_FOUND.value());
+            assertRequestResponseStatus(mockMvc, request, FORBIDDEN.value());
         }
 
         @Test
-        @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD,
-            scripts = {ADD_USERS_SCRIPT, ADD_VERIFIED_USERS_SCRIPT})
         @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
         void testUnauthorizedDeleteAccountV2() throws Exception {
             MockHttpServletRequestBuilder request = MockMvcRequestBuilders
@@ -636,7 +651,8 @@ class AccountTest extends IntegrationTestBase {
                          + "/" + Roles.INTERNAL_ADMIN_LOCAL)
                 .header(REQUESTER_ID_HEADER, SUPER_ADMIN_ISSUER_ID);
 
-            mockMvc.perform(updateRequest).andExpect(status().isForbidden());
+            mockMvc.perform(updateRequest)
+                .andExpect(status().isForbidden());
         }
 
         @Test
@@ -649,8 +665,6 @@ class AccountTest extends IntegrationTestBase {
 
         @Test
         @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
-        @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD,
-            scripts = {ADD_USERS_SCRIPT, ADD_VERIFIED_USERS_SCRIPT})
         void testUnauthorizedUpdateAccountRole() throws Exception {
             MockHttpServletRequestBuilder request = MockMvcRequestBuilders
                 .put(ROOT_URL + UPDATE_PATH + SUPER_ADMIN_ISSUER_ID + "/" + Roles.INTERNAL_ADMIN_LOCAL);
@@ -745,7 +759,7 @@ class AccountTest extends IntegrationTestBase {
         );
     }
 
-    private Map<CreationEnum, List<Object>> createTestUser(PiUser... piUser) throws Exception {
+    private Map<CreationEnum, List<Object>> createTestThirdPartyUser(PiUser... piUser) throws Exception {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(PI_URL)
             .content(OBJECT_MAPPER.writeValueAsString(List.of(piUser)))
@@ -783,8 +797,8 @@ class AccountTest extends IntegrationTestBase {
         return createVerifiedUser(piUser).get(CreationEnum.CREATED_ACCOUNTS).getFirst().toString();
     }
 
-    private String createTestUserAccount(PiUser piUser) throws Exception {
-        return createTestUser(piUser).get(CreationEnum.CREATED_ACCOUNTS).getFirst().toString();
+    private String createTestThirdPartyUserValidAccount(PiUser piUser) throws Exception {
+        return createTestThirdPartyUser(piUser).get(CreationEnum.CREATED_ACCOUNTS).getFirst().toString();
     }
 
 }

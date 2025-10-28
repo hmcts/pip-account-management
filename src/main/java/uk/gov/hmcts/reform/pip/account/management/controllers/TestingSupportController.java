@@ -26,6 +26,8 @@ import uk.gov.hmcts.reform.pip.account.management.service.account.AccountService
 import uk.gov.hmcts.reform.pip.account.management.service.subscription.SubscriptionLocationService;
 import uk.gov.hmcts.reform.pip.model.authentication.roles.IsAdmin;
 
+import java.util.UUID;
+
 @RestController
 @Tag(name = "Account Management Testing Support API")
 @RequestMapping("/testing-support")
@@ -38,7 +40,9 @@ import uk.gov.hmcts.reform.pip.model.authentication.roles.IsAdmin;
 @ConditionalOnProperty(prefix = "testingSupport", name = "enableApi", havingValue = "true")
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
 public class TestingSupportController {
-    private static final String ISSUER_ID = "TESTING-SUPPORT";
+
+    //A randomly generated ID used to identify the calls via the Testing Support controller
+    private static final UUID ISSUER_ID = UUID.fromString("7d709648-a0e3-46aa-9d33-7e68c77f02da");
 
     private static final String OK_CODE = "200";
     private static final String CREATED_CODE = "201";

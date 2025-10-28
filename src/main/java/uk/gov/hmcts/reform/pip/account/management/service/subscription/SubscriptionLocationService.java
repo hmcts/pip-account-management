@@ -59,7 +59,7 @@ public class SubscriptionLocationService {
         return locationSubscriptions;
     }
 
-    public String deleteSubscriptionByLocation(String locationId, String userId) {
+    public String deleteSubscriptionByLocation(String locationId, UUID userId) {
         log.info(writeLog(String.format("User %s attempting to delete all subscriptions for location %s",
                                         userId, locationId)));
         List<Subscription> locationSubscriptions = findSubscriptionsByLocationId(locationId);
@@ -114,8 +114,8 @@ public class SubscriptionLocationService {
         publicationService.sendLocationDeletionSubscriptionEmail(userEmails, locationId);
     }
 
-    private void notifySystemAdminAboutSubscriptionDeletion(String userId, String additionalDetails) {
-        PiUser piUser = accountService.getUserById(UUID.fromString(userId));
+    private void notifySystemAdminAboutSubscriptionDeletion(UUID userId, String additionalDetails) {
+        PiUser piUser = accountService.getUserById(userId);
         if (piUser != null) {
             List<PiUser> systemAdmins = userRepository.findByRoles(SYSTEM_ADMIN);
             List<String> systemAdminEmails = systemAdmins.stream().map(PiUser::getEmail).toList();

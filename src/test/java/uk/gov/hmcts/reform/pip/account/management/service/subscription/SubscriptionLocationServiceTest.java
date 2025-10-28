@@ -112,7 +112,7 @@ class SubscriptionLocationServiceTest {
 
             Assertions.assertEquals("Total 8 subscriptions deleted for location id 1",
                                     subscriptionLocationService.deleteSubscriptionByLocation(LOCATION_ID,
-                                                                                             USER_ID.toString()),
+                                                                                             USER_ID),
                                     "The subscription for given location is not deleted");
 
             assertTrue(logCaptor.getInfoLogs().get(0).contains("User "
@@ -134,7 +134,7 @@ class SubscriptionLocationServiceTest {
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionLocationService.class)) {
             when(subscriptionRepository.findSubscriptionsByLocationId(LOCATION_ID)).thenReturn(List.of());
             assertThrows(SubscriptionNotFoundException.class, () ->
-                             subscriptionLocationService.deleteSubscriptionByLocation(LOCATION_ID, USER_ID.toString()),
+                             subscriptionLocationService.deleteSubscriptionByLocation(LOCATION_ID, USER_ID),
                          "SubscriptionNotFoundException not thrown when trying to delete a subscription"
                              + " that does not exist");
 
@@ -159,7 +159,7 @@ class SubscriptionLocationServiceTest {
 
 
             Assertions.assertEquals(
-                subscriptionLocationService.deleteSubscriptionByLocation(LOCATION_ID, USER_ID.toString()),
+                subscriptionLocationService.deleteSubscriptionByLocation(LOCATION_ID, USER_ID),
                 "Total 8 subscriptions deleted for location id 1",
                 "The subscription for given location is not deleted"
             );

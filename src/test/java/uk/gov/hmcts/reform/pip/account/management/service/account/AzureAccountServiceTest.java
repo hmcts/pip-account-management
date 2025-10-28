@@ -45,7 +45,7 @@ import static org.mockito.Mockito.when;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class AzureAccountServiceTest {
     private static final String FULL_NAME = "Full name";
-    private static final String ISSUER_ID = "abcdef";
+    private static final UUID ISSUER_ID = UUID.randomUUID();
     private static final String EMAIL = "test@hmcts.net";
     private static final String INVALID_EMAIL = "ab.com";
     private static final String ID = "1234";

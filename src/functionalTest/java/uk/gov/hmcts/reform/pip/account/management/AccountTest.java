@@ -91,6 +91,25 @@ class AccountTest extends AccountHelperBase {
     }
 
     @Test
+    void shouldBeAbleToCreateNonPiAadAccountIfNoUserIdProvided() throws Exception {
+        PiUser piUser = new PiUser();
+        piUser.setEmail(email);
+        piUser.setRoles(Roles.INTERNAL_ADMIN_CTSC);
+        piUser.setForenames("TEST");
+        piUser.setSurname("USER");
+        piUser.setUserProvenance(UserProvenances.SSO);
+        piUser.setProvenanceUserId(provenanceId);
+        List<PiUser> users = List.of(piUser);
+        Map<String, String> headers = new ConcurrentHashMap<>(bearer);
+
+        Response createdResponse = doPostRequest(CREATE_PI_ACCOUNT,
+                                                      headers, objectMapper.writeValueAsString(users));
+
+        assertThat(createdResponse.getBody().as(CREATED_RESPONSE_TYPE).get(CreationEnum.CREATED_ACCOUNTS).size())
+            .isEqualTo(1);
+    }
+
+    @Test
     void shouldNotBeAbleToCreateThirdPartyAccountIfNotSystemAdmin() throws Exception {
         List<PiUser> thirdParty = generateThirdParty();
 

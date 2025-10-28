@@ -89,7 +89,7 @@ public class AccountService {
      * @param requesterId the id of the admin adding the users for logging purposes.
      * @return Map of Created and Errored accounts, created has UUID's and errored has user objects.
      */
-    public Map<CreationEnum, List<?>> addUsers(List<PiUser> users, String requesterId) { //NOSONAR
+    public Map<CreationEnum, List<?>> addUsers(List<PiUser> users, UUID requesterId) { //NOSONAR
         List<UUID> createdAccounts = new ArrayList<>();
         List<ErroredPiUser> erroredAccounts = new ArrayList<>();
 
@@ -108,7 +108,8 @@ public class AccountService {
             } else if (constraintViolationSet.isEmpty()) {
                 PiUser addedUser = userRepository.save(user);
                 createdAccounts.add(addedUser.getUserId());
-                log.info(writeLog(requesterId, UserActions.CREATE_ACCOUNT, addedUser.getUserId().toString()));
+                log.info(writeLog(requesterId, UserActions.CREATE_ACCOUNT,
+                                  addedUser.getUserId().toString()));
             } else {
                 ErroredPiUser erroredUser = new ErroredPiUser(user);
                 erroredUser.setErrorMessages(constraintViolationSet
@@ -315,7 +316,7 @@ public class AccountService {
      * @param azureAccount  The user to be added.
      * @return The created account wrapped in Optional if success, otherwise nothing.
      */
-    public Pair<CreationEnum, Object> addUserWithSuppliedPassword(AzureAccount azureAccount, String requesterId) {
+    public Pair<CreationEnum, Object> addUserWithSuppliedPassword(AzureAccount azureAccount, UUID requesterId) {
         if (StringUtils.isBlank(azureAccount.getPassword())) {
             return Pair.of(CreationEnum.ERRORED_ACCOUNTS, "Password must not be blank");
         }
