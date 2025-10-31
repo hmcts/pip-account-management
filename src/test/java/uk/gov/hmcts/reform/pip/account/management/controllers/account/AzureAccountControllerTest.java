@@ -24,6 +24,7 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class AzureAccountControllerTest {
     private static final String EMAIL = "a@b.com";
+    private static final UUID REQUESTER_ID = UUID.randomUUID();
     private static final String STATUS_CODE_MATCH = "Status code responses should match";
 
     @Mock
@@ -43,10 +44,10 @@ class AzureAccountControllerTest {
         List<AzureAccount> azureAccounts = List.of(azureAccount);
 
         when(azureAccountService.addAzureAccounts(argThat(arg -> arg.equals(azureAccounts)),
-                                             eq("b@c.com"), eq(false), eq(false))).thenReturn(accountsMap);
+                                             eq(REQUESTER_ID), eq(false), eq(false))).thenReturn(accountsMap);
 
         ResponseEntity<Map<CreationEnum, List<? extends AzureAccount>>> response =
-            azureAccountController.createAzureAccount("b@c.com", azureAccounts);
+            azureAccountController.createAzureAccount(REQUESTER_ID, azureAccounts);
 
         assertEquals(HttpStatus.OK, response.getStatusCode(), STATUS_CODE_MATCH);
         assertEquals(accountsMap, response.getBody(), "Should return the expected azureAccounts map");

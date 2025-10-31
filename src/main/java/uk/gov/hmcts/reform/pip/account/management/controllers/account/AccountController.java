@@ -66,7 +66,7 @@ public class AccountController {
     @PostMapping("/add/pi")
     @PreAuthorize("@accountAuthorisationService.userCanCreateAccount(#requesterId, #users)")
     public ResponseEntity<Map<CreationEnum, List<?>>> createUsers(//NOSONAR
-        @RequestHeader(REQUESTER_ID) String requesterId,
+        @RequestHeader(value = REQUESTER_ID, required = false) UUID requesterId,
         @RequestBody List<PiUser> users) {
         return ResponseEntity.status(HttpStatus.CREATED).body(accountService.addUsers(users, requesterId));
     }
@@ -79,7 +79,7 @@ public class AccountController {
     @PreAuthorize("@accountAuthorisationService.userCanGetAccountByUserId(#requesterId, #userId)")
     @GetMapping("/{userId}")
     public ResponseEntity<PiUser> getUserById(
-        @RequestHeader(REQUESTER_ID) String requesterId,
+        @RequestHeader(REQUESTER_ID) UUID requesterId,
         @PathVariable UUID userId) {
         return ResponseEntity.ok(accountService.getUserById(userId));
     }

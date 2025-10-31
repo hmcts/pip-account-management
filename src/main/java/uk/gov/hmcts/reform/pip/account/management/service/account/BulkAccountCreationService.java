@@ -15,6 +15,7 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
@@ -37,7 +38,7 @@ public class BulkAccountCreationService {
         this.accountModelMapperService = accountModelMapperService;
     }
 
-    public Map<CreationEnum, List<?>> uploadMediaFromCsv(MultipartFile mediaCsv, String issuerId) { //NOSONAR
+    public Map<CreationEnum, List<?>> uploadMediaFromCsv(MultipartFile mediaCsv, UUID issuerId) { //NOSONAR
         List<MediaCsv> mediaList;
 
         try (InputStreamReader inputStreamReader = new InputStreamReader(mediaCsv.getInputStream());
@@ -55,7 +56,7 @@ public class BulkAccountCreationService {
         return addToAzureAndPiUsers(mediaList, issuerId);
     }
 
-    private Map<CreationEnum, List<?>> addToAzureAndPiUsers(List<MediaCsv> accounts, String issuerId) {
+    private Map<CreationEnum, List<?>> addToAzureAndPiUsers(List<MediaCsv> accounts, UUID issuerId) {
         Map<CreationEnum, List<? extends AzureAccount>> azureAccounts;
         Map<CreationEnum, List<?>> piUserAccounts;
         Map<CreationEnum, List<?>> completedAccounts = new ConcurrentHashMap<>();
