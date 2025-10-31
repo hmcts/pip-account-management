@@ -92,25 +92,6 @@ class PublicationServiceTest {
     }
 
     @Test
-    void testSendEmail() {
-        mockPublicationServicesEndpoint.enqueue(new MockResponse().setBody(SENT_MESSAGE));
-
-        assertTrue(publicationService.sendNotificationEmail(EMAIL, "forename", "surname"),
-                   "No trigger sent");
-        assertTrue(logCaptor.getErrorLogs().isEmpty(), ERROR_LOG_EMPTY_MESSAGE);
-    }
-
-    @Test
-    void testFailedEmailSend() {
-        mockPublicationServicesEndpoint.enqueue(new MockResponse().setResponseCode(400));
-
-        assertFalse(publicationService.sendNotificationEmail(EMAIL, "forename", "surname"),
-                    "trigger sent in error");
-        assertTrue(logCaptor.getErrorLogs().get(0).contains("Admin account welcome email failed to send with error:"),
-                   ERROR_LOG_MATCH_MESSAGE);
-    }
-
-    @Test
     void testSendMediaNotificationEmail() {
         mockPublicationServicesEndpoint.enqueue(new MockResponse().setBody(SENT_MESSAGE));
 

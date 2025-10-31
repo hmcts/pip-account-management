@@ -12,6 +12,7 @@ import uk.gov.hmcts.reform.pip.account.management.model.MediaApplicationStatus;
 import uk.gov.hmcts.reform.pip.account.management.utils.AccountHelperBase;
 import uk.gov.hmcts.reform.pip.model.account.PiUser;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
+import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
 
 import java.io.IOException;
 import java.util.List;
@@ -45,7 +46,8 @@ class MediaApplicationCreationTest extends AccountHelperBase {
         systemAdminUserId = systemAdminUser.getUserId();
 
         String adminCtscUserId = getCreatedAccountUserId(
-            createAccount(generateEmail(), UUID.randomUUID().toString(), Roles.INTERNAL_ADMIN_CTSC, systemAdminUserId));
+            createAccount(generateEmail(), UUID.randomUUID().toString(), Roles.INTERNAL_ADMIN_CTSC,
+                          UserProvenances.SSO, systemAdminUserId));
 
         headers = new ConcurrentHashMap<>(bearer);
         headers.put(REQUESTER_ID_HEADER, adminCtscUserId);

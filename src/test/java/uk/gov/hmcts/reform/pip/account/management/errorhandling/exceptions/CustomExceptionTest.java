@@ -1,7 +1,10 @@
 package uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions;
 
 import org.junit.jupiter.api.Test;
+import uk.gov.hmcts.reform.pip.account.management.model.account.PiUser;
 import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredSystemAdminAccount;
+import uk.gov.hmcts.reform.pip.model.account.Roles;
+import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
 
 import java.util.List;
 
@@ -67,6 +70,19 @@ class CustomExceptionTest {
 
         assertEquals("Found migration not yet applied: " + TEST_MESSAGE,
                      pendingMigrationScriptException.getMessage(),
+                     "Exception message does not match expected message");
+    }
+
+    @Test
+    void testUpdateUserException() {
+        PiUser piUser = new PiUser();
+        piUser.setUserProvenance(UserProvenances.PI_AAD);
+        piUser.setRoles(Roles.INTERNAL_ADMIN_CTSC);
+
+        UpdateUserException updateUserException = new UpdateUserException(piUser);
+
+        assertEquals("Invalid role INTERNAL_ADMIN_CTSC for user with provenance PI_AAD",
+                     updateUserException.getMessage(),
                      "Exception message does not match expected message");
     }
 }

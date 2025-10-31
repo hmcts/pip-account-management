@@ -19,7 +19,6 @@ class InactiveAccountManagementTest extends IntegrationTestBase {
     private static final String ROOT_URL = "/account";
     private static final String NOTIFY_INACTIVE_MEDIA_ACCOUNTS_URL = ROOT_URL + "/media/inactive/notify";
     private static final String DELETE_EXPIRED_MEDIA_ACCOUNTS_URL = ROOT_URL + "/media/inactive";
-    private static final String NOTIFY_INACTIVE_ADMIN_ACCOUNTS_URL = ROOT_URL + "/admin/inactive/notify";
     private static final String DELETE_EXPIRED_ADMIN_ACCOUNTS_URL = ROOT_URL + "/admin/inactive";
     private static final String NOTIFY_INACTIVE_IDAM_ACCOUNTS_URL = ROOT_URL + "/idam/inactive/notify";
     private static final String DELETE_EXPIRED_IDAM_ACCOUNTS_URL = ROOT_URL + "/idam/inactive";
@@ -60,23 +59,6 @@ class InactiveAccountManagementTest extends IntegrationTestBase {
     void testUnauthorizedDeleteExpiredMediaAccounts() throws Exception {
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .delete(DELETE_EXPIRED_MEDIA_ACCOUNTS_URL);
-
-        assertRequestResponseStatus(mockMvc, request, FORBIDDEN.value());
-    }
-
-    @Test
-    void testNotifyInactiveAdminAccountsSuccess() throws Exception {
-        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
-            .post(NOTIFY_INACTIVE_ADMIN_ACCOUNTS_URL);
-
-        mockMvc.perform(request).andExpect(status().isNoContent());
-    }
-
-    @Test
-    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
-    void testUnauthorizedNotifyInactiveAdminAccounts() throws Exception {
-        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
-            .post(NOTIFY_INACTIVE_ADMIN_ACCOUNTS_URL);
 
         assertRequestResponseStatus(mockMvc, request, FORBIDDEN.value());
     }

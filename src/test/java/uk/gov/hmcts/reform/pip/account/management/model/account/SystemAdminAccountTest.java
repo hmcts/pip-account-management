@@ -32,16 +32,15 @@ class SystemAdminAccountTest {
                      "Azure account does not contain the first name");
         assertEquals(systemAdminAccount.getSurname(), azureAccount.getSurname(),
                      "Azure account does not contain the surname");
-        assertEquals(Roles.SYSTEM_ADMIN, azureAccount.getRole(),
-                     "Azure account does not contain the correct role");
     }
 
     @Test
     void testConvertToPiUser() {
-        PiUser piUser = systemAdminAccount.convertToPiUser(PROVENANCE_ID);
+        systemAdminAccount.setProvenanceUserId(PROVENANCE_ID);
+        PiUser piUser = systemAdminAccount.convertToPiUser();
         assertEquals(systemAdminAccount.getEmail(), piUser.getEmail(),
                      "PI account does not contain the email address");
-        assertEquals(UserProvenances.PI_AAD, piUser.getUserProvenance(),
+        assertEquals(UserProvenances.SSO, piUser.getUserProvenance(),
                      "PI account does not contain the correct provenance");
         assertEquals(PROVENANCE_ID, piUser.getProvenanceUserId(),
                      "PI account does not contain the correct provenance ID");

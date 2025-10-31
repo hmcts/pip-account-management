@@ -54,6 +54,7 @@ class CustomAccountRetrievalTest extends IntegrationTestBase {
     private static final String EMAIL = "test_account_admin@hmcts.net";
     private static final String SURNAME = "Surname";
     private static final String FORENAME = "Forename";
+
     private static final String REQUESTER_ID_HEADER = "x-requester-id";
     private static final UUID REQUESTER_ID = UUID.randomUUID();
 
@@ -75,7 +76,7 @@ class CustomAccountRetrievalTest extends IntegrationTestBase {
         PiUser user = new PiUser();
         user.setEmail(EMAIL);
         user.setProvenanceUserId(id);
-        user.setUserProvenance(UserProvenances.PI_AAD);
+        user.setUserProvenance(UserProvenances.SSO);
         user.setRoles(Roles.INTERNAL_ADMIN_CTSC);
         user.setForenames(FORENAME);
         user.setSurname(SURNAME);
@@ -129,7 +130,7 @@ class CustomAccountRetrievalTest extends IntegrationTestBase {
             .as("Returned account MI data must match user object")
             .anyMatch(account -> createdUserId.equals(account.getUserId().toString())
                 && provenanceId.equals(account.getProvenanceUserId())
-                && UserProvenances.PI_AAD.equals(account.getUserProvenance())
+                && UserProvenances.SSO.equals(account.getUserProvenance())
                 && Roles.INTERNAL_ADMIN_CTSC.equals(account.getRoles())
                 && account.getCreatedDate() != null
                 && account.getLastSignedInDate() != null);

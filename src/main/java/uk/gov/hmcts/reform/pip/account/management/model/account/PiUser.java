@@ -17,6 +17,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import uk.gov.hmcts.reform.pip.account.management.validation.annotations.PiEmailConditionalValidation;
+import uk.gov.hmcts.reform.pip.account.management.validation.annotations.ValidProvenance;
 import uk.gov.hmcts.reform.pip.account.management.validation.annotations.ValidProvenanceUserId;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
@@ -31,6 +32,7 @@ import java.util.UUID;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@ValidProvenance
 @ValidProvenanceUserId
 @PiEmailConditionalValidation
 @EntityListeners(AuditingEntityListener.class)

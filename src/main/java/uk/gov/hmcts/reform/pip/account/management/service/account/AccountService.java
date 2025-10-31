@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import uk.gov.hmcts.reform.pip.account.management.database.UserRepository;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.AzureCustomException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.NotFoundException;
+import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.UpdateUserException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.UserNotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.UserWithProvenanceNotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.model.account.AzureAccount;
@@ -21,6 +22,7 @@ import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredPiUser;
 import uk.gov.hmcts.reform.pip.account.management.service.SensitivityService;
 import uk.gov.hmcts.reform.pip.account.management.service.helpers.DateTimeHelper;
 import uk.gov.hmcts.reform.pip.account.management.service.subscription.UserSubscriptionService;
+import uk.gov.hmcts.reform.pip.account.management.validation.validator.ProvenanceValidator;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
 import uk.gov.hmcts.reform.pip.model.enums.UserActions;
@@ -283,18 +285,11 @@ public class AccountService {
                 String.format("User with supplied user id: %s could not be found", userId)
             ));
 
-        // If they are a PI AAD user then try update the users role in B2C
-        if (PI_AAD.equals(userToUpdate.getUserProvenance())) {
-            try {
-                azureUserService.updateUserRole(userToUpdate.getProvenanceUserId(), updatedRole.toString());
-            } catch (AzureCustomException ex) {
-                log.error(writeLog(
-                    String.format("Failed to update user with ID %s in Azure", userToUpdate.getUserId())
-                ));
-            }
+        userToUpdate.setRoles(updatedRole);
+        if (!ProvenanceValidator.checkRoles(userToUpdate)) {
+            throw new UpdateUserException(userToUpdate);
         }
 
-        userToUpdate.setRoles(updatedRole);
         userRepository.save(userToUpdate);
 
         String returnMessage = String.format(
@@ -367,9 +362,9 @@ public class AccountService {
         user.setEmail(createdAccount.getEmail());
         user.setForenames(createdAccount.getFirstName());
         user.setSurname(createdAccount.getSurname());
-        user.setRoles(createdAccount.getRole());
         user.setProvenanceUserId(createdAccount.getAzureAccountId());
         user.setUserProvenance(PI_AAD);
+        user.setRoles(Roles.VERIFIED);
         return user;
     }
 }

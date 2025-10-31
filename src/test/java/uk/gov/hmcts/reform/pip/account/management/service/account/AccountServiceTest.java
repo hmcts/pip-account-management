@@ -17,6 +17,7 @@ import org.springframework.data.domain.PageRequest;
 import uk.gov.hmcts.reform.pip.account.management.database.UserRepository;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.AzureCustomException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.NotFoundException;
+import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.UpdateUserException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.UserNotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.UserWithProvenanceNotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.model.account.AzureAccount;
@@ -131,7 +132,6 @@ class AccountServiceTest {
         PI_USER_IDAM.setProvenanceUserId(ID);
 
         AZURE_ACCOUNT.setEmail(EMAIL);
-        AZURE_ACCOUNT.setRole(Roles.INTERNAL_ADMIN_CTSC);
 
         EXPECTED_USER.setGivenName(TEST);
         EXPECTED_USER.setId(ID);
@@ -484,7 +484,7 @@ class AccountServiceTest {
     }
 
     @Test
-    void testUpdateUserAccountRolePiAad() throws AzureCustomException {
+    void testUpdateUserAccountRolePiAadToAdmin() {
         UUID userId = UUID.randomUUID();
 
         PiUser user = new PiUser();
@@ -497,15 +497,16 @@ class AccountServiceTest {
         azUser.setGivenName(FULL_NAME);
 
         when(userRepository.findByUserId(userId)).thenReturn(Optional.of(user));
-        when(azureUserService.updateUserRole(ID, SYSTEM_ADMIN.toString())).thenReturn(azUser);
 
-        String response = accountService.updateAccountRole(userId, SYSTEM_ADMIN);
-        assertEquals(String.format("User with ID %s has been updated to a SYSTEM_ADMIN", userId),
-                    response, RETURN_USER_ERROR);
+        UpdateUserException updateUserException = assertThrows(UpdateUserException.class, () ->
+            accountService.updateAccountRole(userId, SYSTEM_ADMIN));
+
+        assertEquals("Invalid role SYSTEM_ADMIN for user with provenance PI_AAD",
+                     updateUserException.getMessage(), "Role has been incorrectly updated");
     }
 
     @Test
-    void testUpdateUserAccountRoleCftIdam() {
+    void testUpdateUserAccountRoleCftIdamNotVerified() {
         UUID userId = UUID.randomUUID();
 
         PiUser user = new PiUser();
@@ -515,9 +516,11 @@ class AccountServiceTest {
 
         when(userRepository.findByUserId(userId)).thenReturn(Optional.of(user));
 
-        String response = accountService.updateAccountRole(userId, SYSTEM_ADMIN);
-        assertEquals(String.format("User with ID %s has been updated to a SYSTEM_ADMIN", userId),
-                     response, RETURN_USER_ERROR);
+        UpdateUserException updateUserException = assertThrows(UpdateUserException.class, () ->
+            accountService.updateAccountRole(userId, SYSTEM_ADMIN));
+
+        assertEquals("Invalid role SYSTEM_ADMIN for user with provenance CFT_IDAM",
+                     updateUserException.getMessage(), "Role has been incorrectly updated");
     }
 
     @Test
@@ -532,23 +535,6 @@ class AccountServiceTest {
 
         assertTrue(notFoundException.getMessage().contains(userId.toString()),
                    "Exception message thrown does not contain the user ID");
-    }
-
-    @Test
-    void testUpdateUserAccountRoleAzureException() throws AzureCustomException {
-        UUID userId = UUID.randomUUID();
-
-        when(userRepository.findByUserId(userId)).thenReturn(Optional.of(PI_USER));
-
-        when(azureUserService.updateUserRole(any(), any()))
-            .thenThrow(new AzureCustomException(TEST));
-
-        try (LogCaptor logCaptor = LogCaptor.forClass(AccountService.class)) {
-            accountService.updateAccountRole(userId, SYSTEM_ADMIN);
-            assertEquals(1, logCaptor.getErrorLogs().size(),
-                         "Should not log if failed creating account"
-            );
-        }
     }
 
     @Test
@@ -581,8 +567,7 @@ class AccountServiceTest {
 
     @Test
     void testAddUserWithSuppliedPasswordSuccess() {
-        AzureAccount azureAccount = new AzureAccount(ID, EMAIL, PASSWORD, FORENAME, SURNAME,
-                                              Roles.VERIFIED, null);
+        AzureAccount azureAccount = new AzureAccount(ID, EMAIL, PASSWORD, FORENAME, SURNAME, null);
         Map<CreationEnum, List<? extends AzureAccount>> returnedAzureAccount = Map.of(
             CreationEnum.CREATED_ACCOUNTS,
             List.of(azureAccount),
@@ -620,8 +605,7 @@ class AccountServiceTest {
 
     @Test
     void testAddUserWithSuppliedPasswordIfAddAzureAccountErrored() {
-        AzureAccount azureAccount = new AzureAccount(ID, EMAIL, PASSWORD, FORENAME, SURNAME,
-                                                     Roles.VERIFIED, null);
+        AzureAccount azureAccount = new AzureAccount(ID, EMAIL, PASSWORD, FORENAME, SURNAME, null);
         ErroredAzureAccount erroredAzureAccount = new ErroredAzureAccount(azureAccount);
         erroredAzureAccount.setErrorMessages(List.of(VALIDATION_MESSAGE));
 
@@ -648,8 +632,7 @@ class AccountServiceTest {
 
     @Test
     void testAddUserWithSuppliedPasswordIfAddPiUserErrored() {
-        AzureAccount azureAccount = new AzureAccount(ID, EMAIL, PASSWORD, FORENAME, SURNAME,
-                                                     Roles.VERIFIED, null);
+        AzureAccount azureAccount = new AzureAccount(ID, EMAIL, PASSWORD, FORENAME, SURNAME, null);
         Map<CreationEnum, List<? extends AzureAccount>> returnedAzureAccount = Map.of(
             CreationEnum.CREATED_ACCOUNTS,
             List.of(azureAccount)
@@ -673,8 +656,7 @@ class AccountServiceTest {
 
     @Test
     void testAddUserWithSuppliedPasswordIfPasswordMissing() {
-        AzureAccount azureAccount = new AzureAccount(ID, EMAIL, null, FORENAME, SURNAME,
-                                                     Roles.VERIFIED, null);
+        AzureAccount azureAccount = new AzureAccount(ID, EMAIL, null, FORENAME, SURNAME, null);
 
         Pair<CreationEnum, Object> result = accountService.addUserWithSuppliedPassword(azureAccount, ISSUER_ID);
         assertThat(result.getKey())
@@ -692,8 +674,7 @@ class AccountServiceTest {
 
     @Test
     void testAddUserWithSuppliedPasswordIfPasswordEmpty() {
-        AzureAccount azureAccount = new AzureAccount(ID, EMAIL, "", FORENAME, SURNAME,
-                                                     Roles.VERIFIED, null);
+        AzureAccount azureAccount = new AzureAccount(ID, EMAIL, "", FORENAME, SURNAME, null);
 
         Pair<CreationEnum, Object> result = accountService.addUserWithSuppliedPassword(azureAccount, ISSUER_ID);
         assertThat(result.getKey())
