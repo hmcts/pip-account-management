@@ -210,6 +210,7 @@ dependencies {
   implementation 'com.opencsv:opencsv:5.12.0'
   implementation 'commons-validator:commons-validator:1.10.0'
   implementation 'net.logstash.logback:logstash-logback-encoder:9.0'
+  implementation 'org.apache.commons:commons-lang3:3.19.0'
 
   implementation ('com.github.hmcts:pip-data-models:PUB-3066-Dependency-Updates-b1a3e13') {
     exclude group: 'org.springframework.boot', module: 'spring-boot-starter-data-jpa'
