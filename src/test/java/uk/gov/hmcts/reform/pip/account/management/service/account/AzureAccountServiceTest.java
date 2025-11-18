@@ -33,7 +33,6 @@ import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -239,9 +238,7 @@ class AzureAccountServiceTest {
             azureAccountService.addAzureAccounts(List.of(azureAccount), ISSUER_ID, FALSE, FALSE);
 
         assertTrue(createdAccounts.containsKey(CreationEnum.CREATED_ACCOUNTS), SHOULD_CONTAIN
-            + ERRORED_ACCOUNTS_KEY);
-        assertFalse(createdAccounts.containsValue(CreationEnum.CREATED_ACCOUNTS), "Should not contain "
-            + "CREATED_ACCOUNTS value");
+            + CREATED_ACCOUNTS_KEY);
     }
 
     @Test
@@ -263,9 +260,7 @@ class AzureAccountServiceTest {
             azureAccountService.addAzureAccounts(List.of(azureAccount), ISSUER_ID, FALSE, FALSE);
 
         assertTrue(createdAccounts.containsKey(CreationEnum.CREATED_ACCOUNTS), SHOULD_CONTAIN
-            + ERRORED_ACCOUNTS_KEY);
-        assertFalse(createdAccounts.containsValue(CreationEnum.CREATED_ACCOUNTS), "Should not contain "
-            + "CREATED_ACCOUNTS value");
+            + CREATED_ACCOUNTS_KEY);
     }
 
     @Test
@@ -287,9 +282,7 @@ class AzureAccountServiceTest {
             azureAccountService.addAzureAccounts(List.of(azureAccount), ISSUER_ID, FALSE, FALSE);
 
         assertTrue(createdAccounts.containsKey(CreationEnum.CREATED_ACCOUNTS), SHOULD_CONTAIN
-            + ERRORED_ACCOUNTS_KEY);
-        assertFalse(createdAccounts.containsValue(CreationEnum.CREATED_ACCOUNTS), "Should not contain "
-            + "CREATED_ACCOUNTS value");
+            + CREATED_ACCOUNTS_KEY);
     }
 
     @Test
