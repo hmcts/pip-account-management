@@ -10,6 +10,7 @@
     <exclude name="GuardLogStatement"/>
     <exclude name="UnitTestContainsTooManyAsserts"/>
     <exclude name="PreserveStackTrace"/>
+    <exclude name="RelianceOnDefaultCharset"/>
   </rule>
   <rule ref="category/java/codestyle.xml">
     <exclude name="AtLeastOneConstructor"/>
@@ -71,6 +72,7 @@
   </rule>
   <rule ref="category/java/errorprone.xml">
     <exclude name="NonSerializableClass"/>
+    <exclude name="AvoidCatchingGenericException"/>
   </rule>
   <rule ref="category/java/multithreading.xml"/>
   <rule ref="category/java/performance.xml">

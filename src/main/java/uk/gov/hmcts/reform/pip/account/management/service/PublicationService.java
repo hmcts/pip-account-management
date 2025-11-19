@@ -29,13 +29,13 @@ import java.util.UUID;
 
 import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
 
-@Slf4j
-@Service
-@SuppressWarnings({"PMD.LooseCoupling", "PMD.TooManyMethods"})
 /**
  * Service to communicate with publication-services microservice and send appropriate emails via govnotify on the
  * creation of a new administrator account.
  */
+@Slf4j
+@Service
+@SuppressWarnings({"PMD.LooseCoupling", "PMD.TooManyMethods"})
 public class PublicationService {
 
     private static final String WELCOME_EMAIL_URL = "/notify/welcome-email";
