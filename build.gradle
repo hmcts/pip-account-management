@@ -176,6 +176,7 @@ sonarqube {
 // https://jeremylong.github.io/DependencyCheck/dependency-check-gradle/configuration.html
 dependencyCheck {
   suppressionFile = 'config/owasp/suppressions.xml'
+  skipTestGroups  = false
 }
 
 ext {
