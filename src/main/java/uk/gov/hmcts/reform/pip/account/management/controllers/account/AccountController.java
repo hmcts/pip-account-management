@@ -117,20 +117,6 @@ public class AccountController {
         return ResponseEntity.ok(accountService.updateAccount(userProvenance, provenanceUserId, params));
     }
 
-    @ApiResponse(responseCode = OK_CODE, description = "String confirming deletion")
-    @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description = "User not found")
-    @ApiResponse(responseCode = FORBIDDEN_ERROR_CODE,
-        description = "User with ID {adminUserId} is forbidden to remove user with ID %s")
-    @Operation(summary = "Delete a user by their id")
-    @PreAuthorize("@accountAuthorisationService.userCanDeleteAccount(#userId, #requesterId)")
-    @DeleteMapping("/delete/{userId}")
-    public ResponseEntity<String> deleteAccount(
-        @RequestHeader(REQUESTER_ID) UUID requesterId,
-        @PathVariable UUID userId) {
-        accountService.deleteAccount(userId);
-        return ResponseEntity.ok("User deleted");
-    }
-
     @ApiResponse(responseCode = OK_CODE, description = "User deleted")
     @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description = "User not found")
     @ApiResponse(responseCode = FORBIDDEN_ERROR_CODE,
@@ -138,7 +124,7 @@ public class AccountController {
     @Operation(summary = "Delete a user by their id")
     @DeleteMapping("/v2/{userId}")
     @PreAuthorize("@accountAuthorisationService.userCanDeleteAccount(#userId, #requesterId)")
-    public ResponseEntity<String> deleteAccountV2(@PathVariable UUID userId,
+    public ResponseEntity<String> deleteAccount(@PathVariable UUID userId,
                                                   @RequestHeader(value = REQUESTER_ID, required = false)
                                                     UUID requesterId) {
         accountService.deleteAccount(userId);

@@ -120,7 +120,7 @@ class SystemAdminAccountServiceTest {
     }
 
     @Test
-    void testAddSystemAdminAccountAboveMaxAllowsUsersWithAllSsoUsers() {
+    void testAddSystemAdminAccountAboveMaxAllowsUsers() {
         when(validator.validate(SYSTEM_ADMIN_ACCOUNT)).thenReturn(Collections.emptySet());
         when(userRepository.findByEmailAndUserProvenance(EMAIL, UserProvenances.SSO))
             .thenReturn(Optional.empty());
@@ -135,19 +135,5 @@ class SystemAdminAccountServiceTest {
                    "Max system admin flag not set");
 
         verify(userRepository, never()).save(any());
-    }
-
-    @Test
-    void testAddSystemAdminAccountAboveMaxAllowsUsersNotIncludingAadUsers() {
-        when(validator.validate(SYSTEM_ADMIN_ACCOUNT)).thenReturn(Collections.emptySet());
-        when(userRepository.findByEmailAndUserProvenance(EMAIL, UserProvenances.SSO))
-            .thenReturn(Optional.empty());
-        when(userRepository.findByRoles(Roles.SYSTEM_ADMIN)).thenReturn(List.of(expectedPiUser, expectedPiUser,
-                                                                                expectedPiUser, aadUser));
-        when(userRepository.save(any())).thenReturn(expectedPiUser);
-
-        PiUser returnedUser = systemAdminAccountService.addSystemAdminAccount(SYSTEM_ADMIN_ACCOUNT);
-
-        assertEquals(expectedPiUser, returnedUser, "returned user did not match expected");
     }
 }

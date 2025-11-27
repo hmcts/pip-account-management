@@ -35,7 +35,7 @@ class UserRepositoryTest {
     private static final String PROVENANCE_USER_ID5 = UUID.randomUUID().toString();
     private static final String PROVENANCE_USER_ID6 = UUID.randomUUID().toString();
     private static final String PROVENANCE_USER_ID7 = UUID.randomUUID().toString();
-    private static final String PROVENANCE_USER_ID8 = UUID.randomUUID().toString();
+
     private static final String EMAIL1 = "TestUser1@justice.gov.uk";
     private static final String EMAIL2 = "TestUser2@justice.gov.uk";
     private static final String EMAIL3 = "TestUser3@justice.gov.uk";
@@ -43,7 +43,6 @@ class UserRepositoryTest {
     private static final String EMAIL5 = "TestUser5@justice.gov.uk";
     private static final String EMAIL6 = "TestUser6@justice.gov.uk";
     private static final String EMAIL7 = "TestUser7@justice.gov.uk";
-    private static final String EMAIL8 = "TestUser8@justice.gov.uk";
 
     private static final LocalDateTime TIMESTAMP_NOW = LocalDateTime.now();
     private static final int DAYS = 5;
@@ -58,7 +57,6 @@ class UserRepositoryTest {
     private UUID userId5;
     private UUID userId6;
     private UUID userId7;
-    private UUID userId8;
 
     @Autowired
     UserRepository userRepository;
@@ -84,7 +82,7 @@ class UserRepositoryTest {
         PiUser user3 = new PiUser();
         user3.setEmail(EMAIL3);
         user3.setProvenanceUserId(PROVENANCE_USER_ID3);
-        user3.setUserProvenance(UserProvenances.PI_AAD);
+        user3.setUserProvenance(UserProvenances.SSO);
         user3.setRoles(Roles.INTERNAL_ADMIN_CTSC);
         user3.setLastSignedInDate(TIMESTAMP_NOW.minusDays(DAYS));
         user3.setCreatedDate(TIMESTAMP_NOW.minusDays(DAYS));
@@ -93,8 +91,8 @@ class UserRepositoryTest {
         PiUser user4 = new PiUser();
         user4.setEmail(EMAIL4);
         user4.setProvenanceUserId(PROVENANCE_USER_ID4);
-        user4.setUserProvenance(UserProvenances.SSO);
-        user4.setRoles(Roles.INTERNAL_ADMIN_CTSC);
+        user4.setUserProvenance(UserProvenances.CFT_IDAM);
+        user4.setRoles(Roles.VERIFIED);
         user4.setLastSignedInDate(TIMESTAMP_NOW.minusDays(DAYS));
         userId4 = userRepository.save(user4).getUserId();
 
@@ -103,15 +101,15 @@ class UserRepositoryTest {
         user5.setProvenanceUserId(PROVENANCE_USER_ID5);
         user5.setUserProvenance(UserProvenances.CFT_IDAM);
         user5.setRoles(Roles.VERIFIED);
-        user5.setLastSignedInDate(TIMESTAMP_NOW.minusDays(DAYS));
+        user5.setLastSignedInDate(TIMESTAMP_NOW.minusDays(DAYS + 1));
         userId5 = userRepository.save(user5).getUserId();
 
         PiUser user6 = new PiUser();
         user6.setEmail(EMAIL6);
         user6.setProvenanceUserId(PROVENANCE_USER_ID6);
-        user6.setUserProvenance(UserProvenances.CFT_IDAM);
+        user6.setUserProvenance(UserProvenances.CRIME_IDAM);
         user6.setRoles(Roles.VERIFIED);
-        user6.setLastSignedInDate(TIMESTAMP_NOW.minusDays(DAYS + 1));
+        user6.setLastSignedInDate(TIMESTAMP_NOW.minusDays(DAYS));
         userId6 = userRepository.save(user6).getUserId();
 
         PiUser user7 = new PiUser();
@@ -119,16 +117,8 @@ class UserRepositoryTest {
         user7.setProvenanceUserId(PROVENANCE_USER_ID7);
         user7.setUserProvenance(UserProvenances.CRIME_IDAM);
         user7.setRoles(Roles.VERIFIED);
-        user7.setLastSignedInDate(TIMESTAMP_NOW.minusDays(DAYS));
+        user7.setLastSignedInDate(TIMESTAMP_NOW.minusDays(DAYS + 1));
         userId7 = userRepository.save(user7).getUserId();
-
-        PiUser user8 = new PiUser();
-        user8.setEmail(EMAIL8);
-        user8.setProvenanceUserId(PROVENANCE_USER_ID8);
-        user8.setUserProvenance(UserProvenances.CRIME_IDAM);
-        user8.setRoles(Roles.VERIFIED);
-        user8.setLastSignedInDate(TIMESTAMP_NOW.minusDays(DAYS + 1));
-        userId8 = userRepository.save(user8).getUserId();
     }
 
     @AfterAll
@@ -171,21 +161,12 @@ class UserRepositoryTest {
     }
 
     @Test
-    void shouldFindAdminUsersForNotificationByLastSignedInDate() {
-        assertThat(userRepository.findAdminUsersForNotificationByLastSignedInDate(DAYS))
-            .as(USER_MATCHED_MESSAGE)
-            .hasSize(1)
-            .extracting(PiUser::getUserId)
-            .containsExactly(userId3);
-    }
-
-    @Test
     void shouldFindAdminUsersForDeletionByLastSignedInDate() {
         assertThat(userRepository.findAdminUsersForDeletionByLastSignedInDate(DAYS, DAYS))
             .as(USER_MATCHED_MESSAGE)
-            .hasSize(2)
+            .hasSize(1)
             .extracting(PiUser::getUserId)
-            .containsExactlyInAnyOrder(userId3, userId4);
+            .containsExactlyInAnyOrder(userId3);
     }
 
     @Test
@@ -194,7 +175,7 @@ class UserRepositoryTest {
             .as(USER_MATCHED_MESSAGE)
             .hasSize(2)
             .extracting(PiUser::getUserId)
-            .containsExactlyInAnyOrder(userId5, userId7);
+            .containsExactlyInAnyOrder(userId4, userId6);
     }
 
     @Test
@@ -203,7 +184,7 @@ class UserRepositoryTest {
             .as(USER_MATCHED_MESSAGE)
             .hasSize(4)
             .extracting(PiUser::getUserId)
-            .containsExactlyInAnyOrder(userId5, userId6, userId7, userId8);
+            .containsExactlyInAnyOrder(userId4, userId5, userId6, userId7);
     }
 
     @Test
@@ -226,7 +207,7 @@ class UserRepositoryTest {
             .as("Returned account MI data must match user object")
             .anyMatch(account -> userId3.equals(account.getUserId())
                 && PROVENANCE_USER_ID3.equals(account.getProvenanceUserId())
-                && UserProvenances.PI_AAD.equals(account.getUserProvenance())
+                && UserProvenances.SSO.equals(account.getUserProvenance())
                 && Roles.INTERNAL_ADMIN_CTSC.equals(account.getRoles())
                 && TIMESTAMP_NOW.minusDays(DAYS).truncatedTo(ChronoUnit.SECONDS)
                 .equals(account.getLastSignedInDate().truncatedTo(ChronoUnit.SECONDS))
