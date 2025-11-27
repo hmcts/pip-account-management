@@ -4,9 +4,6 @@
 *.class
 bin/main/application.yaml
 
-# Ignore local integration test properties
-src/integrationTest/resources/application.properties
-
 ### STS ###
 .apt_generated
 .classpath

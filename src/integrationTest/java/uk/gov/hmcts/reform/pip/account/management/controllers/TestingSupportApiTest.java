@@ -13,7 +13,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -85,12 +84,9 @@ class TestingSupportApiTest extends IntegrationTestBase {
     private static final String SYSTEM_ADMIN_USER_ID = "87f907d2-eb28-42cc-b6e1-ae2b03f7bba2";
     private static final UUID REQUESTER_ID = UUID.randomUUID();
 
-    @Value("${test.email-prefix}")
-    private String emailPrefix;
-    @Value("${test.password}")
-    private String password;
-    @Value("${test.email}")
-    private String email;
+    private static final String EMAIL_PREFIX = "TEST_789_";
+    private static final String EMAIL = EMAIL_PREFIX + UUID.randomUUID().toString() + "@test.com";
+    private static final String PASSWORD = UUID.randomUUID().toString();
     private static final String ID = "1234";
 
     private static final String PROVENANCE_USER_ID = UUID.randomUUID().toString();
@@ -178,7 +174,7 @@ class TestingSupportApiTest extends IntegrationTestBase {
         when(usersRequestBuilder.get(any())).thenReturn(userCollectionResponse);
 
         //Create new test user account
-        AzureAccount newAccount = createAccount(password);
+        AzureAccount newAccount = createAccount(PASSWORD);
 
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(TESTING_SUPPORT_CREATE_ACCOUNT_URL)
@@ -191,7 +187,7 @@ class TestingSupportApiTest extends IntegrationTestBase {
 
         PiUser createdAccount = OBJECT_MAPPER.readValue(postResponse.getResponse().getContentAsString(), PiUser.class);
 
-        assertEquals(email, createdAccount.getEmail(), "Azure account creation error");
+        assertEquals(EMAIL, createdAccount.getEmail(), "Azure account creation error");
 
         //User mock setup
         when(graphClient.users()).thenReturn(usersRequestBuilder);
@@ -208,20 +204,20 @@ class TestingSupportApiTest extends IntegrationTestBase {
             responseGetUser.getResponse().getContentAsString(),
             PiUser.class
         );
-        assertEquals(email, returnedUser.getEmail(), "Users should match");
+        assertEquals(EMAIL, returnedUser.getEmail(), "Users should match");
 
         //Delete test user
-        MvcResult deleteResponse = mockMvc.perform(delete(TESTING_SUPPORT_ACCOUNT_URL + emailPrefix))
+        MvcResult deleteResponse = mockMvc.perform(delete(TESTING_SUPPORT_ACCOUNT_URL + EMAIL_PREFIX))
             .andExpect(status().isOk())
             .andReturn();
 
         assertThat(deleteResponse.getResponse().getContentAsString())
             .as("User account delete response does not match")
-            .isEqualTo("1 account(s) deleted with email starting with " + emailPrefix);
+            .isEqualTo("1 account(s) deleted with email starting with " + EMAIL_PREFIX);
 
         //Check whether the user deleted in Pi user table
         mockMvc.perform(get(ACCOUNT_URL + createdAccount.getUserId())
-            .header(REQUESTER_ID_HEADER, REQUESTER_ID))
+                            .header(REQUESTER_ID_HEADER, REQUESTER_ID))
             .andExpect(status().isNotFound());
     }
 
@@ -256,7 +252,7 @@ class TestingSupportApiTest extends IntegrationTestBase {
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testUnauthorisedTestingSupportCreateAccount() throws Exception {
 
-        AzureAccount newAccount = createAccount(password);
+        AzureAccount newAccount = createAccount(PASSWORD);
 
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
             .post(TESTING_SUPPORT_CREATE_ACCOUNT_URL)
@@ -297,21 +293,21 @@ class TestingSupportApiTest extends IntegrationTestBase {
 
         String userId = mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).getFirst();
         mockMvc.perform(get(ACCOUNT_URL + userId)
-            .header(REQUESTER_ID_HEADER, REQUESTER_ID))
+                            .header(REQUESTER_ID_HEADER, REQUESTER_ID))
             .andExpect(status().isOk());
 
         when(accountAuthorisationService.userCanDeleteAccount(any(), any())).thenReturn(true);
-        MvcResult deleteResponse = mockMvc.perform(delete(TESTING_SUPPORT_ACCOUNT_URL + emailPrefix))
+        MvcResult deleteResponse = mockMvc.perform(delete(TESTING_SUPPORT_ACCOUNT_URL + EMAIL_PREFIX))
             .andExpect(status().isOk())
             .andReturn();
 
         assertThat(deleteResponse.getResponse().getContentAsString())
             .as("Media application delete response does not match")
-            .isEqualTo("1 account(s) deleted with email starting with " + emailPrefix);
+            .isEqualTo("1 account(s) deleted with email starting with " + EMAIL_PREFIX);
 
         when(accountAuthorisationService.userCanGetAccountByUserId(any(), any())).thenReturn(true);
         mockMvc.perform(get(ACCOUNT_URL + userId)
-            .header(REQUESTER_ID_HEADER, REQUESTER_ID))
+                            .header(REQUESTER_ID_HEADER, REQUESTER_ID))
             .andExpect(status().isNotFound());
     }
 
@@ -321,20 +317,20 @@ class TestingSupportApiTest extends IntegrationTestBase {
 
         when(mediaApplicationAuthorisationService.userCanViewMediaApplications(any())).thenReturn(true);
         mockMvc.perform(get(APPLICATION_URL + "/" + application.getId())
-            .header(REQUESTER_ID_HEADER, REQUESTER_ID))
+                            .header(REQUESTER_ID_HEADER, REQUESTER_ID))
             .andExpect(status().isOk());
 
-        MvcResult deleteResponse = mockMvc.perform(delete(TESTING_SUPPORT_APPLICATION_URL + emailPrefix))
+        MvcResult deleteResponse = mockMvc.perform(delete(TESTING_SUPPORT_APPLICATION_URL + EMAIL_PREFIX))
             .andExpect(status().isOk())
             .andReturn();
 
         assertThat(deleteResponse.getResponse().getContentAsString())
             .as("Media application delete response does not match")
-            .isEqualTo("1 media application(s) deleted with email starting with " + emailPrefix);
+            .isEqualTo("1 media application(s) deleted with email starting with " + EMAIL_PREFIX);
 
         when(mediaApplicationAuthorisationService.userCanViewMediaApplications(any())).thenReturn(true);
         mockMvc.perform(get(APPLICATION_URL + "/" + application.getId())
-            .header(REQUESTER_ID_HEADER, REQUESTER_ID))
+                            .header(REQUESTER_ID_HEADER, REQUESTER_ID))
             .andExpect(status().isNotFound());
     }
 
@@ -374,19 +370,19 @@ class TestingSupportApiTest extends IntegrationTestBase {
         AuditLog auditLog = createAuditLog();
 
         mockMvc.perform(get(AUDIT_URL + "/" + auditLog.getId())
-            .header(REQUESTER_ID_HEADER, REQUESTER_ID))
+                            .header(REQUESTER_ID_HEADER, REQUESTER_ID))
             .andExpect(status().isOk());
 
-        MvcResult deleteResponse = mockMvc.perform(delete(TESTING_SUPPORT_AUDIT_URL + emailPrefix))
+        MvcResult deleteResponse = mockMvc.perform(delete(TESTING_SUPPORT_AUDIT_URL + EMAIL_PREFIX))
             .andExpect(status().isOk())
             .andReturn();
 
         assertThat(deleteResponse.getResponse().getContentAsString())
             .as("Audit Log delete response does not match")
-            .isEqualTo("2 audit log(s) deleted with user email starting with " + emailPrefix);
+            .isEqualTo("2 audit log(s) deleted with user email starting with " + EMAIL_PREFIX);
 
         mockMvc.perform(get(AUDIT_URL + "/" + auditLog.getId())
-            .header(REQUESTER_ID_HEADER, REQUESTER_ID))
+                            .header(REQUESTER_ID_HEADER, REQUESTER_ID))
             .andExpect(status().isNotFound());
     }
 
@@ -396,11 +392,11 @@ class TestingSupportApiTest extends IntegrationTestBase {
         LocalDate expiredDate = auditLog.getTimestamp().minusDays(200).toLocalDate();
 
         mockMvc.perform(get(AUDIT_URL + "/" + auditLog.getId())
-            .header(REQUESTER_ID_HEADER, REQUESTER_ID))
+                            .header(REQUESTER_ID_HEADER, REQUESTER_ID))
             .andExpect(status().isOk());
 
         MvcResult updateAudit = mockMvc.perform(put(TESTING_SUPPORT_AUDIT_URL + auditLog.getId())
-            .header(REQUESTER_ID_HEADER, REQUESTER_ID))
+                                                    .header(REQUESTER_ID_HEADER, REQUESTER_ID))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -412,14 +408,14 @@ class TestingSupportApiTest extends IntegrationTestBase {
     @Test
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testUnauthorisedTestingSupportDeleteAccounts() throws Exception {
-        mockMvc.perform(delete(TESTING_SUPPORT_ACCOUNT_URL + emailPrefix))
+        mockMvc.perform(delete(TESTING_SUPPORT_ACCOUNT_URL + EMAIL_PREFIX))
             .andExpect(status().isForbidden());
     }
 
     @Test
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testUnauthorisedTestingSupportDeleteApplications() throws Exception {
-        mockMvc.perform(delete(TESTING_SUPPORT_APPLICATION_URL + emailPrefix))
+        mockMvc.perform(delete(TESTING_SUPPORT_APPLICATION_URL + EMAIL_PREFIX))
             .andExpect(status().isForbidden());
     }
 
@@ -433,13 +429,13 @@ class TestingSupportApiTest extends IntegrationTestBase {
     @Test
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testUnauthorisedTestingSupportDeleteAudits() throws Exception {
-        mockMvc.perform(delete(TESTING_SUPPORT_AUDIT_URL + emailPrefix))
+        mockMvc.perform(delete(TESTING_SUPPORT_AUDIT_URL + EMAIL_PREFIX))
             .andExpect(status().isForbidden());
     }
 
     private PiUser createUser() {
         PiUser user = new PiUser();
-        user.setEmail(email);
+        user.setEmail(EMAIL);
         user.setProvenanceUserId(PROVENANCE_USER_ID);
         user.setUserProvenance(PROVENANCE);
         user.setRoles(ROLE);
@@ -450,7 +446,7 @@ class TestingSupportApiTest extends IntegrationTestBase {
 
     private AzureAccount createAccount(String password) {
         AzureAccount newAccount = new AzureAccount();
-        newAccount.setEmail(email);
+        newAccount.setEmail(EMAIL);
         newAccount.setPassword(password);
         newAccount.setDisplayName(GIVEN_NAME);
         newAccount.setRole(ROLE);
@@ -463,7 +459,7 @@ class TestingSupportApiTest extends IntegrationTestBase {
     private MediaApplication createApplication() throws Exception {
         MediaApplication application = new MediaApplication();
         application.setFullName(FULL_NAME);
-        application.setEmail(email);
+        application.setEmail(EMAIL);
         application.setEmployer(EMPLOYER);
         application.setStatus(PENDING_STATUS);
 
@@ -505,7 +501,7 @@ class TestingSupportApiTest extends IntegrationTestBase {
     private AuditLog createAuditLog() throws Exception {
         AuditLog auditLog = new AuditLog();
         auditLog.setUserId(ID);
-        auditLog.setUserEmail(email);
+        auditLog.setUserEmail(EMAIL);
         auditLog.setRoles(ROLE);
         auditLog.setUserProvenance(PROVENANCE);
         auditLog.setAction(ACTION);
