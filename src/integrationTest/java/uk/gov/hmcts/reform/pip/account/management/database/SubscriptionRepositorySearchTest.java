@@ -174,7 +174,7 @@ class SubscriptionRepositorySearchTest {
     @Test
     void shouldNotFindSubscriptionsByLocationIdSearchValueIfListTypeUnmatched() {
         List<Subscription> subscriptions = subscriptionRepository.findSubscriptionsByLocationSearchValue(
-            LOCATION_ID, ListType.CROWN_DAILY_LIST.name(), LIST_LANGUAGE
+            LOCATION_ID, ListType.CROWN_DAILY_PDDA_LIST.name(), LIST_LANGUAGE
         );
         assertThat(subscriptions)
             .as(SUBSCRIPTION_EMPTY_MESSAGE)
