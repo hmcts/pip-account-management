@@ -6,5 +6,7 @@ ENV APP pip-account-management.jar
 COPY lib/applicationinsights.json /opt/app/
 COPY build/libs/$APP /opt/app/
 
+USER 65532:65532
+
 EXPOSE 6969
 CMD [ "pip-account-management.jar" ]
