@@ -15,10 +15,8 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
-import static uk.gov.hmcts.reform.pip.model.account.Roles.ALL_NON_RESTRICTED_ADMIN_ROLES;
 import static uk.gov.hmcts.reform.pip.model.account.Roles.INTERNAL_ADMIN_CTSC;
 import static uk.gov.hmcts.reform.pip.model.account.Roles.INTERNAL_SUPER_ADMIN_CTSC;
-import static uk.gov.hmcts.reform.pip.model.account.Roles.INTERNAL_SUPER_ADMIN_LOCAL;
 import static uk.gov.hmcts.reform.pip.model.account.Roles.SYSTEM_ADMIN;
 import static uk.gov.hmcts.reform.pip.model.account.UserProvenances.PI_AAD;
 
@@ -72,36 +70,30 @@ public class AccountAuthorisationService {
             return false;
         }
 
-        if (!authorisationCommonService.hasOAuthAdminRole()
-            || !authorisationCommonService.isSystemAdmin(adminUserId)
-            || adminUserId.equals(userId)) {
-            log.error(writeLog(String.format("User with ID %s is not authorised to delete this account", adminUserId)));
-            return false;
+        //System admins can delete any account, admin users can only delete their own account (via SSO process)
+        if (authorisationCommonService.hasOAuthAdminRole()
+            && (authorisationCommonService.isSystemAdmin(adminUserId)
+            || (authorisationCommonService.isUserAdmin(adminUserId) && adminUserId.equals(userId)))) {
+
+            return true;
         }
-        return true;
+        log.error(writeLog(String.format("User with ID %s is not authorised to delete this account", adminUserId)));
+        return false;
     }
 
     public boolean userCanUpdateAccount(UUID userId, UUID adminUserId) {
-
         if (!authorisationCommonService.hasOAuthAdminRole()) {
             return false;
         }
 
-        if (adminUserId != null && adminUserId.equals(userId)) {
-            log.error(writeLog(
-                String.format("User with ID %s is forbidden to update their own account", userId)
-            ));
+        PiUser user = getUser(userId);
+        if (!UserProvenances.SSO.equals(user.getUserProvenance()) || adminUserId != null) {
+            log.error(writeLog(String.format("Only SSO users can be updated via the automated process",
+                                             adminUserId, userId)));
             return false;
         }
 
-        boolean isAuthorised = isAuthorisedRole(userId, adminUserId);
-
-        if (!isAuthorised) {
-            log.error(writeLog(
-                String.format("User with ID %s is forbidden to update user with ID %s", adminUserId, userId)
-            ));
-        }
-        return isAuthorised;
+        return true;
     }
 
     public boolean userCanCreateSystemAdmin(UUID userId) {
@@ -152,27 +144,6 @@ public class AccountAuthorisationService {
             return false;
         }
         return true;
-    }
-
-    private boolean isAuthorisedRole(UUID userId, UUID adminUserId) {
-
-        PiUser user = getUser(userId);
-        if (UserProvenances.SSO.equals(user.getUserProvenance())) {
-            return true;
-        }
-
-        if (adminUserId == null) {
-            return false;
-        }
-        PiUser adminUser = getUser(adminUserId);
-
-        if (adminUser.getRoles() == SYSTEM_ADMIN) {
-            return true;
-        } else if (adminUser.getRoles() == INTERNAL_SUPER_ADMIN_LOCAL
-            || adminUser.getRoles() == INTERNAL_SUPER_ADMIN_CTSC) {
-            return ALL_NON_RESTRICTED_ADMIN_ROLES.contains(user.getRoles());
-        }
-        return false;
     }
 
     private PiUser getUser(UUID userId) {

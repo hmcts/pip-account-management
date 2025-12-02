@@ -11,6 +11,7 @@ import uk.gov.hmcts.reform.pip.account.management.model.account.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.utils.AccountHelperBase;
 import uk.gov.hmcts.reform.pip.model.account.PiUser;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
+import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,7 +40,8 @@ class AzureAccountTest extends AccountHelperBase {
         systemAdminUserId = systemAdminUser.getUserId();
 
         adminCtscUserId = getCreatedAccountUserId(
-            createAccount(generateEmail(), UUID.randomUUID().toString(), Roles.INTERNAL_ADMIN_CTSC, systemAdminUserId));
+            createAccount(generateEmail(), UUID.randomUUID().toString(), Roles.INTERNAL_ADMIN_CTSC,
+                          UserProvenances.SSO, systemAdminUserId));
 
         headers = new ConcurrentHashMap<>(bearer);
         headers.put(REQUESTER_ID_HEADER, adminCtscUserId);
@@ -58,7 +60,6 @@ class AzureAccountTest extends AccountHelperBase {
         azureAccount.setFirstName(TEST_FIRST_NAME);
         azureAccount.setSurname(TEST_LAST_NAME);
         azureAccount.setDisplayName(TEST_DISPLAY_NAME);
-        azureAccount.setRole(Roles.VERIFIED);
         azureAccount.setEmail(email);
 
         List<AzureAccount> azureAccounts = new ArrayList<>();
@@ -73,7 +74,7 @@ class AzureAccountTest extends AccountHelperBase {
             .as(AZURE_ACCOUNT_RESPONSE_TYPE).get(CreationEnum.CREATED_ACCOUNTS).getFirst();
 
         assertThat(createdAccount.getEmail()).isEqualTo(email);
-        createAccount(email, createdAccount.getAzureAccountId(), adminCtscUserId);
+        createdVerifiedAccount(email, createdAccount.getAzureAccountId(), adminCtscUserId);
 
         Response getResponse = doGetRequest(String.format(GET_AZURE_ACCOUNT_INFO, createdAccount.getAzureAccountId()),
                      bearer);

@@ -49,21 +49,25 @@ class AccountTest extends AccountHelperBase {
 
         idMap.put(Roles.INTERNAL_SUPER_ADMIN_CTSC, getCreatedAccountUserId(
             createAccount(generateEmail(), UUID.randomUUID().toString(), Roles.INTERNAL_SUPER_ADMIN_CTSC,
-                          idMap.get(Roles.SYSTEM_ADMIN))));
+                         UserProvenances.SSO, idMap.get(Roles.SYSTEM_ADMIN))));
 
         idMap.put(Roles.INTERNAL_SUPER_ADMIN_LOCAL, getCreatedAccountUserId(
             createAccount(generateEmail(), UUID.randomUUID().toString(), Roles.INTERNAL_SUPER_ADMIN_LOCAL,
-                          idMap.get(Roles.SYSTEM_ADMIN))));
+                          UserProvenances.SSO, idMap.get(Roles.SYSTEM_ADMIN))));
 
         idMap.put(Roles.INTERNAL_ADMIN_LOCAL, getCreatedAccountUserId(
             createAccount(generateEmail(), UUID.randomUUID().toString(), Roles.INTERNAL_ADMIN_LOCAL,
-                          idMap.get(Roles.SYSTEM_ADMIN))));
+                          UserProvenances.SSO, idMap.get(Roles.SYSTEM_ADMIN))));
     }
 
     @AfterAll
     public void teardown() {
         doDeleteRequest(TESTING_SUPPORT_DELETE_ACCOUNT_URL + TEST_EMAIL_PREFIX, bearer);
-        doDeleteRequest(String.format(DELETE_ACCOUNT, thirdPartyUserId), bearer);
+
+        Map<String, String> headers = new ConcurrentHashMap<>(bearer);
+        headers.put(REQUESTER_ID_HEADER, idMap.get(Roles.SYSTEM_ADMIN));
+
+        doDeleteRequest(String.format(DELETE_ACCOUNT, thirdPartyUserId), headers);
     }
 
     private List<PiUser> generateThirdParty() {
@@ -80,7 +84,8 @@ class AccountTest extends AccountHelperBase {
 
     @Test
     void shouldBeAbleToCreateAccount() throws Exception {
-        Response createdResponse = createAccount(email, provenanceId, idMap.get(Roles.INTERNAL_SUPER_ADMIN_CTSC));
+        Response createdResponse = createdVerifiedAccount(email, provenanceId,
+                                                          idMap.get(Roles.INTERNAL_SUPER_ADMIN_CTSC));
         assertThat(createdResponse.getBody().as(CREATED_RESPONSE_TYPE).get(CreationEnum.CREATED_ACCOUNTS).size())
             .isEqualTo(1);
     }
@@ -135,7 +140,7 @@ class AccountTest extends AccountHelperBase {
 
     @Test
     void shouldBeAbleToGetAnAccountByUserId() throws Exception {
-        String createdUserId = getCreatedAccountUserId(createAccount(email, provenanceId,
+        String createdUserId = getCreatedAccountUserId(createdVerifiedAccount(email, provenanceId,
                                                                      idMap.get(Roles.INTERNAL_SUPER_ADMIN_CTSC)));
 
         Map<String, String> headers = new ConcurrentHashMap<>(bearer);
@@ -148,7 +153,7 @@ class AccountTest extends AccountHelperBase {
 
     @Test
     void shouldBeAbleToGetAnAccountByProvenanceId() throws Exception {
-        createAccount(email, provenanceId, idMap.get(Roles.INTERNAL_SUPER_ADMIN_CTSC));
+        createdVerifiedAccount(email, provenanceId, idMap.get(Roles.INTERNAL_SUPER_ADMIN_CTSC));
 
         Map<String, String> headers = new ConcurrentHashMap<>(bearer);
         headers.put(REQUESTER_ID_HEADER, idMap.get(Roles.SYSTEM_ADMIN));
@@ -166,7 +171,7 @@ class AccountTest extends AccountHelperBase {
         "CIVIL_DAILY_CAUSE_LIST,CLASSIFIED,false"
     })
     void checkIfUserIsAuthorised(String listType, String sensitivity, boolean shouldBeAuthorised) throws Exception {
-        String createdUserId = getCreatedAccountUserId(createAccount(email, provenanceId,
+        String createdUserId = getCreatedAccountUserId(createdVerifiedAccount(email, provenanceId,
                                                                      idMap.get(Roles.INTERNAL_SUPER_ADMIN_CTSC)));
 
         Map<String, String> headers = new ConcurrentHashMap<>(bearer);
@@ -180,7 +185,7 @@ class AccountTest extends AccountHelperBase {
 
     @Test
     void shouldBeAbleToUpdateAccount() throws Exception {
-        createAccount(email, provenanceId, idMap.get(Roles.INTERNAL_SUPER_ADMIN_CTSC));
+        createdVerifiedAccount(email, provenanceId, idMap.get(Roles.INTERNAL_SUPER_ADMIN_CTSC));
 
         Map<String, String> updateParams = new ConcurrentHashMap<>();
         updateParams.put("lastVerifiedDate", "2024-12-01T01:01:01.123456Z");
@@ -200,25 +205,16 @@ class AccountTest extends AccountHelperBase {
         assertThat(user.getLastSignedInDate()).isEqualTo(LocalDateTime.parse("2024-12-02T01:01:01"));
     }
 
-    @Test
-    void shouldBeAbleToDeleteAccount() throws Exception {
+    @ParameterizedTest
+    @CsvSource({
+        "PI_AAD,VERIFIED",
+        "SSO,INTERNAL_ADMIN_LOCAL",
+    })
+    void shouldBeAbleToDeleteAccountV2(String provenance, String createdUserRole)
+        throws Exception {
         String createdUserId = getCreatedAccountUserId(createAccount(email, provenanceId,
-                                                                     idMap.get(Roles.INTERNAL_SUPER_ADMIN_CTSC)));
-
-        Map<String, String> headers = new ConcurrentHashMap<>(bearer);
-        headers.put(REQUESTER_ID_HEADER, idMap.get(Roles.SYSTEM_ADMIN));
-        Response deleteResponse = doDeleteRequest(String.format(DELETE_ACCOUNT, createdUserId), headers);
-
-        assertThat(deleteResponse.getStatusCode()).isEqualTo(OK.value());
-
-        Response getUserResponse = doGetRequest(String.format(GET_BY_PROVENANCE_ID, provenanceId), headers);
-        assertThat(getUserResponse.getStatusCode()).isEqualTo(NOT_FOUND.value());
-    }
-
-    @Test
-    void shouldBeAbleToDeleteAccountV2() throws Exception {
-        String createdUserId = getCreatedAccountUserId(createAccount(email, provenanceId,
-                idMap.get(Roles.INTERNAL_SUPER_ADMIN_CTSC)));
+                 Roles.valueOf(createdUserRole),
+                 UserProvenances.valueOf(provenance), idMap.get(Roles.INTERNAL_SUPER_ADMIN_CTSC)));
 
         Map<String, String> headers = new ConcurrentHashMap<>(bearer);
         headers.put(REQUESTER_ID_HEADER, idMap.get(Roles.SYSTEM_ADMIN));
@@ -230,18 +226,82 @@ class AccountTest extends AccountHelperBase {
         assertThat(getUserResponse.getStatusCode()).isEqualTo(NOT_FOUND.value());
     }
 
+    @Test
+    void shouldBeAbleToDeleteAccountV2WhenSystemAdminAndThirdParty() throws JsonProcessingException {
+        List<PiUser> thirdParty = generateThirdParty();
+        Map<String, String> headers = new ConcurrentHashMap<>(bearer);
+        headers.put(REQUESTER_ID_HEADER, idMap.get(Roles.SYSTEM_ADMIN));
+
+        final Response createdResponse = doPostRequest(CREATE_PI_ACCOUNT,
+                                                       headers, objectMapper.writeValueAsString(thirdParty));
+        thirdPartyUserId = (String) createdResponse.getBody()
+            .as(CREATED_RESPONSE_TYPE).get(CreationEnum.CREATED_ACCOUNTS).get(0);
+
+        headers.put(REQUESTER_ID_HEADER, idMap.get(Roles.SYSTEM_ADMIN));
+        Response deleteResponse = doDeleteRequest(String.format(DELETE_ENDPOINT_V2, thirdPartyUserId), headers);
+
+        assertThat(deleteResponse.getStatusCode()).isEqualTo(OK.value());
+
+        Response getUserResponse = doGetRequest(String.format(GET_BY_PROVENANCE_ID, provenanceId), bearer);
+        assertThat(getUserResponse.getStatusCode()).isEqualTo(NOT_FOUND.value());
+    }
+
+    @Test
+    void shouldNotBeAbleToDeleteThirdPartyAccountWhenLocalAdmin() throws Exception {
+        List<PiUser> thirdParty = generateThirdParty();
+        Map<String, String> headers = new ConcurrentHashMap<>(bearer);
+        headers.put(REQUESTER_ID_HEADER, idMap.get(Roles.SYSTEM_ADMIN));
+        final Response createdResponse = doPostRequest(CREATE_PI_ACCOUNT,
+                                                       headers, objectMapper.writeValueAsString(thirdParty));
+        thirdPartyUserId = (String) createdResponse.getBody()
+            .as(CREATED_RESPONSE_TYPE).get(CreationEnum.CREATED_ACCOUNTS).get(0);
+
+        headers = new ConcurrentHashMap<>(bearer);
+        headers.put(REQUESTER_ID_HEADER, idMap.get(Roles.INTERNAL_ADMIN_LOCAL));
+
+        Response deleteResponse = doDeleteRequest(String.format(DELETE_ENDPOINT_V2, thirdPartyUserId), headers);
+
+        assertThat(deleteResponse.getStatusCode()).isEqualTo(FORBIDDEN.value());
+
+        Map<String, String> getUserHeaders = new ConcurrentHashMap<>(bearer);
+        getUserHeaders.put(REQUESTER_ID_HEADER, idMap.get(Roles.SYSTEM_ADMIN));
+
+        Response getUserResponse = doGetRequest(String.format(GET_BY_USER_ID, thirdPartyUserId), getUserHeaders);
+        assertThat(getUserResponse.getStatusCode()).isEqualTo(OK.value());
+    }
+
     @ParameterizedTest
     @CsvSource({
-        "INTERNAL_ADMIN_LOCAL,INTERNAL_ADMIN_LOCAL",
-        "INTERNAL_SUPER_ADMIN_CTSC,INTERNAL_ADMIN_LOCAL",
-        "INTERNAL_SUPER_ADMIN_CTSC,VERIFIED"
+        "INTERNAL_ADMIN_LOCAL",
+        "INTERNAL_ADMIN_CTSC",
+        "INTERNAL_SUPER_ADMIN_CTSC",
+        "INTERNAL_SUPER_ADMIN_LOCAL,"
     })
-    void shouldNotBeAbleToDeleteAccount(String adminRole, String createdRole) throws Exception {
-        String createdUserId = getCreatedAccountUserId(createAccount(email, provenanceId, Roles.valueOf(createdRole),
+    void shouldBeAbleToDeleteTheirOwnAccountWhenAdmin(String adminRole) throws Exception {
+        String createdUserId = getCreatedAccountUserId(createAccount(email, provenanceId, Roles.valueOf(adminRole),
+                                                                     UserProvenances.SSO,
                                                                      idMap.get(Roles.INTERNAL_SUPER_ADMIN_CTSC)));
 
         Map<String, String> headers = new ConcurrentHashMap<>(bearer);
-        headers.put(REQUESTER_ID_HEADER, idMap.get(Roles.valueOf(adminRole)));
+        headers.put(REQUESTER_ID_HEADER, createdUserId);
+
+        Response deleteResponse = doDeleteRequest(String.format(DELETE_ENDPOINT_V2, createdUserId), headers);
+
+        assertThat(deleteResponse.getStatusCode()).isEqualTo(OK.value());
+
+        headers.put(REQUESTER_ID_HEADER, idMap.get(Roles.SYSTEM_ADMIN));
+
+        Response getUserResponse = doGetRequest(String.format(GET_BY_PROVENANCE_ID, provenanceId), bearer);
+        assertThat(getUserResponse.getStatusCode()).isEqualTo(NOT_FOUND.value());
+    }
+
+    @Test
+    void shouldNotBeAbleToDeleteAccountWhenVerified() throws Exception {
+        String createdUserId = getCreatedAccountUserId(createdVerifiedAccount(email, provenanceId,
+                                                                     idMap.get(Roles.INTERNAL_SUPER_ADMIN_CTSC)));
+
+        Map<String, String> headers = new ConcurrentHashMap<>(bearer);
+        headers.put(REQUESTER_ID_HEADER, createdUserId);
 
         Response deleteResponse = doDeleteRequest(String.format(DELETE_ENDPOINT_V2, createdUserId), headers);
 
@@ -253,7 +313,7 @@ class AccountTest extends AccountHelperBase {
 
     @Test
     void shouldNotBeAbleToDeleteAccountWhenUserNotProvided() throws Exception {
-        String createdUserId = getCreatedAccountUserId(createAccount(email, provenanceId,
+        String createdUserId = getCreatedAccountUserId(createdVerifiedAccount(email, provenanceId,
                                                                      idMap.get(Roles.INTERNAL_SUPER_ADMIN_CTSC)));
 
         Response deleteResponse = doDeleteRequest(String.format(DELETE_ENDPOINT_V2, createdUserId), bearer);
@@ -286,10 +346,17 @@ class AccountTest extends AccountHelperBase {
     }
 
     @Test
-    void shouldNotBeAbleToUpdateRoleWhenUserNotProvided() {
+    void shouldNotBeAbleToUpdateRoleWhenUserNotProvidedAndRoleIsNotSso() throws JsonProcessingException {
+        List<PiUser> thirdParty = generateThirdParty();
+        Map<String, String> headers = new ConcurrentHashMap<>(bearer);
+        headers.put(REQUESTER_ID_HEADER, idMap.get(Roles.SYSTEM_ADMIN));
+        final Response createdResponse = doPostRequest(CREATE_PI_ACCOUNT,
+                                                       headers, objectMapper.writeValueAsString(thirdParty));
+        thirdPartyUserId = (String) createdResponse.getBody()
+            .as(CREATED_RESPONSE_TYPE).get(CreationEnum.CREATED_ACCOUNTS).get(0);
+
         Response updateResponse = doPutRequest(
-            String.format(UPDATE_ACCOUNT_ROLE, idMap.get(Roles.INTERNAL_SUPER_ADMIN_CTSC),
-                SUPER_ADMIN_LOCAL_ROLE_NAME), bearer);
+            String.format(UPDATE_ACCOUNT_ROLE, thirdPartyUserId, Roles.VERIFIED_THIRD_PARTY_CFT), bearer);
 
         assertThat(updateResponse.getStatusCode()).isEqualTo(FORBIDDEN.value());
 
@@ -305,14 +372,14 @@ class AccountTest extends AccountHelperBase {
 
     @ParameterizedTest
     @CsvSource({
-        "INTERNAL_SUPER_ADMIN_CTSC, PI_AAD",
-        "INTERNAL_SUPER_ADMIN_LOCAL, PI_AAD",
-        "SYSTEM_ADMIN, PI_AAD",
-        "INTERNAL_ADMIN_LOCAL, SSO"
+        "INTERNAL_SUPER_ADMIN_CTSC",
+        "INTERNAL_SUPER_ADMIN_LOCAL",
+        "SYSTEM_ADMIN",
+        "INTERNAL_ADMIN_LOCAL"
     })
-    void shouldBeAbleToUpdateRole(String role, String userProvenance) throws JsonProcessingException {
+    void shouldNotBeAbleToUpdateRoleIfAdminAndNotThirdParty(String role) throws JsonProcessingException {
         String createdUserId = getCreatedAccountUserId(
-            createAccount(email, provenanceId, Roles.INTERNAL_ADMIN_LOCAL, UserProvenances.valueOf(userProvenance),
+            createAccount(email, provenanceId, Roles.INTERNAL_ADMIN_LOCAL, UserProvenances.SSO,
                           idMap.get(Roles.INTERNAL_SUPER_ADMIN_CTSC))
         );
 
@@ -322,41 +389,53 @@ class AccountTest extends AccountHelperBase {
         Response updateResponse = doPutRequest(
             String.format(UPDATE_ACCOUNT_ROLE, createdUserId, SUPER_ADMIN_CTSC_ROLE_NAME), headers);
 
-        assertThat(updateResponse.getStatusCode()).isEqualTo(OK.value());
-
-        Map<String, String> getUserHeaders = new ConcurrentHashMap<>(bearer);
-        getUserHeaders.put(REQUESTER_ID_HEADER, idMap.get(Roles.SYSTEM_ADMIN));
-
-        PiUser getUserResponse = doGetRequest(String.format(GET_BY_USER_ID, createdUserId), getUserHeaders)
-                .getBody().as(PiUser.class);
-
-        assertThat(getUserResponse.getRoles()).isEqualTo(Roles.INTERNAL_SUPER_ADMIN_CTSC);
+        assertThat(updateResponse.getStatusCode()).isEqualTo(FORBIDDEN.value());
     }
 
-    @ParameterizedTest
-    @CsvSource({
-        "INTERNAL_ADMIN_LOCAL,INTERNAL_ADMIN_LOCAL",
-        "INTERNAL_SUPER_ADMIN_LOCAL,VERIFIED"
-    })
-    void shouldNotBeAbleToUpdateRole(String adminRole, String createdRole) throws JsonProcessingException {
-        String createdUserId = getCreatedAccountUserId(
-            createAccount(email, provenanceId, Roles.valueOf(createdRole), idMap.get(Roles.INTERNAL_SUPER_ADMIN_CTSC))
-        );
-
+    @Test
+    void shouldNotBeAbleToUpdateThirdPartyRole() throws JsonProcessingException {
+        List<PiUser> thirdParty = generateThirdParty();
         Map<String, String> headers = new ConcurrentHashMap<>(bearer);
-        headers.put(REQUESTER_ID_HEADER, idMap.get(Roles.valueOf(adminRole)));
+        headers.put(REQUESTER_ID_HEADER, idMap.get(Roles.SYSTEM_ADMIN));
+        final Response createdResponse = doPostRequest(CREATE_PI_ACCOUNT,
+                                                       headers, objectMapper.writeValueAsString(thirdParty));
+        thirdPartyUserId = (String) createdResponse.getBody()
+            .as(CREATED_RESPONSE_TYPE).get(CreationEnum.CREATED_ACCOUNTS).get(0);
+
+        headers = new ConcurrentHashMap<>(bearer);
+        headers.put(REQUESTER_ID_HEADER, idMap.get(Roles.INTERNAL_ADMIN_LOCAL));
 
         Response updateResponse = doPutRequest(
-            String.format(UPDATE_ACCOUNT_ROLE, createdUserId, SUPER_ADMIN_CTSC_ROLE_NAME), headers);
+            String.format(UPDATE_ACCOUNT_ROLE, thirdPartyUserId, Roles.VERIFIED_THIRD_PARTY_CFT), headers);
 
         assertThat(updateResponse.getStatusCode()).isEqualTo(FORBIDDEN.value());
 
         Map<String, String> getUserHeaders = new ConcurrentHashMap<>(bearer);
         getUserHeaders.put(REQUESTER_ID_HEADER, idMap.get(Roles.SYSTEM_ADMIN));
 
-        PiUser getUserResponse = doGetRequest(String.format(GET_BY_USER_ID, createdUserId), getUserHeaders)
-                .getBody().as(PiUser.class);
+        PiUser getUserResponse =
+            doGetRequest(String.format(GET_BY_USER_ID, thirdPartyUserId), getUserHeaders).getBody().as(PiUser.class);
 
-        assertThat(getUserResponse.getRoles()).isEqualTo(Roles.valueOf(createdRole));
+        assertThat(getUserResponse.getRoles()).isEqualTo(Roles.GENERAL_THIRD_PARTY);
+    }
+
+    @Test
+    void shouldBeAbleToUpdateRoleIfSsoAndNoAdminProvided() throws JsonProcessingException {
+        String createdUserId = getCreatedAccountUserId(
+            createAccount(email, provenanceId, Roles.INTERNAL_ADMIN_LOCAL, UserProvenances.SSO,
+                          idMap.get(Roles.INTERNAL_SUPER_ADMIN_CTSC)));
+
+        Response updateResponse = doPutRequest(
+            String.format(UPDATE_ACCOUNT_ROLE, createdUserId, SUPER_ADMIN_CTSC_ROLE_NAME), bearer);
+
+        assertThat(updateResponse.getStatusCode()).isEqualTo(OK.value());
+
+        Map<String, String> getUserHeaders = new ConcurrentHashMap<>(bearer);
+        getUserHeaders.put(REQUESTER_ID_HEADER, idMap.get(Roles.SYSTEM_ADMIN));
+
+        PiUser getUserResponse =
+            doGetRequest(String.format(GET_BY_USER_ID, createdUserId), getUserHeaders).getBody().as(PiUser.class);
+
+        assertThat(getUserResponse.getRoles()).isEqualTo(Roles.INTERNAL_SUPER_ADMIN_CTSC);
     }
 }
