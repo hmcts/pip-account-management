@@ -2,7 +2,6 @@ package uk.gov.hmcts.reform.pip.account.management;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.restassured.response.Response;
 import org.json.JSONObject;
 import org.junit.jupiter.api.AfterAll;
@@ -66,8 +65,6 @@ class InactiveAccountsManagementTest extends AccountHelperBase {
     private String adminUserId;
     private String idamUserId;
 
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-
     @BeforeAll
     public void startUp() throws JsonProcessingException {
 
@@ -78,7 +75,7 @@ class InactiveAccountsManagementTest extends AccountHelperBase {
             }
             """.formatted(TEST_SYSTEM_ADMIN_EMAIL, UUID.randomUUID().toString());
 
-        OBJECT_MAPPER.findAndRegisterModules();
+        objectMapper.findAndRegisterModules();
 
         String userId =  doPostRequest(CREATE_SYSTEM_ADMIN_SSO, bearer, requestBody)
             .jsonPath().getString("userId");
@@ -90,7 +87,8 @@ class InactiveAccountsManagementTest extends AccountHelperBase {
         adminUserId = systemAdminAccount.getUserId().toString();
 
         String ctscAdminId = getCreatedAccountUserId(
-            createAccount(generateEmail(), UUID.randomUUID().toString(), INTERNAL_ADMIN_CTSC, adminUserId));
+            createAccount(generateEmail(), UUID.randomUUID().toString(), INTERNAL_ADMIN_CTSC,
+                          UserProvenances.SSO, adminUserId));
         ctscAdminIssuerId = Map.of(REQUESTER_ID_HEADER, ctscAdminId);
 
         //ADD IDAM USER
@@ -131,7 +129,7 @@ class InactiveAccountsManagementTest extends AccountHelperBase {
 
 
         Response response = doPostRequestForB2C(CREATE_AZURE_ACCOUNT, bearer, ctscAdminIssuerId, requestBody);
-        List<AzureAccount> azureAccountList = OBJECT_MAPPER.convertValue(
+        List<AzureAccount> azureAccountList = objectMapper.convertValue(
             response.jsonPath().getJsonObject("CREATED_ACCOUNTS"),
             new TypeReference<>() {
             }
@@ -146,12 +144,13 @@ class InactiveAccountsManagementTest extends AccountHelperBase {
             {
                 "email": "%s",
                 "firstName": "%s",
-                "surname": "%s"
+                "surname": "%s",
+                "provenanceUserId": "%s"
             }
-            """.formatted(email, FIRST_NAME, SURNAME);
+            """.formatted(email, FIRST_NAME, SURNAME, UUID.randomUUID());
 
 
-        Response response = doPostRequestForB2C(ADD_SYSTEM_ADMIN_B2C_URL, bearer, issuerId, requestBody);
+        Response response = doPostRequestForB2C(CREATE_SYSTEM_ADMIN_SSO, bearer, issuerId, requestBody);
         PiUser piUser = response.getBody().as(PiUser.class);
         assertThat(response.getStatusCode()).isEqualTo(OK.value());
 
@@ -172,7 +171,7 @@ class InactiveAccountsManagementTest extends AccountHelperBase {
             """.formatted(email, provenancesId, role, provenances);
 
         Response postResponse = doPostRequestForB2C(CREATE_PI_ACCOUNT, bearer, ctscAdminIssuerId, requestBody);
-        List<UUID> piUsersList = OBJECT_MAPPER.convertValue(
+        List<UUID> piUsersList = objectMapper.convertValue(
             postResponse.jsonPath().getJsonObject("CREATED_ACCOUNTS"),
             new TypeReference<>() {
             }
@@ -223,26 +222,13 @@ class InactiveAccountsManagementTest extends AccountHelperBase {
 
     @Test
     @Order(3)
-    void shouldBeAbleToNotifyInactiveAdminAccounts() {
-        ZonedDateTime localDateTime = ZonedDateTime.now(CL).minusDays(76);
-        Map<String, String> updateParameters = Map.of(
-            LAST_SINGED_IN_DATE, localDateTime.toString()
-        );
-        updateUserAccountLastVerifiedDate(adminProvenanceId,
-                                          UserProvenances.PI_AAD, updateParameters);
-        Response response = doPostRequest(NOTIFY_INACTIVE_ADMIN_ACCOUNT, bearer, "");
-        assertThat(response.getStatusCode()).isEqualTo(NO_CONTENT.value());
-    }
-
-    @Test
-    @Order(4)
     void shouldBeAbleToDeleteInactiveAdminAccounts() {
         ZonedDateTime localDateTime = ZonedDateTime.now(CL).minusDays(90);
         Map<String, String> updateParameters = Map.of(
             LAST_SINGED_IN_DATE, localDateTime.toString()
         );
         updateUserAccountLastVerifiedDate(adminProvenanceId,
-                                          UserProvenances.PI_AAD, updateParameters);
+                                          UserProvenances.SSO, updateParameters);
         Response response = doDeleteRequest(DELETE_INACTIVE_ADMIN_ACCOUNT, bearer);
         assertThat(response.getStatusCode()).isEqualTo(NO_CONTENT.value());
         final Response getPiUserResponse = doGetRequest(String.format(GET_BY_USER_ID, adminUserId),
@@ -251,7 +237,7 @@ class InactiveAccountsManagementTest extends AccountHelperBase {
     }
 
     @Test
-    @Order(5)
+    @Order(4)
     void shouldBeAbleToNotifyInactiveIdamAccounts() {
         ZonedDateTime localDateTime = ZonedDateTime.now(CL).minusDays(118);
         Map<String, String> updateParameters = Map.of(
@@ -264,7 +250,7 @@ class InactiveAccountsManagementTest extends AccountHelperBase {
     }
 
     @Test
-    @Order(6)
+    @Order(5)
     void shouldBeAbleToDeleteInactiveIdamAccounts() {
         ZonedDateTime localDateTime = ZonedDateTime.now(CL).minusDays(132);
         Map<String, String> updateParameters = Map.of(
