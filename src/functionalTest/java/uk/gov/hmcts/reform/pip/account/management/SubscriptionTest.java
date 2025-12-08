@@ -12,6 +12,7 @@ import uk.gov.hmcts.reform.pip.account.management.model.subscription.usersubscri
 import uk.gov.hmcts.reform.pip.account.management.utils.AccountHelperBase;
 import uk.gov.hmcts.reform.pip.model.account.PiUser;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
+import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
 import uk.gov.hmcts.reform.pip.model.publication.ListType;
 import uk.gov.hmcts.reform.pip.model.report.AllSubscriptionMiData;
 import uk.gov.hmcts.reform.pip.model.report.LocationSubscriptionMiData;
@@ -54,7 +55,8 @@ class SubscriptionTest extends AccountHelperBase {
         systemAdminUserId = systemAdminAccount.getUserId();
 
         String createdUserId = getCreatedAccountUserId(
-            createAccount(generateEmail(), UUID.randomUUID().toString(), Roles.GENERAL_THIRD_PARTY, systemAdminUserId)
+            createAccount(generateEmail(), UUID.randomUUID().toString(),
+                          Roles.GENERAL_THIRD_PARTY, UserProvenances.THIRD_PARTY, systemAdminUserId)
         );
 
         verifiedUserId = UUID.fromString(createdUserId);

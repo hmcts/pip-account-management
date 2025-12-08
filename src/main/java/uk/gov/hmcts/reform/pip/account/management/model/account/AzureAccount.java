@@ -7,8 +7,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import uk.gov.hmcts.reform.pip.account.management.validation.annotations.AzureEmail;
-import uk.gov.hmcts.reform.pip.account.management.validation.annotations.NotSystemAdmin;
-import uk.gov.hmcts.reform.pip.model.account.Roles;
 
 /**
  * Model that represents an Azure Account.
@@ -16,7 +14,6 @@ import uk.gov.hmcts.reform.pip.model.account.Roles;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@NotSystemAdmin
 public class AzureAccount {
 
     /**
@@ -48,12 +45,6 @@ public class AzureAccount {
      * The surname of the account.
      */
     private String surname;
-
-    /**
-     * The role of the account.
-     */
-    @NotNull
-    private Roles role;
 
     private String displayName;
 }
