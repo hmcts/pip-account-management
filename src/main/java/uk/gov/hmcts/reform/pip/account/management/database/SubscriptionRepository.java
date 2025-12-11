@@ -20,7 +20,6 @@ import java.util.UUID;
  * create the required functionality for us.
  */
 @Repository
-@SuppressWarnings({"PMD.TooManyMethods"})
 public interface SubscriptionRepository extends JpaRepository<Subscription, Long> {
 
     Optional<Subscription> findById(UUID id);

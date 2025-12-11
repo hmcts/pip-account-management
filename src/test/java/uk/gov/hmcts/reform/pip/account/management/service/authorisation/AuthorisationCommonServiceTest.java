@@ -31,7 +31,6 @@ import static uk.gov.hmcts.reform.pip.model.account.Roles.INTERNAL_ADMIN_CTSC;
 import static uk.gov.hmcts.reform.pip.model.account.Roles.SYSTEM_ADMIN;
 import static uk.gov.hmcts.reform.pip.model.account.Roles.VERIFIED;
 
-@SuppressWarnings("PMD.UnitTestAssertionsShouldIncludeMessage")
 @ExtendWith(MockitoExtension.class)
 class AuthorisationCommonServiceTest {
 

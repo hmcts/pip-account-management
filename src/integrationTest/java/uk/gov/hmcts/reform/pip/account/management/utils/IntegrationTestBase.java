@@ -38,7 +38,6 @@ public class IntegrationTestBase {
         when(blobContainerClient.getBlobContainerUrl()).thenReturn(BLOB_IMAGE_URL);
     }
 
-    @SuppressWarnings({"PMD.SignatureDeclareThrowsException"})
     protected void assertRequestResponseStatus(MockMvc mockMvc, MockHttpServletRequestBuilder request,
                                                int statusCode) throws Exception {
         MvcResult mvcResult = mockMvc.perform(request).andExpect(status().is(statusCode)).andReturn();

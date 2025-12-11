@@ -63,8 +63,6 @@ import static uk.gov.hmcts.reform.pip.model.enums.AuditAction.PUBLICATION_UPLOAD
 
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
 @WithMockUser(username = "admin", authorities = {"APPROLE_api.request.admin"})
-@SuppressWarnings({"PMD.ExcessiveImports", "PMD.UnitTestShouldIncludeAssert",
-    "PMD.CouplingBetweenObjects"})
 class TestingSupportApiTest extends IntegrationTestBase {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
@@ -454,7 +452,6 @@ class TestingSupportApiTest extends IntegrationTestBase {
         return newAccount;
     }
 
-    @SuppressWarnings("PMD.SignatureDeclareThrowsException")
     private MediaApplication createApplication() throws Exception {
         MediaApplication application = new MediaApplication();
         application.setFullName(FULL_NAME);
@@ -496,7 +493,6 @@ class TestingSupportApiTest extends IntegrationTestBase {
         return subscription;
     }
 
-    @SuppressWarnings("PMD.SignatureDeclareThrowsException")
     private AuditLog createAuditLog() throws Exception {
         AuditLog auditLog = new AuditLog();
         auditLog.setUserId(ID);

@@ -35,7 +35,6 @@ import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
  */
 @Slf4j
 @Service
-@SuppressWarnings({"PMD.LooseCoupling", "PMD.TooManyMethods"})
 public class PublicationService {
 
     private static final String WELCOME_EMAIL_URL = "/notify/welcome-email";
