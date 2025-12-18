@@ -41,7 +41,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @WithMockUser(username = "admin", authorities = { "APPROLE_api.request.admin" })
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@SuppressWarnings("PMD.SignatureDeclareThrowsException")
 class AccountIsAuthorisedTest extends IntegrationTestBase {
 
     @Autowired
@@ -245,7 +244,6 @@ class AccountIsAuthorisedTest extends IntegrationTestBase {
         assertRequestResponseStatus(mockMvc, request, FORBIDDEN.value());
     }
 
-    @SuppressWarnings("PMD.SignatureDeclareThrowsException")
     private MvcResult callIsAuthorised(PiUser user, Sensitivity sensitivity, boolean isSystemAdmin) throws Exception {
         String createdUserId = isSystemAdmin ? createSystemAdminAndGetId(user) : createUserAndGetId(user);
 

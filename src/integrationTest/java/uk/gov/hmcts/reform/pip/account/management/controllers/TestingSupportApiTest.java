@@ -63,8 +63,6 @@ import static uk.gov.hmcts.reform.pip.model.enums.AuditAction.PUBLICATION_UPLOAD
 
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
 @WithMockUser(username = "admin", authorities = {"APPROLE_api.request.admin"})
-@SuppressWarnings({"PMD.ExcessiveImports", "PMD.UnitTestShouldIncludeAssert",
-    "PMD.CouplingBetweenObjects"})
 class TestingSupportApiTest extends IntegrationTestBase {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
@@ -85,8 +83,8 @@ class TestingSupportApiTest extends IntegrationTestBase {
     private static final UUID REQUESTER_ID = UUID.randomUUID();
 
     private static final String EMAIL_PREFIX = "TEST_789_";
-    private static final String EMAIL = EMAIL_PREFIX + "user123@test.com";
-    private static final String PASSWORD = "P@55word11";
+    private static final String EMAIL = EMAIL_PREFIX + UUID.randomUUID().toString() + "@test.com";
+    private static final String PASSWORD = UUID.randomUUID().toString();
     private static final String ID = "1234";
 
     private static final String PROVENANCE_USER_ID = UUID.randomUUID().toString();
@@ -217,7 +215,7 @@ class TestingSupportApiTest extends IntegrationTestBase {
 
         //Check whether the user deleted in Pi user table
         mockMvc.perform(get(ACCOUNT_URL + createdAccount.getUserId())
-            .header(REQUESTER_ID_HEADER, REQUESTER_ID))
+                            .header(REQUESTER_ID_HEADER, REQUESTER_ID))
             .andExpect(status().isNotFound());
     }
 
@@ -293,7 +291,7 @@ class TestingSupportApiTest extends IntegrationTestBase {
 
         String userId = mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).getFirst();
         mockMvc.perform(get(ACCOUNT_URL + userId)
-            .header(REQUESTER_ID_HEADER, REQUESTER_ID))
+                            .header(REQUESTER_ID_HEADER, REQUESTER_ID))
             .andExpect(status().isOk());
 
         when(accountAuthorisationService.userCanDeleteAccount(any(), any())).thenReturn(true);
@@ -307,7 +305,7 @@ class TestingSupportApiTest extends IntegrationTestBase {
 
         when(accountAuthorisationService.userCanGetAccountByUserId(any(), any())).thenReturn(true);
         mockMvc.perform(get(ACCOUNT_URL + userId)
-            .header(REQUESTER_ID_HEADER, REQUESTER_ID))
+                            .header(REQUESTER_ID_HEADER, REQUESTER_ID))
             .andExpect(status().isNotFound());
     }
 
@@ -317,7 +315,7 @@ class TestingSupportApiTest extends IntegrationTestBase {
 
         when(mediaApplicationAuthorisationService.userCanViewMediaApplications(any())).thenReturn(true);
         mockMvc.perform(get(APPLICATION_URL + "/" + application.getId())
-            .header(REQUESTER_ID_HEADER, REQUESTER_ID))
+                            .header(REQUESTER_ID_HEADER, REQUESTER_ID))
             .andExpect(status().isOk());
 
         MvcResult deleteResponse = mockMvc.perform(delete(TESTING_SUPPORT_APPLICATION_URL + EMAIL_PREFIX))
@@ -330,7 +328,7 @@ class TestingSupportApiTest extends IntegrationTestBase {
 
         when(mediaApplicationAuthorisationService.userCanViewMediaApplications(any())).thenReturn(true);
         mockMvc.perform(get(APPLICATION_URL + "/" + application.getId())
-            .header(REQUESTER_ID_HEADER, REQUESTER_ID))
+                            .header(REQUESTER_ID_HEADER, REQUESTER_ID))
             .andExpect(status().isNotFound());
     }
 
@@ -370,7 +368,7 @@ class TestingSupportApiTest extends IntegrationTestBase {
         AuditLog auditLog = createAuditLog();
 
         mockMvc.perform(get(AUDIT_URL + "/" + auditLog.getId())
-            .header(REQUESTER_ID_HEADER, REQUESTER_ID))
+                            .header(REQUESTER_ID_HEADER, REQUESTER_ID))
             .andExpect(status().isOk());
 
         MvcResult deleteResponse = mockMvc.perform(delete(TESTING_SUPPORT_AUDIT_URL + EMAIL_PREFIX))
@@ -382,7 +380,7 @@ class TestingSupportApiTest extends IntegrationTestBase {
             .isEqualTo("2 audit log(s) deleted with user email starting with " + EMAIL_PREFIX);
 
         mockMvc.perform(get(AUDIT_URL + "/" + auditLog.getId())
-            .header(REQUESTER_ID_HEADER, REQUESTER_ID))
+                            .header(REQUESTER_ID_HEADER, REQUESTER_ID))
             .andExpect(status().isNotFound());
     }
 
@@ -392,11 +390,11 @@ class TestingSupportApiTest extends IntegrationTestBase {
         LocalDate expiredDate = auditLog.getTimestamp().minusDays(200).toLocalDate();
 
         mockMvc.perform(get(AUDIT_URL + "/" + auditLog.getId())
-            .header(REQUESTER_ID_HEADER, REQUESTER_ID))
+                            .header(REQUESTER_ID_HEADER, REQUESTER_ID))
             .andExpect(status().isOk());
 
         MvcResult updateAudit = mockMvc.perform(put(TESTING_SUPPORT_AUDIT_URL + auditLog.getId())
-            .header(REQUESTER_ID_HEADER, REQUESTER_ID))
+                                                    .header(REQUESTER_ID_HEADER, REQUESTER_ID))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -454,7 +452,6 @@ class TestingSupportApiTest extends IntegrationTestBase {
         return newAccount;
     }
 
-    @SuppressWarnings("PMD.SignatureDeclareThrowsException")
     private MediaApplication createApplication() throws Exception {
         MediaApplication application = new MediaApplication();
         application.setFullName(FULL_NAME);
@@ -496,7 +493,6 @@ class TestingSupportApiTest extends IntegrationTestBase {
         return subscription;
     }
 
-    @SuppressWarnings("PMD.SignatureDeclareThrowsException")
     private AuditLog createAuditLog() throws Exception {
         AuditLog auditLog = new AuditLog();
         auditLog.setUserId(ID);
