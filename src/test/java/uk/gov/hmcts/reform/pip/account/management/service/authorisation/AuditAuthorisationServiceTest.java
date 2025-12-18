@@ -20,7 +20,6 @@ import static org.mockito.Mockito.when;
 import static uk.gov.hmcts.reform.pip.model.account.Roles.SYSTEM_ADMIN;
 
 @ExtendWith(MockitoExtension.class)
-@SuppressWarnings("PMD.UnitTestAssertionsShouldIncludeMessage")
 class AuditAuthorisationServiceTest {
     private static final UUID USER_ID = UUID.randomUUID();
     private static final UUID ADMIN_USER_ID = UUID.randomUUID();

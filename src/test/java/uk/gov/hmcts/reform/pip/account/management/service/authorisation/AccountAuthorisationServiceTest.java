@@ -37,7 +37,6 @@ import static uk.gov.hmcts.reform.pip.model.account.Roles.SYSTEM_ADMIN;
 import static uk.gov.hmcts.reform.pip.model.account.Roles.VERIFIED;
 import static uk.gov.hmcts.reform.pip.model.account.Roles.VERIFIED_THIRD_PARTY_PRESS;
 
-@SuppressWarnings("PMD.UnitTestAssertionsShouldIncludeMessage")
 @ExtendWith(MockitoExtension.class)
 class AccountAuthorisationServiceTest {
     private static final UUID USER_ID = UUID.randomUUID();

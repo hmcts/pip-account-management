@@ -43,7 +43,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
 @WithMockUser(username = "admin", authorities = {"APPROLE_api.request.admin"})
-@SuppressWarnings({"PMD.UnitTestShouldIncludeAssert"})
 class MediaApplicationTest extends IntegrationTestBase {
     @Autowired
     private MockMvc mockMvc;
@@ -95,7 +94,6 @@ class MediaApplicationTest extends IntegrationTestBase {
         when(mediaApplicationAuthorisationService.userCanUpdateMediaApplications(any())).thenReturn(true);
     }
 
-    @SuppressWarnings("PMD.SignatureDeclareThrowsException")
     private MediaApplication createApplication() throws Exception {
         MediaApplication mediaApplication = new MediaApplication();
         mediaApplication.setFullName(FULL_NAME);
@@ -120,7 +118,6 @@ class MediaApplicationTest extends IntegrationTestBase {
         }
     }
 
-    @SuppressWarnings("PMD.SignatureDeclareThrowsException")
     private MvcResult createApplicationRequest(String fullname, String email,
                                                String employer, MediaApplicationStatus status) throws Exception {
         MediaApplication application = new MediaApplication();
