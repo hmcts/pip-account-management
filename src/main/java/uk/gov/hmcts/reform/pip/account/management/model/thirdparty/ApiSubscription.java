@@ -1,6 +1,5 @@
 package uk.gov.hmcts.reform.pip.account.management.model.thirdparty;
 
-import com.fasterxml.jackson.annotation.JsonView;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
