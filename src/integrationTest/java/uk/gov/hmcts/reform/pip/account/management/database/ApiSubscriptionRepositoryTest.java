@@ -1,7 +1,6 @@
 package uk.gov.hmcts.reform.pip.account.management.database;
 
 import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,32 +21,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ApiSubscriptionRepositoryTest {
-
-    private static final UUID USER_ID1 = UUID.randomUUID();
-    private static final UUID USER_ID2 = UUID.randomUUID();
+    private static final UUID USER_ID = UUID.randomUUID();
+    private static final UUID INVALID_USER_ID = UUID.randomUUID();
 
     @Autowired
     ApiSubscriptionRepository apiSubscriptionRepository;
-
-    @BeforeAll
-    void setup() {
-        ApiSubscription apiSubscription1 = new ApiSubscription();
-        apiSubscription1.setUserId(USER_ID1);
-        apiSubscription1.setListType(ListType.CIVIL_DAILY_CAUSE_LIST);
-        apiSubscription1.setSensitivity(Sensitivity.PUBLIC);
-
-        ApiSubscription apiSubscription2 = new ApiSubscription();
-        apiSubscription2.setUserId(USER_ID1);
-        apiSubscription2.setListType(ListType.FAMILY_DAILY_CAUSE_LIST);
-        apiSubscription2.setSensitivity(Sensitivity.PRIVATE);
-
-        ApiSubscription apiSubscription3 = new ApiSubscription();
-        apiSubscription3.setUserId(USER_ID2);
-        apiSubscription3.setListType(ListType.FAMILY_DAILY_CAUSE_LIST);
-        apiSubscription3.setSensitivity(Sensitivity.CLASSIFIED);
-
-        apiSubscriptionRepository.saveAll(List.of(apiSubscription1, apiSubscription2, apiSubscription3));
-    }
 
     @AfterAll
     void shutdown() {
@@ -55,8 +33,20 @@ class ApiSubscriptionRepositoryTest {
     }
 
     @Test
-    void shouldFindApiSubscriptionsByUserId() {
-        List<ApiSubscription> apiSubscriptions = apiSubscriptionRepository.findAllByUserId(USER_ID1);
+    void shouldFindAndDeleteApiSubscriptionsByUserId() {
+        ApiSubscription apiSubscription1 = new ApiSubscription();
+        apiSubscription1.setUserId(USER_ID);
+        apiSubscription1.setListType(ListType.CIVIL_DAILY_CAUSE_LIST);
+        apiSubscription1.setSensitivity(Sensitivity.PUBLIC);
+
+        ApiSubscription apiSubscription2 = new ApiSubscription();
+        apiSubscription2.setUserId(USER_ID);
+        apiSubscription2.setListType(ListType.FAMILY_DAILY_CAUSE_LIST);
+        apiSubscription2.setSensitivity(Sensitivity.PRIVATE);
+
+        apiSubscriptionRepository.saveAll(List.of(apiSubscription1, apiSubscription2));
+
+        List<ApiSubscription> apiSubscriptions = apiSubscriptionRepository.findAllByUserId(USER_ID);
 
         assertThat(apiSubscriptions)
             .as("Third-party API subscription count does not match")
@@ -71,18 +61,18 @@ class ApiSubscriptionRepositoryTest {
             .as("Third-party API subscription sensitivities do not match")
             .extracting(ApiSubscription::getSensitivity)
             .containsExactly(Sensitivity.PUBLIC, Sensitivity.PRIVATE);
+
+        apiSubscriptionRepository.deleteAllByUserId(USER_ID);
+
+        assertThat(apiSubscriptionRepository.findAllByUserId(USER_ID))
+            .as("Third-party API subscription should be deleted")
+            .isEmpty();
     }
 
     @Test
-    void shouldDeleteApiSubscriptionsByUserId() {
-        assertThat(apiSubscriptionRepository.findAllByUserId(USER_ID2))
-            .as("Third-party API subscription exists")
-            .isNotEmpty();
-
-        apiSubscriptionRepository.deleteAllByUserId(USER_ID2);
-
-        assertThat(apiSubscriptionRepository.findAllByUserId(USER_ID2))
-            .as("Third-party API subscription should be deleted")
+    void shouldNotFindApiSubscriptionsByInvalidUser() {
+        assertThat(apiSubscriptionRepository.findAllByUserId(INVALID_USER_ID))
+            .as("Third-party API subscription should be empty")
             .isEmpty();
     }
 }
