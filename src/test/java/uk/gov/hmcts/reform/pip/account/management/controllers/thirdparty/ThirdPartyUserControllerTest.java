@@ -1,0 +1,85 @@
+package uk.gov.hmcts.reform.pip.account.management.controllers.thirdparty;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import uk.gov.hmcts.reform.pip.account.management.model.thirdparty.ApiUser;
+import uk.gov.hmcts.reform.pip.account.management.service.thirdparty.ThirdPartyUserService;
+
+import java.util.UUID;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+@ExtendWith(MockitoExtension.class)
+class ThirdPartyUserControllerTest {
+    private static final UUID REQUESTER_ID = UUID.randomUUID();
+    private static final UUID USER_ID = UUID.randomUUID();
+
+    @Mock
+    private ThirdPartyUserService thirdPartyUserService;
+
+    @InjectMocks
+    private ThirdPartyUserController controller;
+
+    @Test
+    void testCreateThirdPartyUser() {
+        ApiUser inputUser = new ApiUser();
+        ApiUser createdUser = new ApiUser();
+        createdUser.setUserId(USER_ID);
+
+        when(thirdPartyUserService.createThirdPartyUser(inputUser)).thenReturn(createdUser);
+
+        ResponseEntity<String> response = controller.createThirdPartyUser(inputUser, REQUESTER_ID);
+
+        assertThat(response.getStatusCode())
+            .as("Response status should be CREATED")
+            .isEqualTo(HttpStatus.CREATED);
+
+        assertThat(response.getBody())
+            .as("Response body should contain the user ID")
+            .contains(USER_ID.toString());
+
+        verify(thirdPartyUserService).createThirdPartyUser(inputUser);
+    }
+
+    @Test
+    void testGetThirdPartyUser() {
+        ApiUser apiUser = new ApiUser();
+        apiUser.setUserId(USER_ID);
+
+        when(thirdPartyUserService.findThirdPartyUser(USER_ID)).thenReturn(apiUser);
+
+        ResponseEntity<ApiUser> response = controller.getThirdPartyUser(USER_ID, REQUESTER_ID);
+
+        assertThat(response.getStatusCode())
+            .as("Response status should be OK")
+            .isEqualTo(HttpStatus.OK);
+
+        assertThat(response.getBody())
+            .as("Response body should be the expected ApiUser")
+            .isEqualTo(apiUser);
+
+        verify(thirdPartyUserService).findThirdPartyUser(USER_ID);
+    }
+
+    @Test
+    void testDeleteThirdPartyUser() {
+        ResponseEntity<String> response = controller.deleteThirdPartyUser(USER_ID, REQUESTER_ID);
+
+        assertThat(response.getStatusCode())
+            .as("Response status should be OK")
+            .isEqualTo(HttpStatus.OK);
+
+        assertThat(response.getBody())
+            .as("Response body should contain the user ID")
+            .contains(USER_ID.toString());
+
+        verify(thirdPartyUserService).deleteThirdPartyUser(USER_ID);
+    }
+}
