@@ -1,6 +1,5 @@
 package uk.gov.hmcts.reform.pip.account.management.controllers.thirdparty;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
 import org.junit.jupiter.api.BeforeAll;
@@ -48,7 +47,6 @@ class ThirdPartyConfigurationTest extends IntegrationTestBase {
     private static final String CLIENT_SECRET_KEY = "client-secret";
     private static final String SCOPE_KEY = "scope";
 
-    private UUID userId;
     private ApiOauthConfiguration apiOauthConfiguration = new ApiOauthConfiguration();
 
     @Autowired
@@ -61,8 +59,6 @@ class ThirdPartyConfigurationTest extends IntegrationTestBase {
     void setup() throws Exception {
         OBJECT_MAPPER.findAndRegisterModules();
 
-        userId = createApiUser();
-        apiOauthConfiguration.setUserId(userId);
         apiOauthConfiguration.setDestinationUrl(DESTINATION_URL);
         apiOauthConfiguration.setTokenUrl(TOKEN_URL);
         apiOauthConfiguration.setClientIdKey(CLIENT_ID_KEY);
@@ -77,6 +73,9 @@ class ThirdPartyConfigurationTest extends IntegrationTestBase {
 
     @Test
     void testCreateThirdPartyConfigurationSuccess() throws Exception {
+        UUID userId = createApiUser();
+        apiOauthConfiguration.setUserId(userId);
+
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .post(THIRD_PARTY_CONFIGURATION_PATH)
             .header(REQUESTER_ID_HEADER, REQUESTER_ID)

@@ -15,7 +15,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import uk.gov.hmcts.reform.pip.account.management.model.thirdparty.ApiOauthConfiguration;
 import uk.gov.hmcts.reform.pip.account.management.model.thirdparty.ApiSubscription;
 import uk.gov.hmcts.reform.pip.account.management.model.thirdparty.ApiUser;
 import uk.gov.hmcts.reform.pip.account.management.service.authorisation.ThirdPartyAuthorisationService;
@@ -45,7 +44,6 @@ class ThirdPartySubscriptionTest extends IntegrationTestBase {
     private static final UUID REQUESTER_ID = UUID.randomUUID();
     private static final String USER_NAME = "ThirdPartyUser";
 
-    private UUID userId;
     private ApiSubscription apiSubscription1 = new ApiSubscription();
     private ApiSubscription apiSubscription2 = new ApiSubscription();
 
@@ -59,11 +57,8 @@ class ThirdPartySubscriptionTest extends IntegrationTestBase {
     void setup() throws Exception {
         OBJECT_MAPPER.findAndRegisterModules();
 
-        userId = createApiUser();
-        apiSubscription1.setUserId(userId);
         apiSubscription1.setListType(ListType.CIVIL_DAILY_CAUSE_LIST);
         apiSubscription1.setSensitivity(Sensitivity.PUBLIC);
-        apiSubscription2.setUserId(userId);
         apiSubscription2.setListType(ListType.FAMILY_DAILY_CAUSE_LIST);
         apiSubscription2.setSensitivity(Sensitivity.CLASSIFIED);
     }
@@ -75,6 +70,10 @@ class ThirdPartySubscriptionTest extends IntegrationTestBase {
 
     @Test
     void testCreateThirdPartySubscriptionSuccess() throws Exception {
+        UUID userId = createApiUser();
+        apiSubscription1.setUserId(userId);
+        apiSubscription2.setUserId(userId);
+
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .post(THIRD_PARTY_SUBSCRIPTION_PATH)
             .header(REQUESTER_ID_HEADER, REQUESTER_ID)
