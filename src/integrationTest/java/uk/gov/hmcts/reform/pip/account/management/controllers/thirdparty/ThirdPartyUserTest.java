@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -24,6 +25,7 @@ import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
 @WithMockUser(username = "admin", authorities = {"APPROLE_api.request.admin"})
 class ThirdPartyUserTest extends IntegrationTestBase {
@@ -52,7 +54,7 @@ class ThirdPartyUserTest extends IntegrationTestBase {
 
     @BeforeEach
     public void setupEach() {
-        lenient().when(thirdPartyAuthorisationService.userCanManageThirdParty(REQUESTER_ID)).thenReturn(true);
+        when(thirdPartyAuthorisationService.userCanManageThirdParty(REQUESTER_ID)).thenReturn(true);
     }
 
     @Test
@@ -75,7 +77,7 @@ class ThirdPartyUserTest extends IntegrationTestBase {
     }
 
     @Test
-    void testCreateThirdPartyUserWithNoName() throws Exception {
+    void testCreateThirdPartyUserBadRequest() throws Exception {
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .post(THIRD_PARTY_USER_PATH)
             .header(REQUESTER_ID_HEADER, REQUESTER_ID)
@@ -96,6 +98,84 @@ class ThirdPartyUserTest extends IntegrationTestBase {
             .header(REQUESTER_ID_HEADER, REQUESTER_ID)
             .contentType(MediaType.APPLICATION_JSON)
             .content(OBJECT_MAPPER.writeValueAsString(apiUser));
+
+        mvc.perform(request)
+            .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void testGetAllThirdPartyUsersSuccess() throws Exception {
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+            .get(THIRD_PARTY_USER_PATH)
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID);
+
+        mvc.perform(request)
+            .andExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
+    void testUnauthorisedGetAllThirdPartyUsers() throws Exception {
+        when(thirdPartyAuthorisationService.userCanManageThirdParty(REQUESTER_ID)).thenReturn(false);
+
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+            .get(THIRD_PARTY_USER_PATH)
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID);
+
+        mvc.perform(request)
+            .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void testGetThirdPartyUserByUserIdSuccess() throws Exception {
+        MockHttpServletRequestBuilder createRequest = MockMvcRequestBuilders
+            .post(THIRD_PARTY_USER_PATH)
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(OBJECT_MAPPER.writeValueAsString(new ApiUser()));
+
+        MvcResult createResponse = mvc.perform(createRequest)
+            .andExpect(status().isCreated())
+            .andReturn();
+
+        ApiUser createdApiUser = OBJECT_MAPPER.readValue(createResponse.getResponse().getContentAsString(),
+                                                         ApiUser.class);
+        UUID createdUserId = createdApiUser.getUserId();
+
+        MockHttpServletRequestBuilder getRequest = MockMvcRequestBuilders
+            .get(THIRD_PARTY_USER_PATH + "/" + createdUserId)
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID);
+
+        MvcResult getResponse = mvc.perform(getRequest)
+            .andExpect(status().isOk())
+            .andReturn();
+
+        ApiUser retrievedApiUser = OBJECT_MAPPER.readValue(getResponse.getResponse().getContentAsString(),
+                                                           ApiUser.class);
+
+        assertThat(retrievedApiUser.getName())
+            .as("Retrieved user name should be returned")
+            .isEqualTo(USER_NAME);
+    }
+
+    @Test
+    void testGetThirdPartyUserNotFound() throws Exception {
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+            .get(THIRD_PARTY_USER_PATH + "/" + UUID.randomUUID())
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID);
+
+        mvc.perform(request)
+            .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
+    void testUnauthorisedGetThirdPartyUserByUserId() throws Exception {
+        when(thirdPartyAuthorisationService.userCanManageThirdParty(REQUESTER_ID)).thenReturn(false);
+
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+            .get(THIRD_PARTY_USER_PATH + "/" + UUID.randomUUID())
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID);
 
         mvc.perform(request)
             .andExpect(status().isForbidden());
