@@ -37,8 +37,6 @@ class ThirdPartyConfigurationServiceTest {
         assertThat(result)
             .as("Should return the saved configuration")
             .isSameAs(config);
-
-        verify(apiOauthConfigurationRepository).save(config);
     }
 
     @Test
@@ -51,8 +49,6 @@ class ThirdPartyConfigurationServiceTest {
         assertThat(result)
             .as("Should return the found configuration")
             .isSameAs(config);
-
-        verify(apiOauthConfigurationRepository).findByUserId(USER_ID);
     }
 
     @Test

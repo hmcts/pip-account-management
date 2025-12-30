@@ -20,6 +20,7 @@ import uk.gov.hmcts.reform.pip.account.management.utils.IntegrationTestBase;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -27,6 +28,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WithMockUser(username = "admin", authorities = {"APPROLE_api.request.admin"})
 class ThirdPartyUserTest extends IntegrationTestBase {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final String UNAUTHORIZED_ROLE = "APPROLE_unknown.authorized";
+    private static final String UNAUTHORIZED_USERNAME = "unauthorized_isAuthorized";
+
     private static final String THIRD_PARTY_USER_PATH = "/third-party";
     private static final String REQUESTER_ID_HEADER = "x-requester-id";
     private static final UUID REQUESTER_ID = UUID.randomUUID();
@@ -48,7 +52,7 @@ class ThirdPartyUserTest extends IntegrationTestBase {
 
     @BeforeEach
     public void setupEach() {
-        when(thirdPartyAuthorisationService.userCanManageThirdParty(REQUESTER_ID)).thenReturn(true);
+        lenient().when(thirdPartyAuthorisationService.userCanManageThirdParty(REQUESTER_ID)).thenReturn(true);
     }
 
     @Test
@@ -59,12 +63,15 @@ class ThirdPartyUserTest extends IntegrationTestBase {
             .contentType(MediaType.APPLICATION_JSON)
             .content(OBJECT_MAPPER.writeValueAsString(apiUser));
 
-        MvcResult result = mvc.perform(request)
+        MvcResult response = mvc.perform(request)
             .andExpect(status().isCreated())
             .andReturn();
 
-        assertThat(result.getResponse().getContentAsString())
-            .contains("Third-party user created");
+        ApiUser createdApiUser = OBJECT_MAPPER.readValue(response.getResponse().getContentAsString(), ApiUser.class);
+
+        assertThat(createdApiUser.getName())
+            .as("Created user name should be returned")
+            .isEqualTo(USER_NAME);
     }
 
     @Test
@@ -77,5 +84,72 @@ class ThirdPartyUserTest extends IntegrationTestBase {
 
         mvc.perform(request)
             .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
+    void testUnauthorisedCreateThirdPartyUser() throws Exception {
+        when(thirdPartyAuthorisationService.userCanManageThirdParty(REQUESTER_ID)).thenReturn(false);
+
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+            .post(THIRD_PARTY_USER_PATH)
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(OBJECT_MAPPER.writeValueAsString(apiUser));
+
+        mvc.perform(request)
+            .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void testDeleteThirdPartyUserSuccess() throws Exception {
+        MockHttpServletRequestBuilder createRequest = MockMvcRequestBuilders
+            .post(THIRD_PARTY_USER_PATH)
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(OBJECT_MAPPER.writeValueAsString(new ApiUser()));
+
+        MvcResult createResponse = mvc.perform(createRequest)
+            .andExpect(status().isCreated())
+            .andReturn();
+
+        ApiUser createdApiUser = OBJECT_MAPPER.readValue(createResponse.getResponse().getContentAsString(),
+                                                         ApiUser.class);
+        UUID createdUserId = createdApiUser.getUserId();
+
+        MockHttpServletRequestBuilder deleteRequest = MockMvcRequestBuilders
+            .delete(THIRD_PARTY_USER_PATH + "/" + createdUserId)
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID);
+
+        MvcResult deleteResponse = mvc.perform(deleteRequest)
+            .andExpect(status().isOk())
+            .andReturn();
+
+        assertThat(deleteResponse.getResponse().getContentAsString())
+            .as("Response message should confirm deletion")
+            .isEqualTo(String.format("Third-party user with ID %s has been deleted", createdUserId));
+    }
+
+    @Test
+    void testDeleteThirdPartyUserNotFound() throws Exception {
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+            .delete(THIRD_PARTY_USER_PATH + "/" + UUID.randomUUID())
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID);
+
+        mvc.perform(request)
+            .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
+    void testUnauthorisedDeleteThirdPartyUser() throws Exception {
+        when(thirdPartyAuthorisationService.userCanManageThirdParty(REQUESTER_ID)).thenReturn(false);
+
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+            .delete(THIRD_PARTY_USER_PATH + "/" + UUID.randomUUID())
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID);
+
+        mvc.perform(request)
+            .andExpect(status().isForbidden());
     }
 }

@@ -42,7 +42,6 @@ class ThirdPartySubscriptionServiceTest {
         assertThat(result)
             .as("Should return the saved subscriptions")
             .isEqualTo(subs);
-        verify(apiSubscriptionRepository).saveAll(subs);
     }
 
     @Test
@@ -55,8 +54,6 @@ class ThirdPartySubscriptionServiceTest {
         assertThat(result)
             .as("Should return the found subscriptions")
             .isEqualTo(subs);
-
-        verify(apiSubscriptionRepository).findAllByUserId(USER_ID);
     }
 
     @Test

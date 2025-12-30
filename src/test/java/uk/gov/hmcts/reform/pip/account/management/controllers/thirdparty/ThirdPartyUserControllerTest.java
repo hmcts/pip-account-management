@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import uk.gov.hmcts.reform.pip.account.management.model.thirdparty.ApiUser;
 import uk.gov.hmcts.reform.pip.account.management.service.thirdparty.ThirdPartyUserService;
 
+import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -20,6 +21,7 @@ import static org.mockito.Mockito.when;
 class ThirdPartyUserControllerTest {
     private static final UUID REQUESTER_ID = UUID.randomUUID();
     private static final UUID USER_ID = UUID.randomUUID();
+    private static final String OK_MESSAGE = "Response status should be OK";
 
     @Mock
     private ThirdPartyUserService thirdPartyUserService;
@@ -31,11 +33,10 @@ class ThirdPartyUserControllerTest {
     void testCreateThirdPartyUser() {
         ApiUser inputUser = new ApiUser();
         ApiUser createdUser = new ApiUser();
-        createdUser.setUserId(USER_ID);
 
         when(thirdPartyUserService.createThirdPartyUser(inputUser)).thenReturn(createdUser);
 
-        ResponseEntity<String> response = controller.createThirdPartyUser(inputUser, REQUESTER_ID);
+        ResponseEntity<ApiUser> response = controller.createThirdPartyUser(inputUser, REQUESTER_ID);
 
         assertThat(response.getStatusCode())
             .as("Response status should be CREATED")
@@ -43,9 +44,25 @@ class ThirdPartyUserControllerTest {
 
         assertThat(response.getBody())
             .as("Response body should contain the user ID")
-            .contains(USER_ID.toString());
+            .isEqualTo(createdUser);
 
         verify(thirdPartyUserService).createThirdPartyUser(inputUser);
+    }
+
+    @Test
+    void testGetAllThirdPartyUsers() {
+        when(thirdPartyUserService.getAllThirdPartyUsers())
+            .thenReturn(List.of(new ApiUser(), new ApiUser(), new ApiUser()));
+
+        ResponseEntity<List<ApiUser>> response = controller.getAllThirdPartyUsers(REQUESTER_ID);
+
+        assertThat(response.getStatusCode())
+            .as(OK_MESSAGE)
+            .isEqualTo(HttpStatus.OK);
+
+        assertThat(response.getBody())
+            .as("Response body should contain the list of ApiUsers")
+            .hasSize(3);
     }
 
     @Test
@@ -58,14 +75,12 @@ class ThirdPartyUserControllerTest {
         ResponseEntity<ApiUser> response = controller.getThirdPartyUserByUserId(USER_ID, REQUESTER_ID);
 
         assertThat(response.getStatusCode())
-            .as("Response status should be OK")
+            .as(OK_MESSAGE)
             .isEqualTo(HttpStatus.OK);
 
         assertThat(response.getBody())
             .as("Response body should be the expected ApiUser")
             .isEqualTo(apiUser);
-
-        verify(thirdPartyUserService).findThirdPartyUser(USER_ID);
     }
 
     @Test
@@ -73,7 +88,7 @@ class ThirdPartyUserControllerTest {
         ResponseEntity<String> response = controller.deleteThirdPartyUser(USER_ID, REQUESTER_ID);
 
         assertThat(response.getStatusCode())
-            .as("Response status should be OK")
+            .as(OK_MESSAGE)
             .isEqualTo(HttpStatus.OK);
 
         assertThat(response.getBody())

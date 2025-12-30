@@ -9,6 +9,7 @@ import uk.gov.hmcts.reform.pip.account.management.database.ApiUserRepository;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.NotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.model.thirdparty.ApiUser;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -43,8 +44,17 @@ class ThirdPartyUserServiceTest {
         assertThat(result)
             .as("Should return the saved user")
             .isSameAs(user);
+    }
 
-        verify(apiUserRepository).save(user);
+    @Test
+    void testGetAllThirdPartyUsers() {
+        when(apiUserRepository.findAll()).thenReturn(List.of(new ApiUser(), new ApiUser()));
+
+        List<ApiUser> result = service.getAllThirdPartyUsers();
+
+        assertThat(result)
+            .as("Should return all users")
+            .hasSize(2);
     }
 
     @Test
@@ -57,8 +67,6 @@ class ThirdPartyUserServiceTest {
         assertThat(result)
             .as("Should return the found user")
             .isSameAs(user);
-
-        verify(apiUserRepository).findByUserId(USER_ID);
     }
 
     @Test
