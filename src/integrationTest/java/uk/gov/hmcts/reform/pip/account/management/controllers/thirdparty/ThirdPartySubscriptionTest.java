@@ -1,6 +1,5 @@
 package uk.gov.hmcts.reform.pip.account.management.controllers.thirdparty;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
 import org.junit.jupiter.api.BeforeAll;
@@ -17,10 +16,14 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import uk.gov.hmcts.reform.pip.account.management.model.thirdparty.ApiOauthConfiguration;
+import uk.gov.hmcts.reform.pip.account.management.model.thirdparty.ApiSubscription;
 import uk.gov.hmcts.reform.pip.account.management.model.thirdparty.ApiUser;
 import uk.gov.hmcts.reform.pip.account.management.service.authorisation.ThirdPartyAuthorisationService;
 import uk.gov.hmcts.reform.pip.account.management.utils.IntegrationTestBase;
+import uk.gov.hmcts.reform.pip.model.publication.ListType;
+import uk.gov.hmcts.reform.pip.model.publication.Sensitivity;
 
+import java.util.List;
 import java.util.UUID;
 
 import static org.mockito.Mockito.when;
@@ -30,25 +33,20 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
 @WithMockUser(username = "admin", authorities = {"APPROLE_api.request.admin"})
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class ThirdPartyConfigurationTest extends IntegrationTestBase {
+class ThirdPartySubscriptionTest extends IntegrationTestBase {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final String UNAUTHORISED_ROLE = "APPROLE_unknown.authorised";
     private static final String UNAUTHORISED_USERNAME = "unauthorised_isAuthorised";
 
     private static final String THIRD_PARTY_USER_PATH = "/third-party";
-    private static final String THIRD_PARTY_CONFIGURATION_PATH = THIRD_PARTY_USER_PATH + "/configuration";
+    private static final String THIRD_PARTY_SUBSCRIPTION_PATH = THIRD_PARTY_USER_PATH + "/subscription";
     private static final String REQUESTER_ID_HEADER = "x-requester-id";
     private static final UUID REQUESTER_ID = UUID.randomUUID();
-
     private static final String USER_NAME = "ThirdPartyUser";
-    private static final String DESTINATION_URL = "https://example.com/callback";
-    private static final String TOKEN_URL = "https://example.com/token";
-    private static final String CLIENT_ID_KEY = "client-id";
-    private static final String CLIENT_SECRET_KEY = "client-secret";
-    private static final String SCOPE_KEY = "scope";
 
     private UUID userId;
-    private ApiOauthConfiguration apiOauthConfiguration = new ApiOauthConfiguration();
+    private ApiSubscription apiSubscription1 = new ApiSubscription();
+    private ApiSubscription apiSubscription2 = new ApiSubscription();
 
     @Autowired
     protected MockMvc mvc;
@@ -61,12 +59,12 @@ class ThirdPartyConfigurationTest extends IntegrationTestBase {
         OBJECT_MAPPER.findAndRegisterModules();
 
         userId = createApiUser();
-        apiOauthConfiguration.setUserId(userId);
-        apiOauthConfiguration.setDestinationUrl(DESTINATION_URL);
-        apiOauthConfiguration.setTokenUrl(TOKEN_URL);
-        apiOauthConfiguration.setClientIdKey(CLIENT_ID_KEY);
-        apiOauthConfiguration.setClientSecretKey(CLIENT_SECRET_KEY);
-        apiOauthConfiguration.setScopeKey(SCOPE_KEY);
+        apiSubscription1.setUserId(userId);
+        apiSubscription1.setListType(ListType.CIVIL_DAILY_CAUSE_LIST);
+        apiSubscription1.setSensitivity(Sensitivity.PUBLIC);
+        apiSubscription2.setUserId(userId);
+        apiSubscription2.setListType(ListType.FAMILY_DAILY_CAUSE_LIST);
+        apiSubscription2.setSensitivity(Sensitivity.CLASSIFIED);
     }
 
     @BeforeEach
@@ -80,10 +78,10 @@ class ThirdPartyConfigurationTest extends IntegrationTestBase {
         when(thirdPartyAuthorisationService.userCanManageThirdParty(REQUESTER_ID)).thenReturn(false);
 
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
-            .post(THIRD_PARTY_CONFIGURATION_PATH)
+            .post(THIRD_PARTY_SUBSCRIPTION_PATH)
             .header(REQUESTER_ID_HEADER, REQUESTER_ID)
             .contentType(MediaType.APPLICATION_JSON)
-            .content(OBJECT_MAPPER.writeValueAsString(apiOauthConfiguration));
+            .content(OBJECT_MAPPER.writeValueAsString(List.of(apiSubscription1)));
 
         mvc.perform(request)
             .andExpect(status().isForbidden());
@@ -95,7 +93,7 @@ class ThirdPartyConfigurationTest extends IntegrationTestBase {
         when(thirdPartyAuthorisationService.userCanManageThirdParty(REQUESTER_ID)).thenReturn(false);
 
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
-            .get(THIRD_PARTY_CONFIGURATION_PATH + "/" + UUID.randomUUID())
+            .get(THIRD_PARTY_SUBSCRIPTION_PATH + "/" + UUID.randomUUID())
             .header(REQUESTER_ID_HEADER, REQUESTER_ID);
 
         mvc.perform(request)
@@ -108,10 +106,10 @@ class ThirdPartyConfigurationTest extends IntegrationTestBase {
         when(thirdPartyAuthorisationService.userCanManageThirdParty(REQUESTER_ID)).thenReturn(false);
 
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
-            .put(THIRD_PARTY_CONFIGURATION_PATH + "/" + UUID.randomUUID())
+            .put(THIRD_PARTY_SUBSCRIPTION_PATH + "/" + UUID.randomUUID())
             .header(REQUESTER_ID_HEADER, REQUESTER_ID)
             .contentType(MediaType.APPLICATION_JSON)
-            .content(OBJECT_MAPPER.writeValueAsString(apiOauthConfiguration));
+            .content(OBJECT_MAPPER.writeValueAsString(List.of(apiSubscription1)));
 
         mvc.perform(request)
             .andExpect(status().isForbidden());

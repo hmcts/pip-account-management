@@ -52,7 +52,7 @@ class ThirdPartyUserTest extends IntegrationTestBase {
     }
 
     @BeforeEach
-    public void setupEach() {
+    void setupEach() {
         when(thirdPartyAuthorisationService.userCanManageThirdParty(REQUESTER_ID)).thenReturn(true);
     }
 
