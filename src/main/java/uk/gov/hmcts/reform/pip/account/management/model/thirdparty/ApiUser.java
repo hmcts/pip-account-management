@@ -25,7 +25,7 @@ import java.util.UUID;
 @EntityListeners(AuditingEntityListener.class)
 public class ApiUser {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(columnDefinition = "uuid", insertable = false, updatable = false, nullable = false)
     private UUID userId;
 
