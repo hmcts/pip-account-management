@@ -26,6 +26,7 @@ import uk.gov.hmcts.reform.pip.model.publication.Sensitivity;
 import java.util.List;
 import java.util.UUID;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -70,6 +71,35 @@ class ThirdPartySubscriptionTest extends IntegrationTestBase {
     @BeforeEach
     void setupEach() {
         when(thirdPartyAuthorisationService.userCanManageThirdParty(REQUESTER_ID)).thenReturn(true);
+    }
+
+    @Test
+    void testCreateThirdPartySubscriptionSuccess() throws Exception {
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+            .post(THIRD_PARTY_SUBSCRIPTION_PATH)
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(OBJECT_MAPPER.writeValueAsString(List.of(apiSubscription1, apiSubscription2)));
+
+        MvcResult response = mvc.perform(request)
+            .andExpect(status().isCreated())
+            .andReturn();
+
+        assertThat(response.getResponse().getContentAsString())
+            .as("Creation success message should be returned")
+            .isEqualTo(String.format("Third-party subscriptions successfully created for user with ID %s", userId));
+    }
+
+    @Test
+    void testCreateThirdPartySubscriptionBadRequestIfNoSubscriptionSupplied() throws Exception {
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+            .post(THIRD_PARTY_SUBSCRIPTION_PATH)
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(OBJECT_MAPPER.writeValueAsString(List.of()));
+
+        mvc.perform(request)
+            .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -118,6 +148,7 @@ class ThirdPartySubscriptionTest extends IntegrationTestBase {
     private UUID createApiUser() throws Exception {
         ApiUser apiUser = new ApiUser();
         apiUser.setName(USER_NAME);
+        when(thirdPartyAuthorisationService.userCanManageThirdParty(REQUESTER_ID)).thenReturn(true);
 
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .post(THIRD_PARTY_USER_PATH)
