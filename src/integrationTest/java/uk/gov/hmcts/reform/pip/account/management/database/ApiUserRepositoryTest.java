@@ -1,6 +1,6 @@
 package uk.gov.hmcts.reform.pip.account.management.database;
 
-import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -41,7 +41,7 @@ class ApiUserRepositoryTest {
         apiUserRepository.saveAll(List.of(apiUser1, apiUser2));
     }
 
-    @AfterEach
+    @AfterAll
     void shutdown() {
         apiUserRepository.deleteAll();
     }
@@ -66,7 +66,7 @@ class ApiUserRepositoryTest {
 
         apiUserRepository.deleteByUserId(USER_ID2);
 
-        assertThat(apiUserRepository.findByUserId(USER_ID1))
+        assertThat(apiUserRepository.findByUserId(USER_ID2))
             .as("Third-party API user should be deleted")
             .isNotPresent();
     }
