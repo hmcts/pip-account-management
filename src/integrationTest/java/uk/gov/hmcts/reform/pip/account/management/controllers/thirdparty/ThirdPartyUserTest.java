@@ -29,8 +29,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WithMockUser(username = "admin", authorities = {"APPROLE_api.request.admin"})
 class ThirdPartyUserTest extends IntegrationTestBase {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-    private static final String UNAUTHORIZED_ROLE = "APPROLE_unknown.authorized";
-    private static final String UNAUTHORIZED_USERNAME = "unauthorized_isAuthorized";
+    private static final String UNAUTHORISED_ROLE = "APPROLE_unknown.authorised";
+    private static final String UNAUTHORISED_USERNAME = "unauthorised_isAuthorised";
 
     private static final String THIRD_PARTY_USER_PATH = "/third-party";
     private static final String REQUESTER_ID_HEADER = "x-requester-id";
@@ -88,7 +88,7 @@ class ThirdPartyUserTest extends IntegrationTestBase {
     }
 
     @Test
-    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
+    @WithMockUser(username = UNAUTHORISED_USERNAME, authorities = {UNAUTHORISED_ROLE})
     void testUnauthorisedCreateThirdPartyUser() throws Exception {
         when(thirdPartyAuthorisationService.userCanManageThirdParty(REQUESTER_ID)).thenReturn(false);
 
@@ -113,7 +113,7 @@ class ThirdPartyUserTest extends IntegrationTestBase {
     }
 
     @Test
-    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
+    @WithMockUser(username = UNAUTHORISED_USERNAME, authorities = {UNAUTHORISED_ROLE})
     void testUnauthorisedGetAllThirdPartyUsers() throws Exception {
         when(thirdPartyAuthorisationService.userCanManageThirdParty(REQUESTER_ID)).thenReturn(false);
 
@@ -131,7 +131,7 @@ class ThirdPartyUserTest extends IntegrationTestBase {
             .post(THIRD_PARTY_USER_PATH)
             .header(REQUESTER_ID_HEADER, REQUESTER_ID)
             .contentType(MediaType.APPLICATION_JSON)
-            .content(OBJECT_MAPPER.writeValueAsString(new ApiUser()));
+            .content(OBJECT_MAPPER.writeValueAsString(apiUser));
 
         MvcResult createResponse = mvc.perform(createRequest)
             .andExpect(status().isCreated())
@@ -168,7 +168,7 @@ class ThirdPartyUserTest extends IntegrationTestBase {
     }
 
     @Test
-    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
+    @WithMockUser(username = UNAUTHORISED_USERNAME, authorities = {UNAUTHORISED_ROLE})
     void testUnauthorisedGetThirdPartyUserByUserId() throws Exception {
         when(thirdPartyAuthorisationService.userCanManageThirdParty(REQUESTER_ID)).thenReturn(false);
 
@@ -186,7 +186,7 @@ class ThirdPartyUserTest extends IntegrationTestBase {
             .post(THIRD_PARTY_USER_PATH)
             .header(REQUESTER_ID_HEADER, REQUESTER_ID)
             .contentType(MediaType.APPLICATION_JSON)
-            .content(OBJECT_MAPPER.writeValueAsString(new ApiUser()));
+            .content(OBJECT_MAPPER.writeValueAsString(apiUser));
 
         MvcResult createResponse = mvc.perform(createRequest)
             .andExpect(status().isCreated())
@@ -220,7 +220,7 @@ class ThirdPartyUserTest extends IntegrationTestBase {
     }
 
     @Test
-    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
+    @WithMockUser(username = UNAUTHORISED_USERNAME, authorities = {UNAUTHORISED_ROLE})
     void testUnauthorisedDeleteThirdPartyUser() throws Exception {
         when(thirdPartyAuthorisationService.userCanManageThirdParty(REQUESTER_ID)).thenReturn(false);
 

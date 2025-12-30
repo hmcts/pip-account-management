@@ -28,8 +28,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WithMockUser(username = "admin", authorities = {"APPROLE_api.request.admin"})
 class ThirdPartyConfigurationTest extends IntegrationTestBase {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-    private static final String UNAUTHORIZED_ROLE = "APPROLE_unknown.authorized";
-    private static final String UNAUTHORIZED_USERNAME = "unauthorized_isAuthorized";
+    private static final String UNAUTHORISED_ROLE = "APPROLE_unknown.authorised";
+    private static final String UNAUTHORISED_USERNAME = "unauthorised_isAuthorised";
 
     private static final String THIRD_PARTY_CONFIGURATION_PATH = "/third-party/configuration";
     private static final String REQUESTER_ID_HEADER = "x-requester-id";
@@ -55,7 +55,7 @@ class ThirdPartyConfigurationTest extends IntegrationTestBase {
     }
 
     @Test
-    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
+    @WithMockUser(username = UNAUTHORISED_USERNAME, authorities = {UNAUTHORISED_ROLE})
     void testUnauthorisedCreateThirdPartyConfiguration() throws Exception {
         when(thirdPartyAuthorisationService.userCanManageThirdParty(REQUESTER_ID)).thenReturn(false);
 
@@ -70,7 +70,7 @@ class ThirdPartyConfigurationTest extends IntegrationTestBase {
     }
 
     @Test
-    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
+    @WithMockUser(username = UNAUTHORISED_USERNAME, authorities = {UNAUTHORISED_ROLE})
     void testUnauthorisedGetThirdPartyConfigurationByUserId() throws Exception {
         when(thirdPartyAuthorisationService.userCanManageThirdParty(REQUESTER_ID)).thenReturn(false);
 
@@ -83,7 +83,7 @@ class ThirdPartyConfigurationTest extends IntegrationTestBase {
     }
 
     @Test
-    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
+    @WithMockUser(username = UNAUTHORISED_USERNAME, authorities = {UNAUTHORISED_ROLE})
     void testUnauthorisedUpdateThirdPartyConfiguration() throws Exception {
         when(thirdPartyAuthorisationService.userCanManageThirdParty(REQUESTER_ID)).thenReturn(false);
 
