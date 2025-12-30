@@ -35,7 +35,7 @@ class ApiUserRepositoryTest {
         apiUser1.setName(USER_NAME);
 
         ApiUser apiUser2 = new ApiUser();
-        apiUser2.setUserId(USER_ID1);
+        apiUser2.setUserId(USER_ID2);
         apiUser2.setName(USER_NAME);
 
         apiUserRepository.saveAll(List.of(apiUser1, apiUser2));
