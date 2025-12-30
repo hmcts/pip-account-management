@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -76,6 +77,7 @@ public class ThirdPartyUserController {
     @ApiResponse(responseCode = OK_STATUS_CODE, description = "third-party user with ID {userId} deleted")
     @ApiResponse(responseCode = NOT_FOUND_STATUS_CODE, description = "User with ID {userId} not found")
     @PreAuthorize("@thirdPartyAuthorisationService.userCanManageThirdParty(#requesterId)")
+    @Transactional
     public ResponseEntity<String> deleteThirdPartyUser(
         @PathVariable UUID userId,
         @RequestHeader(X_REQUESTER_ID_HEADER) UUID requesterId

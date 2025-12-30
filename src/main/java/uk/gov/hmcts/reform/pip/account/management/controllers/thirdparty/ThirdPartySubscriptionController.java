@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -87,6 +88,7 @@ public class ThirdPartySubscriptionController {
     @ApiResponse(responseCode = BAD_REQUEST_STATUS_CODE,
         description = "A third-party subscription has an invalid format")
     @PreAuthorize("@thirdPartyAuthorisationService.userCanManageThirdParty(#requesterId)")
+    @Transactional
     public ResponseEntity<String> updateThirdPartySubscriptions(
         @PathVariable UUID userId,
         @RequestBody List<ApiSubscription> apiSubscriptions,
