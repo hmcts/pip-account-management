@@ -22,7 +22,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ApiOauthConfigurationRepositoryTest {
     private static final UUID INVALID_USER_ID = UUID.randomUUID();
-    private static final String CLIENT_ID_KEY = "TestKey";
+    private static final String DESTINATION_URL = "https://test.destination.url";
+    private static final String TOKEN_URL = "https://test.token.url";
+    private static final String CLIENT_ID_KEY = "TestClientIdKey";
+    private static final String CLIENT_SECRET_KEY = "TestClientSecretKey";
+    private static final String SCOPE_KEY = "TestScopeKey";
     private static final String USER_NAME = "Test name";
 
     private UUID userId;
@@ -42,7 +46,11 @@ class ApiOauthConfigurationRepositoryTest {
 
         ApiOauthConfiguration apiOauthConfiguration = new ApiOauthConfiguration();
         apiOauthConfiguration.setUserId(userId);
+        apiOauthConfiguration.setDestinationUrl(DESTINATION_URL);
+        apiOauthConfiguration.setTokenUrl(TOKEN_URL);
         apiOauthConfiguration.setClientIdKey(CLIENT_ID_KEY);
+        apiOauthConfiguration.setClientSecretKey(CLIENT_SECRET_KEY);
+        apiOauthConfiguration.setScopeKey(SCOPE_KEY);
 
         apiOauthConfigurationRepository.save(apiOauthConfiguration);
     }
@@ -62,8 +70,8 @@ class ApiOauthConfigurationRepositoryTest {
             .as("Third-party API OAuth configuration should be found")
             .isPresent()
             .get()
-            .extracting(ApiOauthConfiguration::getClientIdKey)
-            .isEqualTo(CLIENT_ID_KEY);
+            .extracting(ApiOauthConfiguration::getDestinationUrl)
+            .isEqualTo(DESTINATION_URL);
 
         apiOauthConfigurationRepository.deleteByUserId(userId);
 
