@@ -40,7 +40,8 @@ class ApiOauthConfigurationRepositoryTest {
         apiOauthConfiguration.setClientIdKey(CLIENT_ID_KEY);
         apiOauthConfigurationRepository.save(apiOauthConfiguration);
 
-        Optional<ApiOauthConfiguration> foundApiOauthConfiguration = apiOauthConfigurationRepository.findByUserId(USER_ID);
+        Optional<ApiOauthConfiguration> foundApiOauthConfiguration = apiOauthConfigurationRepository
+            .findByUserId(USER_ID);
 
         assertThat(foundApiOauthConfiguration)
             .as("Third-party API OAuth configuration should be found")

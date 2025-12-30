@@ -1,6 +1,7 @@
 package uk.gov.hmcts.reform.pip.account.management.database;
 
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,6 +9,7 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.context.ActiveProfiles;
 import uk.gov.hmcts.reform.pip.account.management.model.thirdparty.ApiSubscription;
+import uk.gov.hmcts.reform.pip.account.management.model.thirdparty.ApiUser;
 import uk.gov.hmcts.reform.pip.model.publication.ListType;
 import uk.gov.hmcts.reform.pip.model.publication.Sensitivity;
 
@@ -21,32 +23,46 @@ import static org.assertj.core.api.Assertions.assertThat;
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ApiSubscriptionRepositoryTest {
-    private static final UUID USER_ID = UUID.randomUUID();
     private static final UUID INVALID_USER_ID = UUID.randomUUID();
+    private static final String USER_NAME = "Test name";
+
+    private UUID userId;
 
     @Autowired
     ApiSubscriptionRepository apiSubscriptionRepository;
 
-    @AfterAll
-    void shutdown() {
-        apiSubscriptionRepository.deleteAll();
-    }
+    @Autowired
+    ApiUserRepository apiUserRepository;
 
-    @Test
-    void shouldFindAndDeleteApiSubscriptionsByUserId() {
+    @BeforeAll
+    void setup() {
+        ApiUser apiUser = new ApiUser();
+        apiUser.setName(USER_NAME);
+        ApiUser createdApiUser = apiUserRepository.save(apiUser);
+        userId = createdApiUser.getUserId();
+
         ApiSubscription apiSubscription1 = new ApiSubscription();
-        apiSubscription1.setUserId(USER_ID);
+        apiSubscription1.setUserId(userId);
         apiSubscription1.setListType(ListType.CIVIL_DAILY_CAUSE_LIST);
         apiSubscription1.setSensitivity(Sensitivity.PUBLIC);
 
         ApiSubscription apiSubscription2 = new ApiSubscription();
-        apiSubscription2.setUserId(USER_ID);
+        apiSubscription2.setUserId(userId);
         apiSubscription2.setListType(ListType.FAMILY_DAILY_CAUSE_LIST);
         apiSubscription2.setSensitivity(Sensitivity.PRIVATE);
 
         apiSubscriptionRepository.saveAll(List.of(apiSubscription1, apiSubscription2));
+    }
 
-        List<ApiSubscription> apiSubscriptions = apiSubscriptionRepository.findAllByUserId(USER_ID);
+    @AfterAll
+    void shutdown() {
+        apiSubscriptionRepository.deleteAll();
+        apiUserRepository.deleteAll();
+    }
+
+    @Test
+    void shouldFindAndDeleteApiSubscriptionsByUserId() {
+        List<ApiSubscription> apiSubscriptions = apiSubscriptionRepository.findAllByUserId(userId);
 
         assertThat(apiSubscriptions)
             .as("Third-party API subscription count does not match")
@@ -62,9 +78,9 @@ class ApiSubscriptionRepositoryTest {
             .extracting(ApiSubscription::getSensitivity)
             .containsExactly(Sensitivity.PUBLIC, Sensitivity.PRIVATE);
 
-        apiSubscriptionRepository.deleteAllByUserId(USER_ID);
+        apiSubscriptionRepository.deleteAllByUserId(userId);
 
-        assertThat(apiSubscriptionRepository.findAllByUserId(USER_ID))
+        assertThat(apiSubscriptionRepository.findAllByUserId(userId))
             .as("Third-party API subscription should be deleted")
             .isEmpty();
     }
