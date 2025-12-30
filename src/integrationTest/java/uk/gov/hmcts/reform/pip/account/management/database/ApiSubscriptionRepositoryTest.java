@@ -23,8 +23,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ApiSubscriptionRepositoryTest {
 
-    private static final UUID USER_ID = UUID.randomUUID();
-    private static final UUID ANOTHER_USER_ID = UUID.randomUUID();
+    private static final UUID USER_ID1 = UUID.randomUUID();
+    private static final UUID USER_ID2 = UUID.randomUUID();
 
     @Autowired
     ApiSubscriptionRepository apiSubscriptionRepository;
@@ -32,19 +32,19 @@ class ApiSubscriptionRepositoryTest {
     @BeforeAll
     void setup() {
         ApiSubscription apiSubscription1 = new ApiSubscription();
-        apiSubscription1.setUserId(USER_ID);
+        apiSubscription1.setUserId(USER_ID1);
         apiSubscription1.setListType(ListType.CIVIL_DAILY_CAUSE_LIST);
         apiSubscription1.setSensitivity(Sensitivity.PUBLIC);
 
         ApiSubscription apiSubscription2 = new ApiSubscription();
-        apiSubscription2.setUserId(USER_ID);
+        apiSubscription2.setUserId(USER_ID1);
         apiSubscription2.setListType(ListType.FAMILY_DAILY_CAUSE_LIST);
         apiSubscription2.setSensitivity(Sensitivity.PRIVATE);
 
         ApiSubscription apiSubscription3 = new ApiSubscription();
-        apiSubscription3.setUserId(ANOTHER_USER_ID);
+        apiSubscription3.setUserId(USER_ID2);
         apiSubscription3.setListType(ListType.FAMILY_DAILY_CAUSE_LIST);
-        apiSubscription3.setSensitivity(Sensitivity.PRIVATE);
+        apiSubscription3.setSensitivity(Sensitivity.CLASSIFIED);
 
         apiSubscriptionRepository.saveAll(List.of(apiSubscription1, apiSubscription2, apiSubscription3));
     }
@@ -56,21 +56,33 @@ class ApiSubscriptionRepositoryTest {
 
     @Test
     void shouldFindApiSubscriptionsByUserId() {
-        List<ApiSubscription> apiSubscriptions = apiSubscriptionRepository.findAllByUserId(USER_ID);
+        List<ApiSubscription> apiSubscriptions = apiSubscriptionRepository.findAllByUserId(USER_ID1);
 
         assertThat(apiSubscriptions)
-            .as("Third-party API subscriptions do not match")
-            .hasSize(2)
+            .as("Third-party API subscription count does not match")
+            .hasSize(2);
+
+        assertThat(apiSubscriptions)
+            .as("Third-party API subscription list types do not match")
             .extracting(ApiSubscription::getListType)
             .containsExactly(ListType.CIVIL_DAILY_CAUSE_LIST, ListType.FAMILY_DAILY_CAUSE_LIST);
+
+        assertThat(apiSubscriptions)
+            .as("Third-party API subscription sensitivities do not match")
+            .extracting(ApiSubscription::getSensitivity)
+            .containsExactly(Sensitivity.PUBLIC, Sensitivity.PRIVATE);
     }
 
     @Test
     void shouldDeleteApiSubscriptionsByUserId() {
-        apiSubscriptionRepository.deleteAllByUserId(USER_ID);
+        assertThat(apiSubscriptionRepository.findAllByUserId(USER_ID2))
+            .as("Third-party API subscription exists")
+            .isNotEmpty();
 
-        assertThat(apiSubscriptionRepository.findAllByUserId(USER_ID))
-            .as("Third-party API subscriptions should be deleted")
+        apiSubscriptionRepository.deleteAllByUserId(USER_ID2);
+
+        assertThat(apiSubscriptionRepository.findAllByUserId(USER_ID2))
+            .as("Third-party API subscription should be deleted")
             .isEmpty();
     }
 }
