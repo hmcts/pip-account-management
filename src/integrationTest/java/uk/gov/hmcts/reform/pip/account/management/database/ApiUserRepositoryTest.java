@@ -22,7 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ApiUserRepositoryTest {
     private static final UUID USER_ID1 = UUID.randomUUID();
-    private static final UUID USER_ID2 = UUID.randomUUID();
+    private static final UUID INVALID_USER_ID = UUID.randomUUID();
     private static final String USER_NAME = "Test name";
 
     @Autowired
@@ -33,12 +33,7 @@ class ApiUserRepositoryTest {
         ApiUser apiUser1 = new ApiUser();
         apiUser1.setUserId(USER_ID1);
         apiUser1.setName(USER_NAME);
-
-        ApiUser apiUser2 = new ApiUser();
-        apiUser2.setUserId(USER_ID2);
-        apiUser2.setName(USER_NAME);
-
-        apiUserRepository.saveAll(List.of(apiUser1, apiUser2));
+        apiUserRepository.save(apiUser1);
     }
 
     @AfterAll
@@ -47,7 +42,7 @@ class ApiUserRepositoryTest {
     }
 
     @Test
-    void shouldFindApiUserByUserId() {
+    void shouldFindAndDeleteApiUserByUserId() {
         Optional<ApiUser> apiUser = apiUserRepository.findByUserId(USER_ID1);
 
         assertThat(apiUser)
@@ -56,18 +51,18 @@ class ApiUserRepositoryTest {
             .get()
             .extracting(ApiUser::getName)
             .isEqualTo(USER_NAME);
+
+        apiUserRepository.deleteByUserId(USER_ID1);
+
+        assertThat(apiUserRepository.findByUserId(USER_ID1))
+            .as("Third-party API user should be deleted")
+            .isNotPresent();
     }
 
     @Test
-    void shouldDeleteApiUserByUserId() {
-        assertThat(apiUserRepository.findByUserId(USER_ID2))
-            .as("Third-party API user exists")
-            .isPresent();
-
-        apiUserRepository.deleteByUserId(USER_ID2);
-
-        assertThat(apiUserRepository.findByUserId(USER_ID2))
-            .as("Third-party API user should be deleted")
+    void shouldNotFindApiUserByInvalidUserId() {
+        assertThat(apiUserRepository.findByUserId(INVALID_USER_ID))
+            .as("Third-party API user should not exist")
             .isNotPresent();
     }
 }
