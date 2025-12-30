@@ -34,6 +34,7 @@ class ThirdPartyConfigurationTest extends IntegrationTestBase {
     private static final String THIRD_PARTY_CONFIGURATION_PATH = "/third-party/configuration";
     private static final String REQUESTER_ID_HEADER = "x-requester-id";
     private static final UUID REQUESTER_ID = UUID.randomUUID();
+    private static final String USER_NAME = "ThirdPartyUser";
 
     private static ApiUser apiUser = new ApiUser();
     private static ApiOauthConfiguration apiOauthConfiguration = new ApiOauthConfiguration();
@@ -47,6 +48,8 @@ class ThirdPartyConfigurationTest extends IntegrationTestBase {
     @BeforeAll
     static void setup() {
         OBJECT_MAPPER.findAndRegisterModules();
+
+        apiUser.setName(USER_NAME);
     }
 
     @BeforeEach
@@ -75,7 +78,7 @@ class ThirdPartyConfigurationTest extends IntegrationTestBase {
         when(thirdPartyAuthorisationService.userCanManageThirdParty(REQUESTER_ID)).thenReturn(false);
 
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
-            .get(THIRD_PARTY_CONFIGURATION_PATH + "/", UUID.randomUUID())
+            .get(THIRD_PARTY_CONFIGURATION_PATH + "/" + UUID.randomUUID())
             .header(REQUESTER_ID_HEADER, REQUESTER_ID);
 
         mvc.perform(request)
@@ -88,7 +91,7 @@ class ThirdPartyConfigurationTest extends IntegrationTestBase {
         when(thirdPartyAuthorisationService.userCanManageThirdParty(REQUESTER_ID)).thenReturn(false);
 
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
-            .put(THIRD_PARTY_CONFIGURATION_PATH + "/", UUID.randomUUID())
+            .put(THIRD_PARTY_CONFIGURATION_PATH + "/" + UUID.randomUUID())
             .header(REQUESTER_ID_HEADER, REQUESTER_ID)
             .contentType(MediaType.APPLICATION_JSON)
             .content(OBJECT_MAPPER.writeValueAsString(apiOauthConfiguration));
