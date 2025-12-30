@@ -49,13 +49,13 @@ class ThirdPartyUserControllerTest {
     }
 
     @Test
-    void testGetThirdPartyUser() {
+    void testGetThirdPartyUserByUserId() {
         ApiUser apiUser = new ApiUser();
         apiUser.setUserId(USER_ID);
 
         when(thirdPartyUserService.findThirdPartyUser(USER_ID)).thenReturn(apiUser);
 
-        ResponseEntity<ApiUser> response = controller.getThirdPartyUser(USER_ID, REQUESTER_ID);
+        ResponseEntity<ApiUser> response = controller.getThirdPartyUserByUserId(USER_ID, REQUESTER_ID);
 
         assertThat(response.getStatusCode())
             .as("Response status should be OK")

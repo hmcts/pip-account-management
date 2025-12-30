@@ -7,6 +7,7 @@ import uk.gov.hmcts.reform.pip.account.management.database.ApiUserRepository;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.NotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.model.thirdparty.ApiUser;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -29,6 +30,10 @@ public class ThirdPartyUserService {
 
     public ApiUser createThirdPartyUser(ApiUser apiUser) {
         return apiUserRepository.save(apiUser);
+    }
+
+    public List<ApiUser> getAllThirdPartyUsers() {
+        return apiUserRepository.findAll();
     }
 
     public ApiUser findThirdPartyUser(UUID userId) {

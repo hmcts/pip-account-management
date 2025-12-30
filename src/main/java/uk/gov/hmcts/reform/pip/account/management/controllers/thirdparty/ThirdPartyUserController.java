@@ -21,6 +21,7 @@ import uk.gov.hmcts.reform.pip.account.management.model.thirdparty.ApiUser;
 import uk.gov.hmcts.reform.pip.account.management.service.thirdparty.ThirdPartyUserService;
 import uk.gov.hmcts.reform.pip.model.authentication.roles.IsAdmin;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -51,13 +52,23 @@ public class ThirdPartyUserController {
         description = "third-party user successfully created with ID {userId}")
     @ApiResponse(responseCode = BAD_REQUEST_STATUS_CODE, description = "The third-party user has an invalid format")
     @PreAuthorize("@thirdPartyAuthorisationService.userCanManageThirdParty(#requesterId)")
-    public ResponseEntity<String> createThirdPartyUser(
+    public ResponseEntity<ApiUser> createThirdPartyUser(
         @RequestBody ApiUser apiUser,
         @RequestHeader(X_REQUESTER_ID_HEADER) UUID requesterId
     ) {
         ApiUser createdApiUser = thirdPartyUserService.createThirdPartyUser(apiUser);
         return ResponseEntity.status(HttpStatus.CREATED)
-            .body(String.format("Third-party user created with ID %s", createdApiUser.getUserId()));
+            .body(createdApiUser);
+    }
+
+    @GetMapping(produces = "application/json")
+    @Operation(summary = "Endpoint to retrieve all third-party users")
+    @ApiResponse(responseCode = OK_STATUS_CODE, description = "All third-party users retrieved")
+    @PreAuthorize("@thirdPartyAuthorisationService.userCanManageThirdParty(#requesterId)")
+    public ResponseEntity<List<ApiUser>> getAllThirdPartyUsers(
+        @RequestHeader(X_REQUESTER_ID_HEADER) UUID requesterId
+    ) {
+        return ResponseEntity.ok(thirdPartyUserService.getAllThirdPartyUsers());
     }
 
     @GetMapping("/{userId}")
@@ -65,7 +76,7 @@ public class ThirdPartyUserController {
     @ApiResponse(responseCode = OK_STATUS_CODE, description = "third-party user with ID {userId} retrieved")
     @ApiResponse(responseCode = NOT_FOUND_STATUS_CODE, description = "User with ID {userId} not found")
     @PreAuthorize("@thirdPartyAuthorisationService.userCanManageThirdParty(#requesterId)")
-    public ResponseEntity<ApiUser> getThirdPartyUser(
+    public ResponseEntity<ApiUser> getThirdPartyUserByUserId(
         @PathVariable UUID userId,
         @RequestHeader(X_REQUESTER_ID_HEADER) UUID requesterId
     ) {
