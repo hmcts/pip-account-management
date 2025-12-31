@@ -197,15 +197,15 @@ class ThirdPartyConfigurationTest extends IntegrationTestBase {
     }
 
     @Test
-    void testUpdateThirdPartyConfigurationBadRequestIFDestinationUrlNotSupplied() throws Exception {
+    void testUpdateThirdPartyConfigurationBadRequestIfEmptyField() throws Exception {
         UUID userId = createApiUser();
         apiOauthConfiguration.setUserId(userId);
         createApiOauthConfiguration();
 
-        apiOauthConfiguration.setDestinationUrl(null);
+        apiOauthConfiguration.setDestinationUrl("");
 
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
-            .put(THIRD_PARTY_CONFIGURATION_PATH + "/" + UUID.randomUUID())
+            .put(THIRD_PARTY_CONFIGURATION_PATH + "/" + userId)
             .header(REQUESTER_ID_HEADER, REQUESTER_ID)
             .contentType(MediaType.APPLICATION_JSON)
             .content(OBJECT_MAPPER.writeValueAsString(apiOauthConfiguration));
