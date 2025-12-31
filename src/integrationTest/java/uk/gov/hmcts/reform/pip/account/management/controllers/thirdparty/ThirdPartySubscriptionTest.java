@@ -1,5 +1,6 @@
 package uk.gov.hmcts.reform.pip.account.management.controllers.thirdparty;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
 import org.junit.jupiter.api.BeforeAll;
@@ -74,17 +75,7 @@ class ThirdPartySubscriptionTest extends IntegrationTestBase {
         apiSubscription1.setUserId(userId);
         apiSubscription2.setUserId(userId);
 
-        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
-            .post(THIRD_PARTY_SUBSCRIPTION_PATH)
-            .header(REQUESTER_ID_HEADER, REQUESTER_ID)
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(OBJECT_MAPPER.writeValueAsString(List.of(apiSubscription1, apiSubscription2)));
-
-        MvcResult response = mvc.perform(request)
-            .andExpect(status().isCreated())
-            .andReturn();
-
-        assertThat(response.getResponse().getContentAsString())
+        assertThat(createApiSubscriptions().getResponse().getContentAsString())
             .as("Creation success message should be returned")
             .isEqualTo(String.format("Third-party subscriptions successfully created for user with ID %s", userId));
     }
@@ -114,6 +105,44 @@ class ThirdPartySubscriptionTest extends IntegrationTestBase {
 
         mvc.perform(request)
             .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void testGetThirdPartySubscriptionByUserIdSuccess() throws Exception {
+        UUID userId = createApiUser();
+        apiSubscription1.setUserId(userId);
+        apiSubscription2.setUserId(userId);
+        createApiSubscriptions();
+
+        MockHttpServletRequestBuilder getRequest = MockMvcRequestBuilders
+            .get(THIRD_PARTY_SUBSCRIPTION_PATH + "/" + userId)
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID);
+
+        MvcResult getResponse = mvc.perform(getRequest)
+            .andExpect(status().isOk())
+            .andReturn();
+
+        List<ApiSubscription> retrievedApiSubscriptions = OBJECT_MAPPER.readValue(
+            getResponse.getResponse().getContentAsString(),
+            new TypeReference<>() {}
+        );
+
+        assertThat(retrievedApiSubscriptions)
+            .hasSize(2)
+            .as("Retrieved subscriptions should match created subscriptions")
+            .first()
+            .extracting(ApiSubscription::getListType, ApiSubscription::getSensitivity)
+            .containsExactly(ListType.CIVIL_DAILY_CAUSE_LIST, Sensitivity.PUBLIC);
+    }
+
+    @Test
+    void testGetThirdPartySubscriptionNotFound() throws Exception {
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+            .get(THIRD_PARTY_SUBSCRIPTION_PATH + "/" + UUID.randomUUID())
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID);
+
+        mvc.perform(request)
+            .andExpect(status().isNotFound());
     }
 
     @Test
@@ -161,5 +190,17 @@ class ThirdPartySubscriptionTest extends IntegrationTestBase {
 
         ApiUser createdApiUser = OBJECT_MAPPER.readValue(response.getResponse().getContentAsString(), ApiUser.class);
         return createdApiUser.getUserId();
+    }
+
+    private MvcResult createApiSubscriptions() throws Exception {
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+            .post(THIRD_PARTY_SUBSCRIPTION_PATH)
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(OBJECT_MAPPER.writeValueAsString(List.of(apiSubscription1)));
+
+        return mvc.perform(request)
+            .andExpect(status().isCreated())
+            .andReturn();
     }
 }

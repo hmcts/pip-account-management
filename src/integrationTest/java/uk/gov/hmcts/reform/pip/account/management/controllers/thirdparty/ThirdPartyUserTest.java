@@ -58,17 +58,8 @@ class ThirdPartyUserTest extends IntegrationTestBase {
 
     @Test
     void testCreateThirdPartyUserSuccess() throws Exception {
-        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
-            .post(THIRD_PARTY_USER_PATH)
-            .header(REQUESTER_ID_HEADER, REQUESTER_ID)
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(OBJECT_MAPPER.writeValueAsString(apiUser));
-
-        MvcResult response = mvc.perform(request)
-            .andExpect(status().isCreated())
-            .andReturn();
-
-        ApiUser createdApiUser = OBJECT_MAPPER.readValue(response.getResponse().getContentAsString(), ApiUser.class);
+        ApiUser createdApiUser = OBJECT_MAPPER.readValue(createThirdPartyUser().getResponse().getContentAsString(),
+                                                         ApiUser.class);
 
         assertThat(createdApiUser.getName())
             .as("Created user name should be returned")
@@ -127,17 +118,7 @@ class ThirdPartyUserTest extends IntegrationTestBase {
 
     @Test
     void testGetThirdPartyUserByUserIdSuccess() throws Exception {
-        MockHttpServletRequestBuilder createRequest = MockMvcRequestBuilders
-            .post(THIRD_PARTY_USER_PATH)
-            .header(REQUESTER_ID_HEADER, REQUESTER_ID)
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(OBJECT_MAPPER.writeValueAsString(apiUser));
-
-        MvcResult createResponse = mvc.perform(createRequest)
-            .andExpect(status().isCreated())
-            .andReturn();
-
-        ApiUser createdApiUser = OBJECT_MAPPER.readValue(createResponse.getResponse().getContentAsString(),
+        ApiUser createdApiUser = OBJECT_MAPPER.readValue(createThirdPartyUser().getResponse().getContentAsString(),
                                                          ApiUser.class);
         UUID createdUserId = createdApiUser.getUserId();
 
@@ -182,17 +163,7 @@ class ThirdPartyUserTest extends IntegrationTestBase {
 
     @Test
     void testDeleteThirdPartyUserSuccess() throws Exception {
-        MockHttpServletRequestBuilder createRequest = MockMvcRequestBuilders
-            .post(THIRD_PARTY_USER_PATH)
-            .header(REQUESTER_ID_HEADER, REQUESTER_ID)
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(OBJECT_MAPPER.writeValueAsString(apiUser));
-
-        MvcResult createResponse = mvc.perform(createRequest)
-            .andExpect(status().isCreated())
-            .andReturn();
-
-        ApiUser createdApiUser = OBJECT_MAPPER.readValue(createResponse.getResponse().getContentAsString(),
+        ApiUser createdApiUser = OBJECT_MAPPER.readValue(createThirdPartyUser().getResponse().getContentAsString(),
                                                          ApiUser.class);
         UUID createdUserId = createdApiUser.getUserId();
 
@@ -230,5 +201,17 @@ class ThirdPartyUserTest extends IntegrationTestBase {
 
         mvc.perform(request)
             .andExpect(status().isForbidden());
+    }
+
+    private MvcResult createThirdPartyUser() throws Exception {
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+            .post(THIRD_PARTY_USER_PATH)
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(OBJECT_MAPPER.writeValueAsString(apiUser));
+
+        return mvc.perform(request)
+            .andExpect(status().isCreated())
+            .andReturn();
     }
 }
