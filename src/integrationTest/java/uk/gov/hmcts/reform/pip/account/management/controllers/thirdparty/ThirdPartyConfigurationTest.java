@@ -29,7 +29,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
 @WithMockUser(username = "admin", authorities = {"APPROLE_api.request.admin"})
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ThirdPartyConfigurationTest extends IntegrationTestBase {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final String UNAUTHORISED_ROLE = "APPROLE_unknown.authorised";
@@ -42,6 +41,7 @@ class ThirdPartyConfigurationTest extends IntegrationTestBase {
 
     private static final String USER_NAME = "ThirdPartyUser";
     private static final String DESTINATION_URL = "https://example.com/callback";
+    private static final String UPDATED_DESTINATION_URL = "https://example.com/callback-updated";
     private static final String TOKEN_URL = "https://example.com/token";
     private static final String CLIENT_ID_KEY = "client-id";
     private static final String CLIENT_SECRET_KEY = "client-secret";
@@ -56,18 +56,18 @@ class ThirdPartyConfigurationTest extends IntegrationTestBase {
     private ThirdPartyAuthorisationService thirdPartyAuthorisationService;
 
     @BeforeAll
-    void setup() throws Exception {
+    static void setup() throws Exception {
         OBJECT_MAPPER.findAndRegisterModules();
+    }
 
+    @BeforeEach
+    void setupEach() {
         apiOauthConfiguration.setDestinationUrl(DESTINATION_URL);
         apiOauthConfiguration.setTokenUrl(TOKEN_URL);
         apiOauthConfiguration.setClientIdKey(CLIENT_ID_KEY);
         apiOauthConfiguration.setClientSecretKey(CLIENT_SECRET_KEY);
         apiOauthConfiguration.setScopeKey(SCOPE_KEY);
-    }
 
-    @BeforeEach
-    void setupEach() {
         when(thirdPartyAuthorisationService.userCanManageThirdParty(REQUESTER_ID)).thenReturn(true);
     }
 
@@ -160,6 +160,59 @@ class ThirdPartyConfigurationTest extends IntegrationTestBase {
 
         mvc.perform(request)
             .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void testUpdateThirdPartyConfigurationSuccess() throws Exception {
+        UUID userId = createApiUser();
+        apiOauthConfiguration.setUserId(userId);
+        createApiOauthConfiguration();
+
+        apiOauthConfiguration.setDestinationUrl(UPDATED_DESTINATION_URL);
+
+        MockHttpServletRequestBuilder updateRequest = MockMvcRequestBuilders
+            .put(THIRD_PARTY_CONFIGURATION_PATH + "/" + userId)
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(OBJECT_MAPPER.writeValueAsString(apiOauthConfiguration));
+
+        mvc.perform(updateRequest)
+            .andExpect(status().isOk());
+
+        MockHttpServletRequestBuilder getRequest = MockMvcRequestBuilders
+            .get(THIRD_PARTY_CONFIGURATION_PATH + "/" + userId)
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID);
+
+        MvcResult getResponse = mvc.perform(getRequest)
+            .andExpect(status().isOk())
+            .andReturn();
+
+        ApiOauthConfiguration updatedApiOauthConfiguration = OBJECT_MAPPER.readValue(
+            getResponse.getResponse().getContentAsString(),
+            ApiOauthConfiguration.class
+        );
+
+        assertThat(updatedApiOauthConfiguration.getDestinationUrl())
+            .as("Destination URL should be updated")
+            .isEqualTo(UPDATED_DESTINATION_URL);
+    }
+
+    @Test
+    void testUpdateThirdPartyConfigurationBadRequestIFDestinationUrlNotSupplied() throws Exception {
+        UUID userId = createApiUser();
+        apiOauthConfiguration.setUserId(userId);
+        createApiOauthConfiguration();
+
+        apiOauthConfiguration.setDestinationUrl(null);
+
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+            .put(THIRD_PARTY_CONFIGURATION_PATH + "/" + UUID.randomUUID())
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(OBJECT_MAPPER.writeValueAsString(apiOauthConfiguration));
+
+        mvc.perform(request)
+            .andExpect(status().isBadRequest());
     }
 
     @Test

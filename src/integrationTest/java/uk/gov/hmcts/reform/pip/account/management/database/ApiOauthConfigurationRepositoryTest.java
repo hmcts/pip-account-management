@@ -70,8 +70,12 @@ class ApiOauthConfigurationRepositoryTest {
             .as("Third-party API OAuth configuration should be found")
             .isPresent()
             .get()
-            .extracting(ApiOauthConfiguration::getDestinationUrl)
-            .isEqualTo(DESTINATION_URL);
+            .extracting(ApiOauthConfiguration::getDestinationUrl,
+                        ApiOauthConfiguration::getTokenUrl,
+                        ApiOauthConfiguration::getClientIdKey,
+                        ApiOauthConfiguration::getClientSecretKey,
+                        ApiOauthConfiguration::getScopeKey)
+            .containsExactly(DESTINATION_URL, TOKEN_URL, CLIENT_ID_KEY, CLIENT_SECRET_KEY, SCOPE_KEY);
 
         apiOauthConfigurationRepository.deleteByUserId(userId);
 

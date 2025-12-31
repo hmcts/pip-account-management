@@ -33,7 +33,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
 @WithMockUser(username = "admin", authorities = {"APPROLE_api.request.admin"})
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ThirdPartySubscriptionTest extends IntegrationTestBase {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final String UNAUTHORISED_ROLE = "APPROLE_unknown.authorised";
@@ -55,17 +54,17 @@ class ThirdPartySubscriptionTest extends IntegrationTestBase {
     private ThirdPartyAuthorisationService thirdPartyAuthorisationService;
 
     @BeforeAll
-    void setup() throws Exception {
+    static void setup() throws Exception {
         OBJECT_MAPPER.findAndRegisterModules();
-
-        apiSubscription1.setListType(ListType.CIVIL_DAILY_CAUSE_LIST);
-        apiSubscription1.setSensitivity(Sensitivity.PUBLIC);
-        apiSubscription2.setListType(ListType.FAMILY_DAILY_CAUSE_LIST);
-        apiSubscription2.setSensitivity(Sensitivity.CLASSIFIED);
     }
 
     @BeforeEach
     void setupEach() {
+        apiSubscription1.setListType(ListType.CIVIL_DAILY_CAUSE_LIST);
+        apiSubscription1.setSensitivity(Sensitivity.PUBLIC);
+        apiSubscription2.setListType(ListType.FAMILY_DAILY_CAUSE_LIST);
+        apiSubscription2.setSensitivity(Sensitivity.CLASSIFIED);
+
         when(thirdPartyAuthorisationService.userCanManageThirdParty(REQUESTER_ID)).thenReturn(true);
     }
 
@@ -159,6 +158,65 @@ class ThirdPartySubscriptionTest extends IntegrationTestBase {
     }
 
     @Test
+    void testUpdateThirdPartySubscriptionSuccess() throws Exception {
+        UUID userId = createApiUser();
+        apiSubscription1.setUserId(userId);
+        apiSubscription2.setUserId(userId);
+        createApiSubscriptions();
+
+        apiSubscription1.setListType(ListType.CIVIL_AND_FAMILY_DAILY_CAUSE_LIST);
+        apiSubscription1.setSensitivity(Sensitivity.CLASSIFIED);
+
+        MockHttpServletRequestBuilder updateRequest = MockMvcRequestBuilders
+            .put(THIRD_PARTY_SUBSCRIPTION_PATH + "/" + userId)
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(OBJECT_MAPPER.writeValueAsString(List.of(apiSubscription1)));
+
+        mvc.perform(updateRequest)
+            .andExpect(status().isOk());
+
+        MockHttpServletRequestBuilder getRequest = MockMvcRequestBuilders
+            .get(THIRD_PARTY_SUBSCRIPTION_PATH + "/" + userId)
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID);
+
+        MvcResult getResponse = mvc.perform(getRequest)
+            .andExpect(status().isOk())
+            .andReturn();
+
+        List<ApiSubscription> retrievedApiSubscriptions = OBJECT_MAPPER.readValue(
+            getResponse.getResponse().getContentAsString(),
+            new TypeReference<>() {}
+        );
+
+        assertThat(retrievedApiSubscriptions)
+            .hasSize(1)
+            .as("Retrieved subscription should match updated subscription")
+            .first()
+            .extracting(ApiSubscription::getListType, ApiSubscription::getSensitivity)
+            .containsExactly(ListType.CIVIL_AND_FAMILY_DAILY_CAUSE_LIST, Sensitivity.CLASSIFIED);
+    }
+
+    @Test
+    void testUpdateThirdPartySubscriptionBadRequestIfNoSensitivitySupplied() throws Exception {
+        UUID userId = createApiUser();
+        apiSubscription1.setUserId(userId);
+        apiSubscription2.setUserId(userId);
+        createApiSubscriptions();
+
+        apiSubscription1.setSensitivity(null);
+
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+            .put(THIRD_PARTY_SUBSCRIPTION_PATH + "/" + userId)
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(OBJECT_MAPPER.writeValueAsString(List.of(apiSubscription1)));
+
+        mvc.perform(request)
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
     @WithMockUser(username = UNAUTHORISED_USERNAME, authorities = {UNAUTHORISED_ROLE})
     void testUnauthorisedUpdateThirdPartyConfiguration() throws Exception {
         when(thirdPartyAuthorisationService.userCanManageThirdParty(REQUESTER_ID)).thenReturn(false);
@@ -197,7 +255,7 @@ class ThirdPartySubscriptionTest extends IntegrationTestBase {
             .post(THIRD_PARTY_SUBSCRIPTION_PATH)
             .header(REQUESTER_ID_HEADER, REQUESTER_ID)
             .contentType(MediaType.APPLICATION_JSON)
-            .content(OBJECT_MAPPER.writeValueAsString(List.of(apiSubscription1)));
+            .content(OBJECT_MAPPER.writeValueAsString(List.of(apiSubscription1, apiSubscription2)));
 
         return mvc.perform(request)
             .andExpect(status().isCreated())
