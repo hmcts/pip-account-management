@@ -31,12 +31,22 @@ public class ThirdPartyConfigurationService {
     }
 
     public void updateThirdPartyConfigurationByUserId(UUID userId, ApiOauthConfiguration apiOauthConfiguration) {
-        apiOauthConfigurationRepository.deleteByUserId(userId);
-        apiOauthConfigurationRepository.save(apiOauthConfiguration);
+        ApiOauthConfiguration foundApiOauthConfiguration = findThirdPartyConfigurationByUserId(userId);
+        updateExistingThirdPartyConfiguration(apiOauthConfiguration, foundApiOauthConfiguration);
 
     }
 
     public void deleteThirdPartyConfigurationByUserId(UUID userId) {
-        apiOauthConfigurationRepository.deleteById(userId);
+        apiOauthConfigurationRepository.deleteByUserId(userId);
+    }
+
+    private void updateExistingThirdPartyConfiguration(ApiOauthConfiguration suppliedApiSubscriptions,
+                                                       ApiOauthConfiguration existingApiOauthConfiguration) {
+        existingApiOauthConfiguration.setDestinationUrl(suppliedApiSubscriptions.getDestinationUrl());
+        existingApiOauthConfiguration.setTokenUrl(suppliedApiSubscriptions.getTokenUrl());
+        existingApiOauthConfiguration.setClientIdKey(suppliedApiSubscriptions.getClientIdKey());
+        existingApiOauthConfiguration.setClientSecretKey(suppliedApiSubscriptions.getClientSecretKey());
+        existingApiOauthConfiguration.setScopeKey(suppliedApiSubscriptions.getScopeKey());
+        apiOauthConfigurationRepository.save(existingApiOauthConfiguration);
     }
 }

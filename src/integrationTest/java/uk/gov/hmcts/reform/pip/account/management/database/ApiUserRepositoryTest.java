@@ -43,7 +43,7 @@ class ApiUserRepositoryTest {
             .extracting(ApiUser::getName)
             .isEqualTo(USER_NAME);
 
-        apiUserRepository.deleteByUserId(userId);
+        apiUserRepository.deleteById(userId);
 
         assertThat(apiUserRepository.findByUserId(userId))
             .as("Third-party API user should be deleted")

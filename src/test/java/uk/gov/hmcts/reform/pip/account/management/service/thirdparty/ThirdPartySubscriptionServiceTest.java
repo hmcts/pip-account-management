@@ -16,6 +16,8 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -69,11 +71,12 @@ class ThirdPartySubscriptionServiceTest {
     @Test
     void testUpdateThirdPartySubscriptionsByUserId() {
         List<ApiSubscription> subs = Collections.singletonList(new ApiSubscription());
+        when(apiSubscriptionRepository.findAllByUserId(USER_ID)).thenReturn(subs);
 
         service.updateThirdPartySubscriptionsByUserId(USER_ID, subs);
 
-        verify(apiSubscriptionRepository).deleteAllByUserId(USER_ID);
-        verify(apiSubscriptionRepository).saveAll(subs);
+        verify(apiSubscriptionRepository).deleteAll(any());
+        verify(apiSubscriptionRepository, times(2)).saveAll(any());
     }
 
     @Test

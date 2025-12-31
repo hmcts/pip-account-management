@@ -64,10 +64,10 @@ class ThirdPartyConfigurationServiceTest {
     @Test
     void testUpdateThirdPartyConfigurationByUserId() {
         ApiOauthConfiguration config = new ApiOauthConfiguration();
+        when(apiOauthConfigurationRepository.findByUserId(USER_ID)).thenReturn(Optional.of(config));
 
         service.updateThirdPartyConfigurationByUserId(USER_ID, config);
 
-        verify(apiOauthConfigurationRepository).deleteByUserId(USER_ID);
         verify(apiOauthConfigurationRepository).save(config);
     }
 
@@ -75,6 +75,6 @@ class ThirdPartyConfigurationServiceTest {
     void testDeleteThirdPartyConfigurationByUserId() {
         service.deleteThirdPartyConfigurationByUserId(USER_ID);
 
-        verify(apiOauthConfigurationRepository).deleteById(USER_ID);
+        verify(apiOauthConfigurationRepository).deleteByUserId(USER_ID);
     }
 }

@@ -49,6 +49,6 @@ public class ThirdPartyUserService {
         }
         thirdPartySubscriptionService.deleteThirdPartySubscriptionsByUserId(userId);
         thirdPartyConfigurationService.deleteThirdPartyConfigurationByUserId(userId);
-        apiUserRepository.deleteByUserId(userId);
+        apiUserRepository.deleteById(userId);
     }
 }

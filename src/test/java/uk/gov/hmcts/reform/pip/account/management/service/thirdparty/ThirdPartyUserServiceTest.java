@@ -88,7 +88,7 @@ class ThirdPartyUserServiceTest {
 
         verify(thirdPartySubscriptionService).deleteThirdPartySubscriptionsByUserId(USER_ID);
         verify(thirdPartyConfigurationService).deleteThirdPartyConfigurationByUserId(USER_ID);
-        verify(apiUserRepository).deleteByUserId(USER_ID);
+        verify(apiUserRepository).deleteById(USER_ID);
     }
 
     @Test
