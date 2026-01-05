@@ -58,10 +58,10 @@ class ThirdPartyUserTest extends IntegrationTestBase {
 
     @Test
     void testCreateThirdPartyUserSuccess() throws Exception {
-        UUID createdApiUserId = OBJECT_MAPPER.readValue(createThirdPartyUser().getResponse().getContentAsString(),
-                                                         UUID.class);
+        UUID createdUserId = OBJECT_MAPPER.readValue(createThirdPartyUser().getResponse().getContentAsString(),
+                                                        UUID.class);
 
-        assertThat(createdApiUserId.toString())
+        assertThat(createdUserId.toString())
             .as("Created user ID should be returned")
             .isNotBlank();
     }
@@ -118,9 +118,8 @@ class ThirdPartyUserTest extends IntegrationTestBase {
 
     @Test
     void testGetThirdPartyUserByUserIdSuccess() throws Exception {
-        ApiUser createdApiUser = OBJECT_MAPPER.readValue(createThirdPartyUser().getResponse().getContentAsString(),
-                                                         ApiUser.class);
-        UUID createdUserId = createdApiUser.getUserId();
+        UUID createdUserId = OBJECT_MAPPER.readValue(createThirdPartyUser().getResponse().getContentAsString(),
+                                                     UUID.class);
 
         MockHttpServletRequestBuilder getRequest = MockMvcRequestBuilders
             .get(THIRD_PARTY_USER_PATH + "/" + createdUserId)
@@ -163,9 +162,8 @@ class ThirdPartyUserTest extends IntegrationTestBase {
 
     @Test
     void testDeleteThirdPartyUserSuccess() throws Exception {
-        ApiUser createdApiUser = OBJECT_MAPPER.readValue(createThirdPartyUser().getResponse().getContentAsString(),
-                                                         ApiUser.class);
-        UUID createdUserId = createdApiUser.getUserId();
+        UUID createdUserId = OBJECT_MAPPER.readValue(createThirdPartyUser().getResponse().getContentAsString(),
+                                                     UUID.class);
 
         MockHttpServletRequestBuilder deleteRequest = MockMvcRequestBuilders
             .delete(THIRD_PARTY_USER_PATH + "/" + createdUserId)

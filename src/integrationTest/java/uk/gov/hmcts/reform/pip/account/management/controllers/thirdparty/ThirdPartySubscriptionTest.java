@@ -245,8 +245,7 @@ class ThirdPartySubscriptionTest extends IntegrationTestBase {
             .andExpect(status().isCreated())
             .andReturn();
 
-        ApiUser createdApiUser = OBJECT_MAPPER.readValue(response.getResponse().getContentAsString(), ApiUser.class);
-        return createdApiUser.getUserId();
+        return  OBJECT_MAPPER.readValue(response.getResponse().getContentAsString(), UUID.class);
     }
 
     private MvcResult createApiSubscriptions() throws Exception {
