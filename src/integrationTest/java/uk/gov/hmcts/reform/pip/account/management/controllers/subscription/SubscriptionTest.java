@@ -63,7 +63,6 @@ import static uk.gov.hmcts.reform.pip.model.account.Roles.SYSTEM_ADMIN;
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @WithMockUser(username = "admin", authorities = {"APPROLE_api.request.admin"})
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
-@SuppressWarnings({"PMD.ExcessiveImports", "PMD.SignatureDeclareThrowsException"})
 @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD,
     scripts = { "classpath:add-admin-users.sql", "classpath:add-verified-users.sql"})
 class SubscriptionTest extends IntegrationTestBase {
@@ -304,7 +303,6 @@ class SubscriptionTest extends IntegrationTestBase {
         }
 
         @Test
-        @SuppressWarnings({"PMD.UnitTestShouldIncludeAssert"})
         void testDeleteSubscriptionByIdReturnsForbiddenIfUserMismatched() throws Exception {
             Subscription returnedSubscription = createdAndExtractSubscription(UUID_STRING.toString());
 
@@ -658,7 +656,6 @@ class SubscriptionTest extends IntegrationTestBase {
             assertAcceptedArtefactRecipientRequest();
         }
 
-        @SuppressWarnings({"PMD.SignatureDeclareThrowsException"})
         private void assertAcceptedArtefactRecipientRequest() throws Exception {
             MockHttpServletRequestBuilder request = MockMvcRequestBuilders
                 .post(ARTEFACT_RECIPIENT_PATH)

@@ -38,7 +38,6 @@ import java.util.UUID;
 @Validated
 @AllArgsConstructor
 @ConditionalOnProperty(prefix = "testingSupport", name = "enableApi", havingValue = "true")
-@SuppressWarnings("PMD.TestClassWithoutTestCases")
 public class TestingSupportController {
 
     //A randomly generated ID used to identify the calls via the Testing Support controller

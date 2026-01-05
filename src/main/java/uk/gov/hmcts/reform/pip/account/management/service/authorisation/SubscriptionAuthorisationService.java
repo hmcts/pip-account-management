@@ -19,7 +19,6 @@ import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
 @Service
 @AllArgsConstructor
 @Slf4j
-@SuppressWarnings({"PMD.SimplifyBooleanReturns", "PMD.TooManyMethods"})
 public class SubscriptionAuthorisationService {
 
     private final SubscriptionRepository subscriptionRepository;

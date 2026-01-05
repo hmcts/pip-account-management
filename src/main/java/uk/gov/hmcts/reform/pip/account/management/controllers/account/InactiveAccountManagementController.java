@@ -53,15 +53,6 @@ public class InactiveAccountManagementController {
     }
 
     @ApiResponse(responseCode = NO_CONTENT_CODE, description = NO_CONTENT_MESSAGE)
-    @Operation(summary = "Notify inactive admin users to verify their accounts")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PostMapping("/admin/inactive/notify")
-    public ResponseEntity<Void> notifyInactiveAdminAccounts() {
-        inactiveAccountManagementService.notifyAdminUsersToSignIn();
-        return ResponseEntity.noContent().build();
-    }
-
-    @ApiResponse(responseCode = NO_CONTENT_CODE, description = NO_CONTENT_MESSAGE)
     @Operation(summary = "Delete all expired inactive admin accounts")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/admin/inactive")

@@ -12,7 +12,6 @@ import uk.gov.hmcts.reform.pip.account.management.utils.IntegrationTestBase;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
-@SuppressWarnings({"PMD.UnitTestShouldIncludeAssert"})
 class ViewTest extends IntegrationTestBase {
 
     @Autowired
