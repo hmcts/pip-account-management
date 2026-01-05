@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.transaction.Transactional;
+import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -57,7 +58,7 @@ public class ThirdPartySubscriptionController {
         @RequestBody List<ApiSubscription> apiSubscriptions,
         @RequestHeader(X_REQUESTER_ID_HEADER) UUID requesterId
     ) {
-        if (apiSubscriptions.isEmpty()) {
+        if (CollectionUtils.isEmpty(apiSubscriptions)) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body("The list of third-party subscriptions cannot be empty");
         }
@@ -94,6 +95,10 @@ public class ThirdPartySubscriptionController {
         @RequestBody List<ApiSubscription> apiSubscriptions,
         @RequestHeader(X_REQUESTER_ID_HEADER) UUID requesterId
     ) {
+        if (CollectionUtils.isEmpty(apiSubscriptions)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body("The list of third-party subscriptions cannot be empty");
+        }
         thirdPartySubscriptionService.updateThirdPartySubscriptionsByUserId(userId, apiSubscriptions);
         return ResponseEntity.status(HttpStatus.OK)
             .body(String.format("Third-party subscriptions successfully updated for user with ID %s", userId));

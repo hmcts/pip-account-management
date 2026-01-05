@@ -33,10 +33,11 @@ class ThirdPartyUserControllerTest {
     void testCreateThirdPartyUser() {
         ApiUser inputUser = new ApiUser();
         ApiUser createdUser = new ApiUser();
+        createdUser.setUserId(USER_ID);
 
         when(thirdPartyUserService.createThirdPartyUser(inputUser)).thenReturn(createdUser);
 
-        ResponseEntity<ApiUser> response = controller.createThirdPartyUser(inputUser, REQUESTER_ID);
+        ResponseEntity<UUID> response = controller.createThirdPartyUser(inputUser, REQUESTER_ID);
 
         assertThat(response.getStatusCode())
             .as("Response status should be CREATED")
@@ -44,7 +45,7 @@ class ThirdPartyUserControllerTest {
 
         assertThat(response.getBody())
             .as("Response body should contain the user ID")
-            .isEqualTo(createdUser);
+            .isEqualTo(USER_ID);
 
         verify(thirdPartyUserService).createThirdPartyUser(inputUser);
     }

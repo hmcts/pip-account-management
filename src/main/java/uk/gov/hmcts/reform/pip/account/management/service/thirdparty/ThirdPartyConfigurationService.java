@@ -40,13 +40,11 @@ public class ThirdPartyConfigurationService {
         apiOauthConfigurationRepository.deleteByUserId(userId);
     }
 
-    private void updateExistingThirdPartyConfiguration(ApiOauthConfiguration suppliedApiSubscriptions,
+    private void updateExistingThirdPartyConfiguration(ApiOauthConfiguration suppliedApiOAuthConfiguration,
                                                        ApiOauthConfiguration existingApiOauthConfiguration) {
-        existingApiOauthConfiguration.setDestinationUrl(suppliedApiSubscriptions.getDestinationUrl());
-        existingApiOauthConfiguration.setTokenUrl(suppliedApiSubscriptions.getTokenUrl());
-        existingApiOauthConfiguration.setClientIdKey(suppliedApiSubscriptions.getClientIdKey());
-        existingApiOauthConfiguration.setClientSecretKey(suppliedApiSubscriptions.getClientSecretKey());
-        existingApiOauthConfiguration.setScopeKey(suppliedApiSubscriptions.getScopeKey());
-        apiOauthConfigurationRepository.save(existingApiOauthConfiguration);
+        suppliedApiOAuthConfiguration.setId(existingApiOauthConfiguration.getId());
+        suppliedApiOAuthConfiguration.setCreatedDate(existingApiOauthConfiguration.getCreatedDate());
+        suppliedApiOAuthConfiguration.setLastUpdatedDate(existingApiOauthConfiguration.getLastUpdatedDate());
+        apiOauthConfigurationRepository.save(suppliedApiOAuthConfiguration);
     }
 }

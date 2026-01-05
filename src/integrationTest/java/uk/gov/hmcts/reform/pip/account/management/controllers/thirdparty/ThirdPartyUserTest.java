@@ -58,12 +58,12 @@ class ThirdPartyUserTest extends IntegrationTestBase {
 
     @Test
     void testCreateThirdPartyUserSuccess() throws Exception {
-        ApiUser createdApiUser = OBJECT_MAPPER.readValue(createThirdPartyUser().getResponse().getContentAsString(),
-                                                         ApiUser.class);
+        UUID createdApiUserId = OBJECT_MAPPER.readValue(createThirdPartyUser().getResponse().getContentAsString(),
+                                                         UUID.class);
 
-        assertThat(createdApiUser.getName())
-            .as("Created user name should be returned")
-            .isEqualTo(USER_NAME);
+        assertThat(createdApiUserId.toString())
+            .as("Created user ID should be returned")
+            .isNotBlank();
     }
 
     @Test

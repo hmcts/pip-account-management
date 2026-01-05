@@ -52,13 +52,13 @@ public class ThirdPartyUserController {
         description = "third-party user successfully created with ID {userId}")
     @ApiResponse(responseCode = BAD_REQUEST_STATUS_CODE, description = "The third-party user has an invalid format")
     @PreAuthorize("@thirdPartyAuthorisationService.userCanManageThirdParty(#requesterId)")
-    public ResponseEntity<ApiUser> createThirdPartyUser(
+    public ResponseEntity<UUID> createThirdPartyUser(
         @RequestBody ApiUser apiUser,
         @RequestHeader(X_REQUESTER_ID_HEADER) UUID requesterId
     ) {
         ApiUser createdApiUser = thirdPartyUserService.createThirdPartyUser(apiUser);
         return ResponseEntity.status(HttpStatus.CREATED)
-            .body(createdApiUser);
+            .body(createdApiUser.getUserId());
     }
 
     @GetMapping(produces = "application/json")
