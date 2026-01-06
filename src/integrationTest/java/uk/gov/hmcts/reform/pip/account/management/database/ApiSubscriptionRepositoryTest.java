@@ -27,7 +27,8 @@ class ApiSubscriptionRepositoryTest {
     private static final String USER_NAME = "Test name";
     private static final String USER_NAME2 = "Test name 2";
 
-    private UUID userId;
+    private UUID userId1;
+    private UUID userId2;
 
     @Autowired
     ApiSubscriptionRepository apiSubscriptionRepository;
@@ -40,15 +41,15 @@ class ApiSubscriptionRepositoryTest {
         ApiUser apiUser = new ApiUser();
         apiUser.setName(USER_NAME);
         ApiUser createdApiUser = apiUserRepository.save(apiUser);
-        userId = createdApiUser.getUserId();
+        userId1 = createdApiUser.getUserId();
 
         ApiSubscription apiSubscription1 = new ApiSubscription();
-        apiSubscription1.setUserId(userId);
+        apiSubscription1.setUserId(userId1);
         apiSubscription1.setListType(ListType.CIVIL_DAILY_CAUSE_LIST);
         apiSubscription1.setSensitivity(Sensitivity.PUBLIC);
 
         ApiSubscription apiSubscription2 = new ApiSubscription();
-        apiSubscription2.setUserId(userId);
+        apiSubscription2.setUserId(userId1);
         apiSubscription2.setListType(ListType.FAMILY_DAILY_CAUSE_LIST);
         apiSubscription2.setSensitivity(Sensitivity.PRIVATE);
 
@@ -85,7 +86,7 @@ class ApiSubscriptionRepositoryTest {
 
     @Test
     void shouldFindAndDeleteApiSubscriptionsByUserId() {
-        List<ApiSubscription> apiSubscriptions = apiSubscriptionRepository.findAllByUserId(userId);
+        List<ApiSubscription> apiSubscriptions = apiSubscriptionRepository.findAllByUserId(userId1);
 
         assertThat(apiSubscriptions)
             .as("Third-party API subscription count does not match")
@@ -101,9 +102,9 @@ class ApiSubscriptionRepositoryTest {
             .extracting(ApiSubscription::getSensitivity)
             .containsExactly(Sensitivity.PUBLIC, Sensitivity.PRIVATE);
 
-        apiSubscriptionRepository.deleteAllByUserId(userId);
+        apiSubscriptionRepository.deleteAllByUserId(userId1);
 
-        assertThat(apiSubscriptionRepository.findAllByUserId(userId))
+        assertThat(apiSubscriptionRepository.findAllByUserId(userId1))
             .as("Third-party API subscription should be deleted")
             .isEmpty();
     }
@@ -130,7 +131,7 @@ class ApiSubscriptionRepositoryTest {
         assertThat(apiSubscriptions)
             .as("Third-party API subscription user IDs do not match")
             .extracting(ApiSubscription::getUserId)
-            .containsOnlyOnce(userId);
+            .containsOnlyOnce(userId2);
 
         assertThat(apiSubscriptions)
             .as("Third-party API subscription list types do not match")
