@@ -131,12 +131,12 @@ class ApiSubscriptionRepositoryTest {
         assertThat(apiSubscriptions)
             .as("Third-party API subscription user IDs do not match")
             .extracting(ApiSubscription::getUserId)
-            .containsOnlyOnce(userId2);
+            .containsExactly(userId2, userId2);
 
         assertThat(apiSubscriptions)
             .as("Third-party API subscription list types do not match")
             .extracting(ApiSubscription::getListType)
-            .containsOnlyOnce(ListType.CROWN_DAILY_LIST);
+            .containsExactly(ListType.CROWN_DAILY_LIST, ListType.CROWN_DAILY_LIST);
 
         assertThat(apiSubscriptions)
             .as("Third-party API subscription sensitivities do not match")
