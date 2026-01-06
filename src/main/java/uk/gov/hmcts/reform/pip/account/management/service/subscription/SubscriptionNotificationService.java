@@ -8,6 +8,7 @@ import uk.gov.hmcts.reform.pip.account.management.database.SubscriptionRepositor
 import uk.gov.hmcts.reform.pip.account.management.model.subscription.Subscription;
 import uk.gov.hmcts.reform.pip.account.management.service.PublicationService;
 import uk.gov.hmcts.reform.pip.account.management.service.account.AccountService;
+import uk.gov.hmcts.reform.pip.account.management.service.thirdparty.ThirdPartySubscriptionNotificationService;
 import uk.gov.hmcts.reform.pip.model.publication.Artefact;
 import uk.gov.hmcts.reform.pip.model.subscription.Channel;
 import uk.gov.hmcts.reform.pip.model.subscription.ThirdPartySubscription;

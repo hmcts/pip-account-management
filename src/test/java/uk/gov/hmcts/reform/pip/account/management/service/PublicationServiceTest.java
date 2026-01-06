@@ -28,8 +28,8 @@ import uk.gov.hmcts.reform.pip.model.subscription.ThirdPartySubscription;
 import uk.gov.hmcts.reform.pip.model.subscription.ThirdPartySubscriptionArtefact;
 import uk.gov.hmcts.reform.pip.model.system.admin.ActionResult;
 import uk.gov.hmcts.reform.pip.model.system.admin.CreateSystemAdminAction;
-import uk.gov.hmcts.reform.pip.model.thirdparty.ApiOauthConfiguration;
 import uk.gov.hmcts.reform.pip.model.thirdparty.ThirdPartyAction;
+import uk.gov.hmcts.reform.pip.model.thirdparty.ThirdPartyOauthConfiguration;
 
 import java.io.IOException;
 import java.util.List;
@@ -417,7 +417,7 @@ class PublicationServiceTest {
 
     @Test
     void testSendThirdPartySubscription() {
-        ApiOauthConfiguration apiOauthConfiguration = new ApiOauthConfiguration(
+        ThirdPartyOauthConfiguration thirdPartyOauthConfiguration = new ThirdPartyOauthConfiguration(
             TEST_API_DESTINATION,
             "http://token.url",
             "clientIdKey",
@@ -426,7 +426,7 @@ class PublicationServiceTest {
         );
         uk.gov.hmcts.reform.pip.model.thirdparty.ThirdPartySubscription thirdPartySubscription =
             new uk.gov.hmcts.reform.pip.model.thirdparty.ThirdPartySubscription(
-                List.of(apiOauthConfiguration), UUID.randomUUID(), ThirdPartyAction.NEW_PUBLICATION
+                List.of(thirdPartyOauthConfiguration), UUID.randomUUID(), ThirdPartyAction.NEW_PUBLICATION
             );
 
         mockPublicationServicesEndpoint.enqueue(new MockResponse()
