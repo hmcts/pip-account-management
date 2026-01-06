@@ -58,20 +58,20 @@ class ApiSubscriptionRepositoryTest {
         ApiUser apiUser2 = new ApiUser();
         apiUser2.setName(USER_NAME2);
         ApiUser createdApiUser2 = apiUserRepository.save(apiUser2);
-        UUID userId = createdApiUser2.getUserId();
+        userId2 = createdApiUser2.getUserId();
 
         ApiSubscription apiSubscription3 = new ApiSubscription();
-        apiSubscription3.setUserId(userId);
+        apiSubscription3.setUserId(userId2);
         apiSubscription3.setListType(ListType.CROWN_DAILY_LIST);
         apiSubscription3.setSensitivity(Sensitivity.PUBLIC);
 
         ApiSubscription apiSubscription4 = new ApiSubscription();
-        apiSubscription4.setUserId(userId);
+        apiSubscription4.setUserId(userId2);
         apiSubscription4.setListType(ListType.CROWN_DAILY_LIST);
         apiSubscription4.setSensitivity(Sensitivity.PRIVATE);
 
         ApiSubscription apiSubscription5 = new ApiSubscription();
-        apiSubscription5.setUserId(userId);
+        apiSubscription5.setUserId(userId2);
         apiSubscription5.setListType(ListType.CROWN_DAILY_LIST);
         apiSubscription5.setSensitivity(Sensitivity.CLASSIFIED);
 
