@@ -25,6 +25,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class ApiSubscriptionRepositoryTest {
     private static final UUID INVALID_USER_ID = UUID.randomUUID();
     private static final String USER_NAME = "Test name";
+    private static final String USER_NAME2 = "Test name 2";
 
     private UUID userId;
 
@@ -54,7 +55,7 @@ class ApiSubscriptionRepositoryTest {
         apiSubscriptionRepository.saveAll(List.of(apiSubscription1, apiSubscription2));
 
         ApiUser apiUser2 = new ApiUser();
-        apiUser2.setName(USER_NAME);
+        apiUser2.setName(USER_NAME2);
         ApiUser createdApiUser2 = apiUserRepository.save(apiUser2);
         UUID userId = createdApiUser2.getUserId();
 
