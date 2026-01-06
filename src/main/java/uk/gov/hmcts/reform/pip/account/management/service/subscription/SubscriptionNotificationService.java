@@ -38,17 +38,21 @@ public class SubscriptionNotificationService {
 
     private final PublicationService publicationService;
 
+    private final ThirdPartySubscriptionNotificationService thirdPartySubscriptionNotificationService;
+
     @Autowired
     public SubscriptionNotificationService(
         SubscriptionRepository repository,
         SubscriptionChannelService subscriptionChannelService,
         AccountService accountService,
-        PublicationService publicationService
+        PublicationService publicationService,
+        ThirdPartySubscriptionNotificationService thirdPartySubscriptionNotificationService
     ) {
         this.repository = repository;
         this.subscriptionChannelService = subscriptionChannelService;
         this.accountService = accountService;
         this.publicationService = publicationService;
+        this.thirdPartySubscriptionNotificationService = thirdPartySubscriptionNotificationService;
     }
 
     /**
@@ -74,6 +78,7 @@ public class SubscriptionNotificationService {
             : subscriptionList;
 
         handleSubscriptionSending(artefact.getArtefactId(), subscriptionsToContact);
+        thirdPartySubscriptionNotificationService.handleThirdPartySubscription(artefact);
     }
 
     /**
@@ -90,6 +95,9 @@ public class SubscriptionNotificationService {
             : subscriptionList;
 
         handleDeletedArtefactSending(subscriptionsToContact, artefactBeingDeleted);
+        thirdPartySubscriptionNotificationService.handleThirdPartySubscriptionForDeletedPublication(
+            artefactBeingDeleted
+        );
     }
 
     private List<Subscription> validateSubscriptionPermissions(List<Subscription> subscriptions, Artefact artefact) {

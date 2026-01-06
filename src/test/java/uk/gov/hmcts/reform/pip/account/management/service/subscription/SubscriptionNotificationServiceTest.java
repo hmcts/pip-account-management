@@ -91,6 +91,9 @@ class SubscriptionNotificationServiceTest {
     @Mock
     PublicationService publicationService;
 
+    @Mock
+    ThirdPartySubscriptionNotificationService thirdPartySubscriptionNotificationService;
+
     @InjectMocks
     SubscriptionNotificationService subscriptionNotificationService;
 
@@ -352,6 +355,7 @@ class SubscriptionNotificationServiceTest {
 
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionNotificationService.class)) {
             subscriptionNotificationService.collectSubscribers(publicArtefactMatches);
+            verify(thirdPartySubscriptionNotificationService).handleThirdPartySubscription(publicArtefactMatches);
             assertTrue(logCaptor.getErrorLogs().isEmpty(), LOG_MESSAGE_MATCH);
         } catch (Exception ex) {
             throw new IOException(ex.getMessage());
@@ -438,6 +442,8 @@ class SubscriptionNotificationServiceTest {
         doNothing().when(publicationService).sendEmptyArtefact(any(ThirdPartySubscriptionArtefact.class));
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionNotificationService.class)) {
             subscriptionNotificationService.collectThirdPartyForDeletion(publicArtefactMatches);
+            verify(thirdPartySubscriptionNotificationService)
+                .handleThirdPartySubscriptionForDeletedPublication(publicArtefactMatches);
             assertTrue(logCaptor.getErrorLogs().isEmpty(), LOG_MESSAGE_MATCH);
         }
     }

@@ -28,6 +28,8 @@ import uk.gov.hmcts.reform.pip.model.subscription.ThirdPartySubscription;
 import uk.gov.hmcts.reform.pip.model.subscription.ThirdPartySubscriptionArtefact;
 import uk.gov.hmcts.reform.pip.model.system.admin.ActionResult;
 import uk.gov.hmcts.reform.pip.model.system.admin.CreateSystemAdminAction;
+import uk.gov.hmcts.reform.pip.model.thirdparty.ApiOauthConfiguration;
+import uk.gov.hmcts.reform.pip.model.thirdparty.ThirdPartyAction;
 
 import java.io.IOException;
 import java.util.List;
@@ -410,6 +412,28 @@ class PublicationServiceTest {
         publicationService.sendEmptyArtefact(
             new ThirdPartySubscriptionArtefact(TEST_API_DESTINATION, TEST_ARTEFACT)
         );
+        assertTrue(logCaptor.getErrorLogs().isEmpty(), ERROR_LOG_EMPTY_MESSAGE);
+    }
+
+    @Test
+    void testSendThirdPartySubscription() {
+        ApiOauthConfiguration apiOauthConfiguration = new ApiOauthConfiguration(
+            TEST_API_DESTINATION,
+            "http://token.url",
+            "clientIdKey",
+            "clientSecretKey",
+            "scopeKey"
+        );
+        uk.gov.hmcts.reform.pip.model.thirdparty.ThirdPartySubscription thirdPartySubscription =
+            new uk.gov.hmcts.reform.pip.model.thirdparty.ThirdPartySubscription(
+                List.of(apiOauthConfiguration), UUID.randomUUID(), ThirdPartyAction.NEW_PUBLICATION
+            );
+
+        mockPublicationServicesEndpoint.enqueue(new MockResponse()
+                                                    .addHeader(CONTENT_TYPE, ContentType.APPLICATION_JSON)
+                                                    .setResponseCode(200));
+
+        publicationService.sendThirdPartySubscription(thirdPartySubscription);
         assertTrue(logCaptor.getErrorLogs().isEmpty(), ERROR_LOG_EMPTY_MESSAGE);
     }
 

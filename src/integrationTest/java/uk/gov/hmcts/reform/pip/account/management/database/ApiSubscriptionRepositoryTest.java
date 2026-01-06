@@ -52,6 +52,28 @@ class ApiSubscriptionRepositoryTest {
         apiSubscription2.setSensitivity(Sensitivity.PRIVATE);
 
         apiSubscriptionRepository.saveAll(List.of(apiSubscription1, apiSubscription2));
+
+        ApiUser apiUser2 = new ApiUser();
+        apiUser2.setName(USER_NAME);
+        ApiUser createdApiUser2 = apiUserRepository.save(apiUser2);
+        UUID userId = createdApiUser2.getUserId();
+
+        ApiSubscription apiSubscription3 = new ApiSubscription();
+        apiSubscription3.setUserId(userId);
+        apiSubscription3.setListType(ListType.CROWN_DAILY_LIST);
+        apiSubscription3.setSensitivity(Sensitivity.PUBLIC);
+
+        ApiSubscription apiSubscription4 = new ApiSubscription();
+        apiSubscription4.setUserId(userId);
+        apiSubscription4.setListType(ListType.CROWN_DAILY_LIST);
+        apiSubscription4.setSensitivity(Sensitivity.PRIVATE);
+
+        ApiSubscription apiSubscription5 = new ApiSubscription();
+        apiSubscription5.setUserId(userId);
+        apiSubscription5.setListType(ListType.CROWN_DAILY_LIST);
+        apiSubscription5.setSensitivity(Sensitivity.CLASSIFIED);
+
+        apiSubscriptionRepository.saveAll(List.of(apiSubscription3, apiSubscription4, apiSubscription5));
     }
 
     @AfterAll
@@ -90,6 +112,34 @@ class ApiSubscriptionRepositoryTest {
         assertThat(apiSubscriptionRepository.findAllByUserId(INVALID_USER_ID))
             .as("Third-party API subscription should be empty")
             .isEmpty();
+    }
+
+    @Test
+    void shouldFindApiSubscriptionsByListTypeAndSensitivities() {
+        List<ApiSubscription> apiSubscriptions = apiSubscriptionRepository
+            .findByListTypeAndSensitivityIn(
+                ListType.CROWN_DAILY_LIST,
+                List.of(Sensitivity.PUBLIC, Sensitivity.CLASSIFIED)
+            );
+
+        assertThat(apiSubscriptions)
+            .as("Third-party API subscription count does not match")
+            .hasSize(2);
+
+        assertThat(apiSubscriptions)
+            .as("Third-party API subscription user IDs do not match")
+            .extracting(ApiSubscription::getUserId)
+            .containsOnlyOnce(userId);
+
+        assertThat(apiSubscriptions)
+            .as("Third-party API subscription list types do not match")
+            .extracting(ApiSubscription::getListType)
+            .containsOnlyOnce(ListType.CROWN_DAILY_LIST);
+
+        assertThat(apiSubscriptions)
+            .as("Third-party API subscription sensitivities do not match")
+            .extracting(ApiSubscription::getSensitivity)
+            .containsExactlyInAnyOrder(Sensitivity.PUBLIC, Sensitivity.CLASSIFIED);
     }
 }
 

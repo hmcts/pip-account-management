@@ -41,6 +41,7 @@ public class PublicationService {
     private static final String NOTIFY_SUBSCRIPTION_PATH = "notify/subscription";
     private static final String NOTIFY_API_PATH = "notify/api";
     private static final String NOTIFY_LOCATION_SUBSCRIPTION_PATH = "notify/location-subscription-delete";
+    private static final String THIRD_PARTY_PATH = "/third-party";
 
     private static final String EMAIL = "email";
     private static final String FULL_NAME = "fullName";
@@ -240,6 +241,23 @@ public class PublicationService {
         } catch (WebClientResponseException ex) {
             log.error(writeLog(
                 String.format("Deleted artefact notification to third party failed to send with error: %s",
+                              ex.getResponseBodyAsString())
+            ));
+        }
+    }
+
+    public void sendThirdPartySubscription(
+        uk.gov.hmcts.reform.pip.model.thirdparty.ThirdPartySubscription thirdPartySubscription
+    ) {
+        try {
+            webClient.post().uri(url + THIRD_PARTY_PATH)
+                .bodyValue(thirdPartySubscription)
+                .retrieve()
+                .bodyToMono(Void.class)
+                .block();
+        } catch (WebClientResponseException ex) {
+            log.error(writeLog(
+                String.format("Third party subscriptions failed to send with error: %s",
                               ex.getResponseBodyAsString())
             ));
         }
