@@ -40,14 +40,15 @@ public class ThirdPartySubscriptionNotificationService {
     public void handleThirdPartySubscription(Artefact artefact) {
         List<ThirdPartyOauthConfiguration> thirdPartyOauthConfigurationList =
             collectThirdPartySubscriberConfigurationList(artefact);
+
         ThirdPartyAction thirdPartyAction = artefact.getSupersededCount() > 0
             ? ThirdPartyAction.UPDATE_PUBLICATION
             : ThirdPartyAction.NEW_PUBLICATION;
 
         if (!thirdPartyOauthConfigurationList.isEmpty()) {
-            publicationService.sendThirdPartySubscription(
-                new ThirdPartySubscription(thirdPartyOauthConfigurationList, artefact.getArtefactId(), thirdPartyAction)
-            );
+            publicationService.sendThirdPartySubscription(new ThirdPartySubscription(
+                thirdPartyOauthConfigurationList, artefact.getArtefactId(), thirdPartyAction
+            ));
         }
     }
 
@@ -56,12 +57,9 @@ public class ThirdPartySubscriptionNotificationService {
             collectThirdPartySubscriberConfigurationList(artefact);
 
         if (!thirdPartyOauthConfigurationList.isEmpty()) {
-            publicationService.sendThirdPartySubscription(
-                new ThirdPartySubscription(
-                    thirdPartyOauthConfigurationList, artefact.getArtefactId(),
-                    ThirdPartyAction.DELETE_PUBLICATION
-                )
-            );
+            publicationService.sendThirdPartySubscription(new ThirdPartySubscription(
+                thirdPartyOauthConfigurationList, artefact.getArtefactId(), ThirdPartyAction.DELETE_PUBLICATION
+            ));
         }
     }
 
@@ -70,8 +68,8 @@ public class ThirdPartySubscriptionNotificationService {
         List<ThirdPartyOauthConfiguration> thirdPartyOauthConfigurationList = new ArrayList<>();
 
         apiSubscriptions.forEach(apiSubscription -> {
-            Optional<ApiOauthConfiguration>
-                foundApiOauthConfiguration = apiOauthConfigurationRepository.findByUserId(apiSubscription.getUserId());
+            Optional<ApiOauthConfiguration> foundApiOauthConfiguration = apiOauthConfigurationRepository
+                .findByUserId(apiSubscription.getUserId());
 
             if (foundApiOauthConfiguration.isPresent()) {
                 thirdPartyOauthConfigurationList.add(
@@ -99,19 +97,19 @@ public class ThirdPartySubscriptionNotificationService {
     }
 
     private List<ApiSubscription> buildThirdPartySubscriberList(Artefact artefact) {
-        List<Sensitivity> allowedApiSensitivities = determineAllowedApiSensitivities(artefact);
+        List<Sensitivity> allowedApiSensitivities = determineAllowedApiSensitivities(artefact.getSensitivity());
         return apiSubscriptionRepository.findByListTypeAndSensitivityIn(
             artefact.getListType(),
             allowedApiSensitivities
         );
     }
 
-    private List<Sensitivity> determineAllowedApiSensitivities(Artefact artefact) {
+    private List<Sensitivity> determineAllowedApiSensitivities(Sensitivity sensitivity) {
         List<Sensitivity> allowedApiSensitivities = new ArrayList<>(List.of(Sensitivity.CLASSIFIED));
 
-        if (Sensitivity.PUBLIC.equals(artefact.getSensitivity())) {
+        if (Sensitivity.PUBLIC.equals(sensitivity)) {
             allowedApiSensitivities.addAll(List.of(Sensitivity.PUBLIC, Sensitivity.PRIVATE));
-        } else if (Sensitivity.PRIVATE.equals(artefact.getSensitivity())) {
+        } else if (Sensitivity.PRIVATE.equals(sensitivity)) {
             allowedApiSensitivities.add(Sensitivity.PRIVATE);
         }
         return allowedApiSensitivities;
