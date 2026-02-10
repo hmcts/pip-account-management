@@ -52,6 +52,7 @@ class PublicationServiceTest {
 
     private final MockWebServer mockPublicationServicesEndpoint = new MockWebServer();
 
+    private static final UUID USER_ID = UUID.randomUUID();
     private static final String SENT_MESSAGE = "test email sent";
     private static final String EMAIL = "test@email.com";
     private static final String FULL_NAME = "FULL_NAME";
@@ -447,6 +448,7 @@ class PublicationServiceTest {
     @Test
     void testSendThirdPartySubscription() {
         ThirdPartyOauthConfiguration thirdPartyOauthConfiguration = new ThirdPartyOauthConfiguration(
+            USER_ID,
             TEST_API_DESTINATION,
             "http://token.url",
             "clientIdKey",
