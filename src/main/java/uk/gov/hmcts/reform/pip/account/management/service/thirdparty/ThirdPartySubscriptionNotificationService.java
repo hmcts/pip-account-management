@@ -88,6 +88,7 @@ public class ThirdPartySubscriptionNotificationService {
         ApiOauthConfiguration foundApiOauthConfiguration
     ) {
         ThirdPartyOauthConfiguration thirdPartyOauthConfiguration = new ThirdPartyOauthConfiguration();
+        thirdPartyOauthConfiguration.setUserId(foundApiOauthConfiguration.getUserId());
         thirdPartyOauthConfiguration.setDestinationUrl(foundApiOauthConfiguration.getDestinationUrl());
         thirdPartyOauthConfiguration.setTokenUrl(foundApiOauthConfiguration.getTokenUrl());
         thirdPartyOauthConfiguration.setClientIdKey(foundApiOauthConfiguration.getClientIdKey());

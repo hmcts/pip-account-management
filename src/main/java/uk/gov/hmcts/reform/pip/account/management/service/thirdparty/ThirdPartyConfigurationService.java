@@ -33,7 +33,6 @@ public class ThirdPartyConfigurationService {
     public void updateThirdPartyConfigurationByUserId(UUID userId, ApiOauthConfiguration apiOauthConfiguration) {
         ApiOauthConfiguration foundApiOauthConfiguration = findThirdPartyConfigurationByUserId(userId);
         updateExistingThirdPartyConfiguration(apiOauthConfiguration, foundApiOauthConfiguration);
-
     }
 
     public void deleteThirdPartyConfigurationByUserId(UUID userId) {
