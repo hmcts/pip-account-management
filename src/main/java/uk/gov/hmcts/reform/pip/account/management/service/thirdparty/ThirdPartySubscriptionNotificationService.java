@@ -63,6 +63,16 @@ public class ThirdPartySubscriptionNotificationService {
         }
     }
 
+    public void thirdPartyHealthCheck(ApiOauthConfiguration apiOauthConfiguration) {
+        ThirdPartyOauthConfiguration thirdPartyOauthConfiguration = buildThirdPartySubscriberConfiguration(
+                apiOauthConfiguration
+        );
+        ThirdPartySubscription thirdPartySubscription = new ThirdPartySubscription(
+            List.of(thirdPartyOauthConfiguration), null, ThirdPartyAction.HEALTH_CHECK
+        );
+        publicationService.sendThirdPartySubscription(thirdPartySubscription);
+    }
+
     private List<ThirdPartyOauthConfiguration> collectThirdPartySubscriberConfigurationList(Artefact artefact) {
         List<ApiSubscription> apiSubscriptions = buildThirdPartySubscriberList(artefact);
         List<ThirdPartyOauthConfiguration> thirdPartyOauthConfigurationList = new ArrayList<>();

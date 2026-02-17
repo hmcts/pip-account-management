@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import uk.gov.hmcts.reform.pip.account.management.model.thirdparty.ApiOauthConfiguration;
 import uk.gov.hmcts.reform.pip.account.management.service.thirdparty.ThirdPartyConfigurationService;
+import uk.gov.hmcts.reform.pip.account.management.service.thirdparty.ThirdPartySubscriptionNotificationService;
 import uk.gov.hmcts.reform.pip.model.authentication.roles.IsAdmin;
 
 import java.util.UUID;
@@ -39,14 +40,19 @@ public class ThirdPartyConfigurationController {
     private static final String X_REQUESTER_ID_HEADER = "x-requester-id";
 
     private final ThirdPartyConfigurationService thirdPartyConfigurationService;
+    private final ThirdPartySubscriptionNotificationService thirdPartySubscriptionNotificationService;
 
     @Autowired
-    public ThirdPartyConfigurationController(ThirdPartyConfigurationService thirdPartyConfigurationService) {
+    public ThirdPartyConfigurationController(
+        ThirdPartyConfigurationService thirdPartyConfigurationService,
+        ThirdPartySubscriptionNotificationService thirdPartySubscriptionNotificationService
+    ) {
         this.thirdPartyConfigurationService = thirdPartyConfigurationService;
+        this.thirdPartySubscriptionNotificationService = thirdPartySubscriptionNotificationService;
     }
 
     @PostMapping(consumes = "application/json")
-    @Operation(summary = "Endpoint to create a new third-party Oauth configuration")
+    @Operation(summary = "Endpoint to create a new third-party OAuth configuration")
     @ApiResponse(responseCode = CREATED_STATUS_CODE,
         description = "Third-party OAuth configuration successfully created for user with ID {userId}")
     @ApiResponse(responseCode = BAD_REQUEST_STATUS_CODE,
@@ -92,5 +98,22 @@ public class ThirdPartyConfigurationController {
         thirdPartyConfigurationService.updateThirdPartyConfigurationByUserId(userId, apiOauthConfiguration);
         return ResponseEntity.status(HttpStatus.OK)
             .body(String.format("Third-party OAuth configuration successfully updated for user with ID %s", userId));
+    }
+
+    @GetMapping
+    @Operation(summary = "Endpoint to perform third-party healthcheck using OAuth configuration")
+    @ApiResponse(responseCode = OK_STATUS_CODE,
+        description = "Successfully performed third-party healthcheck using OAuth configuration")
+    @ApiResponse(responseCode = BAD_REQUEST_STATUS_CODE,
+        description = "The third-party OAuth configuration has an invalid format")
+    @PreAuthorize("@thirdPartyAuthorisationService.userCanManageThirdParty(#requesterId)")
+    public ResponseEntity<String> thirdPartyConfigurationHealthCheck(
+        @RequestBody ApiOauthConfiguration apiOauthConfiguration,
+        @RequestHeader(X_REQUESTER_ID_HEADER) UUID requesterId
+    ) {
+        thirdPartySubscriptionNotificationService.thirdPartyHealthCheck(apiOauthConfiguration);
+        return ResponseEntity.status(HttpStatus.OK)
+            .body(String.format("Successfully performed healthcheck to third-party user with ID %s",
+                                apiOauthConfiguration.getUserId()));
     }
 }

@@ -173,4 +173,16 @@ class ThirdPartySubscriptionNotificationServiceTest {
             .anySatisfy(log ->
                 assertThat(log).contains("No OAuth configuration found for third-party user with ID " + USER_ID1));
     }
+
+    @Test
+    void testThirdPartyHealthCheck() {
+        thirdPartySubscriptionNotificationService.thirdPartyHealthCheck(apiOauthConfiguration1);
+
+        verify(publicationService).sendThirdPartySubscription(
+            new ThirdPartySubscription(any(), null, ThirdPartyAction.HEALTH_CHECK)
+        );
+        assertThat(logCaptor.getErrorLogs())
+            .as(ERROR_LOG_MESSAGE)
+            .isEmpty();
+    }
 }
