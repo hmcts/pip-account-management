@@ -24,6 +24,7 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -114,7 +115,7 @@ class ThirdPartySubscriptionNotificationServiceTest {
 
         verify(publicationService).sendThirdPartySubscription(new ThirdPartySubscription(
             any(), ARTEFACT_ID1, ThirdPartyAction.NEW_PUBLICATION
-        ));
+        ), eq(false));
         assertThat(logCaptor.getErrorLogs())
             .as(ERROR_LOG_MESSAGE)
             .isEmpty();
@@ -132,7 +133,7 @@ class ThirdPartySubscriptionNotificationServiceTest {
 
         verify(publicationService).sendThirdPartySubscription(new ThirdPartySubscription(
             any(), ARTEFACT_ID2, ThirdPartyAction.UPDATE_PUBLICATION
-        ));
+        ), eq(false));
         assertThat(logCaptor.getErrorLogs())
             .as(ERROR_LOG_MESSAGE)
             .isEmpty();
@@ -150,7 +151,7 @@ class ThirdPartySubscriptionNotificationServiceTest {
 
         verify(publicationService).sendThirdPartySubscription(new ThirdPartySubscription(
             any(), ARTEFACT_ID1, ThirdPartyAction.DELETE_PUBLICATION
-        ));
+        ), eq(false));
         assertThat(logCaptor.getErrorLogs())
             .as(ERROR_LOG_MESSAGE)
             .isEmpty();
@@ -166,7 +167,7 @@ class ThirdPartySubscriptionNotificationServiceTest {
 
         thirdPartySubscriptionNotificationService.handleThirdPartySubscription(artefact1);
 
-        verify(publicationService, never()).sendThirdPartySubscription(any());
+        verify(publicationService, never()).sendThirdPartySubscription(any(), eq(false));
         assertThat(logCaptor.getErrorLogs())
             .as(ERROR_LOG_MESSAGE)
             .hasSize(1)
@@ -175,11 +176,11 @@ class ThirdPartySubscriptionNotificationServiceTest {
     }
 
     @Test
-    void testThirdPartyHealthCheck() {
-        thirdPartySubscriptionNotificationService.thirdPartyHealthCheck(apiOauthConfiguration1);
+    void testHandleThirdPartyHealthCheck() {
+        thirdPartySubscriptionNotificationService.handleThirdPartyHealthCheck(apiOauthConfiguration1);
 
         verify(publicationService).sendThirdPartySubscription(
-            new ThirdPartySubscription(any(), null, ThirdPartyAction.HEALTH_CHECK)
+            new ThirdPartySubscription(any(), null, ThirdPartyAction.HEALTH_CHECK), eq(true)
         );
         assertThat(logCaptor.getErrorLogs())
             .as(ERROR_LOG_MESSAGE)

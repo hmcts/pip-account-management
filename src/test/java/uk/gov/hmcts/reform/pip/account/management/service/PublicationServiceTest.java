@@ -15,6 +15,7 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.web.reactive.function.client.WebClient;
+import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.ThirdPartyHealthCheckException;
 import uk.gov.hmcts.reform.pip.account.management.model.MediaApplication;
 import uk.gov.hmcts.reform.pip.account.management.model.MediaApplicationStatus;
 import uk.gov.hmcts.reform.pip.account.management.model.subscription.BulkSubscriptionsSummary;
@@ -38,6 +39,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.fail;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -463,8 +465,31 @@ class PublicationServiceTest {
                                                     .addHeader(CONTENT_TYPE, ContentType.APPLICATION_JSON)
                                                     .setResponseCode(200));
 
-        publicationService.sendThirdPartySubscription(thirdPartySubscription);
+        publicationService.sendThirdPartySubscription(thirdPartySubscription, false);
         assertTrue(logCaptor.getErrorLogs().isEmpty(), ERROR_LOG_EMPTY_MESSAGE);
+    }
+
+    @Test
+    void testSendThirdPartySubscriptionForHealthCheckWithError() {
+        mockPublicationServicesEndpoint.enqueue(new MockResponse().setResponseCode(500));
+        mockPublicationServicesEndpoint.enqueue(new MockResponse().setResponseCode(500));
+        mockPublicationServicesEndpoint.enqueue(new MockResponse().setResponseCode(500));
+        mockPublicationServicesEndpoint.enqueue(new MockResponse().setResponseCode(500));
+
+        ThirdPartyOauthConfiguration thirdPartyOauthConfiguration = new ThirdPartyOauthConfiguration(
+            USER_ID,
+            TEST_API_DESTINATION,
+            "http://token.url",
+            "clientIdKey",
+            "clientSecretKey",
+            "scopeKey"
+        );
+        ThirdPartySubscription thirdPartySubscription = new ThirdPartySubscription(
+            List.of(thirdPartyOauthConfiguration), UUID.randomUUID(), ThirdPartyAction.NEW_PUBLICATION
+        );
+
+        assertThatThrownBy(() -> publicationService.sendThirdPartySubscription(thirdPartySubscription, true))
+            .isInstanceOf(ThirdPartyHealthCheckException.class);
     }
 
     @Test

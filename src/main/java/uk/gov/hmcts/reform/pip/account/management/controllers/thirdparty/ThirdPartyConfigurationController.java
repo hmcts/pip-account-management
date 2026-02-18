@@ -19,7 +19,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import uk.gov.hmcts.reform.pip.account.management.model.thirdparty.ApiOauthConfiguration;
 import uk.gov.hmcts.reform.pip.account.management.service.thirdparty.ThirdPartyConfigurationService;
-import uk.gov.hmcts.reform.pip.account.management.service.thirdparty.ThirdPartySubscriptionNotificationService;
 import uk.gov.hmcts.reform.pip.model.authentication.roles.IsAdmin;
 
 import java.util.UUID;
@@ -40,15 +39,12 @@ public class ThirdPartyConfigurationController {
     private static final String X_REQUESTER_ID_HEADER = "x-requester-id";
 
     private final ThirdPartyConfigurationService thirdPartyConfigurationService;
-    private final ThirdPartySubscriptionNotificationService thirdPartySubscriptionNotificationService;
 
     @Autowired
     public ThirdPartyConfigurationController(
-        ThirdPartyConfigurationService thirdPartyConfigurationService,
-        ThirdPartySubscriptionNotificationService thirdPartySubscriptionNotificationService
+        ThirdPartyConfigurationService thirdPartyConfigurationService
     ) {
         this.thirdPartyConfigurationService = thirdPartyConfigurationService;
-        this.thirdPartySubscriptionNotificationService = thirdPartySubscriptionNotificationService;
     }
 
     @PostMapping(consumes = "application/json")
@@ -100,7 +96,7 @@ public class ThirdPartyConfigurationController {
             .body(String.format("Third-party OAuth configuration successfully updated for user with ID %s", userId));
     }
 
-    @GetMapping
+    @GetMapping("/healthcheck/{userId}")
     @Operation(summary = "Endpoint to perform third-party healthcheck using OAuth configuration")
     @ApiResponse(responseCode = OK_STATUS_CODE,
         description = "Successfully performed third-party healthcheck using OAuth configuration")
@@ -108,12 +104,11 @@ public class ThirdPartyConfigurationController {
         description = "The third-party OAuth configuration has an invalid format")
     @PreAuthorize("@thirdPartyAuthorisationService.userCanManageThirdParty(#requesterId)")
     public ResponseEntity<String> thirdPartyConfigurationHealthCheck(
-        @RequestBody ApiOauthConfiguration apiOauthConfiguration,
+        @PathVariable UUID userId,
         @RequestHeader(X_REQUESTER_ID_HEADER) UUID requesterId
     ) {
-        thirdPartySubscriptionNotificationService.thirdPartyHealthCheck(apiOauthConfiguration);
+        thirdPartyConfigurationService.validateThirdPartyConfiguration(userId);
         return ResponseEntity.status(HttpStatus.OK)
-            .body(String.format("Successfully performed healthcheck to third-party user with ID %s",
-                                apiOauthConfiguration.getUserId()));
+            .body(String.format("Successfully performed healthcheck on third-party user with ID %s", userId));
     }
 }

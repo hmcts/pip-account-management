@@ -9,7 +9,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import uk.gov.hmcts.reform.pip.account.management.model.thirdparty.ApiOauthConfiguration;
 import uk.gov.hmcts.reform.pip.account.management.service.thirdparty.ThirdPartyConfigurationService;
-import uk.gov.hmcts.reform.pip.account.management.service.thirdparty.ThirdPartySubscriptionNotificationService;
 
 import java.util.UUID;
 
@@ -25,9 +24,6 @@ class ThirdPartyConfigurationControllerTest {
 
     @Mock
     private ThirdPartyConfigurationService thirdPartyConfigurationService;
-
-    @Mock
-    ThirdPartySubscriptionNotificationService thirdPartySubscriptionNotificationService;
 
     @InjectMocks
     private ThirdPartyConfigurationController controller;
@@ -85,12 +81,12 @@ class ThirdPartyConfigurationControllerTest {
 
     @Test
     void testThirdPartyConfigurationHealthCheck() {
-        ResponseEntity<String> response = controller.thirdPartyConfigurationHealthCheck(CONFIG, REQUESTER_ID);
+        ResponseEntity<String> response = controller.thirdPartyConfigurationHealthCheck(USER_ID, REQUESTER_ID);
 
         assertThat(response.getStatusCode())
-            .as("Response status should be NO_CONTENT")
+            .as("Response status should be OK")
             .isEqualTo(HttpStatus.OK);
 
-        verify(thirdPartySubscriptionNotificationService).thirdPartyHealthCheck(CONFIG);
+        verify(thirdPartyConfigurationService).validateThirdPartyConfiguration(USER_ID);
     }
 }
