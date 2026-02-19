@@ -108,7 +108,6 @@ class ThirdPartyUserServiceTest {
 
     @Test
     void testDeleteAllThirdPartyUsersByNamePrefixSuccess() {
-        String prefix = "TestUser";
         UUID userId1 = UUID.randomUUID();
         UUID userId2 = UUID.randomUUID();
         UUID userId3 = UUID.randomUUID();
@@ -120,13 +119,14 @@ class ThirdPartyUserServiceTest {
         ApiUser user3 = new ApiUser();
         user3.setUserId(userId3);
 
+        String prefix = "TestUser";
         when(apiUserRepository.findAllByNameStartingWithIgnoreCase(prefix)).thenReturn(List.of(user1, user2, user3));
         when(apiUserRepository.findByUserId(userId1)).thenReturn(Optional.of(user1));
         when(apiUserRepository.findByUserId(userId2)).thenReturn(Optional.of(user2));
         when(apiUserRepository.findByUserId(userId3)).thenReturn(Optional.of(user3));
 
         assertThat(service.deleteAllThirdPartyUsersWithNamePrefix(prefix))
-            .isEqualTo("3 third-party users with name starting with " + prefix
+            .isEqualTo("3 third-party user(s) with name starting with " + prefix
                            + " and associated subscriptions/configurations deleted");
 
         verify(thirdPartySubscriptionService, times(3)).deleteThirdPartySubscriptionsByUserId(any());
@@ -141,7 +141,7 @@ class ThirdPartyUserServiceTest {
         when(apiUserRepository.findAllByNameStartingWithIgnoreCase(prefix)).thenReturn(List.of());
 
         assertThat(service.deleteAllThirdPartyUsersWithNamePrefix(prefix))
-            .isEqualTo("0 third-party users with name starting with " + prefix
+            .isEqualTo("0 third-party user(s) with name starting with " + prefix
                            + " and associated subscriptions/configurations deleted");
 
         verify(thirdPartySubscriptionService, never()).deleteThirdPartySubscriptionsByUserId(any());

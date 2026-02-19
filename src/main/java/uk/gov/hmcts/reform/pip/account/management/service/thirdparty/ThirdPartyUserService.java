@@ -56,7 +56,7 @@ public class ThirdPartyUserService {
         List<ApiUser> apiUsersToDelete = apiUserRepository.findAllByNameStartingWithIgnoreCase(prefix);
         apiUsersToDelete.forEach(apiUser -> deleteThirdPartyUser(apiUser.getUserId()));
         return String.format(
-            "%s third-party users with name starting with %s and associated subscriptions/configurations deleted",
+            "%s third-party user(s) with name starting with %s and associated subscriptions/configurations deleted",
             apiUsersToDelete.size(), prefix
         );
     }

@@ -72,7 +72,7 @@ class ApiUserRepositoryTest {
         apiUserRepository.saveAll(List.of(apiUser1, apiUser2, apiUser3));
 
         assertThat(apiUserRepository.findAllByNameStartingWithIgnoreCase(NAME_PREFIX))
-            .as("Third-party API user does not match")
+            .as("Third-party API users do not match")
             .hasSize(2)
             .extracting(ApiUser::getName)
             .containsExactly(USER_NAME, USER_NAME3);

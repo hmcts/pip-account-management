@@ -151,7 +151,7 @@ class TestingSupportControllerTest {
     @Test
     void testDeleteAllThirdPartyUsersWithNamePrefixReturnsOk() {
         String responseMessage = String.format(
-            "5 third-party users with name starting with %s and associated subscriptions/configurations deleted",
+            "5 third-party user(s) with name starting with %s and associated subscriptions/configurations deleted",
             NAME_PREFIX
         );
         when(thirdPartyUserService.deleteAllThirdPartyUsersWithNamePrefix(NAME_PREFIX))
