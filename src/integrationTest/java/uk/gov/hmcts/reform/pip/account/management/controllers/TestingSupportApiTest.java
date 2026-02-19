@@ -31,14 +31,20 @@ import uk.gov.hmcts.reform.pip.account.management.model.account.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.account.PiUser;
 import uk.gov.hmcts.reform.pip.account.management.model.subscription.Subscription;
 import uk.gov.hmcts.reform.pip.account.management.model.subscription.usersubscription.UserSubscription;
+import uk.gov.hmcts.reform.pip.account.management.model.thirdparty.ApiOauthConfiguration;
+import uk.gov.hmcts.reform.pip.account.management.model.thirdparty.ApiSubscription;
+import uk.gov.hmcts.reform.pip.account.management.model.thirdparty.ApiUser;
 import uk.gov.hmcts.reform.pip.account.management.service.authorisation.AccountAuthorisationService;
 import uk.gov.hmcts.reform.pip.account.management.service.authorisation.AuditAuthorisationService;
 import uk.gov.hmcts.reform.pip.account.management.service.authorisation.MediaApplicationAuthorisationService;
 import uk.gov.hmcts.reform.pip.account.management.service.authorisation.SubscriptionAuthorisationService;
+import uk.gov.hmcts.reform.pip.account.management.service.authorisation.ThirdPartyAuthorisationService;
 import uk.gov.hmcts.reform.pip.account.management.utils.IntegrationTestBase;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
 import uk.gov.hmcts.reform.pip.model.enums.AuditAction;
+import uk.gov.hmcts.reform.pip.model.publication.ListType;
+import uk.gov.hmcts.reform.pip.model.publication.Sensitivity;
 import uk.gov.hmcts.reform.pip.model.subscription.Channel;
 import uk.gov.hmcts.reform.pip.model.subscription.SearchType;
 
@@ -71,11 +77,15 @@ class TestingSupportApiTest extends IntegrationTestBase {
     private static final String TESTING_SUPPORT_APPLICATION_URL = TESTING_SUPPORT_BASE_URL + "application/";
     private static final String TESTING_SUPPORT_CREATE_ACCOUNT_URL = TESTING_SUPPORT_BASE_URL + "account";
     private static final String TESTING_SUPPORT_SUBSCRIPTION_URL = TESTING_SUPPORT_BASE_URL + "subscription/";
+    private static final String TESTING_SUPPORT_THIRD_PARTY_URL = TESTING_SUPPORT_BASE_URL + "third-party/";
     private static final String TESTING_SUPPORT_AUDIT_URL = TESTING_SUPPORT_BASE_URL + "audit/";
 
     private static final String ACCOUNT_URL = "/account/";
     private static final String ACCOUNT_ADD_USER_URL = ACCOUNT_URL + "add/pi";
     private static final String APPLICATION_URL = "/application";
+    private static final String THIRD_PARTY_URL = "/third-party";
+    private static final String THIRD_PARTY_SUBSCRIPTION_URL = THIRD_PARTY_URL + "/subscription";
+    private static final String THIRD_PARTY_CONFIGURATION_URL = THIRD_PARTY_URL + "/configuration";
     private static final String B2C_URL = "URL";
 
     private static final String REQUESTER_ID_HEADER = "x-requester-id";
@@ -84,6 +94,7 @@ class TestingSupportApiTest extends IntegrationTestBase {
 
     private static final String EMAIL_PREFIX = "TEST_789_";
     private static final String EMAIL = EMAIL_PREFIX + UUID.randomUUID().toString() + "@test.com";
+    private static final String NAME_PREFIX = "TEST_123_";
     private static final String PASSWORD = UUID.randomUUID().toString();
     private static final String ID = "1234";
 
@@ -96,6 +107,12 @@ class TestingSupportApiTest extends IntegrationTestBase {
     private static final String FULL_NAME = "Test user";
     private static final String EMPLOYER = "Test employer";
     private static final MediaApplicationStatus PENDING_STATUS = MediaApplicationStatus.PENDING;
+
+    private static final String DESTINATION_URL = "https://test.com";
+    private static final String TOKEN_URL = "https://test.token.com";
+    private static final String CLIENT_ID_KEY = "clientId";
+    private static final String CLIENT_SECRET_KEY = "clientSecret";
+    private static final String SCOPE_KEY = "scope";
 
     private static final String SUBSCRIPTION_PATH = "/subscription";
     private static final String SUBSCRIPTION_BY_USER_PATH = "/subscription/user/%s";
@@ -134,6 +151,9 @@ class TestingSupportApiTest extends IntegrationTestBase {
     private MediaApplicationAuthorisationService mediaApplicationAuthorisationService;
 
     @MockitoBean
+    private ThirdPartyAuthorisationService thirdPartyAuthorisationService;
+
+    @MockitoBean
     private AuditAuthorisationService auditAuthorisationService;
 
     @MockitoBean
@@ -152,6 +172,7 @@ class TestingSupportApiTest extends IntegrationTestBase {
         when(accountAuthorisationService.userCanCreateAccount(any(), any())).thenReturn(true);
         when(subscriptionAuthorisationService.userCanAddSubscriptions(any(), any())).thenReturn(true);
         when(subscriptionAuthorisationService.userCanViewSubscriptions(any(), any())).thenReturn(true);
+        when(thirdPartyAuthorisationService.userCanManageThirdParty(any())).thenReturn(true);
     }
 
     @Test
@@ -364,6 +385,63 @@ class TestingSupportApiTest extends IntegrationTestBase {
     }
 
     @Test
+    void testTestingSupportDeleteThirdPartyUsersWithNamePrefix() throws Exception {
+        ApiUser apiUser = creatThirdPartyUser();
+        MockHttpServletRequestBuilder createUserRequest = MockMvcRequestBuilders
+            .post(THIRD_PARTY_URL)
+            .content(OBJECT_MAPPER.writeValueAsString(apiUser))
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID)
+            .contentType(MediaType.APPLICATION_JSON);
+
+        MvcResult createUserResponse = mockMvc.perform(createUserRequest)
+            .andExpect(status().isCreated())
+            .andReturn();
+
+        UUID userId = OBJECT_MAPPER.readValue(createUserResponse.getResponse().getContentAsString(), UUID.class);
+
+        ApiSubscription apiSubscription = creatThirdPartySubscription(userId);
+        MockHttpServletRequestBuilder createSubscriptionRequest = MockMvcRequestBuilders
+            .post(THIRD_PARTY_SUBSCRIPTION_URL)
+            .content(OBJECT_MAPPER.writeValueAsString(List.of(apiSubscription)))
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID)
+            .contentType(MediaType.APPLICATION_JSON);
+
+        mockMvc.perform(createSubscriptionRequest)
+            .andExpect(status().isCreated());
+
+        ApiOauthConfiguration apiOauthConfiguration = creatThirdPartyOauthConfiguration(userId);
+        MockHttpServletRequestBuilder createConfigurationRequest = MockMvcRequestBuilders
+            .post(THIRD_PARTY_CONFIGURATION_URL)
+            .content(OBJECT_MAPPER.writeValueAsString(apiOauthConfiguration))
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID)
+            .contentType(MediaType.APPLICATION_JSON);
+
+        mockMvc.perform(createConfigurationRequest)
+            .andExpect(status().isCreated());
+
+        MvcResult deleteResponse = mockMvc.perform(delete(TESTING_SUPPORT_THIRD_PARTY_URL + NAME_PREFIX))
+            .andExpect(status().isOk())
+            .andReturn();
+
+        assertThat(deleteResponse.getResponse().getContentAsString())
+            .as("Third-party delete response does not match")
+            .isEqualTo("1 third-party user(s) with name starting with " + NAME_PREFIX
+                           + " and associated subscriptions/configurations deleted");
+
+        mockMvc.perform(get(THIRD_PARTY_URL + "/" + userId)
+                            .header(REQUESTER_ID_HEADER, REQUESTER_ID))
+            .andExpect(status().isNotFound());
+
+        mockMvc.perform(get(THIRD_PARTY_SUBSCRIPTION_URL + "/" + userId)
+                            .header(REQUESTER_ID_HEADER, REQUESTER_ID))
+            .andExpect(status().isNotFound());
+
+        mockMvc.perform(get(THIRD_PARTY_CONFIGURATION_URL + "/" + userId)
+                            .header(REQUESTER_ID_HEADER, REQUESTER_ID))
+            .andExpect(status().isNotFound());
+    }
+
+    @Test
     void testTestingSupportDeleteAuditLogsWithEmailPrefix() throws Exception {
         AuditLog auditLog = createAuditLog();
 
@@ -418,9 +496,16 @@ class TestingSupportApiTest extends IntegrationTestBase {
     }
 
     @Test
-    @WithMockUser(username = "unauthorized_isAuthorized", authorities = {"APPROLE_unknown.authorized"})
+    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testUnauthorisedTestingSupportDeleteSubscriptions() throws Exception {
         mockMvc.perform(delete(TESTING_SUPPORT_SUBSCRIPTION_URL + LOCATION_NAME_PREFIX))
+            .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
+    void testUnauthorisedTestingSupportDeleteThirdPartyUsers() throws Exception {
+        mockMvc.perform(delete(TESTING_SUPPORT_THIRD_PARTY_URL + NAME_PREFIX))
             .andExpect(status().isForbidden());
     }
 
@@ -491,6 +576,31 @@ class TestingSupportApiTest extends IntegrationTestBase {
         subscription.setUserId(USER_ID);
 
         return subscription;
+    }
+
+    private ApiUser creatThirdPartyUser() {
+        ApiUser apiUser = new ApiUser();
+        apiUser.setName(NAME_PREFIX + FULL_NAME);
+        return apiUser;
+    }
+
+    private ApiSubscription creatThirdPartySubscription(UUID userId) {
+        ApiSubscription apiSubscription = new ApiSubscription();
+        apiSubscription.setUserId(userId);
+        apiSubscription.setListType(ListType.CIVIL_AND_FAMILY_DAILY_CAUSE_LIST);
+        apiSubscription.setSensitivity(Sensitivity.PUBLIC);
+        return apiSubscription;
+    }
+
+    private ApiOauthConfiguration creatThirdPartyOauthConfiguration(UUID userId) {
+        ApiOauthConfiguration apiOauthConfiguration = new ApiOauthConfiguration();
+        apiOauthConfiguration.setUserId(userId);
+        apiOauthConfiguration.setDestinationUrl(DESTINATION_URL);
+        apiOauthConfiguration.setTokenUrl(TOKEN_URL);
+        apiOauthConfiguration.setClientIdKey(CLIENT_ID_KEY);
+        apiOauthConfiguration.setClientSecretKey(CLIENT_SECRET_KEY);
+        apiOauthConfiguration.setScopeKey(SCOPE_KEY);
+        return apiOauthConfiguration;
     }
 
     private AuditLog createAuditLog() throws Exception {
