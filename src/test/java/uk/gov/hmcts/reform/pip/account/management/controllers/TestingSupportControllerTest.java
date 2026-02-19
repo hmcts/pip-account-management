@@ -16,6 +16,7 @@ import uk.gov.hmcts.reform.pip.account.management.service.AuditService;
 import uk.gov.hmcts.reform.pip.account.management.service.MediaApplicationService;
 import uk.gov.hmcts.reform.pip.account.management.service.account.AccountService;
 import uk.gov.hmcts.reform.pip.account.management.service.subscription.SubscriptionLocationService;
+import uk.gov.hmcts.reform.pip.account.management.service.thirdparty.ThirdPartyUserService;
 
 import java.util.UUID;
 
@@ -26,6 +27,7 @@ import static org.mockito.Mockito.when;
 class TestingSupportControllerTest {
     private static final String EMAIL_PREFIX = "TEST_PIP_1234_";
     private static final String LOCATION_NAME_PREFIX = "TEST_PIP_1235_";
+    private static final String NAME_PREFIX = "TEST_PIP_1236_";
     private static final String EMAIL = "test@test.com";
     private static final UUID ISSUER_ID = UUID.fromString("7d709648-a0e3-46aa-9d33-7e68c77f02da");
     private static final String MESSAGE = "Failed to create user";
@@ -41,6 +43,9 @@ class TestingSupportControllerTest {
 
     @Mock
     private SubscriptionLocationService subscriptionLocationService;
+
+    @Mock
+    private ThirdPartyUserService thirdPartyUserService;
 
     @Mock
     private AuditService auditService;
@@ -132,6 +137,28 @@ class TestingSupportControllerTest {
 
         ResponseEntity<String> response = testingSupportController.deleteSubscriptionsWithLocationNamePrefix(
             LOCATION_NAME_PREFIX
+        );
+
+        assertThat(response.getStatusCode())
+            .as("Response status does not match")
+            .isEqualTo(HttpStatus.OK);
+
+        assertThat(response.getBody())
+            .as("Response body does not match")
+            .isEqualTo(responseMessage);
+    }
+
+    @Test
+    void testDeleteAllThirdPartyUsersWithNamePrefixReturnsOk() {
+        String responseMessage = String.format(
+            "5 third-party users with name starting with %s and associated subscriptions/configurations deleted",
+            NAME_PREFIX
+        );
+        when(thirdPartyUserService.deleteAllThirdPartyUsersWithNamePrefix(NAME_PREFIX))
+            .thenReturn(responseMessage);
+
+        ResponseEntity<String> response = testingSupportController.deleteThirdPartyUsersWithNamePrefix(
+            NAME_PREFIX
         );
 
         assertThat(response.getStatusCode())
