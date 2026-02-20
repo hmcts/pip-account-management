@@ -88,8 +88,8 @@ class AccountServiceTest {
 
     private static final String FULL_NAME = "Full name";
     private static final UUID ISSUER_ID = UUID.randomUUID();
-    private static final String EMAIL = "test@hmcts.net";
-    private static final String PASSWORD = "Password123!";
+    private static final String EMAIL = "TEST_EMAIL" + UUID.randomUUID() + "@hmcts.net";
+    private static final String PASSWORD = UUID.randomUUID().toString();
     private static final UUID USER_UUID = UUID.randomUUID();
     private static final String INVALID_EMAIL = "ab.com";
     private static final String EMAIL_PREFIX = "TEST_PIP_1234_";
