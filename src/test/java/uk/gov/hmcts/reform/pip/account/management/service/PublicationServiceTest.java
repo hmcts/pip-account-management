@@ -23,11 +23,14 @@ import uk.gov.hmcts.reform.pip.account.management.model.subscription.Subscriptio
 import uk.gov.hmcts.reform.pip.account.management.model.subscription.SubscriptionsSummaryDetails;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
 import uk.gov.hmcts.reform.pip.model.publication.Artefact;
+import uk.gov.hmcts.reform.pip.model.subscription.LegacyThirdPartySubscription;
+import uk.gov.hmcts.reform.pip.model.subscription.LegacyThirdPartySubscriptionArtefact;
 import uk.gov.hmcts.reform.pip.model.subscription.SearchType;
-import uk.gov.hmcts.reform.pip.model.subscription.ThirdPartySubscription;
-import uk.gov.hmcts.reform.pip.model.subscription.ThirdPartySubscriptionArtefact;
 import uk.gov.hmcts.reform.pip.model.system.admin.ActionResult;
 import uk.gov.hmcts.reform.pip.model.system.admin.CreateSystemAdminAction;
+import uk.gov.hmcts.reform.pip.model.thirdparty.ThirdPartyAction;
+import uk.gov.hmcts.reform.pip.model.thirdparty.ThirdPartyOauthConfiguration;
+import uk.gov.hmcts.reform.pip.model.thirdparty.ThirdPartySubscription;
 
 import java.io.IOException;
 import java.util.List;
@@ -49,6 +52,7 @@ class PublicationServiceTest {
 
     private final MockWebServer mockPublicationServicesEndpoint = new MockWebServer();
 
+    private static final UUID USER_ID = UUID.randomUUID();
     private static final String SENT_MESSAGE = "test email sent";
     private static final String EMAIL = "test@email.com";
     private static final String FULL_NAME = "FULL_NAME";
@@ -281,7 +285,7 @@ class PublicationServiceTest {
     }
 
     @Test
-    void testPostSubscriptionSummariesRequestBodyArtefactId() throws IOException, InterruptedException {
+    void testPostSubscriptionSummariesRequestBodyLegacySendEmptyArtefactId() throws IOException, InterruptedException {
         subscription.setSearchType(SearchType.LIST_TYPE);
         Map<String, List<Subscription>> subscriptionsMap = new ConcurrentHashMap<>();
         subscriptionsMap.put(EMAIL, List.of(subscription));
@@ -390,36 +394,36 @@ class PublicationServiceTest {
     }
 
     @Test
-    void testSendThirdPartyList() {
+    void testLegacySendThirdPartyList() {
         mockPublicationServicesEndpoint.enqueue(new MockResponse()
                                                     .addHeader(CONTENT_TYPE, ContentType.APPLICATION_JSON)
                                                     .setResponseCode(200));
 
-        publicationService.sendThirdPartyList(
-            new ThirdPartySubscription(TEST_API_DESTINATION, UUID.randomUUID())
+        publicationService.legacySendThirdPartyList(
+            new LegacyThirdPartySubscription(TEST_API_DESTINATION, UUID.randomUUID())
         );
         assertTrue(logCaptor.getErrorLogs().isEmpty(), ERROR_LOG_EMPTY_MESSAGE);
     }
 
     @Test
-    void testSendEmptyArtefact() {
+    void testSendEmptyLegacySendEmptyArtefact() {
         mockPublicationServicesEndpoint.enqueue(new MockResponse()
                                                     .addHeader(CONTENT_TYPE, ContentType.APPLICATION_JSON)
                                                     .setResponseCode(200));
 
-        publicationService.sendEmptyArtefact(
-            new ThirdPartySubscriptionArtefact(TEST_API_DESTINATION, TEST_ARTEFACT)
+        publicationService.legacySendEmptyArtefact(
+            new LegacyThirdPartySubscriptionArtefact(TEST_API_DESTINATION, TEST_ARTEFACT)
         );
         assertTrue(logCaptor.getErrorLogs().isEmpty(), ERROR_LOG_EMPTY_MESSAGE);
     }
 
     @Test
-    void testSendEmptyArtefactReturnsFailed() {
+    void testSendEmptyLegacySendEmptyArtefactReturnsFailed() {
         mockPublicationServicesEndpoint.enqueue(new MockResponse()
                                                     .setResponseCode(404));
 
-        publicationService.sendEmptyArtefact(
-            new ThirdPartySubscriptionArtefact(TEST_API_DESTINATION, TEST_ARTEFACT)
+        publicationService.legacySendEmptyArtefact(
+            new LegacyThirdPartySubscriptionArtefact(TEST_API_DESTINATION, TEST_ARTEFACT)
         );
 
         assertTrue(logCaptor.getErrorLogs().get(0)
@@ -429,17 +433,38 @@ class PublicationServiceTest {
     }
 
     @Test
-    void testSendThirdPartyListReturnsFailed() {
+    void testLegacySendThirdPartyListReturnsFailed() {
         mockPublicationServicesEndpoint.enqueue(new MockResponse().setResponseCode(404));
 
-        publicationService.sendThirdPartyList(
-            new ThirdPartySubscription(TEST_API_DESTINATION, UUID.randomUUID())
+        publicationService.legacySendThirdPartyList(
+            new LegacyThirdPartySubscription(TEST_API_DESTINATION, UUID.randomUUID())
         );
         assertTrue(
             logCaptor.getErrorLogs().get(0).contains("Publication to third party failed to send with error"),
             ERROR_LOG_MATCH_MESSAGE
         );
+    }
 
+    @Test
+    void testSendThirdPartySubscription() {
+        ThirdPartyOauthConfiguration thirdPartyOauthConfiguration = new ThirdPartyOauthConfiguration(
+            USER_ID,
+            TEST_API_DESTINATION,
+            "http://token.url",
+            "clientIdKey",
+            "clientSecretKey",
+            "scopeKey"
+        );
+        ThirdPartySubscription thirdPartySubscription = new ThirdPartySubscription(
+            List.of(thirdPartyOauthConfiguration), UUID.randomUUID(), ThirdPartyAction.NEW_PUBLICATION
+        );
+
+        mockPublicationServicesEndpoint.enqueue(new MockResponse()
+                                                    .addHeader(CONTENT_TYPE, ContentType.APPLICATION_JSON)
+                                                    .setResponseCode(200));
+
+        publicationService.sendThirdPartySubscription(thirdPartySubscription);
+        assertTrue(logCaptor.getErrorLogs().isEmpty(), ERROR_LOG_EMPTY_MESSAGE);
     }
 
     @Test

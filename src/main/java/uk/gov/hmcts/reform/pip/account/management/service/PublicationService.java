@@ -16,12 +16,13 @@ import uk.gov.hmcts.reform.pip.account.management.model.subscription.Subscriptio
 import uk.gov.hmcts.reform.pip.account.management.model.subscription.SubscriptionsSummary;
 import uk.gov.hmcts.reform.pip.account.management.model.subscription.SubscriptionsSummaryDetails;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
+import uk.gov.hmcts.reform.pip.model.subscription.LegacyThirdPartySubscription;
+import uk.gov.hmcts.reform.pip.model.subscription.LegacyThirdPartySubscriptionArtefact;
 import uk.gov.hmcts.reform.pip.model.subscription.LocationSubscriptionDeletion;
-import uk.gov.hmcts.reform.pip.model.subscription.ThirdPartySubscription;
-import uk.gov.hmcts.reform.pip.model.subscription.ThirdPartySubscriptionArtefact;
 import uk.gov.hmcts.reform.pip.model.system.admin.ActionResult;
 import uk.gov.hmcts.reform.pip.model.system.admin.DeleteLocationSubscriptionAction;
 import uk.gov.hmcts.reform.pip.model.system.admin.SystemAdminAction;
+import uk.gov.hmcts.reform.pip.model.thirdparty.ThirdPartySubscription;
 
 import java.util.List;
 import java.util.Map;
@@ -41,6 +42,7 @@ public class PublicationService {
     private static final String NOTIFY_SUBSCRIPTION_PATH = "notify/subscription";
     private static final String NOTIFY_API_PATH = "notify/api";
     private static final String NOTIFY_LOCATION_SUBSCRIPTION_PATH = "notify/location-subscription-delete";
+    private static final String THIRD_PARTY_PATH = "/third-party";
 
     private static final String EMAIL = "email";
     private static final String FULL_NAME = "fullName";
@@ -217,7 +219,7 @@ public class PublicationService {
         }
     }
 
-    public void sendThirdPartyList(ThirdPartySubscription subscriptions) {
+    public void legacySendThirdPartyList(LegacyThirdPartySubscription subscriptions) {
         try {
             webClient.post().uri(url + "/" + NOTIFY_API_PATH)
                 .bodyValue(subscriptions).retrieve()
@@ -231,7 +233,7 @@ public class PublicationService {
         }
     }
 
-    public void sendEmptyArtefact(ThirdPartySubscriptionArtefact subscriptionArtefact) {
+    public void legacySendEmptyArtefact(LegacyThirdPartySubscriptionArtefact subscriptionArtefact) {
         try {
             webClient.put().uri(url + "/" + NOTIFY_API_PATH)
                 .bodyValue(subscriptionArtefact).retrieve()
@@ -240,6 +242,21 @@ public class PublicationService {
         } catch (WebClientResponseException ex) {
             log.error(writeLog(
                 String.format("Deleted artefact notification to third party failed to send with error: %s",
+                              ex.getResponseBodyAsString())
+            ));
+        }
+    }
+
+    public void sendThirdPartySubscription(ThirdPartySubscription thirdPartySubscription) {
+        try {
+            webClient.post().uri(url + THIRD_PARTY_PATH)
+                .bodyValue(thirdPartySubscription)
+                .retrieve()
+                .bodyToMono(Void.class)
+                .block();
+        } catch (WebClientResponseException ex) {
+            log.error(writeLog(
+                String.format("Third party subscriptions failed to send with error: %s",
                               ex.getResponseBodyAsString())
             ));
         }

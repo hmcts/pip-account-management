@@ -16,14 +16,15 @@ import uk.gov.hmcts.reform.pip.account.management.model.subscription.Subscriptio
 import uk.gov.hmcts.reform.pip.account.management.model.subscription.SubscriptionsSummaryDetails;
 import uk.gov.hmcts.reform.pip.account.management.service.PublicationService;
 import uk.gov.hmcts.reform.pip.account.management.service.account.AccountService;
+import uk.gov.hmcts.reform.pip.account.management.service.thirdparty.ThirdPartySubscriptionNotificationService;
 import uk.gov.hmcts.reform.pip.model.publication.Artefact;
 import uk.gov.hmcts.reform.pip.model.publication.Language;
 import uk.gov.hmcts.reform.pip.model.publication.ListType;
 import uk.gov.hmcts.reform.pip.model.publication.Sensitivity;
 import uk.gov.hmcts.reform.pip.model.subscription.Channel;
+import uk.gov.hmcts.reform.pip.model.subscription.LegacyThirdPartySubscription;
+import uk.gov.hmcts.reform.pip.model.subscription.LegacyThirdPartySubscriptionArtefact;
 import uk.gov.hmcts.reform.pip.model.subscription.SearchType;
-import uk.gov.hmcts.reform.pip.model.subscription.ThirdPartySubscription;
-import uk.gov.hmcts.reform.pip.model.subscription.ThirdPartySubscriptionArtefact;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -90,6 +91,9 @@ class SubscriptionNotificationServiceTest {
 
     @Mock
     PublicationService publicationService;
+
+    @Mock
+    ThirdPartySubscriptionNotificationService thirdPartySubscriptionNotificationService;
 
     @InjectMocks
     SubscriptionNotificationService subscriptionNotificationService;
@@ -348,10 +352,11 @@ class SubscriptionNotificationServiceTest {
                                                                            MAGISTRATES_PUBLIC_LIST, LIST_LANGUAGE))
             .thenReturn(List.of(mockSubscription));
         when(subscriptionChannelService.buildApiSubscriptions(List.of(mockSubscription))).thenReturn(returnedMap);
-        doNothing().when(publicationService).sendThirdPartyList(any(ThirdPartySubscription.class));
+        doNothing().when(publicationService).legacySendThirdPartyList(any(LegacyThirdPartySubscription.class));
 
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionNotificationService.class)) {
             subscriptionNotificationService.collectSubscribers(publicArtefactMatches);
+            verify(thirdPartySubscriptionNotificationService).handleThirdPartySubscription(publicArtefactMatches);
             assertTrue(logCaptor.getErrorLogs().isEmpty(), LOG_MESSAGE_MATCH);
         } catch (Exception ex) {
             throw new IOException(ex.getMessage());
@@ -435,9 +440,11 @@ class SubscriptionNotificationServiceTest {
                                                                    publicArtefactMatches.getListType().name()))
             .thenReturn(List.of(mockSubscription));
         when(subscriptionChannelService.buildApiSubscriptions(List.of(mockSubscription))).thenReturn(returnedMap);
-        doNothing().when(publicationService).sendEmptyArtefact(any(ThirdPartySubscriptionArtefact.class));
+        doNothing().when(publicationService).legacySendEmptyArtefact(any(LegacyThirdPartySubscriptionArtefact.class));
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionNotificationService.class)) {
             subscriptionNotificationService.collectThirdPartyForDeletion(publicArtefactMatches);
+            verify(thirdPartySubscriptionNotificationService)
+                .handleThirdPartySubscriptionForDeletedPublication(publicArtefactMatches);
             assertTrue(logCaptor.getErrorLogs().isEmpty(), LOG_MESSAGE_MATCH);
         }
     }
@@ -455,8 +462,8 @@ class SubscriptionNotificationServiceTest {
                                                            classifiedArtefactMatches.getSensitivity()))
             .thenReturn(false);
         subscriptionNotificationService.collectThirdPartyForDeletion(classifiedArtefactMatches);
-        ThirdPartySubscriptionArtefact subscriptionArtefact = new ThirdPartySubscriptionArtefact(
+        LegacyThirdPartySubscriptionArtefact subscriptionArtefact = new LegacyThirdPartySubscriptionArtefact(
             TEST, classifiedArtefactMatches);
-        verify(publicationService, never()).sendEmptyArtefact(subscriptionArtefact);
+        verify(publicationService, never()).legacySendEmptyArtefact(subscriptionArtefact);
     }
 }
