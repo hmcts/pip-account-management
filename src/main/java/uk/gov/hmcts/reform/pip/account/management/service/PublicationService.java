@@ -1,15 +1,20 @@
 package uk.gov.hmcts.reform.pip.account.management.service;
 
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import net.minidev.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
+import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.ThirdPartyHealthCheckException;
 import uk.gov.hmcts.reform.pip.account.management.model.MediaApplication;
 import uk.gov.hmcts.reform.pip.account.management.model.subscription.BulkSubscriptionsSummary;
 import uk.gov.hmcts.reform.pip.account.management.model.subscription.Subscription;
@@ -37,6 +42,8 @@ import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
 @Slf4j
 @Service
 public class PublicationService {
+
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private static final String WELCOME_EMAIL_URL = "/notify/welcome-email";
     private static final String NOTIFY_SUBSCRIPTION_PATH = "notify/subscription";
@@ -247,7 +254,7 @@ public class PublicationService {
         }
     }
 
-    public void sendThirdPartySubscription(ThirdPartySubscription thirdPartySubscription) {
+    public void sendThirdPartySubscription(ThirdPartySubscription thirdPartySubscription, boolean isHealthCheck) {
         try {
             webClient.post().uri(url + THIRD_PARTY_PATH)
                 .bodyValue(thirdPartySubscription)
@@ -255,6 +262,11 @@ public class PublicationService {
                 .bodyToMono(Void.class)
                 .block();
         } catch (WebClientResponseException ex) {
+            if (isHealthCheck) {
+                String errorMessage = processWebClientErrorMessage(ex);
+                throw new ThirdPartyHealthCheckException(errorMessage);
+            }
+
             log.error(writeLog(
                 String.format("Third party subscriptions failed to send with error: %s",
                               ex.getResponseBodyAsString())
@@ -349,5 +361,24 @@ public class PublicationService {
         locationSubscriptionDeletion.setLocationId(locationId);
         locationSubscriptionDeletion.setSubscriberEmails(emails);
         return locationSubscriptionDeletion;
+    }
+
+    private String processWebClientErrorMessage(WebClientResponseException webClientResponseException) {
+        String errorMessage = null;
+        try {
+            if (HttpStatus.INTERNAL_SERVER_ERROR.equals(webClientResponseException.getStatusCode())) {
+                JsonNode node = OBJECT_MAPPER.readTree(webClientResponseException.getResponseBodyAsString());
+                if (node.has("message")) {
+                    errorMessage = node.get("message").asText();
+                }
+            }
+
+            if (errorMessage != null) {
+                return errorMessage;
+            }
+            return webClientResponseException.getMessage();
+        } catch (JsonProcessingException e) {
+            return webClientResponseException.getMessage();
+        }
     }
 }

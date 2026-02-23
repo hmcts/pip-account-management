@@ -13,10 +13,15 @@ import java.util.UUID;
 @Slf4j
 public class ThirdPartyConfigurationService {
     private final ApiOauthConfigurationRepository apiOauthConfigurationRepository;
+    private final ThirdPartySubscriptionNotificationService thirdPartySubscriptionNotificationService;
 
     @Autowired
-    public ThirdPartyConfigurationService(ApiOauthConfigurationRepository apiOauthConfigurationRepository) {
+    public ThirdPartyConfigurationService(
+        ApiOauthConfigurationRepository apiOauthConfigurationRepository,
+        ThirdPartySubscriptionNotificationService thirdPartySubscriptionNotificationService
+    ) {
         this.apiOauthConfigurationRepository = apiOauthConfigurationRepository;
+        this.thirdPartySubscriptionNotificationService = thirdPartySubscriptionNotificationService;
     }
 
     public ApiOauthConfiguration createThirdPartyConfiguration(ApiOauthConfiguration apiOauthConfiguration) {
@@ -37,6 +42,12 @@ public class ThirdPartyConfigurationService {
 
     public void deleteThirdPartyConfigurationByUserId(UUID userId) {
         apiOauthConfigurationRepository.deleteByUserId(userId);
+    }
+
+    public void validateThirdPartyConfiguration(UUID userId) {
+        ApiOauthConfiguration apiOauthConfiguration = findThirdPartyConfigurationByUserId(userId);
+        thirdPartySubscriptionNotificationService.handleThirdPartyHealthCheck(apiOauthConfiguration);
+
     }
 
     private void updateExistingThirdPartyConfiguration(ApiOauthConfiguration suppliedApiOAuthConfiguration,

@@ -14,6 +14,7 @@ import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.CsvPa
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.NotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.SubscriptionNotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.SystemAdminAccountException;
+import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.ThirdPartyHealthCheckException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.UpdateUserException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.UserWithProvenanceNotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredSystemAdminAccount;
@@ -122,6 +123,12 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ExceptionResponse> handle(UpdateUserException ex) {
         log.error(writeLog("400, Invalid role provided for user and provenance"));
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+            .body(generateExceptionResponse(ex.getMessage()));
+    }
+
+    @ExceptionHandler(ThirdPartyHealthCheckException.class)
+    public ResponseEntity<ExceptionResponse> handle(ThirdPartyHealthCheckException ex) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
             .body(generateExceptionResponse(ex.getMessage()));
     }
 

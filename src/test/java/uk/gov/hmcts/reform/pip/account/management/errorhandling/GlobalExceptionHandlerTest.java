@@ -19,6 +19,7 @@ import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.CsvPa
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.NotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.SubscriptionNotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.SystemAdminAccountException;
+import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.ThirdPartyHealthCheckException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.UpdateUserException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.UserWithProvenanceNotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.model.account.PiUser;
@@ -43,6 +44,7 @@ class GlobalExceptionHandlerTest {
     public static final String RESPONSE_SHOULD_CONTAIN_A_BODY = "Response should contain a body";
 
     private static final String SHOULD_BE_BAD_REQUEST_EXCEPTION = "Should be bad request exception";
+    private static final String SHOULD_BE_500_EXCEPTION = "Should be internal server error exception";
 
     @Mock
     InvalidFormatException invalidFormatException;
@@ -196,5 +198,15 @@ class GlobalExceptionHandlerTest {
 
         assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode(), SHOULD_BE_BAD_REQUEST_EXCEPTION);
         assertNotNull(responseEntity.getBody(), NOT_NULL_MESSAGE);
+    }
+
+    @Test
+    void testThirdPartyHealthCheckException() {
+        ThirdPartyHealthCheckException exception = new ThirdPartyHealthCheckException(ERROR_MESSAGE);
+        ResponseEntity<ExceptionResponse> responseEntity = globalExceptionHandler.handle(exception);
+
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntity.getStatusCode(), SHOULD_BE_500_EXCEPTION);
+        assertNotNull(responseEntity.getBody(), NOT_NULL_MESSAGE);
+        assertTrue(responseEntity.getBody().getMessage().contains(ERROR_MESSAGE), EXCEPTION_BODY_NOT_MATCH);
     }
 }
