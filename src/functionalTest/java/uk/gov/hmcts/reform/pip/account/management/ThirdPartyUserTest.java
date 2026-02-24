@@ -2,6 +2,7 @@ package uk.gov.hmcts.reform.pip.account.management;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.restassured.response.Response;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -22,7 +23,8 @@ import static org.springframework.http.HttpStatus.OK;
 public class ThirdPartyUserTest extends AccountHelperBase {
 
     private static final String BASE_PATH = "/third-party";
-    private static final String BASE_NAME = "ThirdPartyUserTest";
+    private static final String TESTING_SUPPORT_DELETE_THIRD_PARTY_DATA_URL = "/testing-support/third-party/";
+    private static final String TEST_NAME_PREFIX = "ThirdParty" + generateRandomString(4);
 
     private String systemAdminId;
 
@@ -32,16 +34,21 @@ public class ThirdPartyUserTest extends AccountHelperBase {
         systemAdminId = systemAdminUser.getUserId();
     }
 
+    @AfterAll
+    public void teardown() {
+        doDeleteRequest(TESTING_SUPPORT_DELETE_THIRD_PARTY_DATA_URL + TEST_NAME_PREFIX, bearer);
+    }
+
     @Test
     void shouldCreateThirdPartyUser() {
-        String createdUserId = createThirdPartyUser(BASE_NAME + "Create");
+        String createdUserId = createThirdPartyUser(TEST_NAME_PREFIX + "CreateUser");
         assertThat(createdUserId).isNotNull();
     }
 
     @Test
     void shouldGetAllThirdPartyUsers() {
         Map<String, String> headers = getAuthHeaders();
-        String createdUserId = createThirdPartyUser(BASE_NAME + "GetAll");
+        String createdUserId = createThirdPartyUser(TEST_NAME_PREFIX + "GetAllUsers");
 
         Response response = doGetRequest(BASE_PATH, headers);
         assertThat(response.getStatusCode()).isEqualTo(OK.value());
@@ -54,25 +61,25 @@ public class ThirdPartyUserTest extends AccountHelperBase {
     @Test
     void shouldGetThirdPartyUser() {
         Map<String, String> headers = getAuthHeaders();
-        String createdUserId = createThirdPartyUser(BASE_NAME + "GetById");
+        String createdUserId = createThirdPartyUser(TEST_NAME_PREFIX + "GetUserById");
 
         Response response = doGetRequest(BASE_PATH + "/" + createdUserId, headers);
         assertThat(response.getStatusCode()).isEqualTo(OK.value());
 
         ApiUser retrievedUser = response.getBody().as(ApiUser.class);
         assertThat(retrievedUser.getUserId().toString()).isEqualTo(createdUserId);
-        assertThat(retrievedUser.getName()).isEqualTo(BASE_NAME + "GetById");
+        assertThat(retrievedUser.getName()).isEqualTo(TEST_NAME_PREFIX + "GetUserById");
     }
 
     @Test
     void shouldDeleteThirdPartyUser() {
         Map<String, String> headers = getAuthHeaders();
-        String createdUserId = createThirdPartyUser(BASE_NAME + "Delete");
+        String createdUserId = createThirdPartyUser(TEST_NAME_PREFIX + "DeleteUser");
 
         Response response = doDeleteRequest(BASE_PATH + "/" + createdUserId, headers);
         assertThat(response.getStatusCode()).isEqualTo(OK.value());
         assertThat(response.getBody().asString())
-            .isEqualTo("Third-party user with ID " + createdUserId + " has been deleted");
+                .isEqualTo("Third-party user with ID " + createdUserId + " has been deleted");
     }
 
     private String createThirdPartyUser(String userName) {

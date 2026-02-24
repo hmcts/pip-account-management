@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.Random;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.springframework.http.HttpStatus.CREATED;
@@ -30,6 +31,16 @@ public class AccountHelperBase extends FunctionalTestBase {
     protected String generateEmail() {
         return TEST_EMAIL_PREFIX + "-"
             + ThreadLocalRandom.current().nextInt(1000, 9999) + "@justice.gov.uk";
+    }
+
+    protected static String generateRandomString(int length) {
+        int leftLimit = 'a'; // letter 'a'
+        int rightLimit = 'z'; // letter 'z'
+        Random random = new Random();
+        return random.ints(leftLimit, rightLimit + 1)
+            .limit(length)
+            .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
+            .toString();
     }
 
     protected PiUser createSystemAdminAccount() throws JsonProcessingException {

@@ -2,6 +2,7 @@ package uk.gov.hmcts.reform.pip.account.management;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.restassured.response.Response;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -22,7 +23,8 @@ public class ThirdPartyConfigurationTest extends AccountHelperBase {
 
     private static final String CONFIGURATION_PATH = "/third-party/configuration";
     private static final String USER_PATH = "/third-party";
-    private static final String TEST_NAME_PREFIX = "ThirdPartyConfigurationTest";
+    private static final String TESTING_SUPPORT_DELETE_THIRD_PARTY_DATA_URL = "/testing-support/third-party/";
+    private static final String TEST_NAME_PREFIX = "ThirdParty" + generateRandomString(4);
     private static final String DESTINATION_URL = "https://example.com/callback";
     private static final String UPDATED_DESTINATION_URL = "https://example.com/callback-updated";
     private static final String TOKEN_URL = "https://example.com/token";
@@ -30,15 +32,20 @@ public class ThirdPartyConfigurationTest extends AccountHelperBase {
     private static final String CLIENT_SECRET_KEY = "client-secret";
     private static final String SCOPE_KEY = "scope";
     private static final String CREATE_SUCCESS_MSG =
-        "Third-party OAuth configuration successfully created for user with ID ";
+            "Third-party OAuth configuration successfully created for user with ID ";
     private static final String UPDATE_SUCCESS_MSG =
-        "Third-party OAuth configuration successfully updated for user with ID ";
+            "Third-party OAuth configuration successfully updated for user with ID ";
 
     private String systemAdminUserId;
 
     @BeforeAll
     void setup() throws JsonProcessingException {
         systemAdminUserId = createSystemAdminAccount().getUserId();
+    }
+
+    @AfterAll
+    public void teardown() {
+        doDeleteRequest(TESTING_SUPPORT_DELETE_THIRD_PARTY_DATA_URL + TEST_NAME_PREFIX, bearer);
     }
 
     @Test
@@ -80,7 +87,7 @@ public class ThirdPartyConfigurationTest extends AccountHelperBase {
         updatedConfig.setClientSecretKey(CLIENT_SECRET_KEY);
 
         Response updateResponse = doPutRequestWithBody(CONFIGURATION_PATH + "/"
-                                                           + userId, getAuthHeaders(), updatedConfig);
+                + userId, getAuthHeaders(), updatedConfig);
         assertThat(updateResponse.getStatusCode()).isEqualTo(OK.value());
         assertThat(updateResponse.getBody().asString()).isEqualTo(UPDATE_SUCCESS_MSG + userId);
 
