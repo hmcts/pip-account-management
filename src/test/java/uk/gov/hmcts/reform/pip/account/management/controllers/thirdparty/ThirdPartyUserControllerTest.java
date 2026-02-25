@@ -87,7 +87,7 @@ class ThirdPartyUserControllerTest {
 
     @Test
     void testUpdateThirdPartyUserStatus() {
-        ApiUserStatus newStatus = ApiUserStatus.Active;
+        ApiUserStatus newStatus = ApiUserStatus.ACTIVE;
         ApiUser updatedUser = new ApiUser();
         updatedUser.setUserId(USER_ID);
         updatedUser.setStatus(newStatus);

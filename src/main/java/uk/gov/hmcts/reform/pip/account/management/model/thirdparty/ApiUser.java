@@ -41,5 +41,5 @@ public class ApiUser {
 
     @Enumerated(EnumType.STRING)
     @NotNull
-    private ApiUserStatus status = ApiUserStatus.Pending;
+    private ApiUserStatus status = ApiUserStatus.PENDING;
 }

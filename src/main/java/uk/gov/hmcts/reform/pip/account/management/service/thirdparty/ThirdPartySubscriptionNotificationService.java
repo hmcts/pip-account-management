@@ -5,8 +5,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.gov.hmcts.reform.pip.account.management.database.ApiOauthConfigurationRepository;
 import uk.gov.hmcts.reform.pip.account.management.database.ApiSubscriptionRepository;
+import uk.gov.hmcts.reform.pip.account.management.database.ApiUserRepository;
 import uk.gov.hmcts.reform.pip.account.management.model.thirdparty.ApiOauthConfiguration;
 import uk.gov.hmcts.reform.pip.account.management.model.thirdparty.ApiSubscription;
+import uk.gov.hmcts.reform.pip.account.management.model.thirdparty.ApiUserStatus;
 import uk.gov.hmcts.reform.pip.account.management.service.PublicationService;
 import uk.gov.hmcts.reform.pip.model.publication.Artefact;
 import uk.gov.hmcts.reform.pip.model.publication.Sensitivity;
@@ -26,15 +28,18 @@ public class ThirdPartySubscriptionNotificationService {
     private final ApiSubscriptionRepository apiSubscriptionRepository;
     private final ApiOauthConfigurationRepository apiOauthConfigurationRepository;
     private final PublicationService publicationService;
+    private final ApiUserRepository apiUserRepository;
 
     @Autowired
     public ThirdPartySubscriptionNotificationService(
         ApiSubscriptionRepository apiSubscriptionRepository,
         ApiOauthConfigurationRepository apiOauthConfigurationRepository,
-        PublicationService publicationService) {
+        PublicationService publicationService,
+        ApiUserRepository apiUserRepository) {
         this.apiSubscriptionRepository = apiSubscriptionRepository;
         this.apiOauthConfigurationRepository = apiOauthConfigurationRepository;
         this.publicationService = publicationService;
+        this.apiUserRepository = apiUserRepository;
     }
 
     public void handleThirdPartySubscription(Artefact artefact) {
@@ -68,18 +73,27 @@ public class ThirdPartySubscriptionNotificationService {
         List<ThirdPartyOauthConfiguration> thirdPartyOauthConfigurationList = new ArrayList<>();
 
         apiSubscriptions.forEach(apiSubscription -> {
-            Optional<ApiOauthConfiguration> foundApiOauthConfiguration = apiOauthConfigurationRepository
-                .findByUserId(apiSubscription.getUserId());
+            apiUserRepository.findByUserId(apiSubscription.getUserId()).ifPresentOrElse(apiUser -> {
+                if (ApiUserStatus.ACTIVE.equals(apiUser.getStatus())) {
+                    Optional<ApiOauthConfiguration> foundApiOauthConfiguration = apiOauthConfigurationRepository
+                        .findByUserId(apiSubscription.getUserId());
 
-            if (foundApiOauthConfiguration.isPresent()) {
-                thirdPartyOauthConfigurationList.add(
-                    buildThirdPartySubscriberConfiguration(foundApiOauthConfiguration.get())
-                );
-
-            } else {
-                log.error(writeLog(String.format("No OAuth configuration found for third-party user with ID %s",
-                                                apiSubscription.getUserId())));
-            }
+                    if (foundApiOauthConfiguration.isPresent()) {
+                        thirdPartyOauthConfigurationList.add(
+                            buildThirdPartySubscriberConfiguration(foundApiOauthConfiguration.get())
+                        );
+                    } else {
+                        log.error(writeLog(String.format("No OAuth configuration found for third-party user with ID %s",
+                                                        apiSubscription.getUserId())));
+                    }
+                } else {
+                    log.info(writeLog(String.format("Status is not ACTIVE for third-party user with ID %s",
+                        apiSubscription.getUserId())));
+                }
+            }, () -> {
+                log.error(writeLog(String.format("No third-party user found with ID %s",
+                    apiSubscription.getUserId())));
+            });
         });
         return thirdPartyOauthConfigurationList;
     }

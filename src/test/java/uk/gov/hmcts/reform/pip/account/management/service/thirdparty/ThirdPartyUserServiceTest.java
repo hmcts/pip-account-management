@@ -84,8 +84,8 @@ class ThirdPartyUserServiceTest {
     void testUpdateThirdPartyUserStatusWhenUserExists() {
         ApiUser user = new ApiUser();
         user.setUserId(USER_ID);
-        user.setStatus(ApiUserStatus.Pending);
-        final ApiUserStatus newStatus = ApiUserStatus.Active;
+        user.setStatus(ApiUserStatus.PENDING);
+        final ApiUserStatus newStatus = ApiUserStatus.ACTIVE;
 
         when(apiUserRepository.findByUserId(USER_ID)).thenReturn(Optional.of(user));
         when(apiUserRepository.save(user)).thenReturn(user);
@@ -100,7 +100,7 @@ class ThirdPartyUserServiceTest {
 
     @Test
     void testUpdateThirdPartyUserStatusWhenUserDoesNotExist() {
-        ApiUserStatus newStatus = ApiUserStatus.Active;
+        ApiUserStatus newStatus = ApiUserStatus.ACTIVE;
         when(apiUserRepository.findByUserId(USER_ID)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.updateThirdPartyUserStatus(USER_ID, newStatus))
