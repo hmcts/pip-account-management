@@ -11,6 +11,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import uk.gov.hmcts.reform.pip.account.management.model.thirdparty.ApiUser;
+import uk.gov.hmcts.reform.pip.account.management.model.thirdparty.ApiUserStatus;
 import uk.gov.hmcts.reform.pip.account.management.service.thirdparty.ThirdPartyUserService;
 import uk.gov.hmcts.reform.pip.model.authentication.roles.IsAdmin;
 
@@ -81,6 +83,20 @@ public class ThirdPartyUserController {
         @RequestHeader(X_REQUESTER_ID_HEADER) UUID requesterId
     ) {
         return ResponseEntity.ok(thirdPartyUserService.findThirdPartyUser(userId));
+    }
+
+    @PatchMapping("/{userId}/status")
+    @Operation(summary = "Endpoint to update the status of a third-party user")
+    @ApiResponse(responseCode = OK_STATUS_CODE, description = "third-party user status updated")
+    @ApiResponse(responseCode = NOT_FOUND_STATUS_CODE, description = "User with ID {userId} not found")
+    @PreAuthorize("@thirdPartyAuthorisationService.userCanManageThirdParty(#requesterId)")
+    public ResponseEntity<ApiUser> updateUserStatus(
+        @PathVariable UUID userId,
+        @RequestBody ApiUserStatus status,
+        @RequestHeader(X_REQUESTER_ID_HEADER) UUID requesterId
+    ) {
+        ApiUser updatedUser = thirdPartyUserService.updateThirdPartyUserStatus(userId, status);
+        return ResponseEntity.ok(updatedUser);
     }
 
     @DeleteMapping("/{userId}")

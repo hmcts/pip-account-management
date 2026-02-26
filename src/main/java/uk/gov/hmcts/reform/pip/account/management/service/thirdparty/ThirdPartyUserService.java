@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import uk.gov.hmcts.reform.pip.account.management.database.ApiUserRepository;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.NotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.model.thirdparty.ApiUser;
+import uk.gov.hmcts.reform.pip.account.management.model.thirdparty.ApiUserStatus;
 
 import java.util.List;
 import java.util.UUID;
@@ -41,6 +42,15 @@ public class ThirdPartyUserService {
             .orElseThrow(() -> new NotFoundException(
                 String.format("Third-party user with ID %s could not be found", userId)
         ));
+    }
+
+    public ApiUser updateThirdPartyUserStatus(UUID userId, ApiUserStatus newStatus) {
+        ApiUser user = apiUserRepository.findByUserId(userId)
+            .orElseThrow(() -> new NotFoundException(
+                String.format("Third-party user with ID %s could not be found", userId)
+            ));
+        user.setStatus(newStatus);
+        return apiUserRepository.save(user);
     }
 
     public void deleteThirdPartyUser(UUID userId) {

@@ -8,6 +8,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.hmcts.reform.pip.account.management.database.ApiUserRepository;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.NotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.model.thirdparty.ApiUser;
+import uk.gov.hmcts.reform.pip.account.management.model.thirdparty.ApiUserStatus;
 
 import java.util.List;
 import java.util.Optional;
@@ -74,6 +75,35 @@ class ThirdPartyUserServiceTest {
         when(apiUserRepository.findByUserId(USER_ID)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.findThirdPartyUser(USER_ID))
+            .as("Should throw NotFoundException if user not found")
+            .isInstanceOf(NotFoundException.class)
+            .hasMessageContaining(USER_ID.toString());
+    }
+
+    @Test
+    void testUpdateThirdPartyUserStatusWhenUserExists() {
+        ApiUser user = new ApiUser();
+        user.setUserId(USER_ID);
+        user.setStatus(ApiUserStatus.PENDING);
+        final ApiUserStatus newStatus = ApiUserStatus.ACTIVE;
+
+        when(apiUserRepository.findByUserId(USER_ID)).thenReturn(Optional.of(user));
+        when(apiUserRepository.save(user)).thenReturn(user);
+
+        ApiUser result = service.updateThirdPartyUserStatus(USER_ID, newStatus);
+
+        assertThat(result.getStatus())
+            .as("Should update the user's status")
+            .isEqualTo(newStatus);
+        verify(apiUserRepository).save(user);
+    }
+
+    @Test
+    void testUpdateThirdPartyUserStatusWhenUserDoesNotExist() {
+        ApiUserStatus newStatus = ApiUserStatus.ACTIVE;
+        when(apiUserRepository.findByUserId(USER_ID)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.updateThirdPartyUserStatus(USER_ID, newStatus))
             .as("Should throw NotFoundException if user not found")
             .isInstanceOf(NotFoundException.class)
             .hasMessageContaining(USER_ID.toString());

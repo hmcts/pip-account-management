@@ -9,8 +9,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.hmcts.reform.pip.account.management.database.ApiOauthConfigurationRepository;
 import uk.gov.hmcts.reform.pip.account.management.database.ApiSubscriptionRepository;
+import uk.gov.hmcts.reform.pip.account.management.database.ApiUserRepository;
 import uk.gov.hmcts.reform.pip.account.management.model.thirdparty.ApiOauthConfiguration;
 import uk.gov.hmcts.reform.pip.account.management.model.thirdparty.ApiSubscription;
+import uk.gov.hmcts.reform.pip.account.management.model.thirdparty.ApiUser;
+import uk.gov.hmcts.reform.pip.account.management.model.thirdparty.ApiUserStatus;
 import uk.gov.hmcts.reform.pip.account.management.service.PublicationService;
 import uk.gov.hmcts.reform.pip.model.publication.Artefact;
 import uk.gov.hmcts.reform.pip.model.publication.ListType;
@@ -24,6 +27,7 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -52,6 +56,8 @@ class ThirdPartySubscriptionNotificationServiceTest {
     private ApiSubscription apiSubscription2 = new ApiSubscription();
     private ApiOauthConfiguration apiOauthConfiguration1 = new ApiOauthConfiguration();
     private ApiOauthConfiguration apiOauthConfiguration2 = new ApiOauthConfiguration();
+    private ApiUser apiUserActive = new ApiUser();
+    private ApiUser apiUserSuspended = new ApiUser();
 
     private final LogCaptor logCaptor = LogCaptor.forClass(ThirdPartySubscriptionNotificationService.class);
 
@@ -60,6 +66,9 @@ class ThirdPartySubscriptionNotificationServiceTest {
 
     @Mock
     private ApiOauthConfigurationRepository apiOauthConfigurationRepository;
+
+    @Mock
+    private ApiUserRepository apiUserRepository;
 
     @Mock
     private PublicationService publicationService;
@@ -100,6 +109,11 @@ class ThirdPartySubscriptionNotificationServiceTest {
         apiOauthConfiguration2.setClientIdKey(CLIENT_ID_KEY2);
         apiOauthConfiguration2.setClientSecretKey(CLIENT_SECRET_KEY2);
         apiOauthConfiguration2.setScopeKey(SCOPE_KEY2);
+
+        apiUserActive.setUserId(USER_ID1);
+        apiUserActive.setStatus(ApiUserStatus.ACTIVE);
+        apiUserSuspended.setUserId(USER_ID1);
+        apiUserSuspended.setStatus(ApiUserStatus.SUSPENDED);
     }
 
     @Test
@@ -107,7 +121,7 @@ class ThirdPartySubscriptionNotificationServiceTest {
         when(apiSubscriptionRepository.findByListTypeAndSensitivityIn(
             ListType.CIVIL_DAILY_CAUSE_LIST, List.of(Sensitivity.CLASSIFIED, Sensitivity.PRIVATE))
         ).thenReturn(List.of(apiSubscription1));
-
+        when(apiUserRepository.findByUserId(USER_ID1)).thenReturn(Optional.of(apiUserActive));
         when(apiOauthConfigurationRepository.findByUserId(USER_ID1)).thenReturn(Optional.of(apiOauthConfiguration1));
 
         thirdPartySubscriptionNotificationService.handleThirdPartySubscription(artefact1);
@@ -125,7 +139,7 @@ class ThirdPartySubscriptionNotificationServiceTest {
         when(apiSubscriptionRepository.findByListTypeAndSensitivityIn(
             ListType.FAMILY_DAILY_CAUSE_LIST, List.of(Sensitivity.CLASSIFIED))
         ).thenReturn(List.of(apiSubscription2));
-
+        when(apiUserRepository.findByUserId(USER_ID2)).thenReturn(Optional.of(apiUserActive));
         when(apiOauthConfigurationRepository.findByUserId(USER_ID2)).thenReturn(Optional.of(apiOauthConfiguration2));
 
         thirdPartySubscriptionNotificationService.handleThirdPartySubscription(artefact2);
@@ -143,7 +157,7 @@ class ThirdPartySubscriptionNotificationServiceTest {
         when(apiSubscriptionRepository.findByListTypeAndSensitivityIn(
             ListType.CIVIL_DAILY_CAUSE_LIST, List.of(Sensitivity.CLASSIFIED, Sensitivity.PRIVATE))
         ).thenReturn(List.of(apiSubscription1));
-
+        when(apiUserRepository.findByUserId(USER_ID1)).thenReturn(Optional.of(apiUserActive));
         when(apiOauthConfigurationRepository.findByUserId(USER_ID1)).thenReturn(Optional.of(apiOauthConfiguration1));
 
         thirdPartySubscriptionNotificationService.handleThirdPartySubscriptionForDeletedPublication(artefact1);
@@ -161,7 +175,7 @@ class ThirdPartySubscriptionNotificationServiceTest {
         when(apiSubscriptionRepository.findByListTypeAndSensitivityIn(
             ListType.CIVIL_DAILY_CAUSE_LIST, List.of(Sensitivity.CLASSIFIED, Sensitivity.PRIVATE))
         ).thenReturn(List.of(apiSubscription1));
-
+        when(apiUserRepository.findByUserId(USER_ID1)).thenReturn(Optional.of(apiUserActive));
         when(apiOauthConfigurationRepository.findByUserId(USER_ID1)).thenReturn(Optional.empty());
 
         thirdPartySubscriptionNotificationService.handleThirdPartySubscription(artefact1);
@@ -172,5 +186,54 @@ class ThirdPartySubscriptionNotificationServiceTest {
             .hasSize(1)
             .anySatisfy(log ->
                 assertThat(log).contains("No OAuth configuration found for third-party user with ID " + USER_ID1));
+    }
+
+    @Test
+    void testHandleThirdPartySubscriptionWithSuspendedUser() {
+        when(apiSubscriptionRepository.findByListTypeAndSensitivityIn(
+            ListType.CIVIL_DAILY_CAUSE_LIST, List.of(Sensitivity.CLASSIFIED, Sensitivity.PRIVATE))
+        ).thenReturn(List.of(apiSubscription1));
+        when(apiUserRepository.findByUserId(USER_ID1)).thenReturn(Optional.of(apiUserSuspended));
+        lenient().when(apiOauthConfigurationRepository.findByUserId(USER_ID1))
+            .thenReturn(Optional.of(apiOauthConfiguration1));
+
+        thirdPartySubscriptionNotificationService.handleThirdPartySubscription(artefact1);
+
+        verify(publicationService, never()).sendThirdPartySubscription(any());
+    }
+
+    @Test
+    void testHandleThirdPartySubscriptionWithMissingUser() {
+        when(apiSubscriptionRepository.findByListTypeAndSensitivityIn(
+            ListType.CIVIL_DAILY_CAUSE_LIST, List.of(Sensitivity.CLASSIFIED, Sensitivity.PRIVATE))
+        ).thenReturn(List.of(apiSubscription1));
+        when(apiUserRepository.findByUserId(USER_ID1)).thenReturn(Optional.empty());
+        lenient().when(apiOauthConfigurationRepository.findByUserId(USER_ID1))
+            .thenReturn(Optional.of(apiOauthConfiguration1));
+
+        thirdPartySubscriptionNotificationService.handleThirdPartySubscription(artefact1);
+
+        verify(publicationService, never()).sendThirdPartySubscription(any());
+        assertThat(logCaptor.getErrorLogs())
+            .anySatisfy(log ->
+                assertThat(log).contains("No third-party user found with ID " + USER_ID1));
+    }
+
+    @Test
+    void testHandleThirdPartySubscriptionWithPendingUser() {
+        ApiUser apiUserPending = new ApiUser();
+        apiUserPending.setUserId(USER_ID1);
+        apiUserPending.setStatus(ApiUserStatus.PENDING);
+
+        when(apiSubscriptionRepository.findByListTypeAndSensitivityIn(
+            ListType.CIVIL_DAILY_CAUSE_LIST, List.of(Sensitivity.CLASSIFIED, Sensitivity.PRIVATE))
+        ).thenReturn(List.of(apiSubscription1));
+        when(apiUserRepository.findByUserId(USER_ID1)).thenReturn(Optional.of(apiUserPending));
+        lenient().when(apiOauthConfigurationRepository.findByUserId(USER_ID1))
+            .thenReturn(Optional.of(apiOauthConfiguration1));
+
+        thirdPartySubscriptionNotificationService.handleThirdPartySubscription(artefact1);
+
+        verify(publicationService, never()).sendThirdPartySubscription(any());
     }
 }
