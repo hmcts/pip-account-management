@@ -86,9 +86,6 @@ public class ThirdPartySubscriptionNotificationService {
                         log.error(writeLog(String.format("No OAuth configuration found for third-party user with ID %s",
                                                         apiSubscription.getUserId())));
                     }
-                } else {
-                    log.info(writeLog(String.format("Status is not ACTIVE for third-party user with ID %s",
-                        apiSubscription.getUserId())));
                 }
             }, () -> {
                 log.error(writeLog(String.format("No third-party user found with ID %s",

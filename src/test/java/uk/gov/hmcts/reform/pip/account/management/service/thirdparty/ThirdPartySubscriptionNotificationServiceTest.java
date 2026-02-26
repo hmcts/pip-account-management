@@ -200,9 +200,6 @@ class ThirdPartySubscriptionNotificationServiceTest {
         thirdPartySubscriptionNotificationService.handleThirdPartySubscription(artefact1);
 
         verify(publicationService, never()).sendThirdPartySubscription(any());
-        assertThat(logCaptor.getInfoLogs())
-            .anySatisfy(log ->
-                assertThat(log).contains("Status is not ACTIVE for third-party user with ID " + USER_ID1));
     }
 
     @Test
@@ -238,8 +235,5 @@ class ThirdPartySubscriptionNotificationServiceTest {
         thirdPartySubscriptionNotificationService.handleThirdPartySubscription(artefact1);
 
         verify(publicationService, never()).sendThirdPartySubscription(any());
-        assertThat(logCaptor.getInfoLogs())
-            .anySatisfy(log ->
-                assertThat(log).contains("Status is not ACTIVE for third-party user with ID " + USER_ID1));
     }
 }
