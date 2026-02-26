@@ -117,7 +117,7 @@ class AccountIsAuthorisedTest extends IntegrationTestBase {
         user.setUserProvenance(UserProvenances.PI_AAD);
         user.setRoles(Roles.VERIFIED);
 
-        MvcResult response = callIsAuthorised(user, Sensitivity.PUBLIC, false);
+        MvcResult response = callIsAuthorised(user, ListType.SJP_PRESS_LIST, Sensitivity.PUBLIC);
         assertTrue(Boolean.parseBoolean(response.getResponse().getContentAsString()), TRUE_MESSAGE);
     }
 
@@ -126,7 +126,7 @@ class AccountIsAuthorisedTest extends IntegrationTestBase {
         user.setUserProvenance(UserProvenances.SSO);
         user.setRoles(Roles.INTERNAL_ADMIN_CTSC);
 
-        MvcResult response = callIsAuthorised(user, Sensitivity.PUBLIC, false);
+        MvcResult response = callIsAuthorised(user, ListType.SJP_PRESS_LIST, Sensitivity.PUBLIC);
         assertTrue(Boolean.parseBoolean(response.getResponse().getContentAsString()), TRUE_MESSAGE);
     }
 
@@ -136,7 +136,7 @@ class AccountIsAuthorisedTest extends IntegrationTestBase {
         user.setUserProvenance(UserProvenances.THIRD_PARTY);
         user.setRoles(Roles.VERIFIED_THIRD_PARTY_ALL);
 
-        MvcResult response = callIsAuthorised(user, Sensitivity.PUBLIC, false);
+        MvcResult response = callIsAuthorised(user, ListType.SJP_PRESS_LIST, Sensitivity.PUBLIC);
         assertTrue(Boolean.parseBoolean(response.getResponse().getContentAsString()), TRUE_MESSAGE);
     }
 
@@ -145,7 +145,7 @@ class AccountIsAuthorisedTest extends IntegrationTestBase {
         user.setUserProvenance(UserProvenances.PI_AAD);
         user.setRoles(Roles.VERIFIED);
 
-        MvcResult response = callIsAuthorised(user, Sensitivity.PRIVATE, false);
+        MvcResult response = callIsAuthorised(user, ListType.SJP_PRESS_LIST, Sensitivity.PRIVATE);
         assertTrue(Boolean.parseBoolean(response.getResponse().getContentAsString()), TRUE_MESSAGE);
     }
 
@@ -154,7 +154,7 @@ class AccountIsAuthorisedTest extends IntegrationTestBase {
         user.setUserProvenance(UserProvenances.SSO);
         user.setRoles(Roles.INTERNAL_ADMIN_CTSC);
 
-        MvcResult response = callIsAuthorised(user, Sensitivity.PRIVATE, false);
+        MvcResult response = callIsAuthorised(user, ListType.SJP_PRESS_LIST, Sensitivity.PRIVATE);
         assertFalse(Boolean.parseBoolean(response.getResponse().getContentAsString()), FALSE_MESSAGE);
     }
 
@@ -163,7 +163,7 @@ class AccountIsAuthorisedTest extends IntegrationTestBase {
         user.setUserProvenance(UserProvenances.SSO);
         user.setRoles(Roles.INTERNAL_ADMIN_CTSC);
 
-        MvcResult response = callIsAuthorised(user, Sensitivity.CLASSIFIED, false);
+        MvcResult response = callIsAuthorised(user, ListType.SJP_PRESS_LIST, Sensitivity.CLASSIFIED);
         assertFalse(Boolean.parseBoolean(response.getResponse().getContentAsString()), FALSE_MESSAGE);
     }
 
@@ -173,7 +173,7 @@ class AccountIsAuthorisedTest extends IntegrationTestBase {
         user.setUserProvenance(UserProvenances.THIRD_PARTY);
         user.setRoles(Roles.GENERAL_THIRD_PARTY);
 
-        MvcResult response = callIsAuthorised(user, Sensitivity.PRIVATE, false);
+        MvcResult response = callIsAuthorised(user, ListType.SJP_PRESS_LIST, Sensitivity.PRIVATE);
         assertTrue(Boolean.parseBoolean(response.getResponse().getContentAsString()), TRUE_MESSAGE);
     }
 
@@ -182,7 +182,7 @@ class AccountIsAuthorisedTest extends IntegrationTestBase {
         user.setUserProvenance(UserProvenances.SSO);
         user.setRoles(Roles.SYSTEM_ADMIN);
 
-        MvcResult response = callIsAuthorised(user, Sensitivity.PRIVATE, true);
+        MvcResult response = callIsAuthorised(user, ListType.SJP_PRESS_LIST, Sensitivity.PRIVATE);
         assertTrue(Boolean.parseBoolean(response.getResponse().getContentAsString()), TRUE_MESSAGE);
     }
 
@@ -191,8 +191,16 @@ class AccountIsAuthorisedTest extends IntegrationTestBase {
         user.setUserProvenance(UserProvenances.PI_AAD);
         user.setRoles(Roles.VERIFIED);
 
-        MvcResult response = callIsAuthorised(user, Sensitivity.CLASSIFIED, false);
+        MvcResult response = callIsAuthorised(user, ListType.CROWN_WARNED_PDDA_LIST, Sensitivity.CLASSIFIED);
         assertTrue(Boolean.parseBoolean(response.getResponse().getContentAsString()), TRUE_MESSAGE);
+
+        user.setUserProvenance(UserProvenances.CRIME_IDAM);
+        response = callIsAuthorised(user, ListType.CROWN_WARNED_PDDA_LIST, Sensitivity.CLASSIFIED);
+        assertTrue(Boolean.parseBoolean(response.getResponse().getContentAsString()), TRUE_MESSAGE);
+
+        user.setUserProvenance(UserProvenances.CFT_IDAM);
+        response = callIsAuthorised(user, ListType.CROWN_WARNED_PDDA_LIST, Sensitivity.CLASSIFIED);
+        assertFalse(Boolean.parseBoolean(response.getResponse().getContentAsString()), FALSE_MESSAGE);
     }
 
     @Test
@@ -200,7 +208,7 @@ class AccountIsAuthorisedTest extends IntegrationTestBase {
         user.setUserProvenance(UserProvenances.CFT_IDAM);
         user.setRoles(Roles.VERIFIED);
 
-        MvcResult response = callIsAuthorised(user, Sensitivity.CLASSIFIED, false);
+        MvcResult response = callIsAuthorised(user, ListType.SJP_PRESS_LIST, Sensitivity.CLASSIFIED);
         assertFalse(Boolean.parseBoolean(response.getResponse().getContentAsString()), FALSE_MESSAGE);
     }
 
@@ -210,7 +218,7 @@ class AccountIsAuthorisedTest extends IntegrationTestBase {
         user.setUserProvenance(UserProvenances.THIRD_PARTY);
         user.setRoles(Roles.VERIFIED_THIRD_PARTY_PRESS);
 
-        MvcResult response = callIsAuthorised(user, Sensitivity.CLASSIFIED, false);
+        MvcResult response = callIsAuthorised(user, ListType.SJP_PRESS_LIST, Sensitivity.CLASSIFIED);
         assertTrue(Boolean.parseBoolean(response.getResponse().getContentAsString()), TRUE_MESSAGE);
     }
 
@@ -220,7 +228,7 @@ class AccountIsAuthorisedTest extends IntegrationTestBase {
         user.setUserProvenance(UserProvenances.THIRD_PARTY);
         user.setRoles(Roles.VERIFIED_THIRD_PARTY_CRIME_CFT);
 
-        MvcResult response = callIsAuthorised(user, Sensitivity.CLASSIFIED, false);
+        MvcResult response = callIsAuthorised(user, ListType.SJP_PRESS_LIST, Sensitivity.CLASSIFIED);
         assertFalse(Boolean.parseBoolean(response.getResponse().getContentAsString()), FALSE_MESSAGE);
     }
 
@@ -229,7 +237,7 @@ class AccountIsAuthorisedTest extends IntegrationTestBase {
         user.setUserProvenance(UserProvenances.SSO);
         user.setRoles(Roles.SYSTEM_ADMIN);
 
-        MvcResult response = callIsAuthorised(user, Sensitivity.CLASSIFIED, true);
+        MvcResult response = callIsAuthorised(user, ListType.SJP_PRESS_LIST, Sensitivity.CLASSIFIED);
         assertTrue(Boolean.parseBoolean(response.getResponse().getContentAsString()), TRUE_MESSAGE);
     }
 
@@ -237,18 +245,20 @@ class AccountIsAuthorisedTest extends IntegrationTestBase {
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testUnauthorizedCheckUserAuthorised() throws Exception {
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
-            .get(String.format("%s/isAuthorised/%s/%s/%s", ROOT_URL, UUID.randomUUID(),
+            .get(String.format(URL_FORMAT, ROOT_URL, UUID.randomUUID(),
                                ListType.SJP_PRESS_LIST, Sensitivity.PUBLIC
             ));
 
         assertRequestResponseStatus(mockMvc, request, FORBIDDEN.value());
     }
 
-    private MvcResult callIsAuthorised(PiUser user, Sensitivity sensitivity, boolean isSystemAdmin) throws Exception {
-        String createdUserId = isSystemAdmin ? createSystemAdminAndGetId(user) : createUserAndGetId(user);
+    private MvcResult callIsAuthorised(PiUser user, ListType listType, Sensitivity sensitivity) throws Exception {
+        String createdUserId = Roles.SYSTEM_ADMIN.equals(user.getRoles())
+            ? createSystemAdminAndGetId(user)
+            : createUserAndGetId(user);
 
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
-            .get(String.format(URL_FORMAT, ROOT_URL, createdUserId, ListType.SJP_PRESS_LIST, sensitivity));
+            .get(String.format(URL_FORMAT, ROOT_URL, createdUserId, listType, sensitivity));
 
         return mockMvc.perform(request).andExpect(status().isOk()).andReturn();
     }
