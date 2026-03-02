@@ -8,6 +8,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import uk.gov.hmcts.reform.pip.account.management.model.thirdparty.ApiOauthConfiguration;
+import uk.gov.hmcts.reform.pip.account.management.model.thirdparty.ApiOauthConfigurationDto;
 import uk.gov.hmcts.reform.pip.account.management.service.thirdparty.ThirdPartyConfigurationService;
 
 import java.util.UUID;
@@ -29,7 +30,7 @@ class ThirdPartyConfigurationControllerTest {
 
     @Test
     void testCreateThirdPartyConfiguration() {
-        ApiOauthConfiguration config = new ApiOauthConfiguration();
+        ApiOauthConfigurationDto config = new ApiOauthConfigurationDto();
         config.setUserId(USER_ID);
 
         ResponseEntity<String> response = controller.createThirdPartyConfiguration(config, REQUESTER_ID);
@@ -67,7 +68,7 @@ class ThirdPartyConfigurationControllerTest {
 
     @Test
     void testUpdateThirdPartyConfiguration() {
-        ApiOauthConfiguration config = new ApiOauthConfiguration();
+        ApiOauthConfigurationDto config = new ApiOauthConfigurationDto();
 
         ResponseEntity<String> response = controller.updateThirdPartyConfiguration(USER_ID, config, REQUESTER_ID);
 
