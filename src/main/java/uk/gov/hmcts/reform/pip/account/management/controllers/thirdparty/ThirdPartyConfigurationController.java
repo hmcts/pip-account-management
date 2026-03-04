@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import uk.gov.hmcts.reform.pip.account.management.model.thirdparty.ApiOauthConfiguration;
+import uk.gov.hmcts.reform.pip.account.management.model.thirdparty.ApiOauthConfigurationDto;
 import uk.gov.hmcts.reform.pip.account.management.service.thirdparty.ThirdPartyConfigurationService;
 import uk.gov.hmcts.reform.pip.model.authentication.roles.IsAdmin;
 
@@ -41,25 +42,27 @@ public class ThirdPartyConfigurationController {
     private final ThirdPartyConfigurationService thirdPartyConfigurationService;
 
     @Autowired
-    public ThirdPartyConfigurationController(ThirdPartyConfigurationService thirdPartyConfigurationService) {
+    public ThirdPartyConfigurationController(
+        ThirdPartyConfigurationService thirdPartyConfigurationService
+    ) {
         this.thirdPartyConfigurationService = thirdPartyConfigurationService;
     }
 
     @PostMapping(consumes = "application/json")
-    @Operation(summary = "Endpoint to create a new third-party Oauth configuration")
+    @Operation(summary = "Endpoint to create a new third-party OAuth configuration")
     @ApiResponse(responseCode = CREATED_STATUS_CODE,
         description = "Third-party OAuth configuration successfully created for user with ID {userId}")
     @ApiResponse(responseCode = BAD_REQUEST_STATUS_CODE,
         description = "The third-party OAuth configuration has an invalid format")
     @PreAuthorize("@thirdPartyAuthorisationService.userCanManageThirdParty(#requesterId)")
     public ResponseEntity<String> createThirdPartyConfiguration(
-        @RequestBody ApiOauthConfiguration apiOauthConfiguration,
+        @RequestBody ApiOauthConfigurationDto apiOauthConfigurationDto,
         @RequestHeader(X_REQUESTER_ID_HEADER) UUID requesterId
     ) {
-        thirdPartyConfigurationService.createThirdPartyConfiguration(apiOauthConfiguration);
+        thirdPartyConfigurationService.createThirdPartyConfiguration(apiOauthConfigurationDto);
         return ResponseEntity.status(HttpStatus.CREATED)
             .body(String.format("Third-party OAuth configuration successfully created for user with ID %s",
-                                apiOauthConfiguration.getUserId()));
+                                apiOauthConfigurationDto.getUserId()));
     }
 
     @GetMapping("/{userId}")
@@ -86,11 +89,27 @@ public class ThirdPartyConfigurationController {
     @Transactional
     public ResponseEntity<String> updateThirdPartyConfiguration(
         @PathVariable UUID userId,
-        @RequestBody ApiOauthConfiguration apiOauthConfiguration,
+        @RequestBody ApiOauthConfigurationDto apiOauthConfigurationDto,
         @RequestHeader(X_REQUESTER_ID_HEADER) UUID requesterId
     ) {
-        thirdPartyConfigurationService.updateThirdPartyConfigurationByUserId(userId, apiOauthConfiguration);
+        thirdPartyConfigurationService.updateThirdPartyConfigurationByUserId(userId, apiOauthConfigurationDto);
         return ResponseEntity.status(HttpStatus.OK)
             .body(String.format("Third-party OAuth configuration successfully updated for user with ID %s", userId));
+    }
+
+    @GetMapping("/healthcheck/{userId}")
+    @Operation(summary = "Endpoint to perform third-party healthcheck using OAuth configuration")
+    @ApiResponse(responseCode = OK_STATUS_CODE,
+        description = "Successfully performed third-party healthcheck using OAuth configuration")
+    @ApiResponse(responseCode = BAD_REQUEST_STATUS_CODE,
+        description = "The third-party OAuth configuration has an invalid format")
+    @PreAuthorize("@thirdPartyAuthorisationService.userCanManageThirdParty(#requesterId)")
+    public ResponseEntity<String> thirdPartyConfigurationHealthCheck(
+        @PathVariable UUID userId,
+        @RequestHeader(X_REQUESTER_ID_HEADER) UUID requesterId
+    ) {
+        thirdPartyConfigurationService.validateThirdPartyConfiguration(userId);
+        return ResponseEntity.status(HttpStatus.OK)
+            .body(String.format("Successfully performed healthcheck on third-party user with ID %s", userId));
     }
 }

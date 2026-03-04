@@ -15,10 +15,12 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import uk.gov.hmcts.reform.pip.account.management.model.thirdparty.ApiOauthConfiguration;
+import uk.gov.hmcts.reform.pip.account.management.model.thirdparty.ApiOauthConfigurationDto;
 import uk.gov.hmcts.reform.pip.account.management.model.thirdparty.ApiUser;
 import uk.gov.hmcts.reform.pip.account.management.service.authorisation.ThirdPartyAuthorisationService;
 import uk.gov.hmcts.reform.pip.account.management.utils.IntegrationTestBase;
 
+import java.util.Locale;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -46,7 +48,7 @@ class ThirdPartyConfigurationTest extends IntegrationTestBase {
     private static final String CLIENT_SECRET_KEY = "client-secret";
     private static final String SCOPE_KEY = "scope";
 
-    private ApiOauthConfiguration apiOauthConfiguration = new ApiOauthConfiguration();
+    private ApiOauthConfigurationDto apiOauthConfigurationDto = new ApiOauthConfigurationDto();
 
     @Autowired
     protected MockMvc mvc;
@@ -55,17 +57,14 @@ class ThirdPartyConfigurationTest extends IntegrationTestBase {
     private ThirdPartyAuthorisationService thirdPartyAuthorisationService;
 
     @BeforeAll
-    static void setup() throws Exception {
+    static void setup() {
         OBJECT_MAPPER.findAndRegisterModules();
     }
 
     @BeforeEach
     void setupEach() {
-        apiOauthConfiguration.setDestinationUrl(DESTINATION_URL);
-        apiOauthConfiguration.setTokenUrl(TOKEN_URL);
-        apiOauthConfiguration.setClientIdKey(CLIENT_ID_KEY);
-        apiOauthConfiguration.setClientSecretKey(CLIENT_SECRET_KEY);
-        apiOauthConfiguration.setScopeKey(SCOPE_KEY);
+        apiOauthConfigurationDto.setDestinationUrl(DESTINATION_URL);
+        apiOauthConfigurationDto.setTokenUrl(TOKEN_URL);
 
         when(thirdPartyAuthorisationService.userCanManageThirdParty(REQUESTER_ID)).thenReturn(true);
     }
@@ -73,9 +72,9 @@ class ThirdPartyConfigurationTest extends IntegrationTestBase {
     @Test
     void testCreateThirdPartyConfigurationSuccess() throws Exception {
         UUID userId = createApiUser();
-        apiOauthConfiguration.setUserId(userId);
+        apiOauthConfigurationDto.setUserId(userId);
 
-        assertThat(createApiOauthConfiguration().getResponse().getContentAsString())
+        assertThat(createApiOauthConfigurationDto().getResponse().getContentAsString())
             .as("Creation success message should be returned")
             .isEqualTo(
                 String.format("Third-party OAuth configuration successfully created for user with ID %s", userId)
@@ -84,11 +83,15 @@ class ThirdPartyConfigurationTest extends IntegrationTestBase {
 
     @Test
     void testCreateThirdPartyConfigurationBadRequest() throws Exception {
+        UUID userId = createApiUser();
+        ApiOauthConfigurationDto dto = new ApiOauthConfigurationDto();
+        dto.setUserId(userId);
+
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .post(THIRD_PARTY_CONFIGURATION_PATH)
             .header(REQUESTER_ID_HEADER, REQUESTER_ID)
             .contentType(MediaType.APPLICATION_JSON)
-            .content(OBJECT_MAPPER.writeValueAsString(new ApiOauthConfiguration()));
+            .content(OBJECT_MAPPER.writeValueAsString(dto));
 
         mvc.perform(request)
             .andExpect(status().isBadRequest());
@@ -103,7 +106,7 @@ class ThirdPartyConfigurationTest extends IntegrationTestBase {
             .post(THIRD_PARTY_CONFIGURATION_PATH)
             .header(REQUESTER_ID_HEADER, REQUESTER_ID)
             .contentType(MediaType.APPLICATION_JSON)
-            .content(OBJECT_MAPPER.writeValueAsString(apiOauthConfiguration));
+            .content(OBJECT_MAPPER.writeValueAsString(apiOauthConfigurationDto));
 
         mvc.perform(request)
             .andExpect(status().isForbidden());
@@ -112,8 +115,8 @@ class ThirdPartyConfigurationTest extends IntegrationTestBase {
     @Test
     void testGetThirdPartyConfigurationByUserIdSuccess() throws Exception {
         UUID userId = createApiUser();
-        apiOauthConfiguration.setUserId(userId);
-        createApiOauthConfiguration();
+        apiOauthConfigurationDto.setUserId(userId);
+        createApiOauthConfigurationDto();
 
         MockHttpServletRequestBuilder getRequest = MockMvcRequestBuilders
             .get(THIRD_PARTY_CONFIGURATION_PATH + "/" + userId)
@@ -128,6 +131,11 @@ class ThirdPartyConfigurationTest extends IntegrationTestBase {
             ApiOauthConfiguration.class
         );
 
+        String secretKeyPrefix = USER_NAME.toLowerCase(Locale.UK) + "-" + userId + "-";
+        String expectedClientIdKey = secretKeyPrefix + CLIENT_ID_KEY;
+        String expectedClientSecretKey = secretKeyPrefix + CLIENT_SECRET_KEY;
+        String expectedScopeKey = secretKeyPrefix + SCOPE_KEY;
+
         assertThat(retrievedApiOauthConfiguration)
             .as("Retrieved API OAuth configuration should match the created one")
             .extracting(ApiOauthConfiguration::getDestinationUrl,
@@ -135,7 +143,8 @@ class ThirdPartyConfigurationTest extends IntegrationTestBase {
                         ApiOauthConfiguration::getClientIdKey,
                         ApiOauthConfiguration::getClientSecretKey,
                         ApiOauthConfiguration::getScopeKey)
-            .containsExactly(DESTINATION_URL, TOKEN_URL, CLIENT_ID_KEY, CLIENT_SECRET_KEY, SCOPE_KEY);
+            .containsExactly(DESTINATION_URL, TOKEN_URL, expectedClientIdKey, expectedClientSecretKey,
+                             expectedScopeKey);
     }
 
     @Test
@@ -164,16 +173,16 @@ class ThirdPartyConfigurationTest extends IntegrationTestBase {
     @Test
     void testUpdateThirdPartyConfigurationSuccess() throws Exception {
         UUID userId = createApiUser();
-        apiOauthConfiguration.setUserId(userId);
-        createApiOauthConfiguration();
+        apiOauthConfigurationDto.setUserId(userId);
+        createApiOauthConfigurationDto();
 
-        apiOauthConfiguration.setDestinationUrl(UPDATED_DESTINATION_URL);
+        apiOauthConfigurationDto.setDestinationUrl(UPDATED_DESTINATION_URL);
 
         MockHttpServletRequestBuilder updateRequest = MockMvcRequestBuilders
             .put(THIRD_PARTY_CONFIGURATION_PATH + "/" + userId)
             .header(REQUESTER_ID_HEADER, REQUESTER_ID)
             .contentType(MediaType.APPLICATION_JSON)
-            .content(OBJECT_MAPPER.writeValueAsString(apiOauthConfiguration));
+            .content(OBJECT_MAPPER.writeValueAsString(apiOauthConfigurationDto));
 
         mvc.perform(updateRequest)
             .andExpect(status().isOk());
@@ -199,16 +208,16 @@ class ThirdPartyConfigurationTest extends IntegrationTestBase {
     @Test
     void testUpdateThirdPartyConfigurationBadRequestIfEmptyField() throws Exception {
         UUID userId = createApiUser();
-        apiOauthConfiguration.setUserId(userId);
-        createApiOauthConfiguration();
+        apiOauthConfigurationDto.setUserId(userId);
+        createApiOauthConfigurationDto();
 
-        apiOauthConfiguration.setDestinationUrl("");
+        apiOauthConfigurationDto.setDestinationUrl("");
 
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .put(THIRD_PARTY_CONFIGURATION_PATH + "/" + userId)
             .header(REQUESTER_ID_HEADER, REQUESTER_ID)
             .contentType(MediaType.APPLICATION_JSON)
-            .content(OBJECT_MAPPER.writeValueAsString(apiOauthConfiguration));
+            .content(OBJECT_MAPPER.writeValueAsString(apiOauthConfigurationDto));
 
         mvc.perform(request)
             .andExpect(status().isBadRequest());
@@ -223,7 +232,7 @@ class ThirdPartyConfigurationTest extends IntegrationTestBase {
             .put(THIRD_PARTY_CONFIGURATION_PATH + "/" + UUID.randomUUID())
             .header(REQUESTER_ID_HEADER, REQUESTER_ID)
             .contentType(MediaType.APPLICATION_JSON)
-            .content(OBJECT_MAPPER.writeValueAsString(apiOauthConfiguration));
+            .content(OBJECT_MAPPER.writeValueAsString(apiOauthConfigurationDto));
 
         mvc.perform(request)
             .andExpect(status().isForbidden());
@@ -232,7 +241,6 @@ class ThirdPartyConfigurationTest extends IntegrationTestBase {
     private UUID createApiUser() throws Exception {
         ApiUser apiUser = new ApiUser();
         apiUser.setName(USER_NAME);
-        when(thirdPartyAuthorisationService.userCanManageThirdParty(REQUESTER_ID)).thenReturn(true);
 
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .post(THIRD_PARTY_USER_PATH)
@@ -247,12 +255,12 @@ class ThirdPartyConfigurationTest extends IntegrationTestBase {
         return OBJECT_MAPPER.readValue(response.getResponse().getContentAsString(), UUID.class);
     }
 
-    private MvcResult createApiOauthConfiguration() throws Exception {
+    private MvcResult createApiOauthConfigurationDto() throws Exception {
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .post(THIRD_PARTY_CONFIGURATION_PATH)
             .header(REQUESTER_ID_HEADER, REQUESTER_ID)
             .contentType(MediaType.APPLICATION_JSON)
-            .content(OBJECT_MAPPER.writeValueAsString(apiOauthConfiguration));
+            .content(OBJECT_MAPPER.writeValueAsString(apiOauthConfigurationDto));
 
         return mvc.perform(request)
             .andExpect(status().isCreated())

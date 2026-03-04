@@ -53,7 +53,7 @@ public class ThirdPartySubscriptionNotificationService {
         if (!thirdPartyOauthConfigurationList.isEmpty()) {
             publicationService.sendThirdPartySubscription(new ThirdPartySubscription(
                 thirdPartyOauthConfigurationList, artefact.getArtefactId(), thirdPartyAction
-            ));
+            ), false);
         }
     }
 
@@ -64,8 +64,18 @@ public class ThirdPartySubscriptionNotificationService {
         if (!thirdPartyOauthConfigurationList.isEmpty()) {
             publicationService.sendThirdPartySubscription(new ThirdPartySubscription(
                 thirdPartyOauthConfigurationList, artefact.getArtefactId(), ThirdPartyAction.DELETE_PUBLICATION
-            ));
+            ), false);
         }
+    }
+
+    public void handleThirdPartyHealthCheck(ApiOauthConfiguration apiOauthConfiguration) {
+        ThirdPartyOauthConfiguration thirdPartyOauthConfiguration = buildThirdPartySubscriberConfiguration(
+                apiOauthConfiguration
+        );
+        ThirdPartySubscription thirdPartySubscription = new ThirdPartySubscription(
+            List.of(thirdPartyOauthConfiguration), null, ThirdPartyAction.HEALTH_CHECK
+        );
+        publicationService.sendThirdPartySubscription(thirdPartySubscription, true);
     }
 
     private List<ThirdPartyOauthConfiguration> collectThirdPartySubscriberConfigurationList(Artefact artefact) {
