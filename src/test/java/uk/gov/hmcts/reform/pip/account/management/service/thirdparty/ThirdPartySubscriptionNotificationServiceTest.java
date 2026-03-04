@@ -200,7 +200,7 @@ class ThirdPartySubscriptionNotificationServiceTest {
 
         thirdPartySubscriptionNotificationService.handleThirdPartySubscription(artefact1);
 
-        verify(publicationService, never()).sendThirdPartySubscription(any());
+        verify(publicationService, never()).sendThirdPartySubscription(any(), eq(false));
     }
 
     @Test
@@ -214,7 +214,7 @@ class ThirdPartySubscriptionNotificationServiceTest {
 
         thirdPartySubscriptionNotificationService.handleThirdPartySubscription(artefact1);
 
-        verify(publicationService, never()).sendThirdPartySubscription(any());
+        verify(publicationService, never()).sendThirdPartySubscription(any(), eq(false));
         assertThat(logCaptor.getErrorLogs())
             .anySatisfy(log ->
                             assertThat(log).contains("No third-party user found with ID " + USER_ID1));
@@ -235,7 +235,7 @@ class ThirdPartySubscriptionNotificationServiceTest {
 
         thirdPartySubscriptionNotificationService.handleThirdPartySubscription(artefact1);
 
-        verify(publicationService, never()).sendThirdPartySubscription(any());
+        verify(publicationService, never()).sendThirdPartySubscription(any(), eq(false));
     }
 
     @Test
