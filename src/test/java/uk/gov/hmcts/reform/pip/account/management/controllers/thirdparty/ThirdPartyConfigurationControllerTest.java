@@ -20,6 +20,7 @@ import static org.mockito.Mockito.when;
 class ThirdPartyConfigurationControllerTest {
     private static final UUID REQUESTER_ID = UUID.randomUUID();
     private static final UUID USER_ID = UUID.randomUUID();
+    private static final ApiOauthConfiguration CONFIG = new ApiOauthConfiguration();
 
     @Mock
     private ThirdPartyConfigurationService thirdPartyConfigurationService;
@@ -29,10 +30,9 @@ class ThirdPartyConfigurationControllerTest {
 
     @Test
     void testCreateThirdPartyConfiguration() {
-        ApiOauthConfiguration config = new ApiOauthConfiguration();
-        config.setUserId(USER_ID);
+        CONFIG.setUserId(USER_ID);
 
-        ResponseEntity<String> response = controller.createThirdPartyConfiguration(config, REQUESTER_ID);
+        ResponseEntity<String> response = controller.createThirdPartyConfiguration(CONFIG, REQUESTER_ID);
 
         assertThat(response.getStatusCode())
             .as("Response status should be CREATED")
@@ -42,15 +42,14 @@ class ThirdPartyConfigurationControllerTest {
             .as("Response body should contain the user ID")
             .contains(USER_ID.toString());
 
-        verify(thirdPartyConfigurationService).createThirdPartyConfiguration(config);
+        verify(thirdPartyConfigurationService).createThirdPartyConfiguration(CONFIG);
     }
 
     @Test
     void testGetThirdPartyConfiguration() {
-        ApiOauthConfiguration config = new ApiOauthConfiguration();
-        config.setUserId(USER_ID);
+        CONFIG.setUserId(USER_ID);
 
-        when(thirdPartyConfigurationService.findThirdPartyConfigurationByUserId(USER_ID)).thenReturn(config);
+        when(thirdPartyConfigurationService.findThirdPartyConfigurationByUserId(USER_ID)).thenReturn(CONFIG);
 
         ResponseEntity<ApiOauthConfiguration> response = controller.getThirdPartyConfiguration(USER_ID, REQUESTER_ID);
 
@@ -60,16 +59,14 @@ class ThirdPartyConfigurationControllerTest {
 
         assertThat(response.getBody())
             .as("Response body should be the expected configuration")
-            .isEqualTo(config);
+            .isEqualTo(CONFIG);
 
         verify(thirdPartyConfigurationService).findThirdPartyConfigurationByUserId(USER_ID);
     }
 
     @Test
     void testUpdateThirdPartyConfiguration() {
-        ApiOauthConfiguration config = new ApiOauthConfiguration();
-
-        ResponseEntity<String> response = controller.updateThirdPartyConfiguration(USER_ID, config, REQUESTER_ID);
+        ResponseEntity<String> response = controller.updateThirdPartyConfiguration(USER_ID, CONFIG, REQUESTER_ID);
 
         assertThat(response.getStatusCode())
             .as("Response status should be OK")
@@ -79,6 +76,17 @@ class ThirdPartyConfigurationControllerTest {
             .as("Response body should contain the user ID")
             .contains(USER_ID.toString());
 
-        verify(thirdPartyConfigurationService).updateThirdPartyConfigurationByUserId(USER_ID, config);
+        verify(thirdPartyConfigurationService).updateThirdPartyConfigurationByUserId(USER_ID, CONFIG);
+    }
+
+    @Test
+    void testThirdPartyConfigurationHealthCheck() {
+        ResponseEntity<String> response = controller.thirdPartyConfigurationHealthCheck(USER_ID, REQUESTER_ID);
+
+        assertThat(response.getStatusCode())
+            .as("Response status should be OK")
+            .isEqualTo(HttpStatus.OK);
+
+        verify(thirdPartyConfigurationService).validateThirdPartyConfiguration(USER_ID);
     }
 }
