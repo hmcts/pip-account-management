@@ -168,7 +168,8 @@ class AccountTest extends AccountHelperBase {
         "CIVIL_DAILY_CAUSE_LIST,PUBLIC,true",
         "CIVIL_DAILY_CAUSE_LIST,PRIVATE,true",
         "SJP_PUBLIC_LIST,CLASSIFIED,true",
-        "CIVIL_DAILY_CAUSE_LIST,CLASSIFIED,false"
+        "CIVIL_DAILY_CAUSE_LIST,CLASSIFIED,false",
+        "CROWN_DAILY_PDDA_LIST,CLASSIFIED,true"
     })
     void checkIfUserIsAuthorised(String listType, String sensitivity, boolean shouldBeAuthorised) throws Exception {
         String createdUserId = getCreatedAccountUserId(createdVerifiedAccount(email, provenanceId,
