@@ -18,12 +18,17 @@ import java.util.UUID;
 public class ThirdPartyConfigurationService {
     private final ApiOauthConfigurationRepository apiOauthConfigurationRepository;
     private final ApiUserRepository apiUserRepository;
+    private final ThirdPartySubscriptionNotificationService thirdPartySubscriptionNotificationService;
 
     @Autowired
-    public ThirdPartyConfigurationService(ApiOauthConfigurationRepository apiOauthConfigurationRepository,
-                                          ApiUserRepository apiUserRepository) {
+    public ThirdPartyConfigurationService(
+        ApiOauthConfigurationRepository apiOauthConfigurationRepository,
+        ApiUserRepository apiUserRepository,
+        ThirdPartySubscriptionNotificationService thirdPartySubscriptionNotificationService
+    ) {
         this.apiOauthConfigurationRepository = apiOauthConfigurationRepository;
         this.apiUserRepository = apiUserRepository;
+        this.thirdPartySubscriptionNotificationService = thirdPartySubscriptionNotificationService;
     }
 
     public ApiOauthConfiguration createThirdPartyConfiguration(ApiOauthConfigurationDto apiOauthConfigurationDto) {
@@ -46,6 +51,12 @@ public class ThirdPartyConfigurationService {
 
     public void deleteThirdPartyConfigurationByUserId(UUID userId) {
         apiOauthConfigurationRepository.deleteByUserId(userId);
+    }
+
+    public void validateThirdPartyConfiguration(UUID userId) {
+        ApiOauthConfiguration apiOauthConfiguration = findThirdPartyConfigurationByUserId(userId);
+        thirdPartySubscriptionNotificationService.handleThirdPartyHealthCheck(apiOauthConfiguration);
+
     }
 
     private void updateExistingThirdPartyConfiguration(ApiOauthConfiguration suppliedApiOAuthConfiguration,

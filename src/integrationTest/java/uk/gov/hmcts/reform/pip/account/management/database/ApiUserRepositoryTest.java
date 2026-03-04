@@ -8,6 +8,7 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.context.ActiveProfiles;
 import uk.gov.hmcts.reform.pip.account.management.model.thirdparty.ApiUser;
+import uk.gov.hmcts.reform.pip.account.management.model.thirdparty.ApiUserStatus;
 
 import java.util.List;
 import java.util.UUID;
@@ -76,6 +77,17 @@ class ApiUserRepositoryTest {
             .hasSize(2)
             .extracting(ApiUser::getName)
             .containsExactly(USER_NAME, USER_NAME3);
+    }
+
+    @Test
+    void shouldSetDefaultStatusToPendingWhenApiUserIsCreated() {
+        ApiUser apiUser = new ApiUser();
+        apiUser.setName(USER_NAME);
+        ApiUser createdApiUser = apiUserRepository.save(apiUser);
+
+        assertThat(createdApiUser.getStatus())
+            .as("Default status should be PENDING")
+            .isEqualTo(ApiUserStatus.PENDING);
     }
 }
 

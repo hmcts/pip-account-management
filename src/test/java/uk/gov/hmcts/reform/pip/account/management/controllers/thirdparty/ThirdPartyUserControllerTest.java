@@ -8,6 +8,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import uk.gov.hmcts.reform.pip.account.management.model.thirdparty.ApiUser;
+import uk.gov.hmcts.reform.pip.account.management.model.thirdparty.ApiUserStatus;
 import uk.gov.hmcts.reform.pip.account.management.service.thirdparty.ThirdPartyUserService;
 
 import java.util.List;
@@ -83,6 +84,29 @@ class ThirdPartyUserControllerTest {
             .as("Response body should be the expected ApiUser")
             .isEqualTo(apiUser);
     }
+
+    @Test
+    void testUpdateThirdPartyUserStatus() {
+        ApiUserStatus newStatus = ApiUserStatus.ACTIVE;
+        ApiUser updatedUser = new ApiUser();
+        updatedUser.setUserId(USER_ID);
+        updatedUser.setStatus(newStatus);
+
+        when(thirdPartyUserService.updateThirdPartyUserStatus(USER_ID, newStatus)).thenReturn(updatedUser);
+
+        ResponseEntity<ApiUser> response = controller.updateUserStatus(USER_ID, newStatus, REQUESTER_ID);
+
+        assertThat(response.getStatusCode())
+            .as("Response status should be OK")
+            .isEqualTo(HttpStatus.OK);
+
+        assertThat(response.getBody())
+            .as("Response body should contain the updated user")
+            .isEqualTo(updatedUser);
+
+        verify(thirdPartyUserService).updateThirdPartyUserStatus(USER_ID, newStatus);
+    }
+
 
     @Test
     void testDeleteThirdPartyUser() {
