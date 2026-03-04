@@ -27,7 +27,7 @@ public class SensitivityService {
             case PUBLIC -> true;
             case PRIVATE -> Roles.getAllVerifiedRoles().contains(user.getRoles());
             case CLASSIFIED -> VERIFIED.equals(user.getRoles())
-                && user.getUserProvenance().equals(listType.getAllowedProvenance())
+                && listType.getAllowedProvenances().contains(user.getUserProvenance())
                 || THIRD_PARTY.equals(user.getUserProvenance())
                 && listType.getAllowedThirdPartyRoles().contains(user.getRoles());
             default -> false;

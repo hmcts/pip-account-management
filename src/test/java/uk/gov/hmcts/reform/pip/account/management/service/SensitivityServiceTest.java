@@ -148,6 +148,31 @@ class SensitivityServiceTest {
     }
 
     @Test
+    void checkClassifiedReturnsTrueForMultipleCorrectProvenances() {
+        PiUser piUser = new PiUser();
+        piUser.setRoles(Roles.VERIFIED);
+        piUser.setUserProvenance(UserProvenances.CRIME_IDAM);
+
+        assertTrue(
+            sensitivityService.checkAuthorisation(piUser, ListType.CROWN_FIRM_PDDA_LIST, Sensitivity.CLASSIFIED),
+            "Crime IDAM user should be authorised for classified Crown Firm PDDA List"
+        );
+
+        piUser.setUserProvenance(UserProvenances.PI_AAD);
+        assertTrue(
+            sensitivityService.checkAuthorisation(piUser, ListType.CROWN_FIRM_PDDA_LIST, Sensitivity.CLASSIFIED),
+            "Media user should be authorised for classified Crown Firm PDDA List"
+        );
+
+
+        piUser.setUserProvenance(UserProvenances.CFT_IDAM);
+        assertFalse(
+            sensitivityService.checkAuthorisation(piUser, ListType.CROWN_FIRM_PDDA_LIST, Sensitivity.CLASSIFIED),
+            "CFT IDAM user should not be authorised for classified Crown Firm PDDA List"
+        );
+    }
+
+    @Test
     void checkClassifiedReturnsFalseWhenNotVerified() {
         PiUser piUser = new PiUser();
         piUser.setRoles(Roles.INTERNAL_ADMIN_CTSC);
