@@ -2,6 +2,7 @@ package uk.gov.hmcts.reform.pip.account.management;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.restassured.response.Response;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -25,7 +26,8 @@ public class ThirdPartySubscriptionTest extends AccountHelperBase {
 
     private static final String BASE_PATH = "/third-party/subscription";
     private static final String API_USER_PATH = "/third-party";
-    private static final String BASE_NAME = "ThirdPartySubscriptionTest";
+    private static final String TESTING_SUPPORT_DELETE_THIRD_PARTY_DATA_URL = "/testing-support/third-party/";
+    private static final String TEST_NAME_PREFIX = "ThirdParty" + generateRandomString(4);
     private static final String SUCCESS_CREATE_MSG = "Third-party subscriptions successfully created for user with ID ";
     private static final String SUCCESS_UPDATE_MSG = "Third-party subscriptions successfully updated for user with ID ";
 
@@ -36,10 +38,15 @@ public class ThirdPartySubscriptionTest extends AccountHelperBase {
         systemAdminId = createSystemAdminAccount().getUserId();
     }
 
+    @AfterAll
+    public void teardown() {
+        doDeleteRequest(TESTING_SUPPORT_DELETE_THIRD_PARTY_DATA_URL + TEST_NAME_PREFIX, bearer);
+    }
+
     @Test
     void shouldCreateThirdPartySubscription() {
         Map<String, String> headerMap = getAuthHeaders();
-        UUID userId = createThirdPartyUser(BASE_NAME + "CreateApiSubscription");
+        UUID userId = createThirdPartyUser(TEST_NAME_PREFIX + "CreateApiSubscription");
         String responseMsg = createThirdPartyApiSubscription(userId, headerMap);
 
         assertThat(responseMsg).isEqualTo(SUCCESS_CREATE_MSG + userId);
@@ -48,7 +55,7 @@ public class ThirdPartySubscriptionTest extends AccountHelperBase {
     @Test
     void shouldGetThirdPartySubscriptionByUserId() {
         Map<String, String> headerMap = getAuthHeaders();
-        UUID userId = createThirdPartyUser(BASE_NAME + "GetApiSubscription");
+        UUID userId = createThirdPartyUser(TEST_NAME_PREFIX + "GetApiSubscription");
         createThirdPartyApiSubscription(userId, headerMap);
 
         Response response = doGetRequest(BASE_PATH + "/" + userId, headerMap);
@@ -57,13 +64,13 @@ public class ThirdPartySubscriptionTest extends AccountHelperBase {
         assertThat(response.getStatusCode()).isEqualTo(OK.value());
         assertThat(apiSubscriptions).isNotEmpty();
         assertThat(List.of(apiSubscriptions))
-            .anyMatch(sub -> sub.getUserId().equals(userId));
+                .anyMatch(sub -> sub.getUserId().equals(userId));
     }
 
     @Test
     void shouldUpdateThirdPartySubscription() {
         Map<String, String> headerMap = getAuthHeaders();
-        UUID userId = createThirdPartyUser(BASE_NAME + "UpdateApiSubscription");
+        UUID userId = createThirdPartyUser(TEST_NAME_PREFIX + "UpdateApiSubscription");
         createThirdPartyApiSubscription(userId, headerMap);
 
         ApiSubscription updatedSubscription = new ApiSubscription();
@@ -80,8 +87,8 @@ public class ThirdPartySubscriptionTest extends AccountHelperBase {
 
         assertThat(getResponse.getStatusCode()).isEqualTo(OK.value());
         assertThat(List.of(apiSubscriptions))
-            .anyMatch(sub -> sub.getListType().equals(ListType.CIVIL_DAILY_CAUSE_LIST)
-                && sub.getSensitivity().equals(Sensitivity.PRIVATE));
+                .anyMatch(sub -> sub.getListType().equals(ListType.CIVIL_DAILY_CAUSE_LIST)
+                        && sub.getSensitivity().equals(Sensitivity.PRIVATE));
     }
 
     private Map<String, String> getAuthHeaders() {
