@@ -82,4 +82,15 @@ class ThirdPartyConfigurationControllerTest {
 
         verify(thirdPartyConfigurationService).updateThirdPartyConfigurationByUserId(USER_ID, config);
     }
+
+    @Test
+    void testThirdPartyConfigurationHealthCheck() {
+        ResponseEntity<String> response = controller.thirdPartyConfigurationHealthCheck(USER_ID, REQUESTER_ID);
+
+        assertThat(response.getStatusCode())
+            .as("Response status should be OK")
+            .isEqualTo(HttpStatus.OK);
+
+        verify(thirdPartyConfigurationService).validateThirdPartyConfiguration(USER_ID);
+    }
 }

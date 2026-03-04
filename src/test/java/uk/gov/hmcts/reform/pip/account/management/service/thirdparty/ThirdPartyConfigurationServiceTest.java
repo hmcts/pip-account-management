@@ -31,6 +31,9 @@ class ThirdPartyConfigurationServiceTest {
     @Mock
     private ApiUserRepository apiUserRepository;
 
+    @Mock
+    private ThirdPartySubscriptionNotificationService thirdPartySubscriptionNotificationService;
+
     @InjectMocks
     private ThirdPartyConfigurationService service;
 
@@ -97,5 +100,25 @@ class ThirdPartyConfigurationServiceTest {
         service.deleteThirdPartyConfigurationByUserId(USER_ID);
 
         verify(apiOauthConfigurationRepository).deleteByUserId(USER_ID);
+    }
+
+    @Test
+    void testValidateThirdPartyConfigurationSuccess() {
+        ApiOauthConfiguration config = new ApiOauthConfiguration();
+        when(apiOauthConfigurationRepository.findByUserId(USER_ID)).thenReturn(Optional.of(config));
+
+        service.validateThirdPartyConfiguration(USER_ID);
+
+        verify(thirdPartySubscriptionNotificationService).handleThirdPartyHealthCheck(config);
+    }
+
+    @Test
+    void testValidateThirdPartyConfigurationNotFound() {
+        when(apiOauthConfigurationRepository.findByUserId(USER_ID)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.validateThirdPartyConfiguration(USER_ID))
+            .as("Should throw NotFoundException if configuration not found")
+            .isInstanceOf(NotFoundException.class)
+            .hasMessageContaining(USER_ID.toString());
     }
 }
