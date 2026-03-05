@@ -85,4 +85,10 @@ class CustomExceptionTest {
                      updateUserException.getMessage(),
                      "Exception message does not match expected message");
     }
+
+    @Test
+    void testCreationOfThirdPartyHealthCheckException() {
+        ThirdPartyHealthCheckException exception = new ThirdPartyHealthCheckException(TEST_MESSAGE);
+        assertEquals(TEST_MESSAGE, exception.getMessage(), ASSERTION_MESSAGE);
+    }
 }
