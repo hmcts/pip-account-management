@@ -1,12 +1,14 @@
 package uk.gov.hmcts.reform.pip.account.management;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.restassured.response.Response;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import uk.gov.hmcts.reform.pip.account.management.model.thirdparty.ApiUser;
+import uk.gov.hmcts.reform.pip.account.management.model.thirdparty.ApiUserStatus;
 import uk.gov.hmcts.reform.pip.account.management.utils.AccountHelperBase;
 import uk.gov.hmcts.reform.pip.model.account.PiUser;
 
@@ -47,10 +49,10 @@ public class ThirdPartyUserTest extends AccountHelperBase {
 
     @Test
     void shouldGetAllThirdPartyUsers() {
-        Map<String, String> headers = getAuthHeaders();
+
         String createdUserId = createThirdPartyUser(TEST_NAME_PREFIX + "GetAllUsers");
 
-        Response response = doGetRequest(BASE_PATH, headers);
+        Response response = doGetRequest(BASE_PATH, getAuthHeaders());
         assertThat(response.getStatusCode()).isEqualTo(OK.value());
 
         ApiUser[] users = response.getBody().as(ApiUser[].class);
@@ -60,10 +62,10 @@ public class ThirdPartyUserTest extends AccountHelperBase {
 
     @Test
     void shouldGetThirdPartyUser() {
-        Map<String, String> headers = getAuthHeaders();
+
         String createdUserId = createThirdPartyUser(TEST_NAME_PREFIX + "GetUserById");
 
-        Response response = doGetRequest(BASE_PATH + "/" + createdUserId, headers);
+        Response response = doGetRequest(BASE_PATH + "/" + createdUserId, getAuthHeaders());
         assertThat(response.getStatusCode()).isEqualTo(OK.value());
 
         ApiUser retrievedUser = response.getBody().as(ApiUser.class);
@@ -72,22 +74,39 @@ public class ThirdPartyUserTest extends AccountHelperBase {
     }
 
     @Test
+    void shouldUpdateThirdPartyUserStatus() throws JsonProcessingException {
+        String createdUserId = createThirdPartyUser(TEST_NAME_PREFIX + "UpdateUserStatus");
+        String body = new ObjectMapper().writeValueAsString(ApiUserStatus.SUSPENDED);
+
+        Response response = doPatchRequestWithBody(
+            BASE_PATH + "/" + createdUserId + "/status", getAuthHeaders(), body
+        );
+        assertThat(response.getStatusCode()).isEqualTo(OK.value());
+
+        Response responseUpdatedUser = doGetRequest(BASE_PATH + "/" + createdUserId, getAuthHeaders());
+        assertThat(responseUpdatedUser.getStatusCode()).isEqualTo(OK.value());
+
+        ApiUser retrievedUser = responseUpdatedUser.getBody().as(ApiUser.class);
+        assertThat(retrievedUser.getUserId().toString()).isEqualTo(createdUserId);
+        assertThat(retrievedUser.getStatus().toString()).isEqualTo(ApiUserStatus.SUSPENDED.name());
+    }
+
+    @Test
     void shouldDeleteThirdPartyUser() {
-        Map<String, String> headers = getAuthHeaders();
+
         String createdUserId = createThirdPartyUser(TEST_NAME_PREFIX + "DeleteUser");
 
-        Response response = doDeleteRequest(BASE_PATH + "/" + createdUserId, headers);
+        Response response = doDeleteRequest(BASE_PATH + "/" + createdUserId, getAuthHeaders());
         assertThat(response.getStatusCode()).isEqualTo(OK.value());
         assertThat(response.getBody().asString())
-                .isEqualTo("Third-party user with ID " + createdUserId + " has been deleted");
+            .isEqualTo("Third-party user with ID " + createdUserId + " has been deleted");
     }
 
     private String createThirdPartyUser(String userName) {
         ApiUser userObject = new ApiUser();
         userObject.setName(userName);
 
-        Map<String, String> headers = getAuthHeaders();
-        Response response = doPostRequest(BASE_PATH, headers, userObject);
+        Response response = doPostRequest(BASE_PATH, getAuthHeaders(), userObject);
 
         assertThat(response.getStatusCode()).isEqualTo(CREATED.value());
         assertThat(response.getBody().asString()).isNotEmpty();
