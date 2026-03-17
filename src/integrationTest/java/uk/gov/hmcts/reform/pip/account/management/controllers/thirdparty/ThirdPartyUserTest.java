@@ -15,6 +15,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import uk.gov.hmcts.reform.pip.account.management.model.thirdparty.ApiUser;
+import uk.gov.hmcts.reform.pip.account.management.model.thirdparty.ApiUserStatus;
 import uk.gov.hmcts.reform.pip.account.management.service.authorisation.ThirdPartyAuthorisationService;
 import uk.gov.hmcts.reform.pip.account.management.utils.IntegrationTestBase;
 
@@ -196,6 +197,69 @@ class ThirdPartyUserTest extends IntegrationTestBase {
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .delete(THIRD_PARTY_USER_PATH + "/" + UUID.randomUUID())
             .header(REQUESTER_ID_HEADER, REQUESTER_ID);
+
+        mvc.perform(request)
+            .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void testUpdateThirdPartyUserStatusSuccess() throws Exception {
+        UUID createdUserId = OBJECT_MAPPER.readValue(createThirdPartyUser().getResponse().getContentAsString(),
+                                                     UUID.class);
+
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+            .patch(THIRD_PARTY_USER_PATH + "/" + createdUserId + "/status")
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(OBJECT_MAPPER.writeValueAsString(ApiUserStatus.ACTIVE));
+
+        MvcResult patchResponse = mvc.perform(request)
+            .andExpect(status().isOk())
+            .andReturn();
+
+        ApiUser updatedUser = OBJECT_MAPPER.readValue(patchResponse.getResponse().getContentAsString(), ApiUser.class);
+        assertThat(updatedUser.getUserId()).isEqualTo(createdUserId);
+        assertThat(updatedUser.getStatus()).isEqualTo(ApiUserStatus.ACTIVE);
+    }
+
+    @Test
+    void testUpdateThirdPartyUserStatusNotFound() throws Exception {
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+            .patch(THIRD_PARTY_USER_PATH + "/" + UUID.randomUUID() + "/status")
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(OBJECT_MAPPER.writeValueAsString(ApiUserStatus.ACTIVE));
+
+        mvc.perform(request)
+            .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void testUpdateThirdPartyUserStatusBadRequest() throws Exception {
+        UUID createdUserId = OBJECT_MAPPER.readValue(createThirdPartyUser().getResponse().getContentAsString(),
+                                                     UUID.class);
+
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+            .patch(THIRD_PARTY_USER_PATH + "/" + createdUserId + "/status")
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(OBJECT_MAPPER.writeValueAsString("InvalidStatus"));
+
+        mvc.perform(request)
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void testUpdateUnauthorisedThirdPartyUserStatus() throws Exception {
+        UUID createdUserId = OBJECT_MAPPER.readValue(createThirdPartyUser().getResponse().getContentAsString(),
+                                                     UUID.class);
+        when(thirdPartyAuthorisationService.userCanManageThirdParty(REQUESTER_ID)).thenReturn(false);
+
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+            .patch(THIRD_PARTY_USER_PATH + "/" + createdUserId + "/status")
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(OBJECT_MAPPER.writeValueAsString(ApiUserStatus.SUSPENDED));
 
         mvc.perform(request)
             .andExpect(status().isForbidden());
