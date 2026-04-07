@@ -24,6 +24,7 @@ import uk.gov.hmcts.reform.pip.account.management.service.AuditService;
 import uk.gov.hmcts.reform.pip.account.management.service.MediaApplicationService;
 import uk.gov.hmcts.reform.pip.account.management.service.account.AccountService;
 import uk.gov.hmcts.reform.pip.account.management.service.subscription.SubscriptionLocationService;
+import uk.gov.hmcts.reform.pip.account.management.service.thirdparty.ThirdPartyUserService;
 import uk.gov.hmcts.reform.pip.model.authentication.roles.IsAdmin;
 
 import java.util.UUID;
@@ -50,6 +51,7 @@ public class TestingSupportController {
     private final AccountService accountService;
     private final MediaApplicationService mediaApplicationService;
     private final SubscriptionLocationService subscriptionLocationService;
+    private final ThirdPartyUserService thirdPartyUserService;
     private final AuditService auditService;
 
     @ApiResponse(responseCode = CREATED_CODE, description = "{PiUser}")
@@ -92,6 +94,14 @@ public class TestingSupportController {
         return ResponseEntity.ok(
             subscriptionLocationService.deleteAllSubscriptionsWithLocationNamePrefix(locationNamePrefix)
         );
+    }
+
+    @ApiResponse(responseCode = OK_CODE, description = "Account(s) deleted with email starting with {emailPrefix}")
+    @Operation(summary = "Delete all accounts with email prefix")
+    @DeleteMapping("/third-party/{namePrefix}")
+    @Transactional
+    public ResponseEntity<String> deleteThirdPartyUsersWithNamePrefix(@PathVariable String namePrefix) {
+        return ResponseEntity.ok(thirdPartyUserService.deleteAllThirdPartyUsersWithNamePrefix(namePrefix));
     }
 
     @ApiResponse(responseCode = OK_CODE,

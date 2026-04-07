@@ -19,7 +19,20 @@
     <cve>CVE-2025-48924</cve>
   </suppress>
   <suppress>
+    <notes>Netty vulnerabilities pull in from Springboot. To be removed once Springboot is updated</notes>
+    <cve>CVE-2025-67735</cve>
+  </suppress>
+  <suppress>
     <notes>Vulnerability in jackson-databind</notes>
     <cve>CVE-2026-29062</cve>
+  </suppress>
+  <suppress>
+    <notes>Vulnerability in Tomcat</notes>
+    <cve>CVE-2026-24734</cve>
+  </suppress>
+  <suppress>
+    <notes>Vulnerability in Netty</notes>
+    <cve>CVE-2026-33871</cve>
+    <cve>CVE-2026-33870</cve>
   </suppress>
 </suppressions>

@@ -328,7 +328,7 @@ We use [Jenkins](https://www.jenkins.io/) as our CI/CD system. The deployment of
 
 Our builds run against our `dev` environment during the Jenkins build process. As this is a microservice, the build process involves standing up the service in a docker container in a Kubernetes cluster with the current staging master copies of the other interconnected microservices.
 
-If your debugging leads you to conclude that you need to implement a pipeline fix, this can be done in the [CNP Jenkins repo](https://github.com/hmcts/cnp-jenkins-library)
+If your debugging leads you to conclude that you need to implement a pipeline fix, this can be done in the [CNP Jenkins repo](https://github.com/hmcts/cnp-jenkins-library).
 
 ## Creating or debugging of SQL scripts with Flyway
 Flyway is used to apply incremental schema changes (migrations) to our database.

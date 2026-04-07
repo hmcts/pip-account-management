@@ -8,10 +8,11 @@ import uk.gov.hmcts.reform.pip.account.management.database.SubscriptionRepositor
 import uk.gov.hmcts.reform.pip.account.management.model.subscription.Subscription;
 import uk.gov.hmcts.reform.pip.account.management.service.PublicationService;
 import uk.gov.hmcts.reform.pip.account.management.service.account.AccountService;
+import uk.gov.hmcts.reform.pip.account.management.service.thirdparty.ThirdPartySubscriptionNotificationService;
 import uk.gov.hmcts.reform.pip.model.publication.Artefact;
 import uk.gov.hmcts.reform.pip.model.subscription.Channel;
-import uk.gov.hmcts.reform.pip.model.subscription.ThirdPartySubscription;
-import uk.gov.hmcts.reform.pip.model.subscription.ThirdPartySubscriptionArtefact;
+import uk.gov.hmcts.reform.pip.model.subscription.LegacyThirdPartySubscription;
+import uk.gov.hmcts.reform.pip.model.subscription.LegacyThirdPartySubscriptionArtefact;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,17 +39,21 @@ public class SubscriptionNotificationService {
 
     private final PublicationService publicationService;
 
+    private final ThirdPartySubscriptionNotificationService thirdPartySubscriptionNotificationService;
+
     @Autowired
     public SubscriptionNotificationService(
         SubscriptionRepository repository,
         SubscriptionChannelService subscriptionChannelService,
         AccountService accountService,
-        PublicationService publicationService
+        PublicationService publicationService,
+        ThirdPartySubscriptionNotificationService thirdPartySubscriptionNotificationService
     ) {
         this.repository = repository;
         this.subscriptionChannelService = subscriptionChannelService;
         this.accountService = accountService;
         this.publicationService = publicationService;
+        this.thirdPartySubscriptionNotificationService = thirdPartySubscriptionNotificationService;
     }
 
     /**
@@ -74,6 +79,7 @@ public class SubscriptionNotificationService {
             : subscriptionList;
 
         handleSubscriptionSending(artefact.getArtefactId(), subscriptionsToContact);
+        thirdPartySubscriptionNotificationService.handleThirdPartySubscription(artefact);
     }
 
     /**
@@ -90,6 +96,9 @@ public class SubscriptionNotificationService {
             : subscriptionList;
 
         handleDeletedArtefactSending(subscriptionsToContact, artefactBeingDeleted);
+        thirdPartySubscriptionNotificationService.handleThirdPartySubscriptionForDeletedPublication(
+            artefactBeingDeleted
+        );
     }
 
     private List<Subscription> validateSubscriptionPermissions(List<Subscription> subscriptions, Artefact artefact) {
@@ -151,8 +160,9 @@ public class SubscriptionNotificationService {
         }
 
         subscriptionChannelService.buildApiSubscriptions(apiList)
-            .forEach((api, subscriptions) ->
-                         publicationService.sendThirdPartyList(new ThirdPartySubscription(api, artefactId)));
+            .forEach((api, subscriptions) -> publicationService.legacySendThirdPartyList(
+                new LegacyThirdPartySubscription(api, artefactId)
+            ));
         log.info(writeLog(String.format("Collected %s api subscribers", apiList.size())));
     }
 
@@ -179,8 +189,8 @@ public class SubscriptionNotificationService {
         List<Subscription> apiList = sortSubscriptionByChannel(subscriptions,
                                                                Channel.API_COURTEL.notificationRoute);
         subscriptionChannelService.buildApiSubscriptions(apiList)
-            .forEach((api, subscription) -> publicationService.sendEmptyArtefact(
-                new ThirdPartySubscriptionArtefact(api, artefactBeingDeleted)
+            .forEach((api, subscription) -> publicationService.legacySendEmptyArtefact(
+                new LegacyThirdPartySubscriptionArtefact(api, artefactBeingDeleted)
             ));
     }
 }
