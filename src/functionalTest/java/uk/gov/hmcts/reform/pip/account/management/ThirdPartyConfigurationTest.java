@@ -1,0 +1,120 @@
+package uk.gov.hmcts.reform.pip.account.management;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import io.restassured.response.Response;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import uk.gov.hmcts.reform.pip.account.management.model.thirdparty.ApiOauthConfiguration;
+import uk.gov.hmcts.reform.pip.account.management.model.thirdparty.ApiOauthConfigurationDto;
+import uk.gov.hmcts.reform.pip.account.management.model.thirdparty.ApiUser;
+import uk.gov.hmcts.reform.pip.account.management.utils.AccountHelperBase;
+
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.http.HttpStatus.CREATED;
+import static org.springframework.http.HttpStatus.OK;
+
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+public class ThirdPartyConfigurationTest extends AccountHelperBase {
+
+    private static final String CONFIGURATION_PATH = "/third-party/configuration";
+    private static final String USER_PATH = "/third-party";
+    private static final String TESTING_SUPPORT_DELETE_THIRD_PARTY_DATA_URL = "/testing-support/third-party/";
+    private static final String TEST_NAME_PREFIX = "ThirdParty" + generateRandomString(4);
+    private static final String DESTINATION_URL = "https://example.com/callback";
+    private static final String UPDATED_DESTINATION_URL = "https://example.com/callback-updated";
+    private static final String TOKEN_URL = "https://example.com/token";
+    private static final String CREATE_SUCCESS_MSG =
+            "Third-party OAuth configuration successfully created for user with ID ";
+    private static final String UPDATE_SUCCESS_MSG =
+            "Third-party OAuth configuration successfully updated for user with ID ";
+
+    private String systemAdminUserId;
+
+    @BeforeAll
+    void setup() throws JsonProcessingException {
+        systemAdminUserId = createSystemAdminAccount().getUserId();
+    }
+
+    @AfterAll
+    public void teardown() {
+        doDeleteRequest(TESTING_SUPPORT_DELETE_THIRD_PARTY_DATA_URL + TEST_NAME_PREFIX, bearer);
+    }
+
+    @Test
+    void shouldCreateOauthConfiguration() {
+        UUID userId = createThirdPartyUser(TEST_NAME_PREFIX + "CreateOauthConfiguration");
+        String responseMsg = createOauthConfiguration(userId);
+
+        assertThat(responseMsg).isEqualTo(CREATE_SUCCESS_MSG + userId);
+    }
+
+    @Test
+    void shouldGetConfigurationByUserId() {
+        UUID userId = createThirdPartyUser(TEST_NAME_PREFIX + "GetOauthConfiguration");
+        createOauthConfiguration(userId);
+
+        Response response = doGetRequest(CONFIGURATION_PATH + "/" + userId, getAuthHeaders());
+        ApiOauthConfiguration configuration = response.getBody().as(ApiOauthConfiguration.class);
+
+        assertThat(response.getStatusCode()).isEqualTo(OK.value());
+        assertThat(configuration.getUserId()).isEqualTo(userId);
+        assertThat(configuration.getDestinationUrl()).isEqualTo(DESTINATION_URL);
+        assertThat(configuration.getTokenUrl()).isEqualTo(TOKEN_URL);
+    }
+
+    @Test
+    void shouldUpdateConfiguration() {
+        UUID userId = createThirdPartyUser(TEST_NAME_PREFIX + "UpdateOauthConfiguration");
+        createOauthConfiguration(userId);
+
+        ApiOauthConfigurationDto updatedConfig = new ApiOauthConfigurationDto();
+        updatedConfig.setUserId(userId);
+        updatedConfig.setDestinationUrl(UPDATED_DESTINATION_URL);
+        updatedConfig.setTokenUrl(TOKEN_URL);
+
+        Response updateResponse = doPutRequestWithBody(CONFIGURATION_PATH + "/"
+                + userId, getAuthHeaders(), updatedConfig);
+        assertThat(updateResponse.getStatusCode()).isEqualTo(OK.value());
+        assertThat(updateResponse.getBody().asString()).isEqualTo(UPDATE_SUCCESS_MSG + userId);
+
+        Response getResponse = doGetRequest(CONFIGURATION_PATH + "/" + userId, getAuthHeaders());
+        ApiOauthConfiguration configuration = getResponse.getBody().as(ApiOauthConfiguration.class);
+
+        assertThat(getResponse.getStatusCode()).isEqualTo(OK.value());
+        assertThat(configuration.getUserId()).isEqualTo(userId);
+        assertThat(configuration.getDestinationUrl()).isEqualTo(UPDATED_DESTINATION_URL);
+        assertThat(configuration.getTokenUrl()).isEqualTo(TOKEN_URL);
+    }
+
+    private Map<String, String> getAuthHeaders() {
+        Map<String, String> headers = new ConcurrentHashMap<>(bearer);
+        headers.put(REQUESTER_ID_HEADER, systemAdminUserId);
+        return headers;
+    }
+
+    private UUID createThirdPartyUser(String name) {
+        ApiUser user = new ApiUser();
+        user.setName(name);
+
+        Response response = doPostRequest(USER_PATH, getAuthHeaders(), user);
+        assertThat(response.getStatusCode()).isEqualTo(CREATED.value());
+        return response.getBody().as(UUID.class);
+    }
+
+    private String createOauthConfiguration(UUID userId) {
+        ApiOauthConfigurationDto config = new ApiOauthConfigurationDto();
+        config.setUserId(userId);
+        config.setDestinationUrl(DESTINATION_URL);
+        config.setTokenUrl(TOKEN_URL);
+
+        Response response = doPostRequest(CONFIGURATION_PATH, getAuthHeaders(), config);
+        assertThat(response.getStatusCode()).isEqualTo(CREATED.value());
+        return response.getBody().asString();
+    }
+}

@@ -1,0 +1,124 @@
+package uk.gov.hmcts.reform.pip.account.management.service.thirdparty;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.hmcts.reform.pip.account.management.database.ApiOauthConfigurationRepository;
+import uk.gov.hmcts.reform.pip.account.management.database.ApiUserRepository;
+import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.NotFoundException;
+import uk.gov.hmcts.reform.pip.account.management.model.thirdparty.ApiOauthConfiguration;
+import uk.gov.hmcts.reform.pip.account.management.model.thirdparty.ApiOauthConfigurationDto;
+import uk.gov.hmcts.reform.pip.account.management.model.thirdparty.ApiUser;
+
+import java.util.Optional;
+import java.util.UUID;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+@ExtendWith(MockitoExtension.class)
+class ThirdPartyConfigurationServiceTest {
+    private static final UUID USER_ID = UUID.randomUUID();
+
+    @Mock
+    private ApiOauthConfigurationRepository apiOauthConfigurationRepository;
+
+    @Mock
+    private ApiUserRepository apiUserRepository;
+
+    @Mock
+    private ThirdPartySubscriptionNotificationService thirdPartySubscriptionNotificationService;
+
+    @InjectMocks
+    private ThirdPartyConfigurationService service;
+
+    @Test
+    void testCreateThirdPartyConfiguration() {
+        ApiOauthConfigurationDto dto = new ApiOauthConfigurationDto();
+        dto.setUserId(USER_ID);
+
+        ApiUser apiUser = new ApiUser();
+        apiUser.setUserId(USER_ID);
+        ApiOauthConfiguration config = new ApiOauthConfiguration();
+
+        when(apiUserRepository.findByUserId(USER_ID)).thenReturn(Optional.of(apiUser));
+        when(apiOauthConfigurationRepository.save(any())).thenReturn(config);
+
+        ApiOauthConfiguration result = service.createThirdPartyConfiguration(dto);
+
+        assertThat(result)
+            .as("Should return the saved configuration")
+            .isSameAs(config);
+    }
+
+    @Test
+    void testFindThirdPartyConfigurationByUserIdWhenConfigExists() {
+        ApiOauthConfiguration config = new ApiOauthConfiguration();
+        when(apiOauthConfigurationRepository.findByUserId(USER_ID)).thenReturn(Optional.of(config));
+
+        ApiOauthConfiguration result = service.findThirdPartyConfigurationByUserId(USER_ID);
+
+        assertThat(result)
+            .as("Should return the found configuration")
+            .isSameAs(config);
+    }
+
+    @Test
+    void testFindThirdPartyConfigurationByUserIdWhenConfigDoesNotExist() {
+        when(apiOauthConfigurationRepository.findByUserId(USER_ID)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.findThirdPartyConfigurationByUserId(USER_ID))
+            .as("Should throw NotFoundException if configuration not found")
+            .isInstanceOf(NotFoundException.class)
+            .hasMessageContaining(USER_ID.toString());
+    }
+
+    @Test
+    void testUpdateThirdPartyConfigurationByUserId() {
+        ApiOauthConfigurationDto dto = new ApiOauthConfigurationDto();
+        dto.setUserId(USER_ID);
+
+        ApiUser apiUser = new ApiUser();
+        apiUser.setUserId(USER_ID);
+        ApiOauthConfiguration config = new ApiOauthConfiguration();
+
+        when(apiUserRepository.findByUserId(USER_ID)).thenReturn(Optional.of(apiUser));
+        when(apiOauthConfigurationRepository.findByUserId(USER_ID)).thenReturn(Optional.of(config));
+
+        service.updateThirdPartyConfigurationByUserId(USER_ID, dto);
+
+        verify(apiOauthConfigurationRepository).save(any());
+    }
+
+    @Test
+    void testDeleteThirdPartyConfigurationByUserId() {
+        service.deleteThirdPartyConfigurationByUserId(USER_ID);
+
+        verify(apiOauthConfigurationRepository).deleteByUserId(USER_ID);
+    }
+
+    @Test
+    void testValidateThirdPartyConfigurationSuccess() {
+        ApiOauthConfiguration config = new ApiOauthConfiguration();
+        when(apiOauthConfigurationRepository.findByUserId(USER_ID)).thenReturn(Optional.of(config));
+
+        service.validateThirdPartyConfiguration(USER_ID);
+
+        verify(thirdPartySubscriptionNotificationService).handleThirdPartyHealthCheck(config);
+    }
+
+    @Test
+    void testValidateThirdPartyConfigurationNotFound() {
+        when(apiOauthConfigurationRepository.findByUserId(USER_ID)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.validateThirdPartyConfiguration(USER_ID))
+            .as("Should throw NotFoundException if configuration not found")
+            .isInstanceOf(NotFoundException.class)
+            .hasMessageContaining(USER_ID.toString());
+    }
+}

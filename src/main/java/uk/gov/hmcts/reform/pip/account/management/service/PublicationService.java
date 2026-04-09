@@ -1,27 +1,33 @@
 package uk.gov.hmcts.reform.pip.account.management.service;
 
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import net.minidev.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
+import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.ThirdPartyHealthCheckException;
 import uk.gov.hmcts.reform.pip.account.management.model.MediaApplication;
 import uk.gov.hmcts.reform.pip.account.management.model.subscription.BulkSubscriptionsSummary;
 import uk.gov.hmcts.reform.pip.account.management.model.subscription.Subscription;
 import uk.gov.hmcts.reform.pip.account.management.model.subscription.SubscriptionsSummary;
 import uk.gov.hmcts.reform.pip.account.management.model.subscription.SubscriptionsSummaryDetails;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
+import uk.gov.hmcts.reform.pip.model.subscription.LegacyThirdPartySubscription;
+import uk.gov.hmcts.reform.pip.model.subscription.LegacyThirdPartySubscriptionArtefact;
 import uk.gov.hmcts.reform.pip.model.subscription.LocationSubscriptionDeletion;
-import uk.gov.hmcts.reform.pip.model.subscription.ThirdPartySubscription;
-import uk.gov.hmcts.reform.pip.model.subscription.ThirdPartySubscriptionArtefact;
 import uk.gov.hmcts.reform.pip.model.system.admin.ActionResult;
 import uk.gov.hmcts.reform.pip.model.system.admin.DeleteLocationSubscriptionAction;
 import uk.gov.hmcts.reform.pip.model.system.admin.SystemAdminAction;
+import uk.gov.hmcts.reform.pip.model.thirdparty.ThirdPartySubscription;
 
 import java.util.List;
 import java.util.Map;
@@ -37,10 +43,13 @@ import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
 @Service
 public class PublicationService {
 
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
     private static final String WELCOME_EMAIL_URL = "/notify/welcome-email";
     private static final String NOTIFY_SUBSCRIPTION_PATH = "notify/subscription";
     private static final String NOTIFY_API_PATH = "notify/api";
     private static final String NOTIFY_LOCATION_SUBSCRIPTION_PATH = "notify/location-subscription-delete";
+    private static final String THIRD_PARTY_PATH = "/third-party";
 
     private static final String EMAIL = "email";
     private static final String FULL_NAME = "fullName";
@@ -217,7 +226,7 @@ public class PublicationService {
         }
     }
 
-    public void sendThirdPartyList(ThirdPartySubscription subscriptions) {
+    public void legacySendThirdPartyList(LegacyThirdPartySubscription subscriptions) {
         try {
             webClient.post().uri(url + "/" + NOTIFY_API_PATH)
                 .bodyValue(subscriptions).retrieve()
@@ -231,7 +240,7 @@ public class PublicationService {
         }
     }
 
-    public void sendEmptyArtefact(ThirdPartySubscriptionArtefact subscriptionArtefact) {
+    public void legacySendEmptyArtefact(LegacyThirdPartySubscriptionArtefact subscriptionArtefact) {
         try {
             webClient.put().uri(url + "/" + NOTIFY_API_PATH)
                 .bodyValue(subscriptionArtefact).retrieve()
@@ -240,6 +249,26 @@ public class PublicationService {
         } catch (WebClientResponseException ex) {
             log.error(writeLog(
                 String.format("Deleted artefact notification to third party failed to send with error: %s",
+                              ex.getResponseBodyAsString())
+            ));
+        }
+    }
+
+    public void sendThirdPartySubscription(ThirdPartySubscription thirdPartySubscription, boolean isHealthCheck) {
+        try {
+            webClient.post().uri(url + THIRD_PARTY_PATH)
+                .bodyValue(thirdPartySubscription)
+                .retrieve()
+                .bodyToMono(Void.class)
+                .block();
+        } catch (WebClientResponseException ex) {
+            if (isHealthCheck) {
+                String errorMessage = processWebClientErrorMessage(ex);
+                throw new ThirdPartyHealthCheckException(errorMessage);
+            }
+
+            log.error(writeLog(
+                String.format("Third party subscriptions failed to send with error: %s",
                               ex.getResponseBodyAsString())
             ));
         }
@@ -332,5 +361,24 @@ public class PublicationService {
         locationSubscriptionDeletion.setLocationId(locationId);
         locationSubscriptionDeletion.setSubscriberEmails(emails);
         return locationSubscriptionDeletion;
+    }
+
+    private String processWebClientErrorMessage(WebClientResponseException webClientResponseException) {
+        String errorMessage = null;
+        try {
+            if (HttpStatus.INTERNAL_SERVER_ERROR.equals(webClientResponseException.getStatusCode())) {
+                JsonNode node = OBJECT_MAPPER.readTree(webClientResponseException.getResponseBodyAsString());
+                if (node.has("message")) {
+                    errorMessage = node.get("message").asText();
+                }
+            }
+
+            if (errorMessage != null) {
+                return errorMessage;
+            }
+            return webClientResponseException.getMessage();
+        } catch (JsonProcessingException e) {
+            return webClientResponseException.getMessage();
+        }
     }
 }
