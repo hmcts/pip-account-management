@@ -209,7 +209,7 @@ dependencies {
   implementation "org.apache.logging.log4j:log4j-to-slf4j:${log4JVersion}"
 
   // Include Azure storage blob for storing application images
-  implementation 'com.azure:azure-storage-blob:12.33.2'
+  implementation 'com.azure:azure-storage-blob:12.32.0'
 
   // Include Flyway for database migrations
   implementation 'org.flywaydb:flyway-core:12.0.3'
