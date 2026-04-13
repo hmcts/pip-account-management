@@ -218,6 +218,18 @@ public class FunctionalTestBase {
             .thenReturn();
     }
 
+    protected Response doPatchRequestWithBody(final String path, final Map<String, String> additionalHeaders,
+                                            Object body) {
+
+        return given()
+            .relaxedHTTPSValidation()
+            .headers(getRequestHeaders(additionalHeaders))
+            .body(body)
+            .when()
+            .patch(path)
+            .thenReturn();
+    }
+
     protected Response doDeleteRequest(final String path, final Map<String, String> additionalHeaders) {
         return given()
             .relaxedHTTPSValidation()
