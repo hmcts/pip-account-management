@@ -36,28 +36,49 @@
     <cve>CVE-2026-32990</cve>
   </suppress>
   <suppress>
-    <notes><![CDATA[file name: log4j-api-2.25.3.jar]]></notes>
-    <packageUrl regex="true">^pkg:maven/org\.apache\.logging\.log4j/log4j-api@.*$</packageUrl>
+    <notes>log4j-api-2.25.3.jar</notes>
     <cve>CVE-2026-34478</cve>
-  </suppress>
-  <suppress>
-    <notes><![CDATA[file name: log4j-api-2.25.3.jar]]></notes>
-    <packageUrl regex="true">^pkg:maven/org\.apache\.logging\.log4j/log4j-api@.*$</packageUrl>
     <cve>CVE-2026-34480</cve>
-  </suppress>
-  <suppress>
-    <notes><![CDATA[file name: log4j-api-2.25.3.jar]]></notes>
-    <packageUrl regex="true">^pkg:maven/org\.apache\.logging\.log4j/log4j-api@.*$</packageUrl>
     <cve>CVE-2026-34481</cve>
   </suppress>
   <suppress>
-    <notes><![CDATA[file name: spring-security-config-6.5.9.jar]]></notes>
-    <packageUrl regex="true">^pkg:maven/org\.springframework\.security/spring-security-config@.*$</packageUrl>
+    <notes>spring-security-config-6.5.9.jar</notes>
     <cve>CVE-2026-22748</cve>
+    <cve>CVE-2026-22746</cve>
   </suppress>
   <suppress>
-    <notes><![CDATA[file name: spring-security-config-6.5.9.jar]]></notes>
-    <packageUrl regex="true">^pkg:maven/org\.springframework\.security/spring-security-config@.*$</packageUrl>
+    <notes>spring-security-core-6.5.9.jar</notes>
+    <cve>CVE-2026-22748</cve>
+    <cve>CVE-2026-22746</cve>
+  </suppress>
+  <suppress>
+    <notes>spring-security-crypto-6.5.9.jar</notes>
+    <cve>CVE-2026-22748</cve>
+    <cve>CVE-2026-22746</cve>
+  </suppress>
+  <suppress>
+    <notes>spring-security-oauth2-client-6.5.9.jar</notes>
+    <cve>CVE-2026-22748</cve>
+    <cve>CVE-2026-22746</cve>
+  </suppress>
+  <suppress>
+    <notes>spring-security-oauth2-core-6.5.9.jar</notes>
+    <cve>CVE-2026-22748</cve>
+    <cve>CVE-2026-22746</cve>
+  </suppress>
+  <suppress>
+    <notes>spring-security-oauth2-jose-6.5.9.jar</notes>
+    <cve>CVE-2026-22748</cve>
+    <cve>CVE-2026-22746</cve>
+  </suppress>
+  <suppress>
+    <notes>spring-security-oauth2-resource-server-6.5.9.jar</notes>
+    <cve>CVE-2026-22748</cve>
+    <cve>CVE-2026-22746</cve>
+  </suppress>
+  <suppress>
+    <notes>spring-security-web-6.5.9.jar</notes>
+    <cve>CVE-2026-22748</cve>
     <cve>CVE-2026-22746</cve>
   </suppress>
 </suppressions>
