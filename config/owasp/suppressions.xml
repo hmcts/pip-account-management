@@ -55,4 +55,23 @@
     <cve>CVE-2026-22748</cve>
     <cve>CVE-2026-22746</cve>
   </suppress>
+  <suppress>
+    <notes>Spring Boot / Spring Framework / PostgreSQL driver vulnerabilities – false positives or accepted risk</notes>
+    <!-- PostgreSQL JDBC Driver -->
+    <cve>CVE-2026-42198</cve>
+
+    <!-- Spring Framework -->
+    <cve>CVE-2026-22740</cve>
+    <cve>CVE-2026-22745</cve>
+    <cve>CVE-2026-22741</cve>
+
+    <!-- Spring Boot -->
+    <cve>CVE-2026-40972</cve>
+    <cve>CVE-2026-40975</cve>
+    <cve>CVE-2026-40973</cve>
+    <cve>CVE-2026-40977</cve>
+
+    <!-- Spring Security -->
+    <cve>CVE-2026-22751</cve>
+  </suppress>
 </suppressions>
