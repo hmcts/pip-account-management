@@ -56,7 +56,7 @@ It handles all subscription CRUD operations and the triggering of the subscripti
 
 For context, a subscription is something a user can set up in order to be notified when a new publication is received. There are also third party subscriptions which are set up by administrators, which notify selected third party APIs.
 
-This service sits within the Court and Tribunal Hearings Service (CaTH hereafter), written with Spring Boot/Java.
+This service sits within the Court and Tribunal Hearings Service (CaTH hereafter), written with Spring Boot/Java
 
 In practice, the service is usually containerized within a hosted kubernetes environment within Azure.
 
