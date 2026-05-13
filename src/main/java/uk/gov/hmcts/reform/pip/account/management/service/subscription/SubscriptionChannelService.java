@@ -58,11 +58,11 @@ public class SubscriptionChannelService {
     }
 
     /**
-     * Creates map of third party api urls and a list of Subscriptions associated with them.
+     * Creates map of legacy third party api urls and a list of Subscriptions associated with them.
      * @param subscriptions list of subscriptions to be trimmed of duplications and associated with an api.
      * @return Map of Url to list of subscriptions.
      */
-    public Map<String, List<Subscription>> buildApiSubscriptions(List<Subscription> subscriptions) {
+    public Map<String, List<Subscription>> buildLegacyApiSubscriptions(List<Subscription> subscriptions) {
         return userIdToApiValueSwitcher(deduplicateSubscriptions(subscriptions));
     }
 
