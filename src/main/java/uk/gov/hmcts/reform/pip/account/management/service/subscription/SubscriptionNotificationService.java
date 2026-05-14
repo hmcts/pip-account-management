@@ -56,6 +56,11 @@ public class SubscriptionNotificationService {
         this.thirdPartySubscriptionNotificationService = thirdPartySubscriptionNotificationService;
     }
 
+    /**
+     * Collect all subscribers for the artefact, and handle sending of email and third party subscriptions to
+     * the subscribers.
+     * @param artefact the artefact to collect the subscriptions for.
+     */
     @Async
     @Deprecated
     // Method to be removed after related data-management changes merged to use the more specific endpoints
@@ -86,9 +91,10 @@ public class SubscriptionNotificationService {
      */
     @Async
     public void collectEmailSubscribers(Artefact artefact) {
-        List<Subscription> subscriptionList = new ArrayList<>(querySubscriptionValueForLocation(
-            artefact.getLocationId(), artefact.getListType().toString(),
-                                                artefact.getLanguage().toString()));
+        List<Subscription> subscriptionList = new ArrayList<>(
+            querySubscriptionValueForLocation(artefact.getLocationId(), artefact.getListType().toString(),
+                                              artefact.getLanguage().toString())
+        );
 
         if (artefact.getSearch().containsKey("cases")) {
             artefact.getSearch().get("cases").forEach(object -> subscriptionList.addAll(extractSearchValue(object)));

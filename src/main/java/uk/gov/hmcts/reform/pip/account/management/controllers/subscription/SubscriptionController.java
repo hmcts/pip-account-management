@@ -141,7 +141,7 @@ public class SubscriptionController {
         return ResponseEntity.status(HttpStatus.ACCEPTED).body("Subscriber request has been accepted");
     }
 
-    @ApiResponse(responseCode = "202", description = "Subscriber request has been accepted")
+    @ApiResponse(responseCode = "202", description = "Email subscriber request has been accepted")
     @Operation(summary = "Build email subscriber list for the publication.")
     @PostMapping("/email-recipients")
     public ResponseEntity<String> buildEmailSubscriberList(@RequestBody Artefact artefact) {
@@ -149,7 +149,7 @@ public class SubscriptionController {
         return ResponseEntity.status(HttpStatus.ACCEPTED).body("Email subscriber request has been accepted");
     }
 
-    @ApiResponse(responseCode = "202", description = "Subscriber request has been accepted")
+    @ApiResponse(responseCode = "202", description = "API subscriber request has been accepted")
     @Operation(summary = "Build API subscriber list for the publication.")
     @PostMapping("/api-recipients")
     public ResponseEntity<String> buildApiSubscriberList(@RequestBody Artefact artefact) {
