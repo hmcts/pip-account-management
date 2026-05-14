@@ -97,6 +97,8 @@ class SubscriptionTest extends IntegrationTestBase {
     private static final String NOT_FOUND_STATUS_CODE = "Status code does not match not found";
     private static final String RESPONSE_MATCH = "Response should match";
     private static final String SUBSCRIBER_REQUEST_SUCCESS = "Subscriber request has been accepted";
+    private static final String EMAIL_SUBSCRIBER_REQUEST_SUCCESS = "Email subscriber request has been accepted";
+    private static final String API_SUBSCRIBER_REQUEST_SUCCESS = "API subscriber request has been accepted";
 
     private static final String RAW_JSON_MISSING_SEARCH_VALUE =
         "{\"userId\": \"3\", \"searchType\": \"CASE_ID\",\"channel\": \"EMAIL\"}";
@@ -715,7 +717,7 @@ class SubscriptionTest extends IntegrationTestBase {
                 .content(rawArtefact);
             MvcResult result = mvc.perform(request).andExpect(status().isAccepted()).andReturn();
 
-            assertEquals(SUBSCRIBER_REQUEST_SUCCESS, result.getResponse().getContentAsString(), RESPONSE_MATCH);
+            assertEquals(EMAIL_SUBSCRIBER_REQUEST_SUCCESS, result.getResponse().getContentAsString(), RESPONSE_MATCH);
         }
 
         @Test
@@ -763,7 +765,7 @@ class SubscriptionTest extends IntegrationTestBase {
                 .content(rawArtefact);
             MvcResult result = mvc.perform(request).andExpect(status().isAccepted()).andReturn();
 
-            assertEquals(SUBSCRIBER_REQUEST_SUCCESS, result.getResponse().getContentAsString(), RESPONSE_MATCH);
+            assertEquals(API_SUBSCRIBER_REQUEST_SUCCESS, result.getResponse().getContentAsString(), RESPONSE_MATCH);
         }
 
         @Test
