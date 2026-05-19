@@ -13,6 +13,7 @@
   <suppress>
     <notes>Brought in Azure dependencies. Currently on latest version</notes>
     <cve>CVE-2024-35255</cve>
+    <cve>CVE-2026-33117</cve>
   </suppress>
   <suppress>
     <notes>Vulnerability in jackson-databind</notes>
@@ -97,5 +98,9 @@
     <notes>log4j suppression</notes>
     <cve>CVE-2026-34479</cve>
     <cve>CVE-2026-34477</cve>
+  </suppress>
+  <suppress>
+    <notes>microsoft kiota suppression</notes>
+    <cve>CVE-2026-41134</cve>
   </suppress>
 </suppressions>
