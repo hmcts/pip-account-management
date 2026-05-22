@@ -103,4 +103,8 @@
     <notes>microsoft kiota suppression</notes>
     <cve>CVE-2026-41134</cve>
   </suppress>
+  <suppress>
+    <notes>org.eclipse.angus</notes>
+    <cve>CVE-2026-7692</cve>
+  </suppress>
 </suppressions>
