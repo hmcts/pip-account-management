@@ -33,12 +33,12 @@ public class AccountHelperBase extends FunctionalTestBase {
     protected PiUser systemAdminUser;
 
     @BeforeAll
-    void setUp() throws JsonProcessingException {
+    void setUpSystemAdminUser() throws JsonProcessingException {
         systemAdminUser = createSystemAdminAccount();
     }
 
     @AfterAll
-    void tearDown() {
+    void deleteSystemAdminUser() {
         doDeleteRequest(TESTING_SUPPORT_DELETE_ACCOUNT_URL + TEST_EMAIL_PREFIX, bearer);
     }
 

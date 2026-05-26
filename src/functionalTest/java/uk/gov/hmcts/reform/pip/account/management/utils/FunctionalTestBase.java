@@ -107,7 +107,7 @@ public class FunctionalTestBase {
     private String dataManagementUrl;
 
     @BeforeAll
-    void setUp() throws JsonProcessingException {
+    void setUp() {
         RestAssured.baseURI = testUrl;
         dataManagementAccessToken = authClient.generateDataManagementAccessToken();
         bearer = Map.of(HttpHeaders.AUTHORIZATION, BEARER + authClient.generateAccessToken());
