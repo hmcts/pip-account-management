@@ -6,7 +6,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import uk.gov.hmcts.reform.pip.account.management.utils.AccountHelperBase;
-import uk.gov.hmcts.reform.pip.model.account.PiUser;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -14,21 +13,16 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 class BulkAccountTest extends AccountHelperBase {
     private String mockFile;
     private Map<String, String> issuerId;
-    private String systemAdminId;
 
     @BeforeAll
     void startUp() throws IOException {
-        PiUser systemAdminUser = createSystemAdminAccount();
-        systemAdminId = systemAdminUser.getUserId();
-
-        issuerId = Map.of(REQUESTER_ID_HEADER, systemAdminId);
+        issuerId = Map.of(REQUESTER_ID_HEADER, systemAdminUser.getUserId());
 
         StringBuilder csvContent = new StringBuilder(400);
         csvContent.append("email,firstName,surname\n");
@@ -47,9 +41,6 @@ class BulkAccountTest extends AccountHelperBase {
 
     @AfterAll
     public void teardown() throws IOException {
-        Map<String, String> headers = new ConcurrentHashMap<>(bearer);
-        headers.put(REQUESTER_ID_HEADER, systemAdminId);
-        doDeleteRequest(TESTING_SUPPORT_DELETE_ACCOUNT_URL + TEST_EMAIL_PREFIX, headers);
         Files.deleteIfExists(Path.of(mockFile));
     }
 

@@ -45,7 +45,7 @@ class AccountTest extends AccountHelperBase {
 
     @BeforeAll
     public void startUp() throws JsonProcessingException {
-        idMap.put(Roles.SYSTEM_ADMIN, createSystemAdminAccount().getUserId());
+        idMap.put(Roles.SYSTEM_ADMIN, systemAdminUser.getUserId());
 
         idMap.put(Roles.INTERNAL_SUPER_ADMIN_CTSC, getCreatedAccountUserId(
             createAccount(generateEmail(), UUID.randomUUID().toString(), Roles.INTERNAL_SUPER_ADMIN_CTSC,
@@ -62,8 +62,6 @@ class AccountTest extends AccountHelperBase {
 
     @AfterAll
     public void teardown() {
-        doDeleteRequest(TESTING_SUPPORT_DELETE_ACCOUNT_URL + TEST_EMAIL_PREFIX, bearer);
-
         Map<String, String> headers = new ConcurrentHashMap<>(bearer);
         headers.put(REQUESTER_ID_HEADER, idMap.get(Roles.SYSTEM_ADMIN));
 

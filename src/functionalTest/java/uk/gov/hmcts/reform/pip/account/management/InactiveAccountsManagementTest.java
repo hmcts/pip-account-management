@@ -35,8 +35,8 @@ class InactiveAccountsManagementTest extends AccountHelperBase {
     private static final String TEST_NAME = "E2E Account Management Test Name";
     private static final Integer TEST_EMAIL_RANDOM_NUMBER =
         ThreadLocalRandom.current().nextInt(1000, 9999);
-    private static final String TEST_EMAIL_PREFIX = String.format(
-        "pip-am-test-email-%s", TEST_EMAIL_RANDOM_NUMBER);
+    private static final String TEST_MEDIA_EMAIL_PREFIX = String.format(
+        "pip-am-test-media-email-%s", TEST_EMAIL_RANDOM_NUMBER);
     private static final String TEST_ADMIN_EMAIL_PREFIX = String.format(
         "pip-am-test-admin-email-%s", TEST_EMAIL_RANDOM_NUMBER);
     private static final String TEST_IDAM_EMAIL_PREFIX = String.format(
@@ -44,8 +44,8 @@ class InactiveAccountsManagementTest extends AccountHelperBase {
     private static final String TEST_SYSTEM_ADMIN_EMAIL_PREFIX = String.format(
         "pip-am-test-system-admin-email-%s", TEST_EMAIL_RANDOM_NUMBER);
     private static final String EMAIL_DOMAIN = "%s@justice.gov.uk";
-    private static final String TEST_EMAIL =
-        String.format(EMAIL_DOMAIN, TEST_EMAIL_PREFIX);
+    private static final String TEST_MEDIA_EMAIL =
+        String.format(EMAIL_DOMAIN, TEST_MEDIA_EMAIL_PREFIX);
     private static final String TEST_ADMIN_EMAIL =
         String.format(EMAIL_DOMAIN, TEST_ADMIN_EMAIL_PREFIX);
     private static final String TEST_IDAM_EMAIL =
@@ -67,19 +67,9 @@ class InactiveAccountsManagementTest extends AccountHelperBase {
 
     @BeforeAll
     public void startUp() throws JsonProcessingException {
-
-        String requestBody = """
-            {
-                "email": "%s",
-                "provenanceUserId": "%s"
-            }
-            """.formatted(TEST_SYSTEM_ADMIN_EMAIL, UUID.randomUUID().toString());
-
         objectMapper.findAndRegisterModules();
 
-        String userId =  doPostRequest(CREATE_SYSTEM_ADMIN_SSO, bearer, requestBody)
-            .jsonPath().getString("userId");
-        issuerId = Map.of(REQUESTER_ID_HEADER, userId);
+        issuerId = Map.of(REQUESTER_ID_HEADER, systemAdminUser.getUserId());
 
         //ADD SYSTEM ADMIN
         PiUser systemAdminAccount = createSystemAdminAccount(TEST_ADMIN_EMAIL);
@@ -98,7 +88,7 @@ class InactiveAccountsManagementTest extends AccountHelperBase {
         //ADD MEDIA USER
         AzureAccount mediaUserAzureAccount = createAzureAccount();
         mediaUserProvenanceId = mediaUserAzureAccount.getAzureAccountId();
-        mediaUserId = createUser(TEST_EMAIL, mediaUserAzureAccount.getAzureAccountId(),
+        mediaUserId = createUser(TEST_MEDIA_EMAIL, mediaUserAzureAccount.getAzureAccountId(),
                                  Roles.VERIFIED, UserProvenances.PI_AAD);
 
         systemAdminAuthHeaders = new ConcurrentHashMap<>(bearer);
@@ -108,7 +98,7 @@ class InactiveAccountsManagementTest extends AccountHelperBase {
 
     @AfterAll
     public void teardown() {
-        doDeleteRequest(TESTING_SUPPORT_DELETE_ACCOUNT_URL + TEST_EMAIL, bearer);
+        doDeleteRequest(TESTING_SUPPORT_DELETE_ACCOUNT_URL + TEST_MEDIA_EMAIL, bearer);
         doDeleteRequest(TESTING_SUPPORT_DELETE_ACCOUNT_URL + TEST_ADMIN_EMAIL, bearer);
         doDeleteRequest(TESTING_SUPPORT_DELETE_ACCOUNT_URL + TEST_IDAM_EMAIL, bearer);
         doDeleteRequest(TESTING_SUPPORT_DELETE_ACCOUNT_URL + TEST_SYSTEM_ADMIN_EMAIL, bearer);
@@ -125,7 +115,7 @@ class InactiveAccountsManagementTest extends AccountHelperBase {
                     "displayName": "%s"
                 }
             ]
-            """.formatted(TEST_EMAIL, FIRST_NAME, SURNAME, Roles.VERIFIED, TEST_NAME);
+            """.formatted(TEST_MEDIA_EMAIL, FIRST_NAME, SURNAME, Roles.VERIFIED, TEST_NAME);
 
 
         Response response = doPostRequestForB2C(CREATE_AZURE_ACCOUNT, bearer, ctscAdminIssuerId, requestBody);

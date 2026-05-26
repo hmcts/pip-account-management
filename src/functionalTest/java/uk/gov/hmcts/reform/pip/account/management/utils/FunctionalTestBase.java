@@ -1,5 +1,6 @@
 package uk.gov.hmcts.reform.pip.account.management.utils;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.dockerjava.zerodep.shaded.org.apache.hc.core5.http.HttpHeaders;
 import io.restassured.RestAssured;
@@ -46,7 +47,6 @@ public class FunctionalTestBase {
     protected static final String GET_BY_USER_ID = "/account/%s";
     protected static final String CREATE_PI_ACCOUNT = "/account/add/pi";
     protected static final String CREATE_SYSTEM_ADMIN_SSO = "/account/system-admin";
-    protected static final String ADD_SYSTEM_ADMIN_B2C_URL = ACCOUNT_URL + "/add/system-admin";
     protected static final String GET_ALL_THIRD_PARTY_ACCOUNTS = "/account/all/third-party";
     protected static final String GET_ADMIN_USER_BY_EMAIL_AND_PROVENANCE = "/account/admin/%s/%s";
     protected static final String GET_ACCOUNTS_EXCEPT_THIRD_PARTY = "/account/all";
@@ -69,7 +69,6 @@ public class FunctionalTestBase {
     // Inactivity URLs
     protected static final String NOTIFY_INACTIVE_MEDIA_ACCOUNT = ACCOUNT_URL + "/media/inactive/notify";
     protected static final String DELETE_INACTIVE_MEDIA_ACCOUNT = ACCOUNT_URL + "/media/inactive";
-    protected static final String NOTIFY_INACTIVE_ADMIN_ACCOUNT = ACCOUNT_URL + "/admin/inactive/notify";
     protected static final String DELETE_INACTIVE_ADMIN_ACCOUNT = ACCOUNT_URL + "/admin/inactive";
     protected static final String NOTIFY_INACTIVE_IDAM_ACCOUNT = ACCOUNT_URL + "/idam/inactive/notify";
     protected static final String DELETE_INACTIVE_IDAM_ACCOUNT = ACCOUNT_URL + "/idam/inactive";
@@ -108,7 +107,7 @@ public class FunctionalTestBase {
     private String dataManagementUrl;
 
     @BeforeAll
-    void setUp() {
+    void setUp() throws JsonProcessingException {
         RestAssured.baseURI = testUrl;
         dataManagementAccessToken = authClient.generateDataManagementAccessToken();
         bearer = Map.of(HttpHeaders.AUTHORIZATION, BEARER + authClient.generateAccessToken());

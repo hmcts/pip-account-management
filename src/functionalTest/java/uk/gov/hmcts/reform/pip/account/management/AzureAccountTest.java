@@ -3,13 +3,11 @@ package uk.gov.hmcts.reform.pip.account.management;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.restassured.common.mapper.TypeRef;
 import io.restassured.response.Response;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import uk.gov.hmcts.reform.pip.account.management.model.account.AzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.account.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.utils.AccountHelperBase;
-import uk.gov.hmcts.reform.pip.model.account.PiUser;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
 
@@ -35,21 +33,12 @@ class AzureAccountTest extends AccountHelperBase {
 
     @BeforeAll
     public void startUp() throws JsonProcessingException {
-        String systemAdminUserId;
-        PiUser systemAdminUser = createSystemAdminAccount();
-        systemAdminUserId = systemAdminUser.getUserId();
-
         adminCtscUserId = getCreatedAccountUserId(
             createAccount(generateEmail(), UUID.randomUUID().toString(), Roles.INTERNAL_ADMIN_CTSC,
-                          UserProvenances.SSO, systemAdminUserId));
+                          UserProvenances.SSO, systemAdminUser.getUserId()));
 
         headers = new ConcurrentHashMap<>(bearer);
         headers.put(REQUESTER_ID_HEADER, adminCtscUserId);
-    }
-
-    @AfterAll
-    public void tearDown() {
-        doDeleteRequest(TESTING_SUPPORT_DELETE_ACCOUNT_URL + TEST_EMAIL_PREFIX, bearer);
     }
 
     @Test
