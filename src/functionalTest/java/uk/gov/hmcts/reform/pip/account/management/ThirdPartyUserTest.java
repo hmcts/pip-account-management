@@ -4,13 +4,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.restassured.response.Response;
 import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import uk.gov.hmcts.reform.pip.account.management.model.thirdparty.ApiUser;
 import uk.gov.hmcts.reform.pip.account.management.model.thirdparty.ApiUserStatus;
 import uk.gov.hmcts.reform.pip.account.management.utils.AccountHelperBase;
-import uk.gov.hmcts.reform.pip.model.account.PiUser;
 
 import java.util.List;
 import java.util.Map;
@@ -27,14 +25,6 @@ public class ThirdPartyUserTest extends AccountHelperBase {
     private static final String BASE_PATH = "/third-party";
     private static final String TESTING_SUPPORT_DELETE_THIRD_PARTY_DATA_URL = "/testing-support/third-party/";
     private static final String TEST_NAME_PREFIX = "ThirdParty" + generateRandomString(4);
-
-    private String systemAdminId;
-
-    @BeforeAll
-    void setup() throws JsonProcessingException {
-        PiUser systemAdminUser = createSystemAdminAccount();
-        systemAdminId = systemAdminUser.getUserId();
-    }
 
     @AfterAll
     public void teardown() {
@@ -116,7 +106,7 @@ public class ThirdPartyUserTest extends AccountHelperBase {
 
     private Map<String, String> getAuthHeaders() {
         Map<String, String> headers = new ConcurrentHashMap<>(bearer);
-        headers.put(REQUESTER_ID_HEADER, systemAdminId);
+        headers.put(REQUESTER_ID_HEADER, systemAdminUser.getUserId());
         return headers;
     }
 }

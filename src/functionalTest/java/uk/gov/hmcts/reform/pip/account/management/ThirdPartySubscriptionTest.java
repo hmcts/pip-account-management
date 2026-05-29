@@ -1,9 +1,7 @@
 package uk.gov.hmcts.reform.pip.account.management;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import io.restassured.response.Response;
 import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import uk.gov.hmcts.reform.pip.account.management.model.thirdparty.ApiSubscription;
@@ -30,13 +28,6 @@ public class ThirdPartySubscriptionTest extends AccountHelperBase {
     private static final String TEST_NAME_PREFIX = "ThirdParty" + generateRandomString(4);
     private static final String SUCCESS_CREATE_MSG = "Third-party subscriptions successfully created for user with ID ";
     private static final String SUCCESS_UPDATE_MSG = "Third-party subscriptions successfully updated for user with ID ";
-
-    private String systemAdminId;
-
-    @BeforeAll
-    void setup() throws JsonProcessingException {
-        systemAdminId = createSystemAdminAccount().getUserId();
-    }
 
     @AfterAll
     public void teardown() {
@@ -93,7 +84,7 @@ public class ThirdPartySubscriptionTest extends AccountHelperBase {
 
     private Map<String, String> getAuthHeaders() {
         Map<String, String> headers = new ConcurrentHashMap<>(bearer);
-        headers.put(REQUESTER_ID_HEADER, systemAdminId);
+        headers.put(REQUESTER_ID_HEADER, systemAdminUser.getUserId());
         return headers;
     }
 

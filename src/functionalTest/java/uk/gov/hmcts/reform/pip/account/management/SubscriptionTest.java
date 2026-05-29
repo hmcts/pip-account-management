@@ -10,7 +10,6 @@ import uk.gov.hmcts.reform.pip.account.management.model.subscription.Subscriptio
 import uk.gov.hmcts.reform.pip.account.management.model.subscription.SubscriptionListType;
 import uk.gov.hmcts.reform.pip.account.management.model.subscription.usersubscription.UserSubscription;
 import uk.gov.hmcts.reform.pip.account.management.utils.AccountHelperBase;
-import uk.gov.hmcts.reform.pip.model.account.PiUser;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
 import uk.gov.hmcts.reform.pip.model.publication.ListType;
@@ -51,8 +50,7 @@ class SubscriptionTest extends AccountHelperBase {
 
     @BeforeAll
     public void setup() throws JsonProcessingException {
-        PiUser systemAdminAccount = createSystemAdminAccount();
-        systemAdminUserId = systemAdminAccount.getUserId();
+        systemAdminUserId = systemAdminUser.getUserId();
 
         String createdUserId = getCreatedAccountUserId(
             createAccount(generateEmail(), UUID.randomUUID().toString(),
@@ -69,7 +67,6 @@ class SubscriptionTest extends AccountHelperBase {
 
     @AfterAll
     public void teardown() {
-        doDeleteRequest(TESTING_SUPPORT_DELETE_ACCOUNT_URL + TEST_EMAIL_PREFIX, bearer);
         doDeleteRequest(TESTING_SUPPORT_SUBSCRIPTION_URL + LOCATION_NAME, bearer);
         doDataManagementDeleteRequest(
             TESTING_SUPPORT_LOCATION_URL + LOCATION_NAME,

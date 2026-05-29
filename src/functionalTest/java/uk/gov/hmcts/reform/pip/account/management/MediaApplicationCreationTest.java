@@ -10,7 +10,6 @@ import org.springframework.core.io.ClassPathResource;
 import uk.gov.hmcts.reform.pip.account.management.model.MediaApplication;
 import uk.gov.hmcts.reform.pip.account.management.model.MediaApplicationStatus;
 import uk.gov.hmcts.reform.pip.account.management.utils.AccountHelperBase;
-import uk.gov.hmcts.reform.pip.model.account.PiUser;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
 
@@ -29,7 +28,7 @@ class MediaApplicationCreationTest extends AccountHelperBase {
 
     private static final String TEST_NAME = "E2E Account Management Test Name";
     private static final String TEST_EMPLOYER = "E2E Account Management Test Employer";
-    private static final String TEST_EMAIL = TEST_EMAIL_PREFIX + "@justice.gov.uk";
+    private static final String TEST_EMAIL = generateEmail();
     private static final String STATUS = "PENDING";
     private static final String MOCK_FILE = "files/test-image.png";
 
@@ -41,13 +40,9 @@ class MediaApplicationCreationTest extends AccountHelperBase {
 
     @BeforeAll
     public void startUp() throws JsonProcessingException {
-        String systemAdminUserId;
-        PiUser systemAdminUser = createSystemAdminAccount();
-        systemAdminUserId = systemAdminUser.getUserId();
-
         String adminCtscUserId = getCreatedAccountUserId(
             createAccount(generateEmail(), UUID.randomUUID().toString(), Roles.INTERNAL_ADMIN_CTSC,
-                          UserProvenances.SSO, systemAdminUserId));
+                          UserProvenances.SSO, systemAdminUser.getUserId()));
 
         headers = new ConcurrentHashMap<>(bearer);
         headers.put(REQUESTER_ID_HEADER, adminCtscUserId);
