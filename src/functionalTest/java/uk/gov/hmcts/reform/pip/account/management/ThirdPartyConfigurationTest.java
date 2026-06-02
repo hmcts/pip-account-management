@@ -1,9 +1,7 @@
 package uk.gov.hmcts.reform.pip.account.management;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import io.restassured.response.Response;
 import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import uk.gov.hmcts.reform.pip.account.management.model.thirdparty.ApiOauthConfiguration;
@@ -33,13 +31,6 @@ public class ThirdPartyConfigurationTest extends AccountHelperBase {
             "Third-party OAuth configuration successfully created for user with ID ";
     private static final String UPDATE_SUCCESS_MSG =
             "Third-party OAuth configuration successfully updated for user with ID ";
-
-    private String systemAdminUserId;
-
-    @BeforeAll
-    void setup() throws JsonProcessingException {
-        systemAdminUserId = createSystemAdminAccount().getUserId();
-    }
 
     @AfterAll
     public void teardown() {
@@ -94,7 +85,7 @@ public class ThirdPartyConfigurationTest extends AccountHelperBase {
 
     private Map<String, String> getAuthHeaders() {
         Map<String, String> headers = new ConcurrentHashMap<>(bearer);
-        headers.put(REQUESTER_ID_HEADER, systemAdminUserId);
+        headers.put(REQUESTER_ID_HEADER, systemAdminUser.getUserId());
         return headers;
     }
 

@@ -3,6 +3,8 @@ package uk.gov.hmcts.reform.pip.account.management.utils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.restassured.common.mapper.TypeRef;
 import io.restassured.response.Response;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import uk.gov.hmcts.reform.pip.account.management.model.account.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.account.SystemAdminAccount;
 import uk.gov.hmcts.reform.pip.model.account.PiUser;
@@ -28,7 +30,19 @@ public class AccountHelperBase extends FunctionalTestBase {
     //Utils
     protected static final TypeRef<Map<CreationEnum, List<?>>> CREATED_RESPONSE_TYPE = new TypeRef<>() {};
 
-    protected String generateEmail() {
+    protected PiUser systemAdminUser;
+
+    @BeforeAll
+    void setUpSystemAdminUser() throws JsonProcessingException {
+        systemAdminUser = createSystemAdminAccount();
+    }
+
+    @AfterAll
+    void deleteSystemAdminUser() {
+        doDeleteRequest(TESTING_SUPPORT_DELETE_ACCOUNT_URL + TEST_EMAIL_PREFIX, bearer);
+    }
+
+    protected static String generateEmail() {
         return TEST_EMAIL_PREFIX + "-"
             + ThreadLocalRandom.current().nextInt(1000, 9999) + "@justice.gov.uk";
     }
@@ -60,11 +74,6 @@ public class AccountHelperBase extends FunctionalTestBase {
     protected Response createdVerifiedAccount(String email, String provenanceId, String requesterId)
         throws JsonProcessingException {
         return createAccount(email, provenanceId, Roles.VERIFIED, UserProvenances.PI_AAD, requesterId);
-    }
-
-    protected Response createAccount(String email, String provenanceId, Roles role, String requesterId)
-        throws JsonProcessingException {
-        return createAccount(email, provenanceId, role, UserProvenances.PI_AAD, requesterId);
     }
 
     protected Response createAccount(String email, String provenanceId, Roles role, UserProvenances userProvenance,

@@ -46,7 +46,6 @@ public class FunctionalTestBase {
     protected static final String GET_BY_USER_ID = "/account/%s";
     protected static final String CREATE_PI_ACCOUNT = "/account/add/pi";
     protected static final String CREATE_SYSTEM_ADMIN_SSO = "/account/system-admin";
-    protected static final String ADD_SYSTEM_ADMIN_B2C_URL = ACCOUNT_URL + "/add/system-admin";
     protected static final String GET_ALL_THIRD_PARTY_ACCOUNTS = "/account/all/third-party";
     protected static final String GET_ADMIN_USER_BY_EMAIL_AND_PROVENANCE = "/account/admin/%s/%s";
     protected static final String GET_ACCOUNTS_EXCEPT_THIRD_PARTY = "/account/all";
@@ -69,7 +68,6 @@ public class FunctionalTestBase {
     // Inactivity URLs
     protected static final String NOTIFY_INACTIVE_MEDIA_ACCOUNT = ACCOUNT_URL + "/media/inactive/notify";
     protected static final String DELETE_INACTIVE_MEDIA_ACCOUNT = ACCOUNT_URL + "/media/inactive";
-    protected static final String NOTIFY_INACTIVE_ADMIN_ACCOUNT = ACCOUNT_URL + "/admin/inactive/notify";
     protected static final String DELETE_INACTIVE_ADMIN_ACCOUNT = ACCOUNT_URL + "/admin/inactive";
     protected static final String NOTIFY_INACTIVE_IDAM_ACCOUNT = ACCOUNT_URL + "/idam/inactive/notify";
     protected static final String DELETE_INACTIVE_IDAM_ACCOUNT = ACCOUNT_URL + "/idam/inactive";

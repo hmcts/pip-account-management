@@ -28,14 +28,11 @@ import static org.springframework.http.HttpStatus.OK;
 class AccountFilteringTest extends AccountHelperBase {
     private static final TypeRef<CustomPageImpl<PiUser>> GET_ALL_USERS_TYPE = new TypeRef<>() {};
 
-    private PiUser systemAdminUser;
     private String thirdPartyUserId;
     private Map<String, String> headers;
 
     @BeforeAll
     public void startUp() throws JsonProcessingException {
-        systemAdminUser = createSystemAdminAccount();
-
         PiUser piUser = new PiUser();
         piUser.setRoles(Roles.GENERAL_THIRD_PARTY);
         piUser.setUserProvenance(UserProvenances.THIRD_PARTY);
@@ -65,7 +62,6 @@ class AccountFilteringTest extends AccountHelperBase {
 
     @AfterAll
     public void teardown() {
-        doDeleteRequest(TESTING_SUPPORT_DELETE_ACCOUNT_URL + TEST_EMAIL_PREFIX, headers);
         doDeleteRequest(String.format(DELETE_ACCOUNT, thirdPartyUserId), headers);
     }
 

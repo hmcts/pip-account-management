@@ -11,7 +11,7 @@ import java.util.UUID;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 class SystemAdminAccountCreationTest extends AccountHelperBase {
-    private static final String TEST_USER_EMAIL = TEST_EMAIL_PREFIX + "@justice.gov.uk";
+    private static final String TEST_USER_EMAIL = generateEmail();
     private static final String TEST_USER_PROVENANCE_ID = UUID.randomUUID().toString();
 
     @AfterAll

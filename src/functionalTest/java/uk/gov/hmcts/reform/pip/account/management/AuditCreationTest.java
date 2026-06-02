@@ -1,13 +1,11 @@
 package uk.gov.hmcts.reform.pip.account.management;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import io.restassured.response.Response;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import uk.gov.hmcts.reform.pip.account.management.model.account.AuditLog;
 import uk.gov.hmcts.reform.pip.account.management.utils.AccountHelperBase;
-import uk.gov.hmcts.reform.pip.model.account.PiUser;
 
 import java.util.List;
 import java.util.Map;
@@ -20,7 +18,7 @@ import static org.springframework.http.HttpStatus.OK;
 
 class AuditCreationTest extends AccountHelperBase {
     private static final UUID USER_ID = UUID.randomUUID();
-    private static final String TEST_EMAIL = TEST_EMAIL_PREFIX + "@justice.gov.uk";
+    private static final String TEST_EMAIL = generateEmail();
     private static final String ROLES = "SYSTEM_ADMIN";
     private static final String USER_PROVENANCE = "PI_AAD";
     private static final String ACTION = "PUBLICATION_UPLOAD";
@@ -32,17 +30,14 @@ class AuditCreationTest extends AccountHelperBase {
     private Map<String, String> headers;
 
     @BeforeAll
-    public void startUp() throws JsonProcessingException {
-        PiUser systemAdminUser;
-        systemAdminUser = createSystemAdminAccount();
-
+    public void startUp() {
         headers = new ConcurrentHashMap<>(bearer);
         headers.put(REQUESTER_ID_HEADER, systemAdminUser.getUserId());
     }
 
     @AfterAll
     public void teardown() {
-        doDeleteRequest(TESTING_SUPPORT_AUDIT_URL + TEST_EMAIL_PREFIX, headers);
+        doDeleteRequest(TESTING_SUPPORT_AUDIT_URL + TEST_EMAIL, headers);
     }
 
     private AuditLog createAuditLog() {
