@@ -62,11 +62,14 @@ public class SubscriptionNotificationService {
      * @param artefact the artefact to collect the subscriptions for.
      */
     @Async
+    @Deprecated
+    // Method to be removed after related data-management changes merged to use the more specific endpoints
+    // for email and API subscribers
     public void collectSubscribers(Artefact artefact) {
 
         List<Subscription> subscriptionList = new ArrayList<>(querySubscriptionValueForLocation(
             artefact.getLocationId(), artefact.getListType().toString(),
-                                                artefact.getLanguage().toString()));
+            artefact.getLanguage().toString()));
 
         subscriptionList.addAll(querySubscriptionValue(LIST_TYPE.name(), artefact.getListType().name()));
 
@@ -79,6 +82,46 @@ public class SubscriptionNotificationService {
             : subscriptionList;
 
         handleSubscriptionSending(artefact.getArtefactId(), subscriptionsToContact);
+        thirdPartySubscriptionNotificationService.handleThirdPartySubscription(artefact);
+    }
+
+    /**
+     * Collect all email subscribers for the artefact, and handle sending of email to the subscribers.
+     * @param artefact the artefact to collect the subscriptions for.
+     */
+    @Async
+    public void collectEmailSubscribers(Artefact artefact) {
+        List<Subscription> subscriptionList = new ArrayList<>(
+            querySubscriptionValueForLocation(artefact.getLocationId(), artefact.getListType().toString(),
+                                              artefact.getLanguage().toString())
+        );
+
+        if (artefact.getSearch().containsKey("cases")) {
+            artefact.getSearch().get("cases").forEach(object -> subscriptionList.addAll(extractSearchValue(object)));
+        }
+
+        List<Subscription> subscriptionsToContact = CLASSIFIED.equals(artefact.getSensitivity())
+            ? validateSubscriptionPermissions(subscriptionList, artefact)
+            : subscriptionList;
+
+        handleEmailSubscriptionSending(artefact.getArtefactId(), subscriptionsToContact);
+    }
+
+    /**
+     * Collect all API subscribers for the artefact, and handle sending of third party subscriptions.
+     * @param artefact the artefact to collect the subscriptions for.
+     */
+    @Async
+    public void collectApiSubscribers(Artefact artefact) {
+        List<Subscription> subscriptionList = new ArrayList<>(
+            querySubscriptionValue(LIST_TYPE.name(), artefact.getListType().name())
+        );
+
+        List<Subscription> subscriptionsToContact = CLASSIFIED.equals(artefact.getSensitivity())
+            ? validateSubscriptionPermissions(subscriptionList, artefact)
+            : subscriptionList;
+
+        handleLegacyThirdPartySubscriptionSending(artefact.getArtefactId(), subscriptionsToContact);
         thirdPartySubscriptionNotificationService.handleThirdPartySubscription(artefact);
     }
 
@@ -147,6 +190,9 @@ public class SubscriptionNotificationService {
      * @param artefactId The id of the artefact being sent
      * @param subscriptionsList The list of subscriptions being sent
      */
+    @Deprecated
+    // Method to be removed after related data-management changes merged to use the more specific endpoints
+    // for email and API subscribers
     private void handleSubscriptionSending(UUID artefactId, List<Subscription> subscriptionsList) {
         List<Subscription> emailList = sortSubscriptionByChannel(subscriptionsList, Channel.EMAIL.notificationRoute);
         List<Subscription> apiList = sortSubscriptionByChannel(subscriptionsList,
@@ -159,7 +205,40 @@ public class SubscriptionNotificationService {
             publicationService.postSubscriptionSummaries(artefactId, emailSubscriptions);
         }
 
-        subscriptionChannelService.buildApiSubscriptions(apiList)
+        subscriptionChannelService.buildLegacyApiSubscriptions(apiList)
+            .forEach((api, subscriptions) -> publicationService.legacySendThirdPartyList(
+                new LegacyThirdPartySubscription(api, artefactId)
+            ));
+        log.info(writeLog(String.format("Collected %s api subscribers", apiList.size())));
+    }
+
+    /**
+     * Handle forming and sending of subscriptions to publication services.
+     *
+     * @param artefactId The id of the artefact being sent
+     * @param subscriptionsList The list of subscriptions being sent
+     */
+    private void handleEmailSubscriptionSending(UUID artefactId, List<Subscription> subscriptionsList) {
+        List<Subscription> emailList = sortSubscriptionByChannel(subscriptionsList, Channel.EMAIL.notificationRoute);
+
+        Map<String, List<Subscription>> emailSubscriptions = subscriptionChannelService
+            .buildEmailSubscriptions(emailList);
+        if (!emailSubscriptions.isEmpty()) {
+            log.info(writeLog("Summary being sent to publication services for id " + artefactId));
+            publicationService.postSubscriptionSummaries(artefactId, emailSubscriptions);
+        }
+    }
+
+    /**
+     * Handle forming and sending of subscriptions to publication services.
+     *
+     * @param artefactId The id of the artefact being sent
+     * @param subscriptionsList The list of subscriptions being sent
+     */
+    private void handleLegacyThirdPartySubscriptionSending(UUID artefactId, List<Subscription> subscriptionsList) {
+        List<Subscription> apiList = sortSubscriptionByChannel(subscriptionsList,
+                                                               Channel.API_COURTEL.notificationRoute);
+        subscriptionChannelService.buildLegacyApiSubscriptions(apiList)
             .forEach((api, subscriptions) -> publicationService.legacySendThirdPartyList(
                 new LegacyThirdPartySubscription(api, artefactId)
             ));
@@ -188,7 +267,7 @@ public class SubscriptionNotificationService {
     private void handleDeletedArtefactSending(List<Subscription> subscriptions, Artefact artefactBeingDeleted) {
         List<Subscription> apiList = sortSubscriptionByChannel(subscriptions,
                                                                Channel.API_COURTEL.notificationRoute);
-        subscriptionChannelService.buildApiSubscriptions(apiList)
+        subscriptionChannelService.buildLegacyApiSubscriptions(apiList)
             .forEach((api, subscription) -> publicationService.legacySendEmptyArtefact(
                 new LegacyThirdPartySubscriptionArtefact(api, artefactBeingDeleted)
             ));

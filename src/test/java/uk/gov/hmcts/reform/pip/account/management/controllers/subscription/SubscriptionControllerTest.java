@@ -176,10 +176,29 @@ class SubscriptionControllerTest {
     }
 
     @Test
+    @Deprecated
     void testArtefactRecipientsReturnsAccepted() {
         doNothing().when(subscriptionNotificationService).collectSubscribers(any());
         assertEquals(HttpStatus.ACCEPTED, subscriptionController.buildSubscriberList(new Artefact()).getStatusCode(),
                      STATUS_CODE_MATCH
+        );
+    }
+
+    @Test
+    void testEmailSubscriptionRecipientsReturnsAccepted() {
+        doNothing().when(subscriptionNotificationService).collectEmailSubscribers(any());
+        assertEquals(
+            HttpStatus.ACCEPTED, subscriptionController.buildEmailSubscriberList(new Artefact()).getStatusCode(),
+            STATUS_CODE_MATCH
+        );
+    }
+
+    @Test
+    void testApiSubscriptionRecipientsReturnsAccepted() {
+        doNothing().when(subscriptionNotificationService).collectApiSubscribers(any());
+        assertEquals(
+            HttpStatus.ACCEPTED, subscriptionController.buildApiSubscriberList(new Artefact()).getStatusCode(),
+            STATUS_CODE_MATCH
         );
     }
 

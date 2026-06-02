@@ -97,6 +97,8 @@ class SubscriptionTest extends IntegrationTestBase {
     private static final String NOT_FOUND_STATUS_CODE = "Status code does not match not found";
     private static final String RESPONSE_MATCH = "Response should match";
     private static final String SUBSCRIBER_REQUEST_SUCCESS = "Subscriber request has been accepted";
+    private static final String EMAIL_SUBSCRIBER_REQUEST_SUCCESS = "Email subscriber request has been accepted";
+    private static final String API_SUBSCRIBER_REQUEST_SUCCESS = "API subscriber request has been accepted";
 
     private static final String RAW_JSON_MISSING_SEARCH_VALUE =
         "{\"userId\": \"3\", \"searchType\": \"CASE_ID\",\"channel\": \"EMAIL\"}";
@@ -120,6 +122,8 @@ class SubscriptionTest extends IntegrationTestBase {
     private static final String MI_REPORTING_SUBSCRIPTION_DATA_LOCATION_URL = "/subscription/mi-data-location";
     private static final String SUBSCRIPTION_USER_PATH = "/subscription/user/" + UUID_STRING;
     private static final String ARTEFACT_RECIPIENT_PATH = "/subscription/artefact-recipients";
+    private static final String SUBSCRIPTION_EMAIL_RECIPIENT_PATH = "/subscription/email-recipients";
+    private static final String SUBSCRIPTION_API_RECIPIENT_PATH = "/subscription/api-recipients";
     private static final String DELETED_ARTEFACT_RECIPIENT_PATH = "/subscription/deleted-artefact";
     private static final String DELETE_BULK_SUBSCRIPTION_PATH = "/subscription/bulk";
 
@@ -630,6 +634,7 @@ class SubscriptionTest extends IntegrationTestBase {
     }
 
     @Nested
+    @Deprecated
     class ArtefactRecipients {
 
         @Test
@@ -677,6 +682,102 @@ class SubscriptionTest extends IntegrationTestBase {
             assertRequestResponseStatus(mvc, request, FORBIDDEN.value());
         }
 
+    }
+
+    @Nested
+    class EmailRecipients {
+        @Test
+        void testBuildEmailSubscriberListReturnsAccepted() throws Exception {
+            mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, VALID_USER_ID));
+            assertAcceptedEmailRecipientRequest();
+        }
+
+        @Test
+        void testBuildEmailSubscriberListCaseUrnNull() throws Exception {
+            mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, VALID_USER_ID));
+            assertAcceptedEmailRecipientRequest();
+        }
+
+        @Test
+        void testBuildEmailSubscriberListCaseNumberNull() throws Exception {
+            mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, VALID_USER_ID));
+            assertAcceptedEmailRecipientRequest();
+        }
+
+        @Test
+        void testBuildLocationEmailSubscribersListReturnsAccepted() throws Exception {
+            mvc.perform(setupMockSubscription(LOCATION_ID, SearchType.LOCATION_ID, VALID_USER_ID));
+            assertAcceptedEmailRecipientRequest();
+        }
+
+        private void assertAcceptedEmailRecipientRequest() throws Exception {
+            MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+                .post(SUBSCRIPTION_EMAIL_RECIPIENT_PATH)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(rawArtefact);
+            MvcResult result = mvc.perform(request).andExpect(status().isAccepted()).andReturn();
+
+            assertEquals(EMAIL_SUBSCRIBER_REQUEST_SUCCESS, result.getResponse().getContentAsString(), RESPONSE_MATCH);
+        }
+
+        @Test
+        @WithMockUser(username = "unauthorized_find_by_id", authorities = {"APPROLE_unknown.find"})
+        void testUnauthorizedBuildEmailSubscriberList() throws Exception {
+            MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+                .post(SUBSCRIPTION_EMAIL_RECIPIENT_PATH)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(rawArtefact);
+
+            assertRequestResponseStatus(mvc, request, FORBIDDEN.value());
+        }
+    }
+
+    @Nested
+    class ApiRecipients {
+        @Test
+        void testBuildApiSubscriberListReturnsAccepted() throws Exception {
+            mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, VALID_USER_ID));
+            assertAcceptedApiRecipientRequest();
+        }
+
+        @Test
+        void testBuildApiSubscriberListCaseUrnNull() throws Exception {
+            mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, VALID_USER_ID));
+            assertAcceptedApiRecipientRequest();
+        }
+
+        @Test
+        void testBuildApiSubscriberListCaseNumberNull() throws Exception {
+            mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, VALID_USER_ID));
+            assertAcceptedApiRecipientRequest();
+        }
+
+        @Test
+        void testBuildLocationApiSubscribersListReturnsAccepted() throws Exception {
+            mvc.perform(setupMockSubscription(LOCATION_ID, SearchType.LOCATION_ID, VALID_USER_ID));
+            assertAcceptedApiRecipientRequest();
+        }
+
+        private void assertAcceptedApiRecipientRequest() throws Exception {
+            MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+                .post(SUBSCRIPTION_API_RECIPIENT_PATH)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(rawArtefact);
+            MvcResult result = mvc.perform(request).andExpect(status().isAccepted()).andReturn();
+
+            assertEquals(API_SUBSCRIBER_REQUEST_SUCCESS, result.getResponse().getContentAsString(), RESPONSE_MATCH);
+        }
+
+        @Test
+        @WithMockUser(username = "unauthorized_find_by_id", authorities = {"APPROLE_unknown.find"})
+        void testUnauthorizedBuildApiSubscriberList() throws Exception {
+            MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+                .post(SUBSCRIPTION_API_RECIPIENT_PATH)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(rawArtefact);
+
+            assertRequestResponseStatus(mvc, request, FORBIDDEN.value());
+        }
     }
 
     @Nested

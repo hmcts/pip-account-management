@@ -154,7 +154,7 @@ class SubscriptionChannelServiceTest {
     }
 
     @Test
-    void testBuildApiSubscriptionsSuccess() {
+    void testBuildLegacyApiSubscriptionsSuccess() {
         when(thirdPartyApi.getCourtel()).thenReturn(COURTEL_VALUE);
 
         SUB1.setUserId(UUID.fromString(USER1));
@@ -166,7 +166,7 @@ class SubscriptionChannelServiceTest {
             COURTEL_VALUE, List.of(SUB1, SUB2)
         );
 
-        assertThat(subscriptionChannelService.buildApiSubscriptions(List.of(SUB1, SUB2)))
+        assertThat(subscriptionChannelService.buildLegacyApiSubscriptions(List.of(SUB1, SUB2)))
             .as(API_SUBSCRIPTIONS_MESSAGE)
             .isEqualTo(expected);
 
@@ -176,7 +176,7 @@ class SubscriptionChannelServiceTest {
     }
 
     @Test
-    void testBuildApiSubscriptionsWithInvalidApiChannel() {
+    void testBuildApiSubscriptionsWithInvalidLegacyApiChannel() {
         SUB1.setUserId(UUID.fromString(USER1));
         SUB1.setChannel(Channel.API_COURTEL);
         SUB2.setUserId(UUID.fromString(USER2));
@@ -184,7 +184,7 @@ class SubscriptionChannelServiceTest {
 
         when(thirdPartyApi.getCourtel()).thenReturn(COURTEL_VALUE);
 
-        assertThat(subscriptionChannelService.buildApiSubscriptions(List.of(SUB1, SUB2)))
+        assertThat(subscriptionChannelService.buildLegacyApiSubscriptions(List.of(SUB1, SUB2)))
             .as(API_SUBSCRIPTIONS_MESSAGE)
             .isEmpty();
 

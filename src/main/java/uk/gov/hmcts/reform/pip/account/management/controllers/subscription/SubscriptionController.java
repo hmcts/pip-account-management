@@ -133,9 +133,28 @@ public class SubscriptionController {
     @ApiResponse(responseCode = "202", description = "Subscriber request has been accepted")
     @Operation(summary = "Takes in artefact to build subscriber list.")
     @PostMapping("/artefact-recipients")
+    @Deprecated
+    // Method to be removed after related data-management changes merged to use the more specific endpoints
+    // for email and API subscribers
     public ResponseEntity<String> buildSubscriberList(@RequestBody Artefact artefact) {
         subscriptionNotificationService.collectSubscribers(artefact);
         return ResponseEntity.status(HttpStatus.ACCEPTED).body("Subscriber request has been accepted");
+    }
+
+    @ApiResponse(responseCode = "202", description = "Email subscriber request has been accepted")
+    @Operation(summary = "Build email subscriber list for the publication.")
+    @PostMapping("/email-recipients")
+    public ResponseEntity<String> buildEmailSubscriberList(@RequestBody Artefact artefact) {
+        subscriptionNotificationService.collectEmailSubscribers(artefact);
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body("Email subscriber request has been accepted");
+    }
+
+    @ApiResponse(responseCode = "202", description = "API subscriber request has been accepted")
+    @Operation(summary = "Build API subscriber list for the publication.")
+    @PostMapping("/api-recipients")
+    public ResponseEntity<String> buildApiSubscriberList(@RequestBody Artefact artefact) {
+        subscriptionNotificationService.collectApiSubscribers(artefact);
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body("API subscriber request has been accepted");
     }
 
     @ApiResponse(responseCode = "202", description = "Third Parties list deletion accepted")

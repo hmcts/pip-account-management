@@ -100,6 +100,10 @@
     <cve>CVE-2026-34477</cve>
   </suppress>
   <suppress>
+    <notes>netty</notes>
+    <cve>CVE-2026-41417</cve>
+  </suppress>
+  <suppress>
     <notes>microsoft kiota suppression</notes>
     <cve>CVE-2026-41134</cve>
   </suppress>
