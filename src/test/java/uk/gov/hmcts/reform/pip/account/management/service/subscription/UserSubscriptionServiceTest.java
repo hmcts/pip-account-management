@@ -100,7 +100,8 @@ class UserSubscriptionServiceTest {
     }
 
     @Test
-    void testFindByUserIdCaseType() {
+    @Deprecated
+    void testFindByUserIdCaseIdSearchType() {
         mockSubscription.setSearchType(SearchType.CASE_ID);
         mockSubscription.setCaseNumber(CASE_ID);
         mockSubscription.setCaseName(CASE_NAME);
@@ -115,6 +116,42 @@ class UserSubscriptionServiceTest {
         expected.setSubscriptionId(mockSubscription.getId());
         expected.setDateAdded(DATE_ADDED);
         expected.setSearchType(SearchType.CASE_ID);
+        when(subscriptionRepository.findByUserId(USER_ID)).thenReturn(List.of(mockSubscription));
+
+        assertEquals(List.of(expected), userSubscriptionService.findByUserId(USER_ID).getCaseSubscriptions(),
+                     "Should return populated case");
+    }
+
+    @Test
+    void testFindByUserIdCaseNumberSearchType() {
+        mockSubscription.setSearchType(SearchType.CASE_NUMBER);
+        mockSubscription.setCaseNumber(CASE_ID);
+        mockSubscription.setCaseName(CASE_NAME);
+
+        CaseSubscription expected = new CaseSubscription();
+        expected.setCaseNumber(CASE_ID);
+        expected.setCaseName(CASE_NAME);
+        expected.setSubscriptionId(mockSubscription.getId());
+        expected.setDateAdded(DATE_ADDED);
+        expected.setSearchType(SearchType.CASE_NUMBER);
+        when(subscriptionRepository.findByUserId(USER_ID)).thenReturn(List.of(mockSubscription));
+
+        assertEquals(List.of(expected), userSubscriptionService.findByUserId(USER_ID).getCaseSubscriptions(),
+                     "Should return populated case");
+    }
+
+    @Test
+    void testFindByUserIdCaseNameSearchType() {
+        mockSubscription.setSearchType(SearchType.CASE_NAME);
+        mockSubscription.setCaseNumber(CASE_ID);
+        mockSubscription.setCaseName(CASE_NAME);
+
+        CaseSubscription expected = new CaseSubscription();
+        expected.setCaseNumber(CASE_ID);
+        expected.setCaseName(CASE_NAME);
+        expected.setSubscriptionId(mockSubscription.getId());
+        expected.setDateAdded(DATE_ADDED);
+        expected.setSearchType(SearchType.CASE_NAME);
         when(subscriptionRepository.findByUserId(USER_ID)).thenReturn(List.of(mockSubscription));
 
         assertEquals(List.of(expected), userSubscriptionService.findByUserId(USER_ID).getCaseSubscriptions(),

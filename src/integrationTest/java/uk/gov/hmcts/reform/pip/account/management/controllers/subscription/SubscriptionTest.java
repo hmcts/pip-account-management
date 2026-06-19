@@ -123,6 +123,7 @@ class SubscriptionTest extends IntegrationTestBase {
     private static final String SUBSCRIPTION_USER_PATH = "/subscription/user/" + UUID_STRING;
     private static final String ARTEFACT_RECIPIENT_PATH = "/subscription/artefact-recipients";
     private static final String SUBSCRIPTION_EMAIL_RECIPIENT_PATH = "/subscription/email-recipients";
+    private static final String SUBSCRIPTION_EMAIL_RECIPIENT_V2_PATH = "/subscription/email-recipients/V2";
     private static final String SUBSCRIPTION_API_RECIPIENT_PATH = "/subscription/api-recipients";
     private static final String DELETED_ARTEFACT_RECIPIENT_PATH = "/subscription/deleted-artefact";
     private static final String DELETE_BULK_SUBSCRIPTION_PATH = "/subscription/bulk";
@@ -202,25 +203,6 @@ class SubscriptionTest extends IntegrationTestBase {
         SUBSCRIPTION.setSearchType(searchType);
         return setupMockSubscription(searchValue);
     }
-
-    protected MockHttpServletRequestBuilder setupMockSubscription(String caseNumber, String caseUrn)
-        throws JsonProcessingException {
-        SUBSCRIPTION.setUserId(VALID_USER_ID);
-        SUBSCRIPTION.setSearchType(SearchType.CASE_ID);
-        SUBSCRIPTION.setCaseNumber(caseNumber);
-        SUBSCRIPTION.setUrn(caseUrn);
-        return setupMockSubscription(CASE_ID);
-
-    }
-
-    protected MockHttpServletRequestBuilder setupMockSubscriptionWithListType()
-
-        throws JsonProcessingException {
-        SUBSCRIPTION.setUserId(VALID_USER_ID);
-        SUBSCRIPTION.setSearchType(SearchType.LOCATION_ID);
-        return setupMockSubscription(LOCATION_ID);
-    }
-
 
     protected MockHttpServletRequestBuilder getSubscriptionByUuid(String searchValue) {
         return get(SUBSCRIPTION_PATH + '/' + searchValue);
@@ -687,29 +669,34 @@ class SubscriptionTest extends IntegrationTestBase {
     @Nested
     class EmailRecipients {
         @Test
+        @Deprecated
         void testBuildEmailSubscriberListReturnsAccepted() throws Exception {
             mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, VALID_USER_ID));
             assertAcceptedEmailRecipientRequest();
         }
 
         @Test
+        @Deprecated
         void testBuildEmailSubscriberListCaseUrnNull() throws Exception {
             mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, VALID_USER_ID));
             assertAcceptedEmailRecipientRequest();
         }
 
         @Test
+        @Deprecated
         void testBuildEmailSubscriberListCaseNumberNull() throws Exception {
             mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, VALID_USER_ID));
             assertAcceptedEmailRecipientRequest();
         }
 
         @Test
+        @Deprecated
         void testBuildLocationEmailSubscribersListReturnsAccepted() throws Exception {
             mvc.perform(setupMockSubscription(LOCATION_ID, SearchType.LOCATION_ID, VALID_USER_ID));
             assertAcceptedEmailRecipientRequest();
         }
 
+        @Deprecated
         private void assertAcceptedEmailRecipientRequest() throws Exception {
             MockHttpServletRequestBuilder request = MockMvcRequestBuilders
                 .post(SUBSCRIPTION_EMAIL_RECIPIENT_PATH)
@@ -722,9 +709,49 @@ class SubscriptionTest extends IntegrationTestBase {
 
         @Test
         @WithMockUser(username = "unauthorized_find_by_id", authorities = {"APPROLE_unknown.find"})
+        @Deprecated
         void testUnauthorizedBuildEmailSubscriberList() throws Exception {
             MockHttpServletRequestBuilder request = MockMvcRequestBuilders
                 .post(SUBSCRIPTION_EMAIL_RECIPIENT_PATH)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(rawArtefact);
+
+            assertRequestResponseStatus(mvc, request, FORBIDDEN.value());
+        }
+
+        @Test
+        void testBuildEmailSubscriberListV2WithCaseNumberSearchTypeReturnsAccepted() throws Exception {
+            mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_NUMBER, VALID_USER_ID));
+            assertAcceptedEmailRecipientRequestV2();
+        }
+
+        @Test
+        void testBuildEmailSubscriberListV2WithCaseNameSearchTypeReturnsAccepted() throws Exception {
+            mvc.perform(setupMockSubscription(CASE_NAME, SearchType.CASE_NAME, VALID_USER_ID));
+            assertAcceptedEmailRecipientRequestV2();
+        }
+
+        @Test
+        void testBuildLocationEmailSubscribersListV2ReturnsAccepted() throws Exception {
+            mvc.perform(setupMockSubscription(LOCATION_ID, SearchType.LOCATION_ID, VALID_USER_ID));
+            assertAcceptedEmailRecipientRequestV2();
+        }
+
+        private void assertAcceptedEmailRecipientRequestV2() throws Exception {
+            MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+                .post(SUBSCRIPTION_EMAIL_RECIPIENT_V2_PATH)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(rawArtefact);
+            MvcResult result = mvc.perform(request).andExpect(status().isAccepted()).andReturn();
+
+            assertEquals(EMAIL_SUBSCRIBER_REQUEST_SUCCESS, result.getResponse().getContentAsString(), RESPONSE_MATCH);
+        }
+
+        @Test
+        @WithMockUser(username = "unauthorized_find_by_id", authorities = {"APPROLE_unknown.find"})
+        void testUnauthorizedBuildEmailSubscriberListV2() throws Exception {
+            MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+                .post(SUBSCRIPTION_EMAIL_RECIPIENT_V2_PATH)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(rawArtefact);
 

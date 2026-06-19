@@ -46,7 +46,8 @@ public class PublicationService {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private static final String WELCOME_EMAIL_URL = "/notify/welcome-email";
-    private static final String NOTIFY_SUBSCRIPTION_PATH = "notify/subscription";
+    @Deprecated private static final String NOTIFY_SUBSCRIPTION_PATH = "notify/subscription";
+    private static final String NOTIFY_SUBSCRIPTION_V2_PATH = "notify/subscription/V2";
     private static final String NOTIFY_API_PATH = "notify/api";
     private static final String NOTIFY_LOCATION_SUBSCRIPTION_PATH = "notify/location-subscription-delete";
     private static final String THIRD_PARTY_PATH = "/third-party";
@@ -211,10 +212,26 @@ public class PublicationService {
         }
     }
 
+    @Deprecated
     public void postSubscriptionSummaries(UUID artefactId, Map<String, List<Subscription>> subscriptions) {
         BulkSubscriptionsSummary payload = formatSubscriptionsSummary(artefactId, subscriptions);
         try {
             webClient.post().uri(url + "/" + NOTIFY_SUBSCRIPTION_PATH)
+                .body(BodyInserters.fromValue(payload)).retrieve()
+                .bodyToMono(Void.class)
+                .block();
+
+        } catch (WebClientException ex) {
+            log.error(writeLog(
+                String.format("Subscription email failed to send with error: %s", ex.getMessage())
+            ));
+        }
+    }
+
+    public void postSubscriptionSummariesV2(UUID artefactId, Map<String, List<Subscription>> subscriptions) {
+        BulkSubscriptionsSummary payload = formatSubscriptionsSummaryV2(artefactId, subscriptions);
+        try {
+            webClient.post().uri(url + "/" + NOTIFY_SUBSCRIPTION_V2_PATH)
                 .body(BodyInserters.fromValue(payload)).retrieve()
                 .bodyToMono(Void.class)
                 .block();
@@ -326,6 +343,7 @@ public class PublicationService {
      * @param subscriptions A map containing each email which matches the criteria, alongside the subscriptions.
      * @return A subscriptions summary model
      */
+    @Deprecated
     private BulkSubscriptionsSummary formatSubscriptionsSummary(UUID artefactId,
                                                                 Map<String, List<Subscription>> subscriptions) {
 
@@ -338,6 +356,42 @@ public class PublicationService {
                 switch (subscription.getSearchType()) {
                     case CASE_URN -> subscriptionsSummaryDetails.addToCaseUrn(subscription.getSearchValue());
                     case CASE_ID -> subscriptionsSummaryDetails.addToCaseNumber(subscription.getSearchValue());
+                    case LOCATION_ID -> subscriptionsSummaryDetails.addToLocationId(subscription.getSearchValue());
+                    default -> log.error(writeLog(
+                        String.format("Search type was not one of allowed options: %s", subscription.getSearchType())
+                    ));
+                }
+            });
+
+            SubscriptionsSummary subscriptionsSummary = new SubscriptionsSummary();
+            subscriptionsSummary.setEmail(email);
+            subscriptionsSummary.setSubscriptions(subscriptionsSummaryDetails);
+
+            bulkSubscriptionsSummary.addSubscriptionEmail(subscriptionsSummary);
+        });
+
+        return bulkSubscriptionsSummary;
+    }
+
+    /**
+     * Process data to form a subscriptions summary model which can be sent to publication services.
+     *
+     * @param artefactId The artefact id associated with the list of subscriptions
+     * @param subscriptions A map containing each email which matches the criteria, alongside the subscriptions.
+     * @return A subscriptions summary model
+     */
+    private BulkSubscriptionsSummary formatSubscriptionsSummaryV2(UUID artefactId,
+                                                                Map<String, List<Subscription>> subscriptions) {
+
+        BulkSubscriptionsSummary bulkSubscriptionsSummary = new BulkSubscriptionsSummary();
+        bulkSubscriptionsSummary.setArtefactId(artefactId);
+
+        subscriptions.forEach((email, listOfSubscriptions) -> {
+            SubscriptionsSummaryDetails subscriptionsSummaryDetails = new SubscriptionsSummaryDetails();
+            listOfSubscriptions.forEach(subscription -> {
+                switch (subscription.getSearchType()) {
+                    case CASE_NUMBER -> subscriptionsSummaryDetails.addToCaseNumber(subscription.getSearchValue());
+                    case CASE_NAME -> subscriptionsSummaryDetails.addToCaseName(subscription.getSearchValue());
                     case LOCATION_ID -> subscriptionsSummaryDetails.addToLocationId(subscription.getSearchValue());
                     default -> log.error(writeLog(
                         String.format("Search type was not one of allowed options: %s", subscription.getSearchType())
