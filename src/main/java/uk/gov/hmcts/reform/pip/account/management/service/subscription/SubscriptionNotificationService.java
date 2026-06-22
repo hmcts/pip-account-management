@@ -134,7 +134,7 @@ public class SubscriptionNotificationService {
             ? validateSubscriptionPermissions(subscriptionList, artefact)
             : subscriptionList;
 
-        handleEmailSubscriptionSendingV2(artefact.getArtefactId(), subscriptionsToContact);
+        handleEmailSubscriptionSendingV2(artefact, subscriptionsToContact);
     }
 
     /**
@@ -279,17 +279,17 @@ public class SubscriptionNotificationService {
     /**
      * Handle forming and sending of subscriptions to publication services.
      *
-     * @param artefactId The id of the artefact being sent
+     * @param artefact The artefact being sent
      * @param subscriptionsList The list of subscriptions being sent
      */
-    private void handleEmailSubscriptionSendingV2(UUID artefactId, List<Subscription> subscriptionsList) {
+    private void handleEmailSubscriptionSendingV2(Artefact artefact, List<Subscription> subscriptionsList) {
         List<Subscription> emailList = sortSubscriptionByChannel(subscriptionsList, Channel.EMAIL.notificationRoute);
 
         Map<String, List<Subscription>> emailSubscriptions = subscriptionChannelService
             .buildEmailSubscriptions(emailList);
         if (!emailSubscriptions.isEmpty()) {
-            log.info(writeLog("Summary being sent to publication services for id " + artefactId));
-            publicationService.postSubscriptionSummariesV2(artefactId, emailSubscriptions);
+            log.info(writeLog("Summary being sent to publication services for id " + artefact.getArtefactId()));
+            publicationService.postSubscriptionSummariesV2(artefact, emailSubscriptions);
         }
     }
 

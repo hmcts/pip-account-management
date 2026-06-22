@@ -723,8 +723,7 @@ class SubscriptionNotificationServiceTest {
             subscriptionNotificationService.collectEmailSubscribersV2(publicArtefactMatches);
             assertTrue(logCaptor.getInfoLogs().get(0).contains(SUBSCRIBER_NOTIFICATION_LOG),
                        LOG_MESSAGE_MATCH);
-            verify(publicationService).postSubscriptionSummariesV2(publicArtefactMatches.getArtefactId(),
-                                                                   returnedMappedEmails);
+            verify(publicationService).postSubscriptionSummariesV2(publicArtefactMatches, returnedMappedEmails);
             verify(publicationService, never()).legacySendThirdPartyList(any());
             verify(publicationService, never()).sendThirdPartySubscription(any(), anyBoolean());
         } catch (Exception ex) {
@@ -757,8 +756,7 @@ class SubscriptionNotificationServiceTest {
             assertTrue(logCaptor.getInfoLogs().get(0).contains(SUBSCRIBER_NOTIFICATION_LOG),
                        LOG_MESSAGE_MATCH);
 
-            verify(publicationService).postSubscriptionSummariesV2(publicArtefactMatches.getArtefactId(),
-                                                                   returnedMappedEmails);
+            verify(publicationService).postSubscriptionSummariesV2(publicArtefactMatches, returnedMappedEmails);
             verify(publicationService, never()).legacySendThirdPartyList(any());
             verify(publicationService, never()).sendThirdPartySubscription(any(), anyBoolean());
         }
@@ -785,7 +783,7 @@ class SubscriptionNotificationServiceTest {
             assertTrue(logCaptor.getInfoLogs().isEmpty());
 
             verify(subscriptionRepository, never()).findSubscriptionsBySearchValue(any(), any());
-            verify(publicationService, never()).postSubscriptionSummariesV2(publicArtefactMatches.getArtefactId(),
+            verify(publicationService, never()).postSubscriptionSummariesV2(publicArtefactMatches,
                                                                             returnedMappedEmails);
             verify(publicationService, never()).legacySendThirdPartyList(any());
             verify(publicationService, never()).sendThirdPartySubscription(any(), anyBoolean());
@@ -816,8 +814,7 @@ class SubscriptionNotificationServiceTest {
 
             assertTrue(logCaptor.getInfoLogs().get(0).contains(SUBSCRIBER_NOTIFICATION_LOG),
                        LOG_MESSAGE_MATCH);
-            verify(publicationService).postSubscriptionSummariesV2(publicArtefactMatches.getArtefactId(),
-                                                                   returnedMappedEmails);
+            verify(publicationService).postSubscriptionSummariesV2(publicArtefactMatches, returnedMappedEmails);
             verify(publicationService, never()).legacySendThirdPartyList(any());
             verify(publicationService, never()).sendThirdPartySubscription(any(), anyBoolean());
         }
@@ -843,7 +840,7 @@ class SubscriptionNotificationServiceTest {
 
             assertTrue(logCaptor.getInfoLogs().isEmpty());
             verify(subscriptionRepository, never()).findSubscriptionsBySearchValue(any(), any());
-            verify(publicationService, never()).postSubscriptionSummariesV2(publicArtefactMatches.getArtefactId(),
+            verify(publicationService, never()).postSubscriptionSummariesV2(publicArtefactMatches,
                                                                             returnedMappedEmails);
             verify(publicationService, never()).legacySendThirdPartyList(any());
             verify(publicationService, never()).sendThirdPartySubscription(any(), anyBoolean());
@@ -873,8 +870,7 @@ class SubscriptionNotificationServiceTest {
             assertTrue(logCaptor.getInfoLogs().get(0).contains(SUBSCRIBER_NOTIFICATION_LOG),
                        LOG_MESSAGE_MATCH);
 
-            verify(publicationService).postSubscriptionSummariesV2(publicArtefactMatches.getArtefactId(),
-                                                                   returnedMappedEmails);
+            verify(publicationService).postSubscriptionSummariesV2(publicArtefactMatches, returnedMappedEmails);
             verify(publicationService, never()).legacySendThirdPartyList(any());
             verify(publicationService, never()).sendThirdPartySubscription(any(), anyBoolean());
         }
@@ -941,7 +937,7 @@ class SubscriptionNotificationServiceTest {
         @SuppressWarnings("unchecked")
         ArgumentCaptor<Map<String, List<Subscription>>> argument = ArgumentCaptor.forClass(Map.class);
         doNothing().when(publicationService).postSubscriptionSummariesV2(
-            eq(publicArtefactMatches.getArtefactId()), argument.capture());
+            eq(publicArtefactMatches), argument.capture());
 
         subscriptionNotificationService.collectEmailSubscribersV2(publicArtefactMatches);
 

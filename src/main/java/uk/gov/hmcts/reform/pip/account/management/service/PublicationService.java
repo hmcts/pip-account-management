@@ -17,10 +17,12 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.ThirdPartyHealthCheckException;
 import uk.gov.hmcts.reform.pip.account.management.model.MediaApplication;
 import uk.gov.hmcts.reform.pip.account.management.model.subscription.BulkSubscriptionsSummary;
+import uk.gov.hmcts.reform.pip.account.management.model.subscription.BulkSubscriptionsSummaryV2;
 import uk.gov.hmcts.reform.pip.account.management.model.subscription.Subscription;
 import uk.gov.hmcts.reform.pip.account.management.model.subscription.SubscriptionsSummary;
 import uk.gov.hmcts.reform.pip.account.management.model.subscription.SubscriptionsSummaryDetails;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
+import uk.gov.hmcts.reform.pip.model.publication.Artefact;
 import uk.gov.hmcts.reform.pip.model.subscription.LegacyThirdPartySubscription;
 import uk.gov.hmcts.reform.pip.model.subscription.LegacyThirdPartySubscriptionArtefact;
 import uk.gov.hmcts.reform.pip.model.subscription.LocationSubscriptionDeletion;
@@ -228,8 +230,8 @@ public class PublicationService {
         }
     }
 
-    public void postSubscriptionSummariesV2(UUID artefactId, Map<String, List<Subscription>> subscriptions) {
-        BulkSubscriptionsSummary payload = formatSubscriptionsSummaryV2(artefactId, subscriptions);
+    public void postSubscriptionSummariesV2(Artefact artefact, Map<String, List<Subscription>> subscriptions) {
+        BulkSubscriptionsSummaryV2 payload = formatSubscriptionsSummaryV2(artefact, subscriptions);
         try {
             webClient.post().uri(url + "/" + NOTIFY_SUBSCRIPTION_V2_PATH)
                 .body(BodyInserters.fromValue(payload)).retrieve()
@@ -376,15 +378,15 @@ public class PublicationService {
     /**
      * Process data to form a subscriptions summary model which can be sent to publication services.
      *
-     * @param artefactId The artefact id associated with the list of subscriptions
+     * @param artefact The artefact associated with the list of subscriptions
      * @param subscriptions A map containing each email which matches the criteria, alongside the subscriptions.
      * @return A subscriptions summary model
      */
-    private BulkSubscriptionsSummary formatSubscriptionsSummaryV2(UUID artefactId,
-                                                                Map<String, List<Subscription>> subscriptions) {
+    private BulkSubscriptionsSummaryV2 formatSubscriptionsSummaryV2(Artefact artefact,
+                                                                  Map<String, List<Subscription>> subscriptions) {
 
-        BulkSubscriptionsSummary bulkSubscriptionsSummary = new BulkSubscriptionsSummary();
-        bulkSubscriptionsSummary.setArtefactId(artefactId);
+        BulkSubscriptionsSummaryV2 bulkSubscriptionsSummary = new BulkSubscriptionsSummaryV2();
+        bulkSubscriptionsSummary.setArtefact(artefact);
 
         subscriptions.forEach((email, listOfSubscriptions) -> {
             SubscriptionsSummaryDetails subscriptionsSummaryDetails = new SubscriptionsSummaryDetails();
