@@ -18,6 +18,14 @@
   <suppress>
     <notes>Vulnerability in jackson-databind</notes>
     <cve>CVE-2026-29062</cve>
+    <cve>CVE-2026-54512</cve>
+    <cve>CVE-2026-54515</cve>
+    <cve>CVE-2026-54513</cve>
+    <cve>CVE-2026-54518</cve>
+    <cve>CVE-2026-54514</cve>
+    <cve>CVE-2026-54515</cve>
+    <cve>CVE-2026-54516</cve>
+    <cve>CVE-2026-54517</cve>
   </suppress>
   <suppress>
     <notes>Vulnerability in Netty</notes>
@@ -111,5 +119,9 @@
     <notes>org.eclipse.angus</notes>
     <cve>CVE-2025-7962</cve>
     <cve>CVE-2026-7692</cve>
+  </suppress>
+  <suppress>
+    <notes>kotlin suppression</notes>
+    <cve>CVE-2026-53914</cve>
   </suppress>
 </suppressions>
