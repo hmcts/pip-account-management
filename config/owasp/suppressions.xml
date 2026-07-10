@@ -61,6 +61,12 @@
     <cve>CVE-2026-43513</cve>
     <cve>CVE-2026-42498</cve>
     <cve>CVE-2026-43514</cve>
+    <cve>CVE-2026-53434</cve>
+    <cve>CVE-2026-55276</cve>
+    <cve>CVE-2026-53404</cve>
+    <cve>CVE-2026-55955</cve>
+    <cve>CVE-2026-55956</cve>
+    <cve>CVE-2026-50229</cve>
   </suppress>
   <suppress>
     <notes>log4j-api-2.25.3.jar</notes>
@@ -86,6 +92,7 @@
     <notes>Spring Boot / Spring Framework / PostgreSQL driver vulnerabilities – false positives or accepted risk</notes>
     <!-- PostgreSQL JDBC Driver -->
     <cve>CVE-2026-42198</cve>
+    <cve>CVE-2026-54291</cve>
 
     <!-- Spring Framework -->
     <cve>CVE-2026-22740</cve>
