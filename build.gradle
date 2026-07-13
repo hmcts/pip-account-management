@@ -81,7 +81,8 @@ configurations {
   smokeTestRuntimeOnly.extendsFrom runtimeOnly
 
   all {
-    exclude group: 'commons-logging', module: 'commons-logging'
+     // required for Spring Boot 4 upgrade
+    // exclude group: 'commons-logging', module: 'commons-logging'
   }
 }
 
@@ -218,10 +219,8 @@ dependencies {
   implementation 'org.flywaydb:flyway-database-postgresql:12.5.0'
 
   runtimeOnly 'org.springframework.boot:spring-boot-properties-migrator'
-  runtimeOnly 'org.springframework:spring-jcl:6.2.19'
 
   testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-  testRuntimeOnly 'org.springframework:spring-jcl:6.2.19'
 
   testImplementation 'org.springframework.boot:spring-boot-starter-test-classic'
   testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
