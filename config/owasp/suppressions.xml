@@ -18,6 +18,13 @@
   <suppress>
     <notes>Vulnerability in jackson-databind</notes>
     <cve>CVE-2026-29062</cve>
+    <cve>CVE-2026-54512</cve>
+    <cve>CVE-2026-54513</cve>
+    <cve>CVE-2026-54514</cve>
+    <cve>CVE-2026-54515</cve>
+    <cve>CVE-2026-54516</cve>
+    <cve>CVE-2026-54517</cve>
+    <cve>CVE-2026-54518</cve>
   </suppress>
   <suppress>
     <notes>Vulnerability in Netty</notes>
@@ -84,6 +91,7 @@
     <cve>CVE-2026-22740</cve>
     <cve>CVE-2026-22745</cve>
     <cve>CVE-2026-22741</cve>
+    <cve>CVE-2026-41855</cve>
 
     <!-- Spring Boot -->
     <cve>CVE-2026-40972</cve>
@@ -93,6 +101,8 @@
 
     <!-- Spring Security -->
     <cve>CVE-2026-22751</cve>
+    <cve>CVE-2026-41706</cve>
+    <cve>CVE-2026-47838</cve>
   </suppress>
   <suppress>
     <notes>log4j suppression</notes>
@@ -155,5 +165,9 @@
     <cve>CVE-2026-40988</cve>
     <cve>CVE-2026-41003</cve>
     <cve>CVE-2026-41694</cve>
+  </suppress>
+  <suppress>
+    <notes>kotlin suppression</notes>
+    <cve>CVE-2026-53914</cve>
   </suppress>
 </suppressions>
