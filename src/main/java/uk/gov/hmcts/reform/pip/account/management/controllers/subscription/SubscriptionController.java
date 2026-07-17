@@ -144,8 +144,17 @@ public class SubscriptionController {
     @ApiResponse(responseCode = "202", description = "Email subscriber request has been accepted")
     @Operation(summary = "Build email subscriber list for the publication.")
     @PostMapping("/email-recipients")
+    @Deprecated
     public ResponseEntity<String> buildEmailSubscriberList(@RequestBody Artefact artefact) {
         subscriptionNotificationService.collectEmailSubscribers(artefact);
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body("Email subscriber request has been accepted");
+    }
+
+    @ApiResponse(responseCode = "202", description = "Email subscriber request has been accepted")
+    @Operation(summary = "Build email subscriber list for the publication.")
+    @PostMapping("/email-recipients/V2")
+    public ResponseEntity<String> buildEmailSubscriberListV2(@RequestBody Artefact artefact) {
+        subscriptionNotificationService.collectEmailSubscribersV2(artefact);
         return ResponseEntity.status(HttpStatus.ACCEPTED).body("Email subscriber request has been accepted");
     }
 

@@ -83,7 +83,7 @@ class SubscriptionControllerTest {
                 HttpStatus.CREATED
             ),
             subscriptionController.createSubscription(mockSubscription, ACTIONING_USER_ID),
-                RETURNED_SUBSCRIPTION_NOT_MATCHED
+            RETURNED_SUBSCRIPTION_NOT_MATCHED
         );
     }
 
@@ -101,7 +101,7 @@ class SubscriptionControllerTest {
                 HttpStatus.CREATED
             ),
             subscriptionController.createSubscription(mockSubscription, ACTIONING_USER_ID),
-                RETURNED_SUBSCRIPTION_NOT_MATCHED
+            RETURNED_SUBSCRIPTION_NOT_MATCHED
         );
     }
 
@@ -111,7 +111,7 @@ class SubscriptionControllerTest {
         doNothing().when(subscriptionService).deleteById(testUuid, ACTIONING_USER_ID);
         assertEquals(String.format(
             "Subscription: %s was deleted", testUuid), subscriptionController.deleteById(
-                testUuid, ACTIONING_USER_ID).getBody(), "Subscription should be deleted"
+            testUuid, ACTIONING_USER_ID).getBody(), "Subscription should be deleted"
         );
     }
 
@@ -185,10 +185,20 @@ class SubscriptionControllerTest {
     }
 
     @Test
+    @Deprecated
     void testEmailSubscriptionRecipientsReturnsAccepted() {
         doNothing().when(subscriptionNotificationService).collectEmailSubscribers(any());
         assertEquals(
             HttpStatus.ACCEPTED, subscriptionController.buildEmailSubscriberList(new Artefact()).getStatusCode(),
+            STATUS_CODE_MATCH
+        );
+    }
+
+    @Test
+    void testEmailSubscriptionRecipientsV2ReturnsAccepted() {
+        doNothing().when(subscriptionNotificationService).collectEmailSubscribersV2(any());
+        assertEquals(
+            HttpStatus.ACCEPTED, subscriptionController.buildEmailSubscriberListV2(new Artefact()).getStatusCode(),
             STATUS_CODE_MATCH
         );
     }
