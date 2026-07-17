@@ -221,9 +221,9 @@ public class SubscriptionNotificationService {
 
         if (StringUtils.isNotEmpty(caseInfo.getCaseNumber())) {
             subscriptionList.addAll(querySubscriptionValue(CASE_NUMBER.name(), caseInfo.getCaseNumber()));
-        }
-
-        if (StringUtils.isNotEmpty(caseInfo.getCaseName())) {
+        } else if (StringUtils.isNotEmpty(caseInfo.getCaseName())) {
+            // Case name subscription is only used if there is no case number, as the case name subscription is a
+            // fallback for when the case number is not available
             subscriptionList.addAll(querySubscriptionValue(CASE_NAME.name(), caseInfo.getCaseName()));
         }
 
