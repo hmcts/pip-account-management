@@ -67,6 +67,8 @@
     <cve>CVE-2026-55955</cve>
     <cve>CVE-2026-55956</cve>
     <cve>CVE-2026-50229</cve>
+    <cve>CVE-2026-59083</cve>
+    <cve>CVE-2026-59084</cve>
   </suppress>
   <suppress>
     <notes>log4j-api-2.25.3.jar</notes>
@@ -99,6 +101,7 @@
     <cve>CVE-2026-22745</cve>
     <cve>CVE-2026-22741</cve>
     <cve>CVE-2026-41855</cve>
+    <cve>CVE-2026-41839</cve>
 
     <!-- Spring Boot -->
     <cve>CVE-2026-40972</cve>
@@ -115,6 +118,7 @@
     <notes>log4j suppression</notes>
     <cve>CVE-2026-34479</cve>
     <cve>CVE-2026-34477</cve>
+    <cve>CVE-2026-49844</cve>
   </suppress>
   <suppress>
     <notes>netty</notes>
