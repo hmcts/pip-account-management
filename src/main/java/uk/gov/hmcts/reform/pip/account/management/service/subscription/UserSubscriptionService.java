@@ -84,6 +84,7 @@ public class UserSubscriptionService {
                     listTypeSubscription.setChannel(subscription.getChannel());
                     userSubscription.getListTypeSubscriptions().add(listTypeSubscription);
                 }
+                // TODO Remove this case once all subscription changes are merged
                 case CASE_ID, CASE_URN -> {
                     CaseSubscription caseSubscription = new CaseSubscription();
                     caseSubscription.setCaseName(subscription.getCaseName());
@@ -91,6 +92,15 @@ public class UserSubscriptionService {
                     caseSubscription.setCaseNumber(subscription.getCaseNumber());
                     caseSubscription.setUrn(subscription.getUrn());
                     caseSubscription.setPartyNames(subscription.getPartyNames());
+                    caseSubscription.setSearchType(subscription.getSearchType());
+                    caseSubscription.setDateAdded(subscription.getCreatedDate());
+                    userSubscription.getCaseSubscriptions().add(caseSubscription);
+                }
+                case CASE_NUMBER, CASE_NAME -> {
+                    CaseSubscription caseSubscription = new CaseSubscription();
+                    caseSubscription.setCaseName(subscription.getCaseName());
+                    caseSubscription.setSubscriptionId(subscription.getId());
+                    caseSubscription.setCaseNumber(subscription.getCaseNumber());
                     caseSubscription.setSearchType(subscription.getSearchType());
                     caseSubscription.setDateAdded(subscription.getCreatedDate());
                     userSubscription.getCaseSubscriptions().add(caseSubscription);

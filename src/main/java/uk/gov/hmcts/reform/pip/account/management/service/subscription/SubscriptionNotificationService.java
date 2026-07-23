@@ -1,15 +1,18 @@
 package uk.gov.hmcts.reform.pip.account.management.service.subscription;
 
+import io.micrometer.common.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import uk.gov.hmcts.reform.pip.account.management.database.SubscriptionRepository;
 import uk.gov.hmcts.reform.pip.account.management.model.subscription.Subscription;
 import uk.gov.hmcts.reform.pip.account.management.service.PublicationService;
 import uk.gov.hmcts.reform.pip.account.management.service.account.AccountService;
 import uk.gov.hmcts.reform.pip.account.management.service.thirdparty.ThirdPartySubscriptionNotificationService;
 import uk.gov.hmcts.reform.pip.model.publication.Artefact;
+import uk.gov.hmcts.reform.pip.model.publication.ArtefactCaseInfo;
 import uk.gov.hmcts.reform.pip.model.subscription.Channel;
 import uk.gov.hmcts.reform.pip.model.subscription.LegacyThirdPartySubscription;
 import uk.gov.hmcts.reform.pip.model.subscription.LegacyThirdPartySubscriptionArtefact;
@@ -22,14 +25,16 @@ import java.util.UUID;
 import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
 import static uk.gov.hmcts.reform.pip.model.publication.Sensitivity.CLASSIFIED;
 import static uk.gov.hmcts.reform.pip.model.subscription.SearchType.CASE_ID;
+import static uk.gov.hmcts.reform.pip.model.subscription.SearchType.CASE_NAME;
+import static uk.gov.hmcts.reform.pip.model.subscription.SearchType.CASE_NUMBER;
 import static uk.gov.hmcts.reform.pip.model.subscription.SearchType.CASE_URN;
 import static uk.gov.hmcts.reform.pip.model.subscription.SearchType.LIST_TYPE;
 
 @Service
 @Slf4j
 public class SubscriptionNotificationService {
-    private static final String CASE_NUMBER_KEY = "caseNumber";
-    private static final String CASE_URN_KEY = "caseUrn";
+    @Deprecated private static final String CASE_NUMBER_KEY = "caseNumber";
+    @Deprecated private static final String CASE_URN_KEY = "caseUrn";
 
     private final SubscriptionRepository repository;
 
@@ -90,6 +95,7 @@ public class SubscriptionNotificationService {
      * @param artefact the artefact to collect the subscriptions for.
      */
     @Async
+    @Deprecated
     public void collectEmailSubscribers(Artefact artefact) {
         List<Subscription> subscriptionList = new ArrayList<>(
             querySubscriptionValueForLocation(artefact.getLocationId(), artefact.getListType().toString(),
@@ -105,6 +111,30 @@ public class SubscriptionNotificationService {
             : subscriptionList;
 
         handleEmailSubscriptionSending(artefact.getArtefactId(), subscriptionsToContact);
+    }
+
+    /**
+     * Collect all email subscribers for the artefact, and handle sending of email to the subscribers.
+     * @param artefact the artefact to collect the subscriptions for.
+     */
+    @Async
+    public void collectEmailSubscribersV2(Artefact artefact) {
+        List<Subscription> subscriptionList = new ArrayList<>(
+            querySubscriptionValueForLocation(artefact.getLocationId(), artefact.getListType().toString(),
+                                              artefact.getLanguage().toString())
+        );
+
+        if (!CollectionUtils.isEmpty(artefact.getCaseInfoList())) {
+            artefact.getCaseInfoList().forEach(
+                caseInfo -> subscriptionList.addAll(extractCaseSubscriptions(caseInfo))
+            );
+        }
+
+        List<Subscription> subscriptionsToContact = CLASSIFIED.equals(artefact.getSensitivity())
+            ? validateSubscriptionPermissions(subscriptionList, artefact)
+            : subscriptionList;
+
+        handleEmailSubscriptionSendingV2(artefact, subscriptionsToContact);
     }
 
     /**
@@ -166,6 +196,7 @@ public class SubscriptionNotificationService {
     }
 
     @SuppressWarnings("unchecked")
+    @Deprecated
     private List<Subscription> extractSearchValue(Object caseObject) {
         List<Subscription> subscriptionList = new ArrayList<>();
         Map<String, Object> caseMap = (Map) caseObject;
@@ -181,6 +212,21 @@ public class SubscriptionNotificationService {
         if (!caseMap.containsKey(CASE_NUMBER_KEY) || !caseMap.containsKey(CASE_URN_KEY)) {
             log.warn(writeLog(String.format("No value found in %s for case number or urn", caseObject)));
         }
+        return subscriptionList;
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<Subscription> extractCaseSubscriptions(ArtefactCaseInfo caseInfo) {
+        List<Subscription> subscriptionList = new ArrayList<>();
+
+        if (StringUtils.isNotEmpty(caseInfo.getCaseNumber())) {
+            subscriptionList.addAll(querySubscriptionValue(CASE_NUMBER.name(), caseInfo.getCaseNumber()));
+        } else if (StringUtils.isNotEmpty(caseInfo.getCaseName())) {
+            // Case name subscription is only used if there is no case number, as the case name subscription is a
+            // fallback for when the case number is not available
+            subscriptionList.addAll(querySubscriptionValue(CASE_NAME.name(), caseInfo.getCaseName()));
+        }
+
         return subscriptionList;
     }
 
@@ -218,6 +264,7 @@ public class SubscriptionNotificationService {
      * @param artefactId The id of the artefact being sent
      * @param subscriptionsList The list of subscriptions being sent
      */
+    @Deprecated
     private void handleEmailSubscriptionSending(UUID artefactId, List<Subscription> subscriptionsList) {
         List<Subscription> emailList = sortSubscriptionByChannel(subscriptionsList, Channel.EMAIL.notificationRoute);
 
@@ -226,6 +273,23 @@ public class SubscriptionNotificationService {
         if (!emailSubscriptions.isEmpty()) {
             log.info(writeLog("Summary being sent to publication services for id " + artefactId));
             publicationService.postSubscriptionSummaries(artefactId, emailSubscriptions);
+        }
+    }
+
+    /**
+     * Handle forming and sending of subscriptions to publication services.
+     *
+     * @param artefact The artefact being sent
+     * @param subscriptionsList The list of subscriptions being sent
+     */
+    private void handleEmailSubscriptionSendingV2(Artefact artefact, List<Subscription> subscriptionsList) {
+        List<Subscription> emailList = sortSubscriptionByChannel(subscriptionsList, Channel.EMAIL.notificationRoute);
+
+        Map<String, List<Subscription>> emailSubscriptions = subscriptionChannelService
+            .buildEmailSubscriptions(emailList);
+        if (!emailSubscriptions.isEmpty()) {
+            log.info(writeLog("Summary being sent to publication services for id " + artefact.getArtefactId()));
+            publicationService.postSubscriptionSummariesV2(artefact, emailSubscriptions);
         }
     }
 
