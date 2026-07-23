@@ -33,8 +33,17 @@ import static uk.gov.hmcts.reform.pip.model.subscription.SearchType.LIST_TYPE;
 @Service
 @Slf4j
 public class SubscriptionNotificationService {
-    @Deprecated private static final String CASE_NUMBER_KEY = "caseNumber";
-    @Deprecated private static final String CASE_URN_KEY = "caseUrn";
+    /**
+     * @deprecated Use ArtefactCaseInfo.getCaseNumber() instead.
+     */
+    @Deprecated(since = "1.0", forRemoval = true)
+    private static final String CASE_NUMBER_KEY = "caseNumber";
+
+    /**
+     * @deprecated Use ArtefactCaseInfo.getCaseUrn() instead.
+     */
+    @Deprecated(since = "1.0", forRemoval = true)
+    private static final String CASE_URN_KEY = "caseUrn";
 
     private static final String SUBSCRIBER_NOTIFICATION_LOG = "Summary being sent to publication services for id ";
 
@@ -67,11 +76,10 @@ public class SubscriptionNotificationService {
      * Collect all subscribers for the artefact, and handle sending of email and third party subscriptions to
      * the subscribers.
      * @param artefact the artefact to collect the subscriptions for.
+     * @deprecated Use collectEmailSubscribersV2 and collectApiSubscribers instead.
      */
     @Async
-    @Deprecated
-    // Method to be removed after related data-management changes merged to use the more specific endpoints
-    // for email and API subscribers
+    @Deprecated(since = "1.0", forRemoval = true)
     public void collectSubscribers(Artefact artefact) {
 
         List<Subscription> subscriptionList = new ArrayList<>(querySubscriptionValueForLocation(
@@ -95,9 +103,10 @@ public class SubscriptionNotificationService {
     /**
      * Collect all email subscribers for the artefact, and handle sending of email to the subscribers.
      * @param artefact the artefact to collect the subscriptions for.
+     * @deprecated Use collectEmailSubscribersV2 instead.
      */
     @Async
-    @Deprecated
+    @Deprecated(since = "1.0", forRemoval = true)
     public void collectEmailSubscribers(Artefact artefact) {
         List<Subscription> subscriptionList = new ArrayList<>(
             querySubscriptionValueForLocation(artefact.getLocationId(), artefact.getListType().toString(),
@@ -197,8 +206,11 @@ public class SubscriptionNotificationService {
         return repository.findSubscriptionsByLocationSearchValue(value, listType, listLanguage);
     }
 
+    /**
+     * @deprecated Use extractCaseSubscriptions instead.
+     */
     @SuppressWarnings("unchecked")
-    @Deprecated
+    @Deprecated(since = "1.0", forRemoval = true)
     private List<Subscription> extractSearchValue(Object caseObject) {
         List<Subscription> subscriptionList = new ArrayList<>();
         Map<String, Object> caseMap = (Map) caseObject;
@@ -237,10 +249,9 @@ public class SubscriptionNotificationService {
      *
      * @param artefactId The id of the artefact being sent
      * @param subscriptionsList The list of subscriptions being sent
+     * @deprecated Use handleEmailSubscriptionSendingV2 and handleLegacyThirdPartySubscriptionSending instead.
      */
-    @Deprecated
-    // Method to be removed after related data-management changes merged to use the more specific endpoints
-    // for email and API subscribers
+    @Deprecated(since = "1.0", forRemoval = true)
     private void handleSubscriptionSending(UUID artefactId, List<Subscription> subscriptionsList) {
         List<Subscription> emailList = sortSubscriptionByChannel(subscriptionsList, Channel.EMAIL.notificationRoute);
         List<Subscription> apiList = sortSubscriptionByChannel(subscriptionsList,
@@ -265,8 +276,9 @@ public class SubscriptionNotificationService {
      *
      * @param artefactId The id of the artefact being sent
      * @param subscriptionsList The list of subscriptions being sent
+     * @deprecated Use handleEmailSubscriptionSendingV2 instead.
      */
-    @Deprecated
+    @Deprecated(since = "1.0", forRemoval = true)
     private void handleEmailSubscriptionSending(UUID artefactId, List<Subscription> subscriptionsList) {
         List<Subscription> emailList = sortSubscriptionByChannel(subscriptionsList, Channel.EMAIL.notificationRoute);
 

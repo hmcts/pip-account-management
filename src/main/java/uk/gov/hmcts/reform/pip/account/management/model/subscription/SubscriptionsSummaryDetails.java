@@ -8,8 +8,12 @@ import java.util.List;
 
 @Data
 public class SubscriptionsSummaryDetails {
+    /**
+     * @deprecated Use caseNumber instead.
+     */
     @JsonProperty("CASE_URN")
-    @Deprecated private List<String> caseUrn = new ArrayList<>();
+    @Deprecated(since = "1.0", forRemoval = true)
+    private List<String> caseUrn = new ArrayList<>();
     @JsonProperty("CASE_NUMBER")
     private List<String> caseNumber = new ArrayList<>();
     @JsonProperty("CASE_NAME")
@@ -17,7 +21,10 @@ public class SubscriptionsSummaryDetails {
     @JsonProperty("LOCATION_ID")
     private List<String> locationId = new ArrayList<>();
 
-    @Deprecated
+    /**
+     * @deprecated Use addToCaseNumber instead.
+     */
+    @Deprecated(since = "1.0", forRemoval = true)
     public void addToCaseUrn(String caseUrn) {
         this.caseUrn.add(caseUrn);
     }

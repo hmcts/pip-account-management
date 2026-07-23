@@ -48,7 +48,11 @@ public class PublicationService {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private static final String WELCOME_EMAIL_URL = "/notify/welcome-email";
-    @Deprecated private static final String NOTIFY_SUBSCRIPTION_PATH = "notify/subscription";
+    /**
+     * @deprecated Use NOTIFY_SUBSCRIPTION_V2_PATH instead.
+     */
+    @Deprecated(since = "1.0", forRemoval = true)
+    private static final String NOTIFY_SUBSCRIPTION_PATH = "notify/subscription";
     private static final String NOTIFY_SUBSCRIPTION_V2_PATH = "notify/subscription/V2";
     private static final String NOTIFY_API_PATH = "notify/api";
     private static final String NOTIFY_LOCATION_SUBSCRIPTION_PATH = "notify/location-subscription-delete";
@@ -214,7 +218,10 @@ public class PublicationService {
         }
     }
 
-    @Deprecated
+    /**
+     * @deprecated Use postSubscriptionSummariesV2 instead.
+     */
+    @Deprecated(since = "1.0", forRemoval = true)
     public void postSubscriptionSummaries(UUID artefactId, Map<String, List<Subscription>> subscriptions) {
         BulkSubscriptionsSummary payload = formatSubscriptionsSummary(artefactId, subscriptions);
         try {
@@ -344,8 +351,9 @@ public class PublicationService {
      * @param artefactId The artefact id associated with the list of subscriptions
      * @param subscriptions A map containing each email which matches the criteria, alongside the subscriptions.
      * @return A subscriptions summary model
+     * @deprecated Use formatSubscriptionsSummaryV2 instead.
      */
-    @Deprecated
+    @Deprecated(since = "1.0", forRemoval = true)
     private BulkSubscriptionsSummary formatSubscriptionsSummary(UUID artefactId,
                                                                 Map<String, List<Subscription>> subscriptions) {
 

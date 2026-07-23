@@ -130,21 +130,25 @@ public class SubscriptionController {
         return ResponseEntity.ok(userSubscriptionService.findByUserId(userId));
     }
 
+    /**
+     * @deprecated Use the more specific /email-recipients/V2 and /api-recipients endpoints instead.
+     */
     @ApiResponse(responseCode = "202", description = "Subscriber request has been accepted")
     @Operation(summary = "Takes in artefact to build subscriber list.")
     @PostMapping("/artefact-recipients")
-    @Deprecated
-    // Method to be removed after related data-management changes merged to use the more specific endpoints
-    // for email and API subscribers
+    @Deprecated(since = "1.0", forRemoval = true)
     public ResponseEntity<String> buildSubscriberList(@RequestBody Artefact artefact) {
         subscriptionNotificationService.collectSubscribers(artefact);
         return ResponseEntity.status(HttpStatus.ACCEPTED).body("Subscriber request has been accepted");
     }
 
+    /**
+     * @deprecated Use the /email-recipients/V2 endpoint instead.
+     */
     @ApiResponse(responseCode = "202", description = "Email subscriber request has been accepted")
     @Operation(summary = "Build email subscriber list for the publication.")
     @PostMapping("/email-recipients")
-    @Deprecated
+    @Deprecated(since = "1.0", forRemoval = true)
     public ResponseEntity<String> buildEmailSubscriberList(@RequestBody Artefact artefact) {
         subscriptionNotificationService.collectEmailSubscribers(artefact);
         return ResponseEntity.status(HttpStatus.ACCEPTED).body("Email subscriber request has been accepted");
