@@ -49,6 +49,8 @@ public class PublicationService {
 
     private static final String WELCOME_EMAIL_URL = "/notify/welcome-email";
     /**
+     * Path for the legacy subscription notification endpoint.
+     *
      * @deprecated Use NOTIFY_SUBSCRIPTION_V2_PATH instead.
      */
     @Deprecated(since = "1.0", forRemoval = true)
@@ -219,6 +221,8 @@ public class PublicationService {
     }
 
     /**
+     * Sends subscription summaries to publication services.
+     *
      * @deprecated Use postSubscriptionSummariesV2 instead.
      */
     @Deprecated(since = "1.0", forRemoval = true)
@@ -354,6 +358,7 @@ public class PublicationService {
      * @deprecated Use formatSubscriptionsSummaryV2 instead.
      */
     @Deprecated(since = "1.0", forRemoval = true)
+    @SuppressWarnings("removal")
     private BulkSubscriptionsSummary formatSubscriptionsSummary(UUID artefactId,
                                                                 Map<String, List<Subscription>> subscriptions) {
 

@@ -9,6 +9,8 @@ import java.util.List;
 @Data
 public class SubscriptionsSummaryDetails {
     /**
+     * Case URN subscription list.
+     *
      * @deprecated Use caseNumber instead.
      */
     @JsonProperty("CASE_URN")
@@ -22,6 +24,8 @@ public class SubscriptionsSummaryDetails {
     private List<String> locationId = new ArrayList<>();
 
     /**
+     * Adds a case URN value to the list.
+     *
      * @deprecated Use addToCaseNumber instead.
      */
     @Deprecated(since = "1.0", forRemoval = true)

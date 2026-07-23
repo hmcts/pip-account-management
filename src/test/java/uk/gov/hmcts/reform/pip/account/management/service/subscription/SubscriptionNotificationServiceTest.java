@@ -48,6 +48,7 @@ import static uk.gov.hmcts.reform.pip.account.management.helpers.SubscriptionUti
 
 @ExtendWith({MockitoExtension.class})
 @MockitoSettings(strictness = Strictness.LENIENT)
+@SuppressWarnings("removal")
 class SubscriptionNotificationServiceTest {
     private static final UUID USER_ID = UUID.randomUUID();
     private static final String SEARCH_VALUE = "193254";

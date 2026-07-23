@@ -34,12 +34,16 @@ import static uk.gov.hmcts.reform.pip.model.subscription.SearchType.LIST_TYPE;
 @Slf4j
 public class SubscriptionNotificationService {
     /**
+     * Key for case number in legacy search map.
+     *
      * @deprecated Use ArtefactCaseInfo.getCaseNumber() instead.
      */
     @Deprecated(since = "1.0", forRemoval = true)
     private static final String CASE_NUMBER_KEY = "caseNumber";
 
     /**
+     * Key for case URN in legacy search map.
+     *
      * @deprecated Use ArtefactCaseInfo.getCaseUrn() instead.
      */
     @Deprecated(since = "1.0", forRemoval = true)
@@ -80,6 +84,7 @@ public class SubscriptionNotificationService {
      */
     @Async
     @Deprecated(since = "1.0", forRemoval = true)
+    @SuppressWarnings("removal")
     public void collectSubscribers(Artefact artefact) {
 
         List<Subscription> subscriptionList = new ArrayList<>(querySubscriptionValueForLocation(
@@ -107,6 +112,7 @@ public class SubscriptionNotificationService {
      */
     @Async
     @Deprecated(since = "1.0", forRemoval = true)
+    @SuppressWarnings("removal")
     public void collectEmailSubscribers(Artefact artefact) {
         List<Subscription> subscriptionList = new ArrayList<>(
             querySubscriptionValueForLocation(artefact.getLocationId(), artefact.getListType().toString(),
@@ -207,6 +213,8 @@ public class SubscriptionNotificationService {
     }
 
     /**
+     * Extracts subscriptions from a legacy case search object.
+     *
      * @deprecated Use extractCaseSubscriptions instead.
      */
     @SuppressWarnings("unchecked")
@@ -252,6 +260,7 @@ public class SubscriptionNotificationService {
      * @deprecated Use handleEmailSubscriptionSendingV2 and handleLegacyThirdPartySubscriptionSending instead.
      */
     @Deprecated(since = "1.0", forRemoval = true)
+    @SuppressWarnings("removal")
     private void handleSubscriptionSending(UUID artefactId, List<Subscription> subscriptionsList) {
         List<Subscription> emailList = sortSubscriptionByChannel(subscriptionsList, Channel.EMAIL.notificationRoute);
         List<Subscription> apiList = sortSubscriptionByChannel(subscriptionsList,
@@ -279,6 +288,7 @@ public class SubscriptionNotificationService {
      * @deprecated Use handleEmailSubscriptionSendingV2 instead.
      */
     @Deprecated(since = "1.0", forRemoval = true)
+    @SuppressWarnings("removal")
     private void handleEmailSubscriptionSending(UUID artefactId, List<Subscription> subscriptionsList) {
         List<Subscription> emailList = sortSubscriptionByChannel(subscriptionsList, Channel.EMAIL.notificationRoute);
 

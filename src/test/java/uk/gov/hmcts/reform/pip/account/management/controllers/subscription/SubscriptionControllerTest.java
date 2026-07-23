@@ -33,6 +33,7 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
+@SuppressWarnings("removal")
 class SubscriptionControllerTest {
 
     private Subscription mockSubscription;

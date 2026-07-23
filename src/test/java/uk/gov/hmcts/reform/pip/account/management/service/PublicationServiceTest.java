@@ -51,6 +51,7 @@ import static uk.gov.hmcts.reform.pip.account.management.helpers.MediaApplicatio
 
 @ExtendWith(MockitoExtension.class)
 @ActiveProfiles({"test", "non-async"})
+@SuppressWarnings("removal")
 class PublicationServiceTest {
 
     private final MockWebServer mockPublicationServicesEndpoint = new MockWebServer();
