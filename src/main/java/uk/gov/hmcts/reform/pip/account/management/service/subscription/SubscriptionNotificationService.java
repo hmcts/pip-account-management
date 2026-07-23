@@ -36,6 +36,8 @@ public class SubscriptionNotificationService {
     @Deprecated private static final String CASE_NUMBER_KEY = "caseNumber";
     @Deprecated private static final String CASE_URN_KEY = "caseUrn";
 
+    private static final String SUBSCRIBER_NOTIFICATION_LOG = "Summary being sent to publication services for id ";
+
     private final SubscriptionRepository repository;
 
     private final SubscriptionChannelService subscriptionChannelService;
@@ -247,7 +249,7 @@ public class SubscriptionNotificationService {
         Map<String, List<Subscription>> emailSubscriptions =
             subscriptionChannelService.buildEmailSubscriptions(emailList);
         if (!emailSubscriptions.isEmpty()) {
-            log.info(writeLog("Summary being sent to publication services for id " + artefactId));
+            log.info(writeLog(SUBSCRIBER_NOTIFICATION_LOG + artefactId));
             publicationService.postSubscriptionSummaries(artefactId, emailSubscriptions);
         }
 
@@ -271,7 +273,7 @@ public class SubscriptionNotificationService {
         Map<String, List<Subscription>> emailSubscriptions = subscriptionChannelService
             .buildEmailSubscriptions(emailList);
         if (!emailSubscriptions.isEmpty()) {
-            log.info(writeLog("Summary being sent to publication services for id " + artefactId));
+            log.info(writeLog(SUBSCRIBER_NOTIFICATION_LOG + artefactId));
             publicationService.postSubscriptionSummaries(artefactId, emailSubscriptions);
         }
     }
@@ -288,7 +290,7 @@ public class SubscriptionNotificationService {
         Map<String, List<Subscription>> emailSubscriptions = subscriptionChannelService
             .buildEmailSubscriptions(emailList);
         if (!emailSubscriptions.isEmpty()) {
-            log.info(writeLog("Summary being sent to publication services for id " + artefact.getArtefactId()));
+            log.info(writeLog(SUBSCRIBER_NOTIFICATION_LOG + artefact.getArtefactId()));
             publicationService.postSubscriptionSummariesV2(artefact, emailSubscriptions);
         }
     }
