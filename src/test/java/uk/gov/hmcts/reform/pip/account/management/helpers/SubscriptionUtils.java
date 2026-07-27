@@ -73,6 +73,46 @@ public final class SubscriptionUtils {
         return subs;
     }
 
+    public static List<Subscription> createMockSubscriptionListV2(LocalDateTime createdDate) {
+        final int caseNumberInterval = 3;
+        final int caseNameInterval = 6;
+
+        List<Subscription> subs = new ArrayList<>();
+        Map<Integer, UUID> mockData = Map.of(
+            0, UUID.randomUUID(),
+            1, UUID.randomUUID(),
+            2, UUID.randomUUID(),
+            3, UUID.randomUUID(),
+            4, UUID.randomUUID(),
+            5, UUID.randomUUID(),
+            6, UUID.randomUUID(),
+            7, UUID.randomUUID(),
+            8, UUID.randomUUID()
+        );
+
+        for (int i = 0; i < 8; i++) {
+            Subscription subscription = createMockSubscription(mockData.get(i), String.format("%s", i),
+                                                               i < 3 ? Channel.API_COURTEL : Channel.EMAIL,
+                                                               createdDate);
+            subscription.setChannel(i < 3 ? Channel.API_COURTEL : Channel.EMAIL);
+            subscription.setCaseName("test name");
+            if (i < caseNumberInterval) {
+                subscription.setCaseNumber("123" + i);
+                subscription.setSearchType(SearchType.CASE_NUMBER);
+            } else if (i < caseNameInterval) {
+                subscription.setSearchType(SearchType.CASE_NAME);
+            } else {
+                subscription.setSearchType(SearchType.LOCATION_ID);
+                subscription.setCaseName(null);
+                subscription.setUrn(null);
+                subscription.setCaseNumber(null);
+                subscription.setLocationName("test court name");
+            }
+            subs.add(subscription);
+        }
+        return subs;
+    }
+
     public static Subscription findableSubscription() {
         Subscription subscription = new Subscription();
         subscription.setUserId(UUID.randomUUID());

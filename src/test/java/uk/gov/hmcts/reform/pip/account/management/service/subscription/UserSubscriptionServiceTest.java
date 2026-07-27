@@ -30,8 +30,10 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static uk.gov.hmcts.reform.pip.account.management.helpers.SubscriptionUtils.createMockSubscription;
 import static uk.gov.hmcts.reform.pip.account.management.helpers.SubscriptionUtils.createMockSubscriptionList;
+import static uk.gov.hmcts.reform.pip.account.management.helpers.SubscriptionUtils.createMockSubscriptionListV2;
 
 @ExtendWith({MockitoExtension.class})
+@SuppressWarnings("removal")
 class UserSubscriptionServiceTest {
     private static final UUID USER_ID = UUID.randomUUID();
     private static final UUID USER_ID_NO_SUBS = UUID.randomUUID();
@@ -49,6 +51,7 @@ class UserSubscriptionServiceTest {
     private static final LocalDateTime DATE_ADDED = LocalDateTime.now();
 
     private List<Subscription> mockSubscriptionList;
+    private List<Subscription> mockSubscriptionListV2;
     private Subscription mockSubscription;
 
     private SubscriptionListType mockSubscriptionListType;
@@ -66,18 +69,21 @@ class UserSubscriptionServiceTest {
     void setup() {
         mockSubscription = createMockSubscription(USER_ID, SEARCH_VALUE, EMAIL, DATE_ADDED);
         mockSubscriptionList = createMockSubscriptionList(DATE_ADDED);
+        mockSubscriptionListV2 = createMockSubscriptionListV2(DATE_ADDED);
         mockSubscription.setChannel(Channel.EMAIL);
         mockSubscriptionListType = new SubscriptionListType();
         mockSubscriptionListType.setListType(LIST_TYPES);
     }
 
     @Test
+    @Deprecated
     void testNoSubscriptionsReturnsEmpty() {
         assertEquals(new UserSubscription(), userSubscriptionService.findByUserId(USER_ID_NO_SUBS),
                      "Should return empty user subscriptions");
     }
 
     @Test
+    @Deprecated
     void testFindByUserIdOnlyCourt() {
         mockSubscription.setSearchType(SearchType.LOCATION_ID);
         mockSubscription.setLocationName("Test court");
@@ -123,42 +129,7 @@ class UserSubscriptionServiceTest {
     }
 
     @Test
-    void testFindByUserIdCaseNumberSearchType() {
-        mockSubscription.setSearchType(SearchType.CASE_NUMBER);
-        mockSubscription.setCaseNumber(CASE_ID);
-        mockSubscription.setCaseName(CASE_NAME);
-
-        CaseSubscription expected = new CaseSubscription();
-        expected.setCaseNumber(CASE_ID);
-        expected.setCaseName(CASE_NAME);
-        expected.setSubscriptionId(mockSubscription.getId());
-        expected.setDateAdded(DATE_ADDED);
-        expected.setSearchType(SearchType.CASE_NUMBER);
-        when(subscriptionRepository.findByUserId(USER_ID)).thenReturn(List.of(mockSubscription));
-
-        assertEquals(List.of(expected), userSubscriptionService.findByUserId(USER_ID).getCaseSubscriptions(),
-                     "Should return populated case");
-    }
-
-    @Test
-    void testFindByUserIdCaseNameSearchType() {
-        mockSubscription.setSearchType(SearchType.CASE_NAME);
-        mockSubscription.setCaseNumber(CASE_ID);
-        mockSubscription.setCaseName(CASE_NAME);
-
-        CaseSubscription expected = new CaseSubscription();
-        expected.setCaseNumber(CASE_ID);
-        expected.setCaseName(CASE_NAME);
-        expected.setSubscriptionId(mockSubscription.getId());
-        expected.setDateAdded(DATE_ADDED);
-        expected.setSearchType(SearchType.CASE_NAME);
-        when(subscriptionRepository.findByUserId(USER_ID)).thenReturn(List.of(mockSubscription));
-
-        assertEquals(List.of(expected), userSubscriptionService.findByUserId(USER_ID).getCaseSubscriptions(),
-                     "Should return populated case");
-    }
-
-    @Test
+    @Deprecated
     void testFindByUserIdLength() {
         when(subscriptionRepository.findByUserId(USER_ID)).thenReturn(mockSubscriptionList);
         when(subscriptionListTypeRepository
@@ -171,6 +142,7 @@ class UserSubscriptionServiceTest {
     }
 
     @Test
+    @Deprecated
     void testFindByUserId() {
         when(subscriptionRepository.findByUserId(USER_ID)).thenReturn(mockSubscriptionList);
         when(subscriptionListTypeRepository
@@ -186,6 +158,7 @@ class UserSubscriptionServiceTest {
     }
 
     @Test
+    @Deprecated
     void testFindByUserIdCreatedDates() {
         when(subscriptionRepository.findByUserId(USER_ID)).thenReturn(mockSubscriptionList);
         when(subscriptionListTypeRepository
@@ -200,6 +173,7 @@ class UserSubscriptionServiceTest {
     }
 
     @Test
+    @Deprecated
     void testFindByUserIdAssignsIdForCourt() {
         mockSubscription.setSearchType(SearchType.LOCATION_ID);
         when(subscriptionRepository.findByUserId(USER_ID)).thenReturn(List.of(mockSubscription));
@@ -215,6 +189,7 @@ class UserSubscriptionServiceTest {
     }
 
     @Test
+    @Deprecated
     void testFindByUserIdAssignsIdForCase() {
         mockSubscription.setSearchType(SearchType.CASE_ID);
         when(subscriptionRepository.findByUserId(USER_ID)).thenReturn(List.of(mockSubscription));
@@ -225,6 +200,7 @@ class UserSubscriptionServiceTest {
     }
 
     @Test
+    @Deprecated
     void testFindByUserIdListTypeSubscriptions() {
         mockSubscription.setSearchType(SearchType.LIST_TYPE);
         mockSubscription.setSearchValue(LIST_NAME);
@@ -248,12 +224,156 @@ class UserSubscriptionServiceTest {
     }
 
     @Test
-    void testFindByUserIdNoListTypeSubscriptions() {
-        mockSubscription.setSearchType(SearchType.CASE_ID);
+    void testNoSubscriptionsV2ReturnsEmpty() {
+        assertEquals(new UserSubscription(), userSubscriptionService.findByUserIdV2(USER_ID_NO_SUBS),
+                     "Should return empty user subscriptions");
+    }
+
+    @Test
+    void testFindByUserIdV2OnlyCourt() {
+        mockSubscription.setSearchType(SearchType.LOCATION_ID);
+        mockSubscription.setLocationName("Test court");
+        when(subscriptionRepository.findByUserId(USER_ID)).thenReturn(List.of(mockSubscription));
+        when(subscriptionListTypeRepository
+                 .findByUserId(any()))
+            .thenReturn(Optional.of(mockSubscriptionListType));
+        LocationSubscription expected = new LocationSubscription();
+        expected.setSubscriptionId(mockSubscription.getId());
+        expected.setLocationName("Test court");
+        expected.setLocationId("193254");
+        expected.setListType(List.of(LIST_NAME));
+        expected.setDateAdded(DATE_ADDED);
+
+        UserSubscription result = userSubscriptionService.findByUserIdV2(USER_ID);
+
+        assertEquals(List.of(expected), result.getLocationSubscriptions(),
+                     "Should return court name");
+        assertEquals(0, result.getCaseSubscriptions().size(), "Cases should be empty");
+    }
+
+    @Test
+    void testFindByUserIdV2CaseNumberSearchType() {
+        mockSubscription.setSearchType(SearchType.CASE_NUMBER);
+        mockSubscription.setCaseNumber(CASE_ID);
+        mockSubscription.setCaseName(CASE_NAME);
+
+        CaseSubscription expected = new CaseSubscription();
+        expected.setCaseNumber(CASE_ID);
+        expected.setCaseName(CASE_NAME);
+        expected.setSubscriptionId(mockSubscription.getId());
+        expected.setDateAdded(DATE_ADDED);
+        expected.setSearchType(SearchType.CASE_NUMBER);
         when(subscriptionRepository.findByUserId(USER_ID)).thenReturn(List.of(mockSubscription));
 
-        assertEquals(0, userSubscriptionService.findByUserId(USER_ID).getListTypeSubscriptions().size(),
-                     "Unexpected number of list type subscriptions returned");
+        assertEquals(List.of(expected), userSubscriptionService.findByUserIdV2(USER_ID).getCaseSubscriptions(),
+                     "Should return populated case");
+    }
+
+    @Test
+    void testFindByUserIdV2CaseNameSearchType() {
+        mockSubscription.setSearchType(SearchType.CASE_NAME);
+        mockSubscription.setCaseNumber(CASE_ID);
+        mockSubscription.setCaseName(CASE_NAME);
+
+        CaseSubscription expected = new CaseSubscription();
+        expected.setCaseNumber(CASE_ID);
+        expected.setCaseName(CASE_NAME);
+        expected.setSubscriptionId(mockSubscription.getId());
+        expected.setDateAdded(DATE_ADDED);
+        expected.setSearchType(SearchType.CASE_NAME);
+        when(subscriptionRepository.findByUserId(USER_ID)).thenReturn(List.of(mockSubscription));
+
+        assertEquals(List.of(expected), userSubscriptionService.findByUserIdV2(USER_ID).getCaseSubscriptions(),
+                     "Should return populated case");
+    }
+
+    @Test
+    void testFindByUserIdV2Length() {
+        when(subscriptionRepository.findByUserId(USER_ID)).thenReturn(mockSubscriptionListV2);
+        when(subscriptionListTypeRepository
+                 .findByUserId(any()))
+            .thenReturn(Optional.of(mockSubscriptionListType));
+        UserSubscription result = userSubscriptionService.findByUserIdV2(USER_ID);
+        assertEquals(6, result.getCaseSubscriptions().size(),
+                     "Should add all CaseSubscriptions to UserSubscriptions");
+        assertEquals(2, result.getLocationSubscriptions().size(), "Should add all court names");
+    }
+
+    @Test
+    void testFindByUserIdV2() {
+        when(subscriptionRepository.findByUserId(USER_ID)).thenReturn(mockSubscriptionListV2);
+        when(subscriptionListTypeRepository
+                 .findByUserId(any()))
+            .thenReturn(Optional.of(mockSubscriptionListType));
+        UserSubscription result = userSubscriptionService.findByUserIdV2(USER_ID);
+        for (int i = 0; i < 3; i++) {
+            assertEquals(CASE_ID + i, result.getCaseSubscriptions().get(i).getCaseNumber(),
+                         "Should contain correct caseNumber");
+        }
+        assertEquals(COURT_NAME, result.getLocationSubscriptions().get(0).getLocationName(),
+                     "Should match court name");
+    }
+
+    @Test
+    void testFindByUserIdV2CreatedDates() {
+        when(subscriptionRepository.findByUserId(USER_ID)).thenReturn(mockSubscriptionListV2);
+        when(subscriptionListTypeRepository
+                 .findByUserId(any()))
+            .thenReturn(Optional.of(mockSubscriptionListType));
+        UserSubscription result = userSubscriptionService.findByUserIdV2(USER_ID);
+        for (int i = 0; i < 6; i++) {
+            assertEquals(DATE_ADDED, result.getCaseSubscriptions().get(i).getDateAdded(),
+                         "Should match dateAdded");
+        }
+        assertEquals(DATE_ADDED, result.getLocationSubscriptions().get(0).getDateAdded(), "Should match dateAdded");
+    }
+
+    @Test
+    void testFindByUserIdV2AssignsIdForCourt() {
+        mockSubscription.setSearchType(SearchType.LOCATION_ID);
+        when(subscriptionRepository.findByUserId(USER_ID)).thenReturn(List.of(mockSubscription));
+        when(subscriptionListTypeRepository
+                 .findByUserId(any()))
+            .thenReturn(Optional.of(mockSubscriptionListType));
+
+        assertEquals(mockSubscription.getId(),
+                     userSubscriptionService.findByUserIdV2(USER_ID)
+                         .getLocationSubscriptions().get(0)
+                         .getSubscriptionId(),
+                     "Should match subscriptionId");
+    }
+
+    @Test
+    void testFindByUserIdV2AssignsIdForCase() {
+        mockSubscription.setSearchType(SearchType.CASE_NUMBER);
+        when(subscriptionRepository.findByUserId(USER_ID)).thenReturn(List.of(mockSubscription));
+
+        assertEquals(mockSubscription.getId(),
+                     userSubscriptionService.findByUserIdV2(USER_ID).getCaseSubscriptions().get(0).getSubscriptionId(),
+                     "Should match subscriptionId");
+    }
+
+    @Test
+    void testFindByUserIdV2ListTypeSubscriptions() {
+        mockSubscription.setSearchType(SearchType.LIST_TYPE);
+        mockSubscription.setSearchValue(LIST_NAME);
+
+        when(subscriptionRepository.findByUserId(USER_ID)).thenReturn(List.of(mockSubscription));
+
+        List<ListTypeSubscription> listTypeSubscriptions =
+            userSubscriptionService.findByUserIdV2(USER_ID).getListTypeSubscriptions();
+
+
+        assertEquals(1, listTypeSubscriptions.size(), "Unexpected number of list type subscriptions returned");
+
+        assertEquals(mockSubscription.getId(), listTypeSubscriptions.get(0).getSubscriptionId(),
+                     "Returned list type subscription does not match ID");
+        assertEquals(mockSubscription.getSearchValue(), listTypeSubscriptions.get(0).getListType(),
+                     "Returned list type subscription does not match list type");
+        assertEquals(mockSubscription.getChannel(), listTypeSubscriptions.get(0).getChannel(),
+                     "Returned list type subscription does not match channel");
+        assertEquals(mockSubscription.getCreatedDate(), listTypeSubscriptions.get(0).getDateAdded(),
+                     "Returned list type subscription does not match created date");
     }
 
     @Test

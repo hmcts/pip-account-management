@@ -121,6 +121,7 @@ class SubscriptionTest extends IntegrationTestBase {
     private static final String MI_REPORTING_SUBSCRIPTION_DATA_ALL_URL = "/subscription/mi-data-all";
     private static final String MI_REPORTING_SUBSCRIPTION_DATA_LOCATION_URL = "/subscription/mi-data-location";
     private static final String SUBSCRIPTION_USER_PATH = "/subscription/user/" + UUID_STRING;
+    private static final String SUBSCRIPTION_USER_V2_PATH = "/subscription/user/v2/" + UUID_STRING;
     private static final String ARTEFACT_RECIPIENT_PATH = "/subscription/artefact-recipients";
     private static final String SUBSCRIPTION_EMAIL_RECIPIENT_PATH = "/subscription/email-recipients";
     private static final String SUBSCRIPTION_EMAIL_RECIPIENT_V2_PATH = "/subscription/email-recipients/V2";
@@ -604,6 +605,95 @@ class SubscriptionTest extends IntegrationTestBase {
 
         private UserSubscription getUserSubscriptions() throws Exception {
             MvcResult response = mvc.perform(get(SUBSCRIPTION_USER_PATH)
+                                                 .header(REQUESTER_ID_HEADER, ACTIONING_USER_ID))
+                .andExpect(status().isOk())
+                .andReturn();
+
+            assertNotNull(response.getResponse(), VALIDATION_EMPTY_RESPONSE);
+
+            return OBJECT_MAPPER.readValue(response.getResponse().getContentAsString(), UserSubscription.class);
+        }
+
+    }
+
+    @Nested
+    class FindSubscriptionsByUserIdV2 {
+
+        @Test
+        void testGetUsersSubscriptionsByUserIdSuccessful() throws Exception {
+            mvc.perform(setupMockSubscription(LOCATION_ID, SearchType.LOCATION_ID, UUID_STRING));
+            mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_NUMBER, UUID_STRING));
+            mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_NAME, UUID_STRING));
+
+            UserSubscription userSubscriptions = getUserSubscriptions();
+
+            assertEquals(
+                3,
+                userSubscriptions.getLocationSubscriptions().size() + userSubscriptions
+                    .getCaseSubscriptions().size(),
+                VALIDATION_SUBSCRIPTION_LIST
+            );
+
+            LocationSubscription location = userSubscriptions.getLocationSubscriptions().getFirst();
+            assertEquals(LOCATION_NAME, location.getLocationName(), VALIDATION_LOCATION_NAME);
+            assertEquals(DATE_ADDED.withNano(0), location.getDateAdded().withNano(0),
+                         VALIDATION_DATE_ADDED);
+
+            CaseSubscription caseSubscription = userSubscriptions.getCaseSubscriptions().getFirst();
+            assertEquals(CASE_NAME, caseSubscription.getCaseName(), VALIDATION_CASE_NAME);
+            assertEquals(CASE_ID, caseSubscription.getCaseNumber(), VALIDATION_CASE_ID);
+        }
+
+        @Test
+        void testGetUsersSubscriptionsByUserIdSingleLocation() throws Exception {
+            mvc.perform(setupMockSubscription(LOCATION_ID, SearchType.LOCATION_ID, UUID_STRING));
+
+            UserSubscription userSubscriptions = getUserSubscriptions();
+
+            assertEquals(1, userSubscriptions.getLocationSubscriptions().size(),
+                         "Court subscription list does not contain 1 court");
+
+            assertEquals(0, userSubscriptions.getCaseSubscriptions().size(),
+                         "Court subscription list contains unknown cases");
+
+            LocationSubscription location = userSubscriptions.getLocationSubscriptions().getFirst();
+            assertEquals(LOCATION_NAME, location.getLocationName(), VALIDATION_LOCATION_NAME);
+            assertEquals(DATE_ADDED.withNano(0), location.getDateAdded().withNano(0),
+                         VALIDATION_DATE_ADDED);
+        }
+
+        @Test
+        void testGetUsersSubscriptionsByUserIdSingleCaseNumber() throws Exception {
+            mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_NUMBER, UUID_STRING));
+
+            UserSubscription userSubscriptions = getUserSubscriptions();
+
+            assertEquals(0, userSubscriptions.getLocationSubscriptions().size(), VALIDATION_LOCATION_LIST);
+            assertEquals(1, userSubscriptions.getCaseSubscriptions().size(), VALIDATION_ONE_CASE_LOCATION);
+
+            CaseSubscription caseSubscription = userSubscriptions.getCaseSubscriptions().getFirst();
+            assertEquals(CASE_NAME, caseSubscription.getCaseName(), VALIDATION_CASE_NAME);
+            assertEquals(SearchType.CASE_NUMBER, caseSubscription.getSearchType(), VALIDATION_SEARCH_TYPE);
+            assertEquals(CASE_ID, caseSubscription.getCaseNumber(), VALIDATION_CASE_ID);
+        }
+
+        @Test
+        void testGetUsersSubscriptionsByUserIdNoSubscriptions() throws Exception {
+            UserSubscription userSubscriptions = getUserSubscriptions();
+
+            assertEquals(new UserSubscription(), userSubscriptions, VALIDATION_NO_SUBSCRIPTIONS);
+        }
+
+        @Test
+        @WithMockUser(username = "unauthorized_find_by_user_id", authorities = {"APPROLE_unknown.find"})
+        void testUnauthorizedFindByUserId() throws Exception {
+            when(subscriptionAuthorisationService.userCanViewSubscriptions(any(), any())).thenReturn(false);
+            assertRequestResponseStatus(mvc, get(SUBSCRIPTION_USER_V2_PATH)
+                .header(REQUESTER_ID_HEADER, ACTIONING_USER_ID), FORBIDDEN.value());
+        }
+
+        private UserSubscription getUserSubscriptions() throws Exception {
+            MvcResult response = mvc.perform(get(SUBSCRIPTION_USER_V2_PATH)
                                                  .header(REQUESTER_ID_HEADER, ACTIONING_USER_ID))
                 .andExpect(status().isOk())
                 .andReturn();

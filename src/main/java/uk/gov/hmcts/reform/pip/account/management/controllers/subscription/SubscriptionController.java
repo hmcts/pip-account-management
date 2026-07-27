@@ -116,6 +116,11 @@ public class SubscriptionController {
         return ResponseEntity.ok(subscriptionService.findById(subId));
     }
 
+    /**
+     * Retrieve all subscriptions for a user.
+     *
+     * @deprecated Use the endpoint /user/v2/{userId} instead.
+     */
     @ApiResponse(responseCode = OK_CODE, description = "Subscriptions list for user id {userId} found")
     @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE,
         description = "No subscription found with the user id {userId}")
@@ -124,10 +129,26 @@ public class SubscriptionController {
     @Operation(summary = "Returns the list of relevant subscriptions associated with a given user id.")
     @PreAuthorize("@subscriptionAuthorisationService.userCanViewSubscriptions(#requesterId, #userId)")
     @GetMapping("/user/{userId}")
+    @Deprecated(since = "1.0", forRemoval = true)
+    @SuppressWarnings("removal")
     public ResponseEntity<UserSubscription> findByUserId(
         @RequestHeader(X_REQUESTER_ID_HEADER) UUID requesterId,
         @Parameter @PathVariable UUID userId) {
         return ResponseEntity.ok(userSubscriptionService.findByUserId(userId));
+    }
+
+    @ApiResponse(responseCode = OK_CODE, description = "Subscriptions list for user id {userId} found")
+    @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE,
+        description = "No subscription found with the user id {userId}")
+    @ApiResponse(responseCode = FORBIDDEN_ERROR_CODE,
+        description = "User with ID {requesterId} is not authorised to view these subscriptions")
+    @Operation(summary = "Returns the list of relevant subscriptions associated with a given user id.")
+    @PreAuthorize("@subscriptionAuthorisationService.userCanViewSubscriptions(#requesterId, #userId)")
+    @GetMapping("/user/v2/{userId}")
+    public ResponseEntity<UserSubscription> findByUserIdV2(
+        @RequestHeader(X_REQUESTER_ID_HEADER) UUID requesterId,
+        @Parameter @PathVariable UUID userId) {
+        return ResponseEntity.ok(userSubscriptionService.findByUserIdV2(userId));
     }
 
     /**

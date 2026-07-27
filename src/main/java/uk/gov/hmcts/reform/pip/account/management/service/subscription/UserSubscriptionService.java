@@ -36,13 +36,30 @@ public class UserSubscriptionService {
      * Find all subscriptions for a given user.
      * @param userId The user id to find the subscriptions for.
      * @return The list of subscriptions that have been found.
+     *
+     * @deprecated Use findByUserIdV2 instead.
+     *
      */
+    @Deprecated(since = "1.0", forRemoval = true)
     public UserSubscription findByUserId(UUID userId) {
         List<Subscription> subscriptions = subscriptionRepository.findByUserId(userId);
         if (subscriptions.isEmpty()) {
             return new UserSubscription();
         }
         return collectSubscriptions(subscriptions);
+    }
+
+    /**
+     * Find all subscriptions for a given user.
+     * @param userId The user id to find the subscriptions for.
+     * @return The list of subscriptions that have been found.
+     */
+    public UserSubscription findByUserIdV2(UUID userId) {
+        List<Subscription> subscriptions = subscriptionRepository.findByUserId(userId);
+        if (subscriptions.isEmpty()) {
+            return new UserSubscription();
+        }
+        return collectSubscriptionsV2(subscriptions);
     }
 
     /**
@@ -58,57 +75,96 @@ public class UserSubscriptionService {
         return message;
     }
 
+    /**
+     * Collect all user subscriptions and group them by type.
+     *
+     * @deprecated Use collectSubscriptionsV2 instead.
+     */
+    @Deprecated(since = "1.0", forRemoval = true)
     private UserSubscription collectSubscriptions(List<Subscription> subscriptions) {
         UserSubscription userSubscription = new UserSubscription();
         subscriptions.forEach(subscription -> {
             switch (subscription.getSearchType()) {
-                case LOCATION_ID -> {
-                    LocationSubscription locationSubscription = new LocationSubscription();
-                    locationSubscription.setSubscriptionId(subscription.getId());
-                    locationSubscription.setLocationName(subscription.getLocationName());
-                    locationSubscription.setLocationId(subscription.getSearchValue());
-                    Optional<SubscriptionListType> subscriptionListType = subscriptionListTypeRepository
-                        .findByUserId(subscription.getUserId());
-                    if (subscriptionListType.isPresent()) {
-                        locationSubscription.setListType(subscriptionListType.get().getListType());
-                        locationSubscription.setListLanguage(subscriptionListType.get().getListLanguage());
-                    }
-                    locationSubscription.setDateAdded(subscription.getCreatedDate());
-                    userSubscription.getLocationSubscriptions().add(locationSubscription);
-                }
-                case LIST_TYPE -> {
-                    ListTypeSubscription listTypeSubscription = new ListTypeSubscription();
-                    listTypeSubscription.setSubscriptionId(subscription.getId());
-                    listTypeSubscription.setListType(subscription.getSearchValue());
-                    listTypeSubscription.setDateAdded(subscription.getCreatedDate());
-                    listTypeSubscription.setChannel(subscription.getChannel());
-                    userSubscription.getListTypeSubscriptions().add(listTypeSubscription);
-                }
-                // TODO Remove this case once all subscription changes are merged
-                case CASE_ID, CASE_URN -> {
-                    CaseSubscription caseSubscription = new CaseSubscription();
-                    caseSubscription.setCaseName(subscription.getCaseName());
-                    caseSubscription.setSubscriptionId(subscription.getId());
-                    caseSubscription.setCaseNumber(subscription.getCaseNumber());
-                    caseSubscription.setUrn(subscription.getUrn());
-                    caseSubscription.setPartyNames(subscription.getPartyNames());
-                    caseSubscription.setSearchType(subscription.getSearchType());
-                    caseSubscription.setDateAdded(subscription.getCreatedDate());
-                    userSubscription.getCaseSubscriptions().add(caseSubscription);
-                }
-                case CASE_NUMBER, CASE_NAME -> {
-                    CaseSubscription caseSubscription = new CaseSubscription();
-                    caseSubscription.setCaseName(subscription.getCaseName());
-                    caseSubscription.setSubscriptionId(subscription.getId());
-                    caseSubscription.setCaseNumber(subscription.getCaseNumber());
-                    caseSubscription.setSearchType(subscription.getSearchType());
-                    caseSubscription.setDateAdded(subscription.getCreatedDate());
-                    userSubscription.getCaseSubscriptions().add(caseSubscription);
-                }
+                case LOCATION_ID ->
+                    userSubscription.getLocationSubscriptions()
+                        .add(configureLocationSubscription(subscription));
+                case LIST_TYPE ->
+                    userSubscription.getListTypeSubscriptions()
+                        .add(configureListTypeSubscription(subscription));
+                case CASE_ID, CASE_URN ->
+                    userSubscription.getCaseSubscriptions()
+                        .add(configureCaseSubscription(subscription));
                 default -> { // No default case
                 }
             }
         });
         return userSubscription;
+    }
+
+    private UserSubscription collectSubscriptionsV2(List<Subscription> subscriptions) {
+        UserSubscription userSubscription = new UserSubscription();
+        subscriptions.forEach(subscription -> {
+            switch (subscription.getSearchType()) {
+                case LOCATION_ID ->
+                    userSubscription.getLocationSubscriptions()
+                        .add(configureLocationSubscription(subscription));
+                case LIST_TYPE ->
+                    userSubscription.getListTypeSubscriptions()
+                        .add(configureListTypeSubscription(subscription));
+                case CASE_NUMBER, CASE_NAME ->
+                    userSubscription.getCaseSubscriptions()
+                        .add(configureCaseSubscriptionV2(subscription));
+                default -> { // No default case
+                }
+            }
+        });
+        return userSubscription;
+    }
+
+    private LocationSubscription configureLocationSubscription(Subscription subscription) {
+        LocationSubscription locationSubscription = new LocationSubscription();
+        locationSubscription.setSubscriptionId(subscription.getId());
+        locationSubscription.setLocationName(subscription.getLocationName());
+        locationSubscription.setLocationId(subscription.getSearchValue());
+        Optional<SubscriptionListType> subscriptionListType = subscriptionListTypeRepository
+            .findByUserId(subscription.getUserId());
+        if (subscriptionListType.isPresent()) {
+            locationSubscription.setListType(subscriptionListType.get().getListType());
+            locationSubscription.setListLanguage(subscriptionListType.get().getListLanguage());
+        }
+        locationSubscription.setDateAdded(subscription.getCreatedDate());
+
+        return locationSubscription;
+    }
+
+    private ListTypeSubscription configureListTypeSubscription(Subscription subscription) {
+        ListTypeSubscription listTypeSubscription = new ListTypeSubscription();
+        listTypeSubscription.setSubscriptionId(subscription.getId());
+        listTypeSubscription.setListType(subscription.getSearchValue());
+        listTypeSubscription.setDateAdded(subscription.getCreatedDate());
+        listTypeSubscription.setChannel(subscription.getChannel());
+        return listTypeSubscription;
+    }
+
+    private CaseSubscription configureCaseSubscription(Subscription subscription) {
+        CaseSubscription caseSubscription = new CaseSubscription();
+        caseSubscription.setCaseName(subscription.getCaseName());
+        caseSubscription.setSubscriptionId(subscription.getId());
+        caseSubscription.setCaseNumber(subscription.getCaseNumber());
+        caseSubscription.setUrn(subscription.getUrn());
+        caseSubscription.setPartyNames(subscription.getPartyNames());
+        caseSubscription.setSearchType(subscription.getSearchType());
+        caseSubscription.setDateAdded(subscription.getCreatedDate());
+        return caseSubscription;
+    }
+
+    private CaseSubscription configureCaseSubscriptionV2(Subscription subscription) {
+        CaseSubscription caseSubscription = new CaseSubscription();
+        caseSubscription.setCaseName(subscription.getCaseName());
+        caseSubscription.setSubscriptionId(subscription.getId());
+        caseSubscription.setCaseNumber(subscription.getCaseNumber());
+        caseSubscription.setSearchType(subscription.getSearchType());
+        caseSubscription.setDateAdded(subscription.getCreatedDate());
+        return caseSubscription;
     }
 }
