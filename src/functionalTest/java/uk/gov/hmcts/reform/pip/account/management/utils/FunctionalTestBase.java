@@ -84,7 +84,7 @@ public class FunctionalTestBase {
 
     // Subscription URLs
     protected static final String SUBSCRIPTION_URL = "/subscription";
-    protected static final String FIND_SUBSCRIPTION_BY_USER_ID_URL = "/subscription/user/";
+    protected static final String FIND_SUBSCRIPTION_BY_USER_ID_URL = "/subscription/user/v2/";
     protected static final String BUILD_SUBSCRIBER_LIST_URL = SUBSCRIPTION_URL + "/artefact-recipients";
     protected static final String BUILD_DELETED_ARTEFACT_SUBSCRIBER_URL = SUBSCRIPTION_URL + "/deleted-artefact";
     protected static final String CONFIGURE_LIST_TYPE_URL = SUBSCRIPTION_URL + "/configure-list-types/";

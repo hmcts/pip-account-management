@@ -33,6 +33,7 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
+@SuppressWarnings("removal")
 class SubscriptionControllerTest {
 
     private Subscription mockSubscription;
@@ -83,7 +84,7 @@ class SubscriptionControllerTest {
                 HttpStatus.CREATED
             ),
             subscriptionController.createSubscription(mockSubscription, ACTIONING_USER_ID),
-                RETURNED_SUBSCRIPTION_NOT_MATCHED
+            RETURNED_SUBSCRIPTION_NOT_MATCHED
         );
     }
 
@@ -101,7 +102,7 @@ class SubscriptionControllerTest {
                 HttpStatus.CREATED
             ),
             subscriptionController.createSubscription(mockSubscription, ACTIONING_USER_ID),
-                RETURNED_SUBSCRIPTION_NOT_MATCHED
+            RETURNED_SUBSCRIPTION_NOT_MATCHED
         );
     }
 
@@ -111,7 +112,7 @@ class SubscriptionControllerTest {
         doNothing().when(subscriptionService).deleteById(testUuid, ACTIONING_USER_ID);
         assertEquals(String.format(
             "Subscription: %s was deleted", testUuid), subscriptionController.deleteById(
-                testUuid, ACTIONING_USER_ID).getBody(), "Subscription should be deleted"
+            testUuid, ACTIONING_USER_ID).getBody(), "Subscription should be deleted"
         );
     }
 
@@ -160,6 +161,7 @@ class SubscriptionControllerTest {
     }
 
     @Test
+    @Deprecated
     void testFindByUserId() {
         when(userSubscriptionService.findByUserId(USER_ID)).thenReturn(userSubscription);
         assertEquals(userSubscription, subscriptionController.findByUserId(USER_ID, USER_ID).getBody(),
@@ -168,9 +170,26 @@ class SubscriptionControllerTest {
     }
 
     @Test
+    @Deprecated
     void testFindByUserIdReturnsOk() {
         when(userSubscriptionService.findByUserId(USER_ID)).thenReturn(userSubscription);
         assertEquals(HttpStatus.OK, subscriptionController.findByUserId(USER_ID, USER_ID).getStatusCode(),
+                     STATUS_CODE_MATCH
+        );
+    }
+
+    @Test
+    void testFindByUserIdV2() {
+        when(userSubscriptionService.findByUserIdV2(USER_ID)).thenReturn(userSubscription);
+        assertEquals(userSubscription, subscriptionController.findByUserIdV2(USER_ID, USER_ID).getBody(),
+                     "Should return users subscriptions"
+        );
+    }
+
+    @Test
+    void testFindByUserIdV2ReturnsOk() {
+        when(userSubscriptionService.findByUserIdV2(USER_ID)).thenReturn(userSubscription);
+        assertEquals(HttpStatus.OK, subscriptionController.findByUserIdV2(USER_ID, USER_ID).getStatusCode(),
                      STATUS_CODE_MATCH
         );
     }
@@ -185,10 +204,20 @@ class SubscriptionControllerTest {
     }
 
     @Test
+    @Deprecated
     void testEmailSubscriptionRecipientsReturnsAccepted() {
         doNothing().when(subscriptionNotificationService).collectEmailSubscribers(any());
         assertEquals(
             HttpStatus.ACCEPTED, subscriptionController.buildEmailSubscriberList(new Artefact()).getStatusCode(),
+            STATUS_CODE_MATCH
+        );
+    }
+
+    @Test
+    void testEmailSubscriptionRecipientsV2ReturnsAccepted() {
+        doNothing().when(subscriptionNotificationService).collectEmailSubscribersV2(any());
+        assertEquals(
+            HttpStatus.ACCEPTED, subscriptionController.buildEmailSubscriberListV2(new Artefact()).getStatusCode(),
             STATUS_CODE_MATCH
         );
     }

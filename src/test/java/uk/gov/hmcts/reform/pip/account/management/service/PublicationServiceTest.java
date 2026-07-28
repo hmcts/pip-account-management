@@ -19,6 +19,7 @@ import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.Third
 import uk.gov.hmcts.reform.pip.account.management.model.MediaApplication;
 import uk.gov.hmcts.reform.pip.account.management.model.MediaApplicationStatus;
 import uk.gov.hmcts.reform.pip.account.management.model.subscription.BulkSubscriptionsSummary;
+import uk.gov.hmcts.reform.pip.account.management.model.subscription.BulkSubscriptionsSummaryV2;
 import uk.gov.hmcts.reform.pip.account.management.model.subscription.Subscription;
 import uk.gov.hmcts.reform.pip.account.management.model.subscription.SubscriptionsSummary;
 import uk.gov.hmcts.reform.pip.account.management.model.subscription.SubscriptionsSummaryDetails;
@@ -50,6 +51,7 @@ import static uk.gov.hmcts.reform.pip.account.management.helpers.MediaApplicatio
 
 @ExtendWith(MockitoExtension.class)
 @ActiveProfiles({"test", "non-async"})
+@SuppressWarnings("removal")
 class PublicationServiceTest {
 
     private final MockWebServer mockPublicationServicesEndpoint = new MockWebServer();
@@ -75,12 +77,20 @@ class PublicationServiceTest {
     private final LogCaptor logCaptor = LogCaptor.forClass(PublicationService.class);
     private final SubscriptionsSummary subscriptionsSummary = new SubscriptionsSummary();
     private final Subscription subscription = new Subscription();
+    private final Subscription subscriptionV2 = new Subscription();
+    private final Artefact artefact = new Artefact();
 
     @BeforeEach
     void setup() throws IOException {
+        artefact.setArtefactId(ARTEFACT_ID);
+
         subscriptionsSummary.setEmail(EMAIL);
         subscription.setSearchType(SearchType.CASE_ID);
         subscription.setSearchValue(TEST_ID);
+
+        subscriptionsSummary.setEmail(EMAIL);
+        subscriptionV2.setSearchType(SearchType.CASE_NUMBER);
+        subscriptionV2.setSearchValue(TEST_ID);
 
         mockPublicationServicesEndpoint.start(8081);
 
@@ -246,6 +256,7 @@ class PublicationServiceTest {
     }
 
     @Test
+    @Deprecated
     void testPostSubscriptionSummariesRequestUrl() throws InterruptedException {
         subscription.setSearchType(SearchType.LIST_TYPE);
         Map<String, List<Subscription>> subscriptionsMap = new ConcurrentHashMap<>();
@@ -265,6 +276,7 @@ class PublicationServiceTest {
     }
 
     @Test
+    @Deprecated
     void testPostSubscriptionSummariesRequestBodyEmail() throws IOException, InterruptedException {
         subscription.setSearchType(SearchType.LIST_TYPE);
         Map<String, List<Subscription>> subscriptionsMap = new ConcurrentHashMap<>();
@@ -287,6 +299,7 @@ class PublicationServiceTest {
     }
 
     @Test
+    @Deprecated
     void testPostSubscriptionSummariesRequestBodyLegacySendEmptyArtefactId() throws IOException, InterruptedException {
         subscription.setSearchType(SearchType.LIST_TYPE);
         Map<String, List<Subscription>> subscriptionsMap = new ConcurrentHashMap<>();
@@ -309,6 +322,7 @@ class PublicationServiceTest {
 
     @ParameterizedTest
     @EnumSource(value = SearchType.class, names = {"LOCATION_ID", "CASE_URN", "CASE_ID"})
+    @Deprecated
     void testPostSubscriptionDifferentTypes(SearchType searchType)
         throws InterruptedException, IOException {
         subscription.setSearchType(searchType);
@@ -356,6 +370,7 @@ class PublicationServiceTest {
     }
 
     @Test
+    @Deprecated
     void testPostSubscriptionSummariesWhenMultipleSubscriptions() throws InterruptedException, IOException {
         subscription.setSearchType(SearchType.LOCATION_ID);
         Map<String, List<Subscription>> subscriptionsMap = new ConcurrentHashMap<>();
@@ -380,6 +395,7 @@ class PublicationServiceTest {
     }
 
     @Test
+    @Deprecated
     void testPostSubscriptionSummariesThrows() {
         Map<String, List<Subscription>> subscriptionsMap = new ConcurrentHashMap<>();
         subscriptionsMap.put(EMAIL, List.of(subscription));
@@ -388,6 +404,157 @@ class PublicationServiceTest {
 
         publicationService.postSubscriptionSummaries(ARTEFACT_ID,
                                                              subscriptionsMap);
+
+        assertTrue(
+            logCaptor.getErrorLogs().get(0).contains("Subscription email failed to send with error"),
+            ERROR_LOG_MATCH_MESSAGE
+        );
+    }
+
+    @Test
+    void testPostSubscriptionSummariesV2RequestUrl() throws InterruptedException {
+        subscription.setSearchType(SearchType.LIST_TYPE);
+        Map<String, List<Subscription>> subscriptionsMap = new ConcurrentHashMap<>();
+        subscriptionsMap.put(EMAIL, List.of(subscription));
+
+        mockPublicationServicesEndpoint.enqueue(new MockResponse()
+                                                    .addHeader(CONTENT_TYPE,
+                                                               ContentType.APPLICATION_JSON)
+                                                    .setResponseCode(200));
+
+        publicationService.postSubscriptionSummariesV2(artefact, subscriptionsMap);
+
+        RecordedRequest recordedRequest = mockPublicationServicesEndpoint.takeRequest();
+        assertNotNull(recordedRequest.getRequestUrl(), "Request URL should not be null");
+        assertTrue(recordedRequest.getRequestUrl().toString().contains("/notify/subscription"),
+                   "Request URL should be correct");
+    }
+
+    @Test
+    void testPostSubscriptionSummariesV2RequestBodyEmail() throws IOException, InterruptedException {
+        subscription.setSearchType(SearchType.LIST_TYPE);
+        Map<String, List<Subscription>> subscriptionsMap = new ConcurrentHashMap<>();
+        subscriptionsMap.put(EMAIL, List.of(subscription));
+
+        mockPublicationServicesEndpoint.enqueue(new MockResponse()
+                                                    .addHeader(CONTENT_TYPE,
+                                                               ContentType.APPLICATION_JSON)
+                                                    .setResponseCode(200));
+
+        publicationService.postSubscriptionSummariesV2(artefact, subscriptionsMap);
+        RecordedRequest recordedRequest = mockPublicationServicesEndpoint.takeRequest();
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        BulkSubscriptionsSummaryV2 bulkSubscriptionsSummary =
+            objectMapper.readValue(recordedRequest.getBody().readByteArray(), BulkSubscriptionsSummaryV2.class);
+
+        SubscriptionsSummary subscriptionsSummary = bulkSubscriptionsSummary.getSubscriptionEmails().get(0);
+        assertEquals(EMAIL, subscriptionsSummary.getEmail(), "Subscription email should match");
+    }
+
+    @Test
+    void testPostSubscriptionSummariesV2RequestBodyLegacySendEmptyArtefactId()
+        throws IOException, InterruptedException {
+        subscription.setSearchType(SearchType.LIST_TYPE);
+        Map<String, List<Subscription>> subscriptionsMap = new ConcurrentHashMap<>();
+        subscriptionsMap.put(EMAIL, List.of(subscription));
+
+        mockPublicationServicesEndpoint.enqueue(new MockResponse()
+                                                    .addHeader(CONTENT_TYPE,
+                                                               ContentType.APPLICATION_JSON)
+                                                    .setResponseCode(200));
+
+        publicationService.postSubscriptionSummariesV2(artefact, subscriptionsMap);
+        RecordedRequest recordedRequest = mockPublicationServicesEndpoint.takeRequest();
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        BulkSubscriptionsSummaryV2 bulkSubscriptionsSummary =
+            objectMapper.readValue(recordedRequest.getBody().readByteArray(), BulkSubscriptionsSummaryV2.class);
+
+        assertEquals(ARTEFACT_ID, bulkSubscriptionsSummary.getArtefact().getArtefactId(),
+                     "Subscription artefact ID should match");
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = SearchType.class, names = {"LOCATION_ID", "CASE_NUMBER", "CASE_NAME"})
+    void testPostSubscriptionV2DifferentTypes(SearchType searchType)
+        throws InterruptedException, IOException {
+        subscriptionV2.setSearchType(searchType);
+        Map<String, List<Subscription>> subscriptionsMap = new ConcurrentHashMap<>();
+        subscriptionsMap.put(EMAIL, List.of(subscriptionV2));
+
+        mockPublicationServicesEndpoint.enqueue(new MockResponse()
+                                                    .addHeader(CONTENT_TYPE,
+                                                               ContentType.APPLICATION_JSON)
+                                                    .setResponseCode(200));
+
+        publicationService.postSubscriptionSummariesV2(artefact, subscriptionsMap);
+        assertTrue(logCaptor.getErrorLogs().isEmpty(), ERROR_LOG_EMPTY_MESSAGE);
+
+        RecordedRequest recordedRequest = mockPublicationServicesEndpoint.takeRequest();
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        BulkSubscriptionsSummaryV2 bulkSubscriptionsSummary =
+            objectMapper.readValue(recordedRequest.getBody().readByteArray(), BulkSubscriptionsSummaryV2.class);
+
+        SubscriptionsSummaryDetails subscriptionsSummaryDetailsReturned = bulkSubscriptionsSummary
+            .getSubscriptionEmails().get(0).getSubscriptions();
+
+        switch (searchType) {
+            case LOCATION_ID -> {
+                assertEquals(1, subscriptionsSummaryDetailsReturned.getLocationId().size(),
+                             "Size of location IDs should match");
+                assertEquals(TEST_ID, subscriptionsSummaryDetailsReturned.getLocationId().get(0),
+                             "Location ID should match");
+            }
+            case CASE_NAME -> {
+                assertEquals(1, subscriptionsSummaryDetailsReturned.getCaseName().size(),
+                             "Size of case names should match");
+                assertEquals(TEST_ID, subscriptionsSummaryDetailsReturned.getCaseName().get(0),
+                             "Case name should match");
+            }
+            case CASE_NUMBER -> {
+                assertEquals(1, subscriptionsSummaryDetailsReturned.getCaseNumber().size(),
+                             "Size of case numbers should match");
+                assertEquals(TEST_ID, subscriptionsSummaryDetailsReturned.getCaseNumber().get(0),
+                             "Case number should match");
+            }
+            default -> fail("Invalid search type");
+        }
+    }
+
+    @Test
+    void testPostSubscriptionSummariesV2WhenMultipleSubscriptions() throws InterruptedException, IOException {
+        subscription.setSearchType(SearchType.LOCATION_ID);
+        Map<String, List<Subscription>> subscriptionsMap = new ConcurrentHashMap<>();
+        subscriptionsMap.put(EMAIL, List.of(subscriptionV2));
+        subscriptionsMap.put("OtherTestEmail", List.of(subscriptionV2));
+
+        mockPublicationServicesEndpoint.enqueue(new MockResponse()
+                                                    .addHeader(CONTENT_TYPE,
+                                                               ContentType.APPLICATION_JSON)
+                                                    .setResponseCode(200));
+
+        publicationService.postSubscriptionSummariesV2(artefact, subscriptionsMap);
+
+        RecordedRequest recordedRequest = mockPublicationServicesEndpoint.takeRequest();
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        BulkSubscriptionsSummaryV2 bulkSubscriptionsSummary =
+            objectMapper.readValue(recordedRequest.getBody().readByteArray(), BulkSubscriptionsSummaryV2.class);
+
+        assertEquals(2, bulkSubscriptionsSummary.getSubscriptionEmails().size(),
+                     "Number of subscriptions should match when there are multiple subscriptions");
+    }
+
+    @Test
+    void testPostSubscriptionSummariesV2Throws() {
+        Map<String, List<Subscription>> subscriptionsMap = new ConcurrentHashMap<>();
+        subscriptionsMap.put(EMAIL, List.of(subscriptionV2));
+
+        mockPublicationServicesEndpoint.enqueue(new MockResponse().setResponseCode(404));
+
+        publicationService.postSubscriptionSummariesV2(artefact, subscriptionsMap);
 
         assertTrue(
             logCaptor.getErrorLogs().get(0).contains("Subscription email failed to send with error"),
