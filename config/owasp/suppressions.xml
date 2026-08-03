@@ -113,6 +113,9 @@
     <cve>CVE-2026-22751</cve>
     <cve>CVE-2026-41706</cve>
     <cve>CVE-2026-47838</cve>
+
+    <!-- Spring Cloud -->
+    <cve>CVE-2026-50338</cve>
   </suppress>
   <suppress>
     <notes>log4j suppression</notes>
@@ -153,6 +156,9 @@
     <cve>CVE-2026-47244</cve>
     <cve>CVE-2026-50020</cve>
     <cve>CVE-2026-45536</cve>
+    <cve>CVE-2026-44891</cve>
+    <cve>CVE-2026-55831</cve>
+    <cve>CVE-2026-55833</cve>
   </suppress>
   <suppress>
     <notes>spring framework suppression</notes>
