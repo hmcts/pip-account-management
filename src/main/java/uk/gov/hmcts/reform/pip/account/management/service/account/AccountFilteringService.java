@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import uk.gov.hmcts.reform.pip.account.management.database.UserArchivedRepository;
 import uk.gov.hmcts.reform.pip.account.management.database.UserRepository;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.NotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.helpers.EmailHelper;
@@ -11,6 +12,7 @@ import uk.gov.hmcts.reform.pip.account.management.model.account.PiUser;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
 import uk.gov.hmcts.reform.pip.model.report.AccountMiData;
+import uk.gov.hmcts.reform.pip.model.report.DeletedAccountMiData;
 
 import java.util.List;
 
@@ -21,10 +23,12 @@ import static uk.gov.hmcts.reform.pip.model.account.UserProvenances.ALL_NON_THIR
 @Service
 public class AccountFilteringService {
     private final UserRepository userRepository;
+    private final UserArchivedRepository userArchivedRepository;
 
     @Autowired
-    public AccountFilteringService(UserRepository userRepository) {
+    public AccountFilteringService(UserRepository userRepository, UserArchivedRepository userArchivedRepository) {
         this.userRepository = userRepository;
+        this.userArchivedRepository = userArchivedRepository;
     }
 
     /**
@@ -34,6 +38,15 @@ public class AccountFilteringService {
      */
     public List<AccountMiData> getAccountDataForMi() {
         return userRepository.getAccountDataForMi();
+    }
+
+    /**
+     * Method which will retrieve MI reporting data for all deleted accounts from the archived table.
+     *
+     * @return A list of MI Data objects for deleted accounts.
+     */
+    public List<DeletedAccountMiData> getDeletedAccountDataForMi() {
+        return userArchivedRepository.getAccountDataForMi();
     }
 
     /**

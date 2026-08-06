@@ -12,7 +12,9 @@ import uk.gov.hmcts.reform.pip.account.management.service.account.AccountFilteri
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
 import uk.gov.hmcts.reform.pip.model.report.AccountMiData;
+import uk.gov.hmcts.reform.pip.model.report.DeletedAccountMiData;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -34,14 +36,27 @@ class AccountFilteringControllerTest {
     AccountFilteringController accountFilteringController;
 
     @Test
-    void testMiDataReturnsOk() {
+    void testAccountMiDataReturnsOk() {
         AccountMiData accountMiData = new AccountMiData();
         accountMiData.setProvenanceUserId("5678");
 
         when(accountFilteringService.getAccountDataForMi()).thenReturn(List.of(accountMiData));
-        ResponseEntity<List<AccountMiData>> listAccountMiData = accountFilteringController.getMiData();
+        ResponseEntity<List<AccountMiData>> listAccountMiData = accountFilteringController.getAccountMiData();
         assertEquals(HttpStatus.OK, listAccountMiData.getStatusCode(), STATUS_CODE_MATCH);
         assertTrue(listAccountMiData.getBody().contains(accountMiData), "Expected Account MI Data not found");
+    }
+
+    @Test
+    void testDeletedAccountMiDataReturnsOk() {
+        DeletedAccountMiData accountMiData = new DeletedAccountMiData();
+        accountMiData.setUserId(UUID.randomUUID());
+        accountMiData.setDeletedDate(LocalDateTime.now());
+
+        when(accountFilteringService.getDeletedAccountDataForMi()).thenReturn(List.of(accountMiData));
+        ResponseEntity<List<DeletedAccountMiData>> response = accountFilteringController
+            .getDeletedAccountMiData();
+        assertEquals(HttpStatus.OK, response.getStatusCode(), STATUS_CODE_MATCH);
+        assertTrue(response.getBody().contains(accountMiData), "Expected deleted account MI Data not found");
     }
 
     @Test
