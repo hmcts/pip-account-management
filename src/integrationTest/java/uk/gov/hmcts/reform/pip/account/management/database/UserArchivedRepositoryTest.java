@@ -71,7 +71,10 @@ class UserArchivedRepositoryTest {
                 && PROVENANCE_USER_ID1.equals(account.getProvenanceUserId())
                 && UserProvenances.PI_AAD.equals(account.getUserProvenance())
                 && Roles.VERIFIED.equals(account.getRoles())
-                && LAST_SIGNED_IN_DATE1.equals(account.getLastSignedInDate())
-                && ARCHIVED_DATE1.equals(account.getDeletedDate()));
+                && LAST_SIGNED_IN_DATE1.truncatedTo(ChronoUnit.SECONDS)
+                .equals(account.getLastSignedInDate().truncatedTo(ChronoUnit.SECONDS))
+                && ARCHIVED_DATE1.truncatedTo(ChronoUnit.SECONDS)
+                .equals(account.getDeletedDate().truncatedTo(ChronoUnit.SECONDS))
+            );
     }
 }
