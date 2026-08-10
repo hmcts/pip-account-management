@@ -36,7 +36,7 @@ class UserSubscriptionServiceTest {
     private static final UUID USER_ID = UUID.randomUUID();
     private static final UUID USER_ID_NO_SUBS = UUID.randomUUID();
     private static final String SEARCH_VALUE = "193254";
-    private static final String CASE_ID = "123";
+    private static final String CASE_NUMBER = "123";
 
     private static final String CASE_NAME = "case-name";
     private static final Channel EMAIL = Channel.EMAIL;
@@ -100,11 +100,11 @@ class UserSubscriptionServiceTest {
     @Test
     void testFindByUserIdV2CaseNumberSearchType() {
         mockSubscription.setSearchType(SearchType.CASE_NUMBER);
-        mockSubscription.setCaseNumber(CASE_ID);
+        mockSubscription.setCaseNumber(CASE_NUMBER);
         mockSubscription.setCaseName(CASE_NAME);
 
         CaseSubscription expected = new CaseSubscription();
-        expected.setCaseNumber(CASE_ID);
+        expected.setCaseNumber(CASE_NUMBER);
         expected.setCaseName(CASE_NAME);
         expected.setSubscriptionId(mockSubscription.getId());
         expected.setDateAdded(DATE_ADDED);
@@ -118,11 +118,11 @@ class UserSubscriptionServiceTest {
     @Test
     void testFindByUserIdV2CaseNameSearchType() {
         mockSubscription.setSearchType(SearchType.CASE_NAME);
-        mockSubscription.setCaseNumber(CASE_ID);
+        mockSubscription.setCaseNumber(CASE_NUMBER);
         mockSubscription.setCaseName(CASE_NAME);
 
         CaseSubscription expected = new CaseSubscription();
-        expected.setCaseNumber(CASE_ID);
+        expected.setCaseNumber(CASE_NUMBER);
         expected.setCaseName(CASE_NAME);
         expected.setSubscriptionId(mockSubscription.getId());
         expected.setDateAdded(DATE_ADDED);
@@ -153,8 +153,9 @@ class UserSubscriptionServiceTest {
             .thenReturn(Optional.of(mockSubscriptionListType));
         UserSubscription result = userSubscriptionService.findByUserIdV2(USER_ID);
         for (int i = 0; i < 3; i++) {
-            assertEquals(CASE_ID + i, result.getCaseSubscriptions().get(i).getCaseNumber(),
-                         "Should contain correct caseNumber");
+            assertEquals(
+                CASE_NUMBER + i, result.getCaseSubscriptions().get(i).getCaseNumber(),
+                "Should contain correct caseNumber");
         }
         assertEquals(COURT_NAME, result.getLocationSubscriptions().get(0).getLocationName(),
                      "Should match court name");

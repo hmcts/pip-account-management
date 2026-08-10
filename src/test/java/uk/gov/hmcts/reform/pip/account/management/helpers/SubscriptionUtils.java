@@ -63,7 +63,6 @@ public final class SubscriptionUtils {
             } else {
                 subscription.setSearchType(SearchType.LOCATION_ID);
                 subscription.setCaseName(null);
-                subscription.setUrn(null);
                 subscription.setCaseNumber(null);
                 subscription.setLocationName("test court name");
             }

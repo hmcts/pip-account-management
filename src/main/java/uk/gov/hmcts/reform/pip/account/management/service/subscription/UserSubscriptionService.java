@@ -103,18 +103,6 @@ public class UserSubscriptionService {
         return listTypeSubscription;
     }
 
-    private CaseSubscription configureCaseSubscription(Subscription subscription) {
-        CaseSubscription caseSubscription = new CaseSubscription();
-        caseSubscription.setCaseName(subscription.getCaseName());
-        caseSubscription.setSubscriptionId(subscription.getId());
-        caseSubscription.setCaseNumber(subscription.getCaseNumber());
-        caseSubscription.setUrn(subscription.getUrn());
-        caseSubscription.setPartyNames(subscription.getPartyNames());
-        caseSubscription.setSearchType(subscription.getSearchType());
-        caseSubscription.setDateAdded(subscription.getCreatedDate());
-        return caseSubscription;
-    }
-
     private CaseSubscription configureCaseSubscriptionV2(Subscription subscription) {
         CaseSubscription caseSubscription = new CaseSubscription();
         caseSubscription.setCaseName(subscription.getCaseName());

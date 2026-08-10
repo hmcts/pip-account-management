@@ -120,7 +120,7 @@ class TestingSupportApiTest extends IntegrationTestBase {
     private static final String LOCATION_NAME = "Court1";
 
     private static final UUID USER_ID = UUID.fromString("87f907d2-eb28-42cc-b6e1-ae2b03f7bba5");
-    private static final String CASE_ID = "T485913";
+    private static final String CASE_NUMBER = "T485913";
 
     private static final String AUDIT_URL = "/audit";
     private static final AuditAction ACTION = PUBLICATION_UPLOAD;
@@ -569,9 +569,9 @@ class TestingSupportApiTest extends IntegrationTestBase {
 
         subscription.setLocationName(LOCATION_NAME_PREFIX + LOCATION_NAME);
         subscription.setChannel(Channel.API_COURTEL);
-        subscription.setSearchType(SearchType.CASE_ID);
-        subscription.setSearchValue(CASE_ID);
-        subscription.setCaseNumber(CASE_ID);
+        subscription.setSearchType(SearchType.CASE_NUMBER);
+        subscription.setSearchValue(CASE_NUMBER);
+        subscription.setCaseNumber(CASE_NUMBER);
         subscription.setCreatedDate(LocalDateTime.now());
         subscription.setUserId(USER_ID);
 

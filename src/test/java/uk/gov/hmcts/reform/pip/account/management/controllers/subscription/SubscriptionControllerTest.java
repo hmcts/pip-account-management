@@ -89,7 +89,7 @@ class SubscriptionControllerTest {
 
     @Test
     void testCreateCaseSubscription() {
-        mockSubscription.setSearchType(SearchType.CASE_ID);
+        mockSubscription.setSearchType(SearchType.CASE_NUMBER);
         when(subscriptionService.createSubscription(mockSubscription, ACTIONING_USER_ID))
             .thenReturn(mockSubscription);
 

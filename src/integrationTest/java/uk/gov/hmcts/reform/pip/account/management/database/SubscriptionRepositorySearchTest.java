@@ -30,7 +30,7 @@ class SubscriptionRepositorySearchTest {
     private static final String LOCATION_ID = "123";
     private static final String LOCATION_NAME = "Test location name";
     private static final String CASE_NUMBER = "Test case number";
-    private static final String CASE_URN = "Test case URN";
+    private static final String CASE_NAME = "Test case name";
     private static final String SUBSCRIPTION_MATCHED_MESSAGE = "Subscription does not match";
     private static final String SUBSCRIPTION_EMPTY_MESSAGE = "Subscription is not empty";
     private static final String LIST_LANGUAGE = "ENGLISH";
@@ -63,20 +63,20 @@ class SubscriptionRepositorySearchTest {
 
         Subscription subscription2 = new Subscription();
         subscription2.setUserId(USER_ID);
-        subscription2.setSearchType(SearchType.CASE_ID);
+        subscription2.setSearchType(SearchType.CASE_NUMBER);
         subscription2.setSearchValue(CASE_NUMBER);
         subscription2.setChannel(Channel.EMAIL);
         subscription2.setCaseNumber(CASE_NUMBER);
+        subscription2.setCaseName(CASE_NAME);
 
         savedSubscription = subscriptionRepository.save(subscription2);
         subscriptionId2 = savedSubscription.getId();
 
         Subscription subscription3 = new Subscription();
         subscription3.setUserId(USER_ID);
-        subscription3.setSearchType(SearchType.CASE_URN);
-        subscription3.setSearchValue(CASE_URN);
+        subscription3.setSearchType(SearchType.CASE_NAME);
+        subscription3.setSearchValue(CASE_NAME);
         subscription3.setChannel(Channel.EMAIL);
-        subscription3.setUrn(CASE_URN);
 
         savedSubscription = subscriptionRepository.save(subscription3);
         subscriptionId3 = savedSubscription.getId();
@@ -105,33 +105,26 @@ class SubscriptionRepositorySearchTest {
     }
 
     @Test
-    void shouldFindSubscriptionsByCaseIdSearchValue() {
-        assertThat(subscriptionRepository.findSubscriptionsBySearchValue(SearchType.CASE_ID.name(), CASE_NUMBER))
+    void shouldFindSubscriptionsByCaseNumberSearchValue() {
+        assertThat(subscriptionRepository.findSubscriptionsBySearchValue(SearchType.CASE_NUMBER.name(), CASE_NUMBER))
             .as(SUBSCRIPTION_MATCHED_MESSAGE)
             .hasSize(1).extracting(Subscription::getId)
             .containsExactly(subscriptionId2);
     }
 
     @Test
-    void shouldFindNotSubscriptionsByCaseIdUsingCaseUrnSearchValue() {
-        assertThat(subscriptionRepository.findSubscriptionsBySearchValue(SearchType.CASE_ID.name(), CASE_URN))
+    void shouldFindNotSubscriptionsByCaseNumberUsingCaseNameSearchValue() {
+        assertThat(subscriptionRepository.findSubscriptionsBySearchValue(SearchType.CASE_NUMBER.name(), CASE_NAME))
             .as(SUBSCRIPTION_EMPTY_MESSAGE)
             .isEmpty();
     }
 
     @Test
     void shouldFindSubscriptionsByCaseUrnSearchValue() {
-        assertThat(subscriptionRepository.findSubscriptionsBySearchValue(SearchType.CASE_URN.name(), CASE_URN))
+        assertThat(subscriptionRepository.findSubscriptionsBySearchValue(SearchType.CASE_NAME.name(), CASE_NAME))
             .as(SUBSCRIPTION_MATCHED_MESSAGE)
             .hasSize(1).extracting(Subscription::getId)
             .containsExactly(subscriptionId3);
-    }
-
-    @Test
-    void shouldNotFindSubscriptionsByCaseUrnUsingCaseNumberSearchValue() {
-        assertThat(subscriptionRepository.findSubscriptionsBySearchValue(SearchType.CASE_URN.name(), CASE_NUMBER))
-            .as(SUBSCRIPTION_EMPTY_MESSAGE)
-            .isEmpty();
     }
 
     @Test

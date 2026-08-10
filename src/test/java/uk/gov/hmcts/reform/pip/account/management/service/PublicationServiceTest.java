@@ -83,10 +83,6 @@ class PublicationServiceTest {
         artefact.setArtefactId(ARTEFACT_ID);
 
         subscriptionsSummary.setEmail(EMAIL);
-        subscription.setSearchType(SearchType.CASE_ID);
-        subscription.setSearchValue(TEST_ID);
-
-        subscriptionsSummary.setEmail(EMAIL);
         subscriptionV2.setSearchType(SearchType.CASE_NUMBER);
         subscriptionV2.setSearchValue(TEST_ID);
 
