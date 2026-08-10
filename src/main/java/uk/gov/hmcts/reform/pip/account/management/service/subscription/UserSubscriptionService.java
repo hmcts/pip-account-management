@@ -36,23 +36,6 @@ public class UserSubscriptionService {
      * Find all subscriptions for a given user.
      * @param userId The user id to find the subscriptions for.
      * @return The list of subscriptions that have been found.
-     *
-     * @deprecated Use findByUserIdV2 instead.
-     *
-     */
-    @Deprecated(since = "1.0", forRemoval = true)
-    public UserSubscription findByUserId(UUID userId) {
-        List<Subscription> subscriptions = subscriptionRepository.findByUserId(userId);
-        if (subscriptions.isEmpty()) {
-            return new UserSubscription();
-        }
-        return collectSubscriptions(subscriptions);
-    }
-
-    /**
-     * Find all subscriptions for a given user.
-     * @param userId The user id to find the subscriptions for.
-     * @return The list of subscriptions that have been found.
      */
     public UserSubscription findByUserIdV2(UUID userId) {
         List<Subscription> subscriptions = subscriptionRepository.findByUserId(userId);
@@ -73,32 +56,6 @@ public class UserSubscriptionService {
         String message = String.format("All subscriptions deleted for user id %s", userId);
         log.info(writeLog(message));
         return message;
-    }
-
-    /**
-     * Collect all user subscriptions and group them by type.
-     *
-     * @deprecated Use collectSubscriptionsV2 instead.
-     */
-    @Deprecated(since = "1.0", forRemoval = true)
-    private UserSubscription collectSubscriptions(List<Subscription> subscriptions) {
-        UserSubscription userSubscription = new UserSubscription();
-        subscriptions.forEach(subscription -> {
-            switch (subscription.getSearchType()) {
-                case LOCATION_ID ->
-                    userSubscription.getLocationSubscriptions()
-                        .add(configureLocationSubscription(subscription));
-                case LIST_TYPE ->
-                    userSubscription.getListTypeSubscriptions()
-                        .add(configureListTypeSubscription(subscription));
-                case CASE_ID, CASE_URN ->
-                    userSubscription.getCaseSubscriptions()
-                        .add(configureCaseSubscription(subscription));
-                default -> { // No default case
-                }
-            }
-        });
-        return userSubscription;
     }
 
     private UserSubscription collectSubscriptionsV2(List<Subscription> subscriptions) {

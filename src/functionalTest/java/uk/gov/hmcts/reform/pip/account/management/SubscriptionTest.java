@@ -221,7 +221,7 @@ class SubscriptionTest extends AccountHelperBase {
             final String jsonString = new String(jsonFile.readAllBytes(), StandardCharsets.UTF_8);
 
             Response responseBuildSubscriberList = doPostRequest(
-                BUILD_SUBSCRIBER_LIST_URL,
+                BUILD_EMAIL_SUBSCRIBER_LIST_URL,
                 headerMap, jsonString
             );
             assertThat(responseBuildSubscriberList.getStatusCode()).isEqualTo(ACCEPTED.value());

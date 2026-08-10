@@ -116,27 +116,6 @@ public class SubscriptionController {
         return ResponseEntity.ok(subscriptionService.findById(subId));
     }
 
-    /**
-     * Retrieve all subscriptions for a user.
-     *
-     * @deprecated Use the endpoint /user/v2/{userId} instead.
-     */
-    @ApiResponse(responseCode = OK_CODE, description = "Subscriptions list for user id {userId} found")
-    @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE,
-        description = "No subscription found with the user id {userId}")
-    @ApiResponse(responseCode = FORBIDDEN_ERROR_CODE,
-        description = "User with ID {requesterId} is not authorised to view these subscriptions")
-    @Operation(summary = "Returns the list of relevant subscriptions associated with a given user id.")
-    @PreAuthorize("@subscriptionAuthorisationService.userCanViewSubscriptions(#requesterId, #userId)")
-    @GetMapping("/user/{userId}")
-    @Deprecated(since = "1.0", forRemoval = true)
-    @SuppressWarnings("removal")
-    public ResponseEntity<UserSubscription> findByUserId(
-        @RequestHeader(X_REQUESTER_ID_HEADER) UUID requesterId,
-        @Parameter @PathVariable UUID userId) {
-        return ResponseEntity.ok(userSubscriptionService.findByUserId(userId));
-    }
-
     @ApiResponse(responseCode = OK_CODE, description = "Subscriptions list for user id {userId} found")
     @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE,
         description = "No subscription found with the user id {userId}")
@@ -149,36 +128,6 @@ public class SubscriptionController {
         @RequestHeader(X_REQUESTER_ID_HEADER) UUID requesterId,
         @Parameter @PathVariable UUID userId) {
         return ResponseEntity.ok(userSubscriptionService.findByUserIdV2(userId));
-    }
-
-    /**
-     * Builds the subscriber list for the given artefact.
-     *
-     * @deprecated Use the more specific /email-recipients/V2 and /api-recipients endpoints instead.
-     */
-    @ApiResponse(responseCode = "202", description = "Subscriber request has been accepted")
-    @Operation(summary = "Takes in artefact to build subscriber list.")
-    @PostMapping("/artefact-recipients")
-    @Deprecated(since = "1.0", forRemoval = true)
-    @SuppressWarnings("removal")
-    public ResponseEntity<String> buildSubscriberList(@RequestBody Artefact artefact) {
-        subscriptionNotificationService.collectSubscribers(artefact);
-        return ResponseEntity.status(HttpStatus.ACCEPTED).body("Subscriber request has been accepted");
-    }
-
-    /**
-     * Builds the email subscriber list for the given artefact.
-     *
-     * @deprecated Use the /email-recipients/V2 endpoint instead.
-     */
-    @ApiResponse(responseCode = "202", description = "Email subscriber request has been accepted")
-    @Operation(summary = "Build email subscriber list for the publication.")
-    @PostMapping("/email-recipients")
-    @Deprecated(since = "1.0", forRemoval = true)
-    @SuppressWarnings("removal")
-    public ResponseEntity<String> buildEmailSubscriberList(@RequestBody Artefact artefact) {
-        subscriptionNotificationService.collectEmailSubscribers(artefact);
-        return ResponseEntity.status(HttpStatus.ACCEPTED).body("Email subscriber request has been accepted");
     }
 
     @ApiResponse(responseCode = "202", description = "Email subscriber request has been accepted")

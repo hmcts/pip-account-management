@@ -24,30 +24,13 @@ import java.util.UUID;
 
 import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
 import static uk.gov.hmcts.reform.pip.model.publication.Sensitivity.CLASSIFIED;
-import static uk.gov.hmcts.reform.pip.model.subscription.SearchType.CASE_ID;
 import static uk.gov.hmcts.reform.pip.model.subscription.SearchType.CASE_NAME;
 import static uk.gov.hmcts.reform.pip.model.subscription.SearchType.CASE_NUMBER;
-import static uk.gov.hmcts.reform.pip.model.subscription.SearchType.CASE_URN;
 import static uk.gov.hmcts.reform.pip.model.subscription.SearchType.LIST_TYPE;
 
 @Service
 @Slf4j
 public class SubscriptionNotificationService {
-    /**
-     * Key for case number in legacy search map.
-     *
-     * @deprecated Use ArtefactCaseInfo.getCaseNumber() instead.
-     */
-    @Deprecated(since = "1.0", forRemoval = true)
-    private static final String CASE_NUMBER_KEY = "caseNumber";
-
-    /**
-     * Key for case URN in legacy search map.
-     *
-     * @deprecated Use ArtefactCaseInfo.getCaseUrn() instead.
-     */
-    @Deprecated(since = "1.0", forRemoval = true)
-    private static final String CASE_URN_KEY = "caseUrn";
 
     private static final String SUBSCRIBER_NOTIFICATION_LOG = "Summary being sent to publication services for id ";
 
@@ -74,60 +57,6 @@ public class SubscriptionNotificationService {
         this.accountService = accountService;
         this.publicationService = publicationService;
         this.thirdPartySubscriptionNotificationService = thirdPartySubscriptionNotificationService;
-    }
-
-    /**
-     * Collect all subscribers for the artefact, and handle sending of email and third party subscriptions to
-     * the subscribers.
-     * @param artefact the artefact to collect the subscriptions for.
-     * @deprecated Use collectEmailSubscribersV2 and collectApiSubscribers instead.
-     */
-    @Async
-    @Deprecated(since = "1.0", forRemoval = true)
-    @SuppressWarnings("removal")
-    public void collectSubscribers(Artefact artefact) {
-
-        List<Subscription> subscriptionList = new ArrayList<>(querySubscriptionValueForLocation(
-            artefact.getLocationId(), artefact.getListType().toString(),
-            artefact.getLanguage().toString()));
-
-        subscriptionList.addAll(querySubscriptionValue(LIST_TYPE.name(), artefact.getListType().name()));
-
-        if (artefact.getSearch().containsKey("cases")) {
-            artefact.getSearch().get("cases").forEach(object -> subscriptionList.addAll(extractSearchValue(object)));
-        }
-
-        List<Subscription> subscriptionsToContact = CLASSIFIED.equals(artefact.getSensitivity())
-            ? validateSubscriptionPermissions(subscriptionList, artefact)
-            : subscriptionList;
-
-        handleSubscriptionSending(artefact.getArtefactId(), subscriptionsToContact);
-        thirdPartySubscriptionNotificationService.handleThirdPartySubscription(artefact);
-    }
-
-    /**
-     * Collect all email subscribers for the artefact, and handle sending of email to the subscribers.
-     * @param artefact the artefact to collect the subscriptions for.
-     * @deprecated Use collectEmailSubscribersV2 instead.
-     */
-    @Async
-    @Deprecated(since = "1.0", forRemoval = true)
-    @SuppressWarnings("removal")
-    public void collectEmailSubscribers(Artefact artefact) {
-        List<Subscription> subscriptionList = new ArrayList<>(
-            querySubscriptionValueForLocation(artefact.getLocationId(), artefact.getListType().toString(),
-                                              artefact.getLanguage().toString())
-        );
-
-        if (artefact.getSearch().containsKey("cases")) {
-            artefact.getSearch().get("cases").forEach(object -> subscriptionList.addAll(extractSearchValue(object)));
-        }
-
-        List<Subscription> subscriptionsToContact = CLASSIFIED.equals(artefact.getSensitivity())
-            ? validateSubscriptionPermissions(subscriptionList, artefact)
-            : subscriptionList;
-
-        handleEmailSubscriptionSending(artefact.getArtefactId(), subscriptionsToContact);
     }
 
     /**
@@ -212,31 +141,6 @@ public class SubscriptionNotificationService {
         return repository.findSubscriptionsByLocationSearchValue(value, listType, listLanguage);
     }
 
-    /**
-     * Extracts subscriptions from a legacy case search object.
-     *
-     * @deprecated Use extractCaseSubscriptions instead.
-     */
-    @SuppressWarnings("unchecked")
-    @Deprecated(since = "1.0", forRemoval = true)
-    private List<Subscription> extractSearchValue(Object caseObject) {
-        List<Subscription> subscriptionList = new ArrayList<>();
-        Map<String, Object> caseMap = (Map) caseObject;
-
-        if (caseMap.containsKey(CASE_NUMBER_KEY) && caseMap.get(CASE_NUMBER_KEY) != null) {
-            subscriptionList.addAll(querySubscriptionValue(CASE_ID.name(), caseMap.get(CASE_NUMBER_KEY).toString()));
-        }
-
-        if (caseMap.containsKey(CASE_URN_KEY) && caseMap.get(CASE_URN_KEY) != null) {
-            subscriptionList.addAll(querySubscriptionValue(CASE_URN.name(), caseMap.get(CASE_URN_KEY).toString()));
-        }
-
-        if (!caseMap.containsKey(CASE_NUMBER_KEY) || !caseMap.containsKey(CASE_URN_KEY)) {
-            log.warn(writeLog(String.format("No value found in %s for case number or urn", caseObject)));
-        }
-        return subscriptionList;
-    }
-
     @SuppressWarnings("unchecked")
     private List<Subscription> extractCaseSubscriptions(ArtefactCaseInfo caseInfo) {
         List<Subscription> subscriptionList = new ArrayList<>();
@@ -250,54 +154,6 @@ public class SubscriptionNotificationService {
         }
 
         return subscriptionList;
-    }
-
-    /**
-     * Handle forming and sending of subscriptions to publication services.
-     *
-     * @param artefactId The id of the artefact being sent
-     * @param subscriptionsList The list of subscriptions being sent
-     * @deprecated Use handleEmailSubscriptionSendingV2 and handleLegacyThirdPartySubscriptionSending instead.
-     */
-    @Deprecated(since = "1.0", forRemoval = true)
-    @SuppressWarnings("removal")
-    private void handleSubscriptionSending(UUID artefactId, List<Subscription> subscriptionsList) {
-        List<Subscription> emailList = sortSubscriptionByChannel(subscriptionsList, Channel.EMAIL.notificationRoute);
-        List<Subscription> apiList = sortSubscriptionByChannel(subscriptionsList,
-                                                               Channel.API_COURTEL.notificationRoute);
-
-        Map<String, List<Subscription>> emailSubscriptions =
-            subscriptionChannelService.buildEmailSubscriptions(emailList);
-        if (!emailSubscriptions.isEmpty()) {
-            log.info(writeLog(SUBSCRIBER_NOTIFICATION_LOG + artefactId));
-            publicationService.postSubscriptionSummaries(artefactId, emailSubscriptions);
-        }
-
-        subscriptionChannelService.buildLegacyApiSubscriptions(apiList)
-            .forEach((api, subscriptions) -> publicationService.legacySendThirdPartyList(
-                new LegacyThirdPartySubscription(api, artefactId)
-            ));
-        log.info(writeLog(String.format("Collected %s api subscribers", apiList.size())));
-    }
-
-    /**
-     * Handle forming and sending of subscriptions to publication services.
-     *
-     * @param artefactId The id of the artefact being sent
-     * @param subscriptionsList The list of subscriptions being sent
-     * @deprecated Use handleEmailSubscriptionSendingV2 instead.
-     */
-    @Deprecated(since = "1.0", forRemoval = true)
-    @SuppressWarnings("removal")
-    private void handleEmailSubscriptionSending(UUID artefactId, List<Subscription> subscriptionsList) {
-        List<Subscription> emailList = sortSubscriptionByChannel(subscriptionsList, Channel.EMAIL.notificationRoute);
-
-        Map<String, List<Subscription>> emailSubscriptions = subscriptionChannelService
-            .buildEmailSubscriptions(emailList);
-        if (!emailSubscriptions.isEmpty()) {
-            log.info(writeLog(SUBSCRIBER_NOTIFICATION_LOG + artefactId));
-            publicationService.postSubscriptionSummaries(artefactId, emailSubscriptions);
-        }
     }
 
     /**
