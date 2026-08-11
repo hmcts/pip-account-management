@@ -115,7 +115,7 @@ class TestingSupportApiTest extends IntegrationTestBase {
     private static final String SCOPE_KEY = "scope";
 
     private static final String SUBSCRIPTION_PATH = "/subscription";
-    private static final String SUBSCRIPTION_BY_USER_PATH = "/subscription/user/%s";
+    private static final String SUBSCRIPTION_BY_USER_PATH = "/subscription/user/v2/%s";
     private static final String LOCATION_NAME_PREFIX = "TEST_123_";
     private static final String LOCATION_NAME = "Court1";
 
