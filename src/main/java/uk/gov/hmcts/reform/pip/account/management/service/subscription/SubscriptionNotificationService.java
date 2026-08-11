@@ -64,7 +64,7 @@ public class SubscriptionNotificationService {
      * @param artefact the artefact to collect the subscriptions for.
      */
     @Async
-    public void collectEmailSubscribersV2(Artefact artefact) {
+    public void collectEmailSubscribers(Artefact artefact) {
         List<Subscription> subscriptionList = new ArrayList<>(
             querySubscriptionValueForLocation(artefact.getLocationId(), artefact.getListType().toString(),
                                               artefact.getLanguage().toString())
@@ -80,7 +80,7 @@ public class SubscriptionNotificationService {
             ? validateSubscriptionPermissions(subscriptionList, artefact)
             : subscriptionList;
 
-        handleEmailSubscriptionSendingV2(artefact, subscriptionsToContact);
+        handleEmailSubscriptionSending(artefact, subscriptionsToContact);
     }
 
     /**
@@ -162,14 +162,14 @@ public class SubscriptionNotificationService {
      * @param artefact The artefact being sent
      * @param subscriptionsList The list of subscriptions being sent
      */
-    private void handleEmailSubscriptionSendingV2(Artefact artefact, List<Subscription> subscriptionsList) {
+    private void handleEmailSubscriptionSending(Artefact artefact, List<Subscription> subscriptionsList) {
         List<Subscription> emailList = sortSubscriptionByChannel(subscriptionsList, Channel.EMAIL.notificationRoute);
 
         Map<String, List<Subscription>> emailSubscriptions = subscriptionChannelService
             .buildEmailSubscriptions(emailList);
         if (!emailSubscriptions.isEmpty()) {
             log.info(writeLog(SUBSCRIBER_NOTIFICATION_LOG + artefact.getArtefactId()));
-            publicationService.postSubscriptionSummariesV2(artefact, emailSubscriptions);
+            publicationService.postSubscriptionSummaries(artefact, emailSubscriptions);
         }
     }
 

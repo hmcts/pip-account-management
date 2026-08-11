@@ -177,7 +177,7 @@ class SubscriptionControllerTest {
 
     @Test
     void testEmailSubscriptionRecipientsV2ReturnsAccepted() {
-        doNothing().when(subscriptionNotificationService).collectEmailSubscribersV2(any());
+        doNothing().when(subscriptionNotificationService).collectEmailSubscribers(any());
         assertEquals(
             HttpStatus.ACCEPTED, subscriptionController.buildEmailSubscriberListV2(new Artefact()).getStatusCode(),
             STATUS_CODE_MATCH

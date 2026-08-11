@@ -211,8 +211,8 @@ public class PublicationService {
         }
     }
 
-    public void postSubscriptionSummariesV2(Artefact artefact, Map<String, List<Subscription>> subscriptions) {
-        BulkSubscriptionsSummaryV2 payload = formatSubscriptionsSummaryV2(artefact, subscriptions);
+    public void postSubscriptionSummaries(Artefact artefact, Map<String, List<Subscription>> subscriptions) {
+        BulkSubscriptionsSummaryV2 payload = formatSubscriptionsSummary(artefact, subscriptions);
         try {
             webClient.post().uri(url + "/" + NOTIFY_SUBSCRIPTION_V2_PATH)
                 .body(BodyInserters.fromValue(payload)).retrieve()
@@ -326,8 +326,8 @@ public class PublicationService {
      * @param subscriptions A map containing each email which matches the criteria, alongside the subscriptions.
      * @return A subscriptions summary model
      */
-    private BulkSubscriptionsSummaryV2 formatSubscriptionsSummaryV2(Artefact artefact,
-                                                                    Map<String, List<Subscription>> subscriptions) {
+    private BulkSubscriptionsSummaryV2 formatSubscriptionsSummary(Artefact artefact,
+                                                                  Map<String, List<Subscription>> subscriptions) {
 
         BulkSubscriptionsSummaryV2 bulkSubscriptionsSummary = new BulkSubscriptionsSummaryV2();
         bulkSubscriptionsSummary.setArtefact(artefact);

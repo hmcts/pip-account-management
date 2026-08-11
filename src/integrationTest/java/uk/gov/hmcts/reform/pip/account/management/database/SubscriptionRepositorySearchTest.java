@@ -120,7 +120,7 @@ class SubscriptionRepositorySearchTest {
     }
 
     @Test
-    void shouldFindSubscriptionsByCaseUrnSearchValue() {
+    void shouldFindSubscriptionsByCaseNameSearchValue() {
         assertThat(subscriptionRepository.findSubscriptionsBySearchValue(SearchType.CASE_NAME.name(), CASE_NAME))
             .as(SUBSCRIPTION_MATCHED_MESSAGE)
             .hasSize(1).extracting(Subscription::getId)

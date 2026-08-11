@@ -134,7 +134,7 @@ public class SubscriptionController {
     @Operation(summary = "Build email subscriber list for the publication.")
     @PostMapping("/email-recipients/V2")
     public ResponseEntity<String> buildEmailSubscriberListV2(@RequestBody Artefact artefact) {
-        subscriptionNotificationService.collectEmailSubscribersV2(artefact);
+        subscriptionNotificationService.collectEmailSubscribers(artefact);
         return ResponseEntity.status(HttpStatus.ACCEPTED).body("Email subscriber request has been accepted");
     }
 

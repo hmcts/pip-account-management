@@ -120,7 +120,7 @@ class SubscriptionNotificationServiceTest {
     }
 
     @Test
-    void testCollectEmailSubscribersV2ForCourtSubscriptionWithListTypeNotClassified() throws IOException {
+    void testCollectEmailSubscribersForCourtSubscriptionWithListTypeNotClassified() throws IOException {
         returnedSubscription.setChannel(Channel.EMAIL);
         returnedMappedEmails.put(TEST_USER_EMAIL, List.of(returnedSubscription));
         when(subscriptionRepository.findSubscriptionsByLocationSearchValue(COURT_MATCH, MAGISTRATES_PUBLIC_LIST,
@@ -129,10 +129,10 @@ class SubscriptionNotificationServiceTest {
 
         when(subscriptionChannelService.buildEmailSubscriptions(any())).thenReturn(returnedMappedEmails);
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionNotificationService.class)) {
-            subscriptionNotificationService.collectEmailSubscribersV2(publicArtefactMatches);
+            subscriptionNotificationService.collectEmailSubscribers(publicArtefactMatches);
             assertTrue(logCaptor.getInfoLogs().get(0).contains(SUBSCRIBER_NOTIFICATION_LOG),
                        LOG_MESSAGE_MATCH);
-            verify(publicationService).postSubscriptionSummariesV2(publicArtefactMatches, returnedMappedEmails);
+            verify(publicationService).postSubscriptionSummaries(publicArtefactMatches, returnedMappedEmails);
             verify(publicationService, never()).legacySendThirdPartyList(any());
             verify(publicationService, never()).sendThirdPartySubscription(any(), anyBoolean());
         } catch (Exception ex) {
@@ -141,7 +141,7 @@ class SubscriptionNotificationServiceTest {
     }
 
     @Test
-    void testCollectEmailSubscribersV2CaseNumber() {
+    void testCollectEmailSubscribersCaseNumber() {
         publicArtefactMatches.setCaseInfoList(List.of(CASE_INFO));
 
         mockSubscription.setSearchType(SearchType.CASE_NUMBER);
@@ -160,19 +160,19 @@ class SubscriptionNotificationServiceTest {
             .thenReturn(returnedMappedEmails);
 
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionNotificationService.class)) {
-            subscriptionNotificationService.collectEmailSubscribersV2(publicArtefactMatches);
+            subscriptionNotificationService.collectEmailSubscribers(publicArtefactMatches);
 
             assertTrue(logCaptor.getInfoLogs().get(0).contains(SUBSCRIBER_NOTIFICATION_LOG),
                        LOG_MESSAGE_MATCH);
 
-            verify(publicationService).postSubscriptionSummariesV2(publicArtefactMatches, returnedMappedEmails);
+            verify(publicationService).postSubscriptionSummaries(publicArtefactMatches, returnedMappedEmails);
             verify(publicationService, never()).legacySendThirdPartyList(any());
             verify(publicationService, never()).sendThirdPartySubscription(any(), anyBoolean());
         }
     }
 
     @Test
-    void testCollectEmailSubscribersV2CaseNumberWithNoArtefactCaseInfo() {
+    void testCollectEmailSubscribersCaseNumberWithNoArtefactCaseInfo() {
         publicArtefactMatches.setCaseInfoList(List.of());
 
         mockSubscription.setSearchType(SearchType.CASE_NUMBER);
@@ -187,20 +187,20 @@ class SubscriptionNotificationServiceTest {
             .thenReturn(returnedMappedEmails);
 
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionNotificationService.class)) {
-            subscriptionNotificationService.collectEmailSubscribersV2(publicArtefactMatches);
+            subscriptionNotificationService.collectEmailSubscribers(publicArtefactMatches);
 
             assertTrue(logCaptor.getInfoLogs().isEmpty());
 
             verify(subscriptionRepository, never()).findSubscriptionsBySearchValue(any(), any());
-            verify(publicationService, never()).postSubscriptionSummariesV2(publicArtefactMatches,
-                                                                            returnedMappedEmails);
+            verify(publicationService, never()).postSubscriptionSummaries(publicArtefactMatches,
+                                                                          returnedMappedEmails);
             verify(publicationService, never()).legacySendThirdPartyList(any());
             verify(publicationService, never()).sendThirdPartySubscription(any(), anyBoolean());
         }
     }
 
     @Test
-    void testCollectEmailSubscribersV2CaseName() {
+    void testCollectEmailSubscribersCaseName() {
         publicArtefactMatches.setCaseInfoList(List.of(CASE_INFO));
 
         mockSubscription.setSearchType(SearchType.CASE_NAME);
@@ -219,18 +219,18 @@ class SubscriptionNotificationServiceTest {
             .thenReturn(returnedMappedEmails);
 
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionNotificationService.class)) {
-            subscriptionNotificationService.collectEmailSubscribersV2(publicArtefactMatches);
+            subscriptionNotificationService.collectEmailSubscribers(publicArtefactMatches);
 
             assertTrue(logCaptor.getInfoLogs().get(0).contains(SUBSCRIBER_NOTIFICATION_LOG),
                        LOG_MESSAGE_MATCH);
-            verify(publicationService).postSubscriptionSummariesV2(publicArtefactMatches, returnedMappedEmails);
+            verify(publicationService).postSubscriptionSummaries(publicArtefactMatches, returnedMappedEmails);
             verify(publicationService, never()).legacySendThirdPartyList(any());
             verify(publicationService, never()).sendThirdPartySubscription(any(), anyBoolean());
         }
     }
 
     @Test
-    void testCollectEmailSubscribersV2CaseNameWithNoCaseInfo() {
+    void testCollectEmailSubscribersCaseNameWithNoCaseInfo() {
         publicArtefactMatches.setCaseInfoList(List.of());
 
         mockSubscription.setSearchType(SearchType.CASE_NAME);
@@ -245,19 +245,19 @@ class SubscriptionNotificationServiceTest {
             .thenReturn(returnedMappedEmails);
 
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionNotificationService.class)) {
-            subscriptionNotificationService.collectEmailSubscribersV2(publicArtefactMatches);
+            subscriptionNotificationService.collectEmailSubscribers(publicArtefactMatches);
 
             assertTrue(logCaptor.getInfoLogs().isEmpty());
             verify(subscriptionRepository, never()).findSubscriptionsBySearchValue(any(), any());
-            verify(publicationService, never()).postSubscriptionSummariesV2(publicArtefactMatches,
-                                                                            returnedMappedEmails);
+            verify(publicationService, never()).postSubscriptionSummaries(publicArtefactMatches,
+                                                                          returnedMappedEmails);
             verify(publicationService, never()).legacySendThirdPartyList(any());
             verify(publicationService, never()).sendThirdPartySubscription(any(), anyBoolean());
         }
     }
 
     @Test
-    void testCollectEmailSubscribersV2LocationId() {
+    void testCollectEmailSubscribersLocationId() {
         mockSubscription.setSearchType(SearchType.LOCATION_ID);
         mockSubscription.setSearchValue(COURT_MATCH);
 
@@ -274,19 +274,19 @@ class SubscriptionNotificationServiceTest {
             .thenReturn(returnedMappedEmails);
 
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionNotificationService.class)) {
-            subscriptionNotificationService.collectEmailSubscribersV2(publicArtefactMatches);
+            subscriptionNotificationService.collectEmailSubscribers(publicArtefactMatches);
 
             assertTrue(logCaptor.getInfoLogs().get(0).contains(SUBSCRIBER_NOTIFICATION_LOG),
                        LOG_MESSAGE_MATCH);
 
-            verify(publicationService).postSubscriptionSummariesV2(publicArtefactMatches, returnedMappedEmails);
+            verify(publicationService).postSubscriptionSummaries(publicArtefactMatches, returnedMappedEmails);
             verify(publicationService, never()).legacySendThirdPartyList(any());
             verify(publicationService, never()).sendThirdPartySubscription(any(), anyBoolean());
         }
     }
 
     @Test
-    void testCollectEmailSubscribersV2RestrictsClassified() {
+    void testCollectEmailSubscribersRestrictsClassified() {
         classifiedArtefactMatches.setCaseInfoList(List.of(CASE_INFO));
 
         returnedSubscription.setChannel(Channel.EMAIL);
@@ -313,7 +313,7 @@ class SubscriptionNotificationServiceTest {
             .thenReturn(returnedMappedEmails);
 
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionNotificationService.class)) {
-            subscriptionNotificationService.collectEmailSubscribersV2(classifiedArtefactMatches);
+            subscriptionNotificationService.collectEmailSubscribers(classifiedArtefactMatches);
             assertTrue(logCaptor.getInfoLogs().get(0).contains(SUBSCRIBER_NOTIFICATION_LOG), LOG_MESSAGE_MATCH);
             assertTrue(logCaptor.getErrorLogs().isEmpty(), LOG_MESSAGE_MATCH);
         }
@@ -327,8 +327,8 @@ class SubscriptionNotificationServiceTest {
             .thenReturn(List.of(returnedSubscription));
         when(subscriptionChannelService.buildEmailSubscriptions(any())).thenReturn(new ConcurrentHashMap<>());
 
-        subscriptionNotificationService.collectEmailSubscribersV2(publicArtefactMatches);
-        verify(publicationService, never()).postSubscriptionSummariesV2(any(), any());
+        subscriptionNotificationService.collectEmailSubscribers(publicArtefactMatches);
+        verify(publicationService, never()).postSubscriptionSummaries(any(), any());
     }
 
     @Test
@@ -345,10 +345,10 @@ class SubscriptionNotificationServiceTest {
 
         @SuppressWarnings("unchecked")
         ArgumentCaptor<Map<String, List<Subscription>>> argument = ArgumentCaptor.forClass(Map.class);
-        doNothing().when(publicationService).postSubscriptionSummariesV2(
+        doNothing().when(publicationService).postSubscriptionSummaries(
             eq(publicArtefactMatches), argument.capture());
 
-        subscriptionNotificationService.collectEmailSubscribersV2(publicArtefactMatches);
+        subscriptionNotificationService.collectEmailSubscribers(publicArtefactMatches);
 
         Map<String, List<Subscription>> capturedMap = argument.getValue();
         assertEquals(2, capturedMap.size(), "The size of the captured map is incorrect");

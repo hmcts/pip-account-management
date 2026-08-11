@@ -250,7 +250,7 @@ class PublicationServiceTest {
     }
 
     @Test
-    void testPostSubscriptionSummariesV2RequestUrl() throws InterruptedException {
+    void testPostSubscriptionSummariesRequestUrl() throws InterruptedException {
         subscription.setSearchType(SearchType.LIST_TYPE);
         Map<String, List<Subscription>> subscriptionsMap = new ConcurrentHashMap<>();
         subscriptionsMap.put(EMAIL, List.of(subscription));
@@ -260,7 +260,7 @@ class PublicationServiceTest {
                                                                ContentType.APPLICATION_JSON)
                                                     .setResponseCode(200));
 
-        publicationService.postSubscriptionSummariesV2(artefact, subscriptionsMap);
+        publicationService.postSubscriptionSummaries(artefact, subscriptionsMap);
 
         RecordedRequest recordedRequest = mockPublicationServicesEndpoint.takeRequest();
         assertNotNull(recordedRequest.getRequestUrl(), "Request URL should not be null");
@@ -269,7 +269,7 @@ class PublicationServiceTest {
     }
 
     @Test
-    void testPostSubscriptionSummariesV2RequestBodyEmail() throws IOException, InterruptedException {
+    void testPostSubscriptionSummariesRequestBodyEmail() throws IOException, InterruptedException {
         subscription.setSearchType(SearchType.LIST_TYPE);
         Map<String, List<Subscription>> subscriptionsMap = new ConcurrentHashMap<>();
         subscriptionsMap.put(EMAIL, List.of(subscription));
@@ -279,7 +279,7 @@ class PublicationServiceTest {
                                                                ContentType.APPLICATION_JSON)
                                                     .setResponseCode(200));
 
-        publicationService.postSubscriptionSummariesV2(artefact, subscriptionsMap);
+        publicationService.postSubscriptionSummaries(artefact, subscriptionsMap);
         RecordedRequest recordedRequest = mockPublicationServicesEndpoint.takeRequest();
 
         ObjectMapper objectMapper = new ObjectMapper();
@@ -291,7 +291,7 @@ class PublicationServiceTest {
     }
 
     @Test
-    void testPostSubscriptionSummariesV2RequestBodyLegacySendEmptyArtefactId()
+    void testPostSubscriptionSummariesRequestBodyLegacySendEmptyArtefactId()
         throws IOException, InterruptedException {
         subscription.setSearchType(SearchType.LIST_TYPE);
         Map<String, List<Subscription>> subscriptionsMap = new ConcurrentHashMap<>();
@@ -302,7 +302,7 @@ class PublicationServiceTest {
                                                                ContentType.APPLICATION_JSON)
                                                     .setResponseCode(200));
 
-        publicationService.postSubscriptionSummariesV2(artefact, subscriptionsMap);
+        publicationService.postSubscriptionSummaries(artefact, subscriptionsMap);
         RecordedRequest recordedRequest = mockPublicationServicesEndpoint.takeRequest();
 
         ObjectMapper objectMapper = new ObjectMapper();
@@ -326,7 +326,7 @@ class PublicationServiceTest {
                                                                ContentType.APPLICATION_JSON)
                                                     .setResponseCode(200));
 
-        publicationService.postSubscriptionSummariesV2(artefact, subscriptionsMap);
+        publicationService.postSubscriptionSummaries(artefact, subscriptionsMap);
         assertTrue(logCaptor.getErrorLogs().isEmpty(), ERROR_LOG_EMPTY_MESSAGE);
 
         RecordedRequest recordedRequest = mockPublicationServicesEndpoint.takeRequest();
@@ -362,7 +362,7 @@ class PublicationServiceTest {
     }
 
     @Test
-    void testPostSubscriptionSummariesV2WhenMultipleSubscriptions() throws InterruptedException, IOException {
+    void testPostSubscriptionSummariesWhenMultipleSubscriptions() throws InterruptedException, IOException {
         subscription.setSearchType(SearchType.LOCATION_ID);
         Map<String, List<Subscription>> subscriptionsMap = new ConcurrentHashMap<>();
         subscriptionsMap.put(EMAIL, List.of(subscriptionV2));
@@ -373,7 +373,7 @@ class PublicationServiceTest {
                                                                ContentType.APPLICATION_JSON)
                                                     .setResponseCode(200));
 
-        publicationService.postSubscriptionSummariesV2(artefact, subscriptionsMap);
+        publicationService.postSubscriptionSummaries(artefact, subscriptionsMap);
 
         RecordedRequest recordedRequest = mockPublicationServicesEndpoint.takeRequest();
 
@@ -386,13 +386,13 @@ class PublicationServiceTest {
     }
 
     @Test
-    void testPostSubscriptionSummariesV2Throws() {
+    void testPostSubscriptionSummariesThrows() {
         Map<String, List<Subscription>> subscriptionsMap = new ConcurrentHashMap<>();
         subscriptionsMap.put(EMAIL, List.of(subscriptionV2));
 
         mockPublicationServicesEndpoint.enqueue(new MockResponse().setResponseCode(404));
 
-        publicationService.postSubscriptionSummariesV2(artefact, subscriptionsMap);
+        publicationService.postSubscriptionSummaries(artefact, subscriptionsMap);
 
         assertTrue(
             logCaptor.getErrorLogs().get(0).contains("Subscription email failed to send with error"),
