@@ -31,12 +31,10 @@ import uk.gov.hmcts.reform.pip.model.system.admin.ActionResult;
 import uk.gov.hmcts.reform.pip.model.system.admin.DeleteLocationSubscriptionAction;
 import uk.gov.hmcts.reform.pip.model.system.admin.SystemAdminAction;
 import uk.gov.hmcts.reform.pip.model.thirdparty.ThirdPartySubscription;
-
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-
 import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
 
 /**
@@ -208,7 +206,6 @@ public class PublicationService {
     }
 
     public void sendMediaAccountDeletionEmail(String emailAddress, String fullName, LocalDateTime lastVerifiedDate) {
-
         String reVerificationEmailDate = DateTimeHelper.localDateTimeToDateString(lastVerifiedDate.plusDays(350));
         JSONObject jsonObject = new JSONObject();
         jsonObject.put(FULL_NAME, fullName);
