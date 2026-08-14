@@ -11,6 +11,7 @@ import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
@@ -20,7 +21,6 @@ import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
-import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import uk.gov.hmcts.reform.pip.account.management.config.ClientConfiguration;
 import uk.gov.hmcts.reform.pip.account.management.model.MediaApplication;
@@ -135,13 +135,13 @@ class TestingSupportApiTest extends IntegrationTestBase {
     @MockitoBean
     GraphServiceClient graphClient;
 
-    @MockitoBean
+    @Mock
     private UsersRequestBuilder usersRequestBuilder;
 
-    @MockitoBean
+    @Mock
     private UserItemRequestBuilder userItemRequestBuilder;
 
-    @MockitoBean
+    @Mock
     private ClientConfiguration clientConfiguration;
 
     @MockitoBean
@@ -173,8 +173,6 @@ class TestingSupportApiTest extends IntegrationTestBase {
         when(subscriptionAuthorisationService.userCanAddSubscriptions(any(), any())).thenReturn(true);
         when(subscriptionAuthorisationService.userCanViewSubscriptions(any(), any())).thenReturn(true);
         when(thirdPartyAuthorisationService.userCanManageThirdParty(any())).thenReturn(true);
-        when(clientConfiguration.getB2cUrl()).thenReturn(B2C_URL);
-        when(clientConfiguration.getExtensionId()).thenReturn("b2cExtensionsAppId");
     }
 
     @Test
@@ -553,7 +551,7 @@ class TestingSupportApiTest extends IntegrationTestBase {
                                                                 "", imageInputStream
             );
 
-            MockMultipartHttpServletRequestBuilder postRequest = multipart(APPLICATION_URL)
+            MockHttpServletRequestBuilder postRequest = multipart(APPLICATION_URL)
                 .file(imageFile)
                 .flashAttr("application", application)
                 .contentType(MediaType.MULTIPART_FORM_DATA_VALUE);
