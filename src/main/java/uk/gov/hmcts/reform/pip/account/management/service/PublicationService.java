@@ -212,7 +212,7 @@ public class PublicationService {
         jsonObject.put(EMAIL, emailAddress);
         jsonObject.put(DATE,  reVerificationEmailDate);
         try {
-            webClient.post().uri(url + "/notify/media/deleted")
+            webClient.post().uri(url + "/notify/media/inactive/deletion")
                 .body(BodyInserters.fromValue(jsonObject)).retrieve()
                 .bodyToMono(String.class)
                 .block();
