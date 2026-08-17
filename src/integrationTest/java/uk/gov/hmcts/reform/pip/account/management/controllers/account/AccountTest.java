@@ -11,6 +11,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -56,10 +57,10 @@ class AccountTest extends IntegrationTestBase {
     @MockitoBean
     GraphServiceClient graphClient;
 
-    @MockitoBean
+    @Mock
     private UsersRequestBuilder usersRequestBuilder;
 
-    @MockitoBean
+    @Mock
     private UserItemRequestBuilder userItemRequestBuilder;
 
     private static final String ROOT_URL = "/account";
