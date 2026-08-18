@@ -168,12 +168,19 @@
     <cve>CVE-2026-44891</cve>
     <cve>CVE-2026-55831</cve>
     <cve>CVE-2026-55833</cve>
+    <cve>CVE-2026-59919</cve>
+    <cve>CVE-2026-56746</cve>
+    <cve>CVE-2026-56819</cve>
+    <cve>CVE-2026-56817</cve>
+    <cve>CVE-2026-56816</cve>
     <cve>CVE-2026-59899</cve>
     <cve>CVE-2026-59921</cve>
     <cve>CVE-2026-59900</cve>
     <cve>CVE-2026-59901</cve>
+    <cve>CVE-2026-56745</cve>
     <cve>CVE-2026-56822</cve>
     <cve>CVE-2026-56821</cve>
+    <cve>CVE-2026-56820</cve>
     <cve>CVE-2026-59898</cve>
     <cve>CVE-2026-59920</cve>
   </suppress>
@@ -199,6 +206,7 @@
     <cve>CVE-2026-40988</cve>
     <cve>CVE-2026-41003</cve>
     <cve>CVE-2026-41694</cve>
+    <cve>CVE-2026-55851</cve>
   </suppress>
   <suppress>
     <notes>kotlin suppression</notes>
