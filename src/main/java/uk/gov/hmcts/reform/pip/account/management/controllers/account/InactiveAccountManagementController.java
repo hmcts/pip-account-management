@@ -46,7 +46,7 @@ public class InactiveAccountManagementController {
     @ApiResponse(responseCode = NO_CONTENT_CODE, description = NO_CONTENT_MESSAGE)
     @Operation(summary = "Delete all expired inactive accounts")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @DeleteMapping("/media/inactive/deletion")
+    @DeleteMapping("/media/inactive")
     public ResponseEntity<Void> deleteExpiredMediaAccounts() {
         inactiveAccountManagementService.findAndNotifyMediaAccountsForDeletion();
         return ResponseEntity.noContent().build();
