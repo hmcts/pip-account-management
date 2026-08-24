@@ -109,11 +109,15 @@ verification:
   media-account-verification-email-days: 350
   media-account-deletion-days: 365
   aad-admin-account-deletion-days: 90
-  sso-admin-account-deletion-days: 90
+  sso-admin-account-deletion-days: 365
   cft-idam-account-sign-in-notification-days: 118
   cft-idam-account-deletion-days: 132
   crime-idam-account-sign-in-notification-days: 180
   crime-idam-account-deletion-days: 208
+
+account:
+  archived:
+    deletion-days: 90
 
 admin:
   max-system-admin: ${MAX_SYSTEM_ADMIN_ACCOUNTS:4}
