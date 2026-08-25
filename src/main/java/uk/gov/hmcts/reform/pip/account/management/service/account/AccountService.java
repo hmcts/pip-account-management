@@ -8,6 +8,8 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import uk.gov.hmcts.reform.pip.account.management.database.UserArchivedRepository;
 import uk.gov.hmcts.reform.pip.account.management.database.UserRepository;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.AzureCustomException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.NotFoundException;
@@ -17,6 +19,7 @@ import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.UserW
 import uk.gov.hmcts.reform.pip.account.management.model.account.AzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.account.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.account.PiUser;
+import uk.gov.hmcts.reform.pip.account.management.model.account.PiUserArchived;
 import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredAzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredPiUser;
 import uk.gov.hmcts.reform.pip.account.management.service.SensitivityService;
@@ -59,6 +62,7 @@ public class AccountService {
     private final AzureAccountService azureAccountService;
     private final AccountFilteringService accountFilteringService;
     private final UserRepository userRepository;
+    private final UserArchivedRepository userArchivedRepository;
     private final SensitivityService sensitivityService;
     private final UserSubscriptionService userSubscriptionService;
 
@@ -69,6 +73,7 @@ public class AccountService {
         AzureAccountService azureAccountService,
         AccountFilteringService accountFilteringService,
         UserRepository userRepository,
+        UserArchivedRepository userArchivedRepository,
         SensitivityService sensitivityService,
         UserSubscriptionService userSubscriptionService) {
         this.validator = validator;
@@ -76,6 +81,7 @@ public class AccountService {
         this.azureAccountService = azureAccountService;
         this.accountFilteringService = accountFilteringService;
         this.userRepository = userRepository;
+        this.userArchivedRepository = userArchivedRepository;
         this.sensitivityService = sensitivityService;
         this.userSubscriptionService = userSubscriptionService;
     }
@@ -198,21 +204,39 @@ public class AccountService {
     public String deleteAccount(UUID userId) {
         PiUser userToDelete = userRepository.findByUserId(userId)
             .orElseThrow(() -> new NotFoundException("User with supplied ID could not be found"));
+        deleteAzureUser(userToDelete);
+        handleAccountDeletion(userToDelete);
+        return String.format("User with ID %s has been deleted", userToDelete.getUserId());
+    }
 
+    @Transactional
+    public String archiveAccount(UUID userId) {
+        PiUser userToArchive = userRepository.findByUserId(userId)
+            .orElseThrow(() -> new NotFoundException("User with supplied ID could not be found"));
+        deleteAzureUser(userToArchive);
+
+        PiUserArchived archivedUser = new PiUserArchived(userToArchive);
+        userArchivedRepository.save(archivedUser);
+        handleAccountDeletion(userToArchive);
+        return String.format("User with ID %s has been archived", userToArchive.getUserId());
+    }
+
+    private void deleteAzureUser(PiUser userToDelete) {
         try {
             if (PI_AAD.equals(userToDelete.getUserProvenance())) {
                 azureUserService.deleteUser(userToDelete.getProvenanceUserId());
             }
-            log.info(writeLog(UserActions.REMOVE_ACCOUNT, userId.toString()));
+            log.info(writeLog(UserActions.REMOVE_ACCOUNT, userToDelete.getUserId().toString()));
         } catch (AzureCustomException ex) {
             log.error(writeLog(String.format("Error when deleting an account from azure with Provenance user id: "
-                                                + "%s and error: %s",
-                                            userToDelete.getProvenanceUserId(), ex.getMessage())));
+                                                 + "%s and error: %s",
+                                             userToDelete.getProvenanceUserId(), ex.getMessage())));
         }
+    }
 
+    private void handleAccountDeletion(PiUser userToDelete) {
         userSubscriptionService.deleteAllByUserId(userToDelete.getUserId());
         userRepository.delete(userToDelete);
-        return String.format("User with ID %s has been deleted", userToDelete.getUserId());
     }
 
     public String deleteAllAccountsWithEmailPrefix(String prefix) {

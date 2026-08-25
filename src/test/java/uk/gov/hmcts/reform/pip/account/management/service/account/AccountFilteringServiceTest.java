@@ -10,13 +10,16 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import uk.gov.hmcts.reform.pip.account.management.database.UserArchivedRepository;
 import uk.gov.hmcts.reform.pip.account.management.database.UserRepository;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.NotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.model.account.PiUser;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
 import uk.gov.hmcts.reform.pip.model.report.AccountMiData;
+import uk.gov.hmcts.reform.pip.model.report.DeletedAccountMiData;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -49,6 +52,9 @@ class AccountFilteringServiceTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private UserArchivedRepository userArchivedRepository;
+
     @InjectMocks
     private AccountFilteringService accountFilteringService;
 
@@ -69,6 +75,19 @@ class AccountFilteringServiceTest {
 
         assertThat(accountFilteringService.getAccountDataForMi())
             .as("Account data for MI does not match expected")
+            .contains(accountMiData);
+    }
+
+    @Test
+    void testGetDeletedAccountsForMi() {
+        DeletedAccountMiData accountMiData = new DeletedAccountMiData();
+        accountMiData.setUserId(UUID.randomUUID());
+        accountMiData.setDeletedDate(LocalDateTime.now());
+
+        when(userArchivedRepository.getAccountDataForMi()).thenReturn(List.of(accountMiData));
+
+        assertThat(accountFilteringService.getDeletedAccountDataForMi())
+            .as("Deleted account data for MI does not match expected")
             .contains(accountMiData);
     }
 
