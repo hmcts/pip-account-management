@@ -45,9 +45,6 @@ class InactiveAccountManagementServiceTest {
     private static final PiUser MEDIA_USER = new PiUser(MEDIA_USER_UUID, UserProvenances.PI_AAD,
                                                         "1", MEDIA_USER_EMAIL, Roles.VERIFIED,
                                                         FORENAME, SURNAME, null, LAST_VERIFIED_DATE, null);
-    private static final PiUser AAD_ADMIN_USER = new PiUser(AAD_ADMIN_UUID, UserProvenances.PI_AAD,
-                                                            "2", AAD_ADMIN_USER_EMAIL, Roles.INTERNAL_SUPER_ADMIN_CTSC,
-                                                            FORENAME, SURNAME, null, null, LAST_SIGNED_IN_DATE);
     private static final PiUser SSO_ADMIN_USER = new PiUser(SSO_ADMIN_UUID, UserProvenances.SSO,
                                                             "3", SSO_ADMIN_USER_EMAIL, Roles.INTERNAL_ADMIN_CTSC,
                                                             FORENAME, SURNAME, null, null, LAST_SIGNED_IN_DATE);
