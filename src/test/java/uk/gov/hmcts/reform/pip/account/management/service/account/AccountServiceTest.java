@@ -8,12 +8,14 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import uk.gov.hmcts.reform.pip.account.management.database.UserArchivedRepository;
 import uk.gov.hmcts.reform.pip.account.management.database.UserRepository;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.AzureCustomException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.NotFoundException;
@@ -23,6 +25,7 @@ import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.UserW
 import uk.gov.hmcts.reform.pip.account.management.model.account.AzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.account.CreationEnum;
 import uk.gov.hmcts.reform.pip.account.management.model.account.PiUser;
+import uk.gov.hmcts.reform.pip.account.management.model.account.PiUserArchived;
 import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredAzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredPiUser;
 import uk.gov.hmcts.reform.pip.account.management.service.SensitivityService;
@@ -73,6 +76,9 @@ class AccountServiceTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private UserArchivedRepository userArchivedRepository;
 
     @Mock
     private SensitivityService sensitivityService;
@@ -342,6 +348,94 @@ class AccountServiceTest {
 
         try (LogCaptor logCaptor = LogCaptor.forClass(AccountService.class)) {
             accountService.deleteAccount(VALID_USER_ID);
+            assertEquals(1, logCaptor.getErrorLogs().size(),
+                         "No logs were thrown");
+        }
+    }
+
+    @Test
+    void testArchiveAadAccount() throws AzureCustomException {
+        when(userRepository.findByUserId(USER_UUID)).thenReturn(Optional.of(PI_USER));
+
+        when(userSubscriptionService.deleteAllByUserId(VALID_USER_ID))
+            .thenReturn(SUBSCRIPTIONS_DELETED);
+
+        accountService.archiveAccount(USER_UUID);
+
+        ArgumentCaptor<PiUserArchived> captor = ArgumentCaptor.forClass(PiUserArchived.class);
+        verify(userArchivedRepository).save(captor.capture());
+        PiUserArchived piUserArchived = captor.getValue();
+        assertThat(piUserArchived.getUserId()).isEqualTo(VALID_USER_ID);
+        assertThat(piUserArchived.getUserProvenance()).isEqualTo(UserProvenances.PI_AAD);
+
+        verify(azureUserService).deleteUser(PI_USER.getProvenanceUserId());
+        verify(userSubscriptionService).deleteAllByUserId(VALID_USER_ID);
+        verify(userRepository).delete(PI_USER);
+    }
+
+    @Test
+    void testArchiveSsoAccount() {
+        when(userRepository.findByUserId(VALID_USER_ID_SSO)).thenReturn(Optional.of(PI_USER_SSO));
+
+        when(userSubscriptionService.deleteAllByUserId(VALID_USER_ID_SSO))
+            .thenReturn(SUBSCRIPTIONS_DELETED);
+
+        accountService.archiveAccount(VALID_USER_ID_SSO);
+
+        ArgumentCaptor<PiUserArchived> captor = ArgumentCaptor.forClass(PiUserArchived.class);
+        verify(userArchivedRepository).save(captor.capture());
+        PiUserArchived piUserArchived = captor.getValue();
+        assertThat(piUserArchived.getUserId()).isEqualTo(VALID_USER_ID_SSO);
+        assertThat(piUserArchived.getUserProvenance()).isEqualTo(UserProvenances.SSO);
+
+        verifyNoInteractions(azureUserService);
+        verify(userSubscriptionService).deleteAllByUserId(VALID_USER_ID_SSO);
+        verify(userRepository).delete(PI_USER_SSO);
+    }
+
+    @Test
+    void testArchiveIdamAccount() {
+        when(userRepository.findByUserId(VALID_USER_ID_IDAM)).thenReturn(Optional.of(PI_USER_IDAM));
+
+        doNothing().when(userRepository).delete(PI_USER_IDAM);
+        when(userSubscriptionService.deleteAllByUserId(VALID_USER_ID_IDAM))
+            .thenReturn(SUBSCRIPTIONS_DELETED);
+
+        accountService.archiveAccount(VALID_USER_ID_IDAM);
+
+        ArgumentCaptor<PiUserArchived> captor = ArgumentCaptor.forClass(PiUserArchived.class);
+        verify(userArchivedRepository).save(captor.capture());
+        PiUserArchived piUserArchived = captor.getValue();
+        assertThat(piUserArchived.getUserId()).isEqualTo(VALID_USER_ID_IDAM);
+        assertThat(piUserArchived.getUserProvenance()).isEqualTo(UserProvenances.CFT_IDAM);
+
+        verifyNoInteractions(azureUserService);
+        verify(userSubscriptionService).deleteAllByUserId(VALID_USER_ID_IDAM);
+        verify(userRepository).delete(PI_USER_IDAM);
+    }
+
+    @Test
+    void testArchiveAccountNotFound() {
+        try {
+            Object result = accountService.archiveAccount(UUID.randomUUID());
+            assertThrows(NotFoundException.class, result::toString, "Expected NotFoundException to be thrown");
+        } catch (NotFoundException e) {
+            assertTrue(e.getMessage()
+                           .contains("User with supplied ID could not be found"),
+                       "Not found error missing");
+        }
+    }
+
+    @Test
+    void testArchiveAccountThrows() throws AzureCustomException {
+        when(userRepository.findByUserId(VALID_USER_ID)).thenReturn(Optional.of(PI_USER));
+
+        doThrow(new AzureCustomException(TEST)).when(azureUserService).deleteUser(PI_USER.getProvenanceUserId());
+        when(userSubscriptionService.deleteAllByUserId(VALID_USER_ID))
+            .thenReturn(SUBSCRIPTIONS_DELETED);
+
+        try (LogCaptor logCaptor = LogCaptor.forClass(AccountService.class)) {
+            accountService.archiveAccount(VALID_USER_ID);
             assertEquals(1, logCaptor.getErrorLogs().size(),
                          "No logs were thrown");
         }

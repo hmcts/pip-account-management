@@ -25,6 +25,7 @@ import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
 import uk.gov.hmcts.reform.pip.model.authentication.roles.IsAdmin;
 import uk.gov.hmcts.reform.pip.model.report.AccountMiData;
+import uk.gov.hmcts.reform.pip.model.report.DeletedAccountMiData;
 
 import java.util.List;
 import java.util.UUID;
@@ -51,8 +52,15 @@ public class AccountFilteringController {
     @ApiResponse(responseCode = OK_CODE, description = "List of Accounts MI Data")
     @Operation(summary = "Returns anonymized account data for MI reporting")
     @GetMapping("/mi-data")
-    public ResponseEntity<List<AccountMiData>> getMiData() {
+    public ResponseEntity<List<AccountMiData>> getAccountMiData() {
         return ResponseEntity.status(HttpStatus.OK).body(accountFilteringService.getAccountDataForMi());
+    }
+
+    @ApiResponse(responseCode = OK_CODE, description = "List of deleted accounts MI Data")
+    @Operation(summary = "Returns anonymized deleted account data for MI reporting")
+    @GetMapping("/mi-data-deleted")
+    public ResponseEntity<List<DeletedAccountMiData>> getDeletedAccountMiData() {
+        return ResponseEntity.status(HttpStatus.OK).body(accountFilteringService.getDeletedAccountDataForMi());
     }
 
     @ApiResponse(responseCode = OK_CODE, description = "List of third party accounts")

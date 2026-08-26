@@ -24,8 +24,10 @@ import uk.gov.hmcts.reform.pip.account.management.utils.IntegrationTestBase;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
 import uk.gov.hmcts.reform.pip.model.report.AccountMiData;
+import uk.gov.hmcts.reform.pip.model.report.DeletedAccountMiData;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -49,6 +51,9 @@ class CustomAccountRetrievalTest extends IntegrationTestBase {
     private static final String PI_URL = ROOT_URL + "/add/pi";
     private static final String GET_ALL_ACCOUNTS_EXCEPT_THIRD_PARTY = ROOT_URL + "/all";
     private static final String MI_REPORTING_ACCOUNT_DATA_URL = ROOT_URL + "/mi-data";
+    private static final String MI_REPORTING_DELETED_ACCOUNT_DATA_URL = ROOT_URL + "/mi-data-deleted";
+    private static final String UPDATE_ACCOUNT_URL = ROOT_URL + "/provenance/";
+    private static final String DELETE_EXPIRED_ADMIN_ACCOUNTS_URL = ROOT_URL + "/admin/inactive";
 
     private static final String EMAIL = "test_account_admin@hmcts.net";
     private static final String SURNAME = "Surname";
@@ -94,7 +99,7 @@ class CustomAccountRetrievalTest extends IntegrationTestBase {
     }
 
     @Test
-    void testMiData() throws Exception {
+    void testAccountMiData() throws Exception {
         String provenanceId = UUID.randomUUID().toString();
         PiUser validUser = createUser(provenanceId);
         validUser.setEmail("test-account-am-" + RandomUtils.nextInt() + "@hmcts.net");
@@ -136,10 +141,81 @@ class CustomAccountRetrievalTest extends IntegrationTestBase {
     }
 
     @Test
+    void testDeletedAccountMiData() throws Exception {
+        String provenanceId = UUID.randomUUID().toString();
+        PiUser validUser = createUser(provenanceId);
+        validUser.setEmail("test-account-am-" + RandomUtils.nextInt() + "@hmcts.net");
+
+        MockHttpServletRequestBuilder createRequest =
+            MockMvcRequestBuilders
+                .post(PI_URL)
+                .content(OBJECT_MAPPER.writeValueAsString(List.of(validUser)))
+                .header(REQUESTER_ID_HEADER, REQUESTER_ID)
+                .contentType(MediaType.APPLICATION_JSON);
+
+        MvcResult responseCreateUser = mockMvc.perform(createRequest)
+            .andExpect(status().isCreated()).andReturn();
+        Map<CreationEnum, List<Object>> mappedResponse =
+            OBJECT_MAPPER.readValue(
+                responseCreateUser.getResponse().getContentAsString(),
+                new TypeReference<>() {
+                }
+            );
+
+        String createdUserId = mappedResponse.get(CreationEnum.CREATED_ACCOUNTS).getFirst().toString();
+
+        // Update the account to make it expired
+        MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
+            .put(UPDATE_ACCOUNT_URL + UserProvenances.SSO + "/" + provenanceId)
+            .content(OBJECT_MAPPER.writeValueAsString(Collections.singletonMap(
+                "lastSignedInDate", "2025-08-14T20:21:10.912Z")))
+            .contentType(MediaType.APPLICATION_JSON);
+
+        mockMvc.perform(mockHttpServletRequestBuilder)
+            .andExpect(status().isOk());
+
+        // Archive the expired admin account
+        MockHttpServletRequestBuilder deleteRequest = MockMvcRequestBuilders
+            .delete(DELETE_EXPIRED_ADMIN_ACCOUNTS_URL);
+
+        mockMvc.perform(deleteRequest)
+            .andExpect(status().isNoContent());
+
+        MockHttpServletRequestBuilder miRequest = MockMvcRequestBuilders
+            .get(MI_REPORTING_DELETED_ACCOUNT_DATA_URL);
+
+        MvcResult miDataResponse = mockMvc.perform(miRequest)
+            .andExpect(status().isOk())
+            .andReturn();
+
+        List<DeletedAccountMiData> deletedAccountMiData =
+            Arrays.stream(OBJECT_MAPPER.readValue(
+                miDataResponse.getResponse().getContentAsString(), DeletedAccountMiData[].class)).toList();
+
+        assertThat(deletedAccountMiData)
+            .as("Returned deleted account MI data must match user object")
+            .anyMatch(account -> createdUserId.equals(account.getUserId().toString())
+                && provenanceId.equals(account.getProvenanceUserId())
+                && UserProvenances.SSO.equals(account.getUserProvenance())
+                && Roles.INTERNAL_ADMIN_CTSC.equals(account.getRoles())
+                && account.getLastSignedInDate() != null
+                && account.getDeletedDate() != null);
+    }
+
+    @Test
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
-    void testUnauthorizedGetMiData() throws Exception {
+    void testUnauthorizedGetAccountMiData() throws Exception {
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .get(MI_REPORTING_ACCOUNT_DATA_URL);
+
+        assertRequestResponseStatus(mockMvc, request, FORBIDDEN.value());
+    }
+
+    @Test
+    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
+    void testUnauthorizedGetDeletedAccountMiData() throws Exception {
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+            .get(MI_REPORTING_DELETED_ACCOUNT_DATA_URL);
 
         assertRequestResponseStatus(mockMvc, request, FORBIDDEN.value());
     }
