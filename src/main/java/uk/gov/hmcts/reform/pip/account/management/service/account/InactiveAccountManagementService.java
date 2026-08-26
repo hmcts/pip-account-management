@@ -87,12 +87,26 @@ public class InactiveAccountManagementService {
     }
 
     /**
-     * Method that archive all media users who have not verified their account (default to 365 days).
+     * Method that gets all media users who have not verified their account (default to 365 days).
+     * Publication service alerts the user about the deletion.
      * Account service handles the deletion of their AAD, P&I user and subscriptions.
      */
-    public void findMediaAccountsForDeletion() {
+    public void findAndNotifyMediaAccountsForDeletion() {
         userRepository.findVerifiedUsersForDeletionByLastVerifiedDate(mediaAccountDeletionDays)
-            .forEach(user -> accountService.archiveAccount(user.getUserId()));
+            .forEach(user ->  {
+                try {
+                    publicationService.sendMediaAccountDeletionEmail(
+                        user.getEmail(),
+                        azureUserService.getUser(user.getEmail()).getGivenName(),
+                        user.getLastVerifiedDate()
+                    );
+                    accountService.deleteAccount(user.getUserId());
+
+                } catch (AzureCustomException ex) {
+                    log.error(writeLog("Error when getting user from azure: " + ex.getMessage()));
+                }
+
+            });
     }
 
     /**
