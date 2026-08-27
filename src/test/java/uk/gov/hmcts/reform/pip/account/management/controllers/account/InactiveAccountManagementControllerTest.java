@@ -31,7 +31,7 @@ class InactiveAccountManagementControllerTest {
 
     @Test
     void testDeleteExpiredAccounts() {
-        doNothing().when(inactiveAccountManagementService).findMediaAccountsForDeletion();
+        doNothing().when(inactiveAccountManagementService).findAndNotifyMediaAccountsForDeletion();
         assertThat(inactiveAccountManagementController.deleteExpiredMediaAccounts().getStatusCode())
             .as(STATUS_CODE_MATCH)
             .isEqualTo(HttpStatus.NO_CONTENT);

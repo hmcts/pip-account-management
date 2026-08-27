@@ -48,7 +48,7 @@ public class InactiveAccountManagementController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/media/inactive")
     public ResponseEntity<Void> deleteExpiredMediaAccounts() {
-        inactiveAccountManagementService.findMediaAccountsForDeletion();
+        inactiveAccountManagementService.findAndNotifyMediaAccountsForDeletion();
         return ResponseEntity.noContent().build();
     }
 

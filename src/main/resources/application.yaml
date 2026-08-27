@@ -120,7 +120,7 @@ account:
     deletion-days: 90
 
 admin:
-  max-system-admin: ${MAX_SYSTEM_ADMIN_ACCOUNTS:4}
+  max-system-admin: ${MAX_SYSTEM_ADMIN_ACCOUNTS:6}
 
 springdoc:
   swagger-ui:

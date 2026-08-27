@@ -40,10 +40,11 @@ class InactiveAccountManagementServiceTest {
     private static final String LAST_SIGNED_IN_DATE_STRING = "01 August 2022";
     private static final String FORENAME = "Test";
     private static final String SURNAME = "Surname";
+    private static final LocalDateTime LAST_VERIFIED_DATE = LocalDateTime.of(2024, 4, 14, 10, 0, 0);
 
     private static final PiUser MEDIA_USER = new PiUser(MEDIA_USER_UUID, UserProvenances.PI_AAD,
                                                         "1", MEDIA_USER_EMAIL, Roles.VERIFIED,
-                                                        FORENAME, SURNAME, null, null, null);
+                                                        FORENAME, SURNAME, null, LAST_VERIFIED_DATE, null);
     private static final PiUser SSO_ADMIN_USER = new PiUser(SSO_ADMIN_UUID, UserProvenances.SSO,
                                                             "3", SSO_ADMIN_USER_EMAIL, Roles.INTERNAL_ADMIN_CTSC,
                                                             FORENAME, SURNAME, null, null, LAST_SIGNED_IN_DATE);
@@ -122,12 +123,16 @@ class InactiveAccountManagementServiceTest {
     }
 
     @Test
-    void testMediaAccountDeletion() {
+    void testMediaAccountDeletion() throws AzureCustomException {
         when(userRepository.findVerifiedUsersForDeletionByLastVerifiedDate(anyInt()))
             .thenReturn(Collections.singletonList(MEDIA_USER));
+        when(azureUserService.getUser(MEDIA_USER_EMAIL)).thenReturn(azureMediaUser);
 
-        inactiveAccountManagementService.findMediaAccountsForDeletion();
-        verify(accountService).archiveAccount(MEDIA_USER_UUID);
+        inactiveAccountManagementService.findAndNotifyMediaAccountsForDeletion();
+        verify(publicationService).sendMediaAccountDeletionEmail(MEDIA_USER_EMAIL, AZURE_MEDIA_USER_NAME,
+                                                                 LAST_VERIFIED_DATE);
+        verify(accountService).deleteAccount(MEDIA_USER_UUID);
+
     }
 
     @Test
@@ -135,7 +140,7 @@ class InactiveAccountManagementServiceTest {
         when(userRepository.findVerifiedUsersForDeletionByLastVerifiedDate(anyInt()))
             .thenReturn(Collections.emptyList());
 
-        inactiveAccountManagementService.findMediaAccountsForDeletion();
+        inactiveAccountManagementService.findAndNotifyMediaAccountsForDeletion();
         verifyNoInteractions(accountService);
     }
 
