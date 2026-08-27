@@ -597,7 +597,6 @@ class AccountTest extends IntegrationTestBase {
 
     @Nested
     class DeleteArchivedAccountsTests {
-
         @Test
         void testDeleteArchivedAccounts() throws Exception {
             MockHttpServletRequestBuilder deleteRequest = MockMvcRequestBuilders
