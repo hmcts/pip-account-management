@@ -9,12 +9,16 @@ import uk.gov.hmcts.reform.pip.account.management.database.AuditRepository;
 import uk.gov.hmcts.reform.pip.account.management.database.MediaApplicationRepository;
 import uk.gov.hmcts.reform.pip.account.management.database.SubscriptionListTypeRepository;
 import uk.gov.hmcts.reform.pip.account.management.database.SubscriptionRepository;
+import uk.gov.hmcts.reform.pip.account.management.database.UserArchivedRepository;
 import uk.gov.hmcts.reform.pip.account.management.database.UserRepository;
 
 @ActiveProfiles(profiles = "integration-basic", inheritProfiles = false)
 public class IntegrationBasicTestBase extends IntegrationTestBase {
     @MockitoBean
     protected UserRepository userRepository;
+
+    @MockitoBean
+    protected UserArchivedRepository userArchivedRepository;
 
     @MockitoBean
     protected MediaApplicationRepository mediaApplicationRepository;
