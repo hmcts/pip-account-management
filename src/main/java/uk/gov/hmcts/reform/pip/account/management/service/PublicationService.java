@@ -16,7 +16,6 @@ import org.springframework.web.reactive.function.client.WebClientException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.ThirdPartyHealthCheckException;
 import uk.gov.hmcts.reform.pip.account.management.model.MediaApplication;
-import uk.gov.hmcts.reform.pip.account.management.model.subscription.BulkSubscriptionsSummary;
 import uk.gov.hmcts.reform.pip.account.management.model.subscription.BulkSubscriptionsSummaryV2;
 import uk.gov.hmcts.reform.pip.account.management.model.subscription.Subscription;
 import uk.gov.hmcts.reform.pip.account.management.model.subscription.SubscriptionsSummary;
@@ -34,7 +33,7 @@ import uk.gov.hmcts.reform.pip.model.thirdparty.ThirdPartySubscription;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
+
 import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
 
 /**
@@ -48,13 +47,6 @@ public class PublicationService {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private static final String WELCOME_EMAIL_URL = "/notify/welcome-email";
-    /**
-     * Path for the legacy subscription notification endpoint.
-     *
-     * @deprecated Use NOTIFY_SUBSCRIPTION_V2_PATH instead.
-     */
-    @Deprecated(since = "1.0", forRemoval = true)
-    private static final String NOTIFY_SUBSCRIPTION_PATH = "notify/subscription";
     private static final String NOTIFY_SUBSCRIPTION_V2_PATH = "notify/subscription/V2";
     private static final String NOTIFY_API_PATH = "notify/api";
     private static final String NOTIFY_LOCATION_SUBSCRIPTION_PATH = "notify/location-subscription-delete";
@@ -239,29 +231,8 @@ public class PublicationService {
         }
     }
 
-    /**
-     * Sends subscription summaries to publication services.
-     *
-     * @deprecated Use postSubscriptionSummariesV2 instead.
-     */
-    @Deprecated(since = "1.0", forRemoval = true)
-    public void postSubscriptionSummaries(UUID artefactId, Map<String, List<Subscription>> subscriptions) {
-        BulkSubscriptionsSummary payload = formatSubscriptionsSummary(artefactId, subscriptions);
-        try {
-            webClient.post().uri(url + "/" + NOTIFY_SUBSCRIPTION_PATH)
-                .body(BodyInserters.fromValue(payload)).retrieve()
-                .bodyToMono(Void.class)
-                .block();
-
-        } catch (WebClientException ex) {
-            log.error(writeLog(
-                String.format("Subscription email failed to send with error: %s", ex.getMessage())
-            ));
-        }
-    }
-
-    public void postSubscriptionSummariesV2(Artefact artefact, Map<String, List<Subscription>> subscriptions) {
-        BulkSubscriptionsSummaryV2 payload = formatSubscriptionsSummaryV2(artefact, subscriptions);
+    public void postSubscriptionSummaries(Artefact artefact, Map<String, List<Subscription>> subscriptions) {
+        BulkSubscriptionsSummaryV2 payload = formatSubscriptionsSummary(artefact, subscriptions);
         try {
             webClient.post().uri(url + "/" + NOTIFY_SUBSCRIPTION_V2_PATH)
                 .body(BodyInserters.fromValue(payload)).retrieve()
@@ -371,51 +342,12 @@ public class PublicationService {
     /**
      * Process data to form a subscriptions summary model which can be sent to publication services.
      *
-     * @param artefactId The artefact id associated with the list of subscriptions
-     * @param subscriptions A map containing each email which matches the criteria, alongside the subscriptions.
-     * @return A subscriptions summary model
-     * @deprecated Use formatSubscriptionsSummaryV2 instead.
-     */
-    @Deprecated(since = "1.0", forRemoval = true)
-    @SuppressWarnings("removal")
-    private BulkSubscriptionsSummary formatSubscriptionsSummary(UUID artefactId,
-                                                                Map<String, List<Subscription>> subscriptions) {
-
-        BulkSubscriptionsSummary bulkSubscriptionsSummary = new BulkSubscriptionsSummary();
-        bulkSubscriptionsSummary.setArtefactId(artefactId);
-
-        subscriptions.forEach((email, listOfSubscriptions) -> {
-            SubscriptionsSummaryDetails subscriptionsSummaryDetails = new SubscriptionsSummaryDetails();
-            listOfSubscriptions.forEach(subscription -> {
-                switch (subscription.getSearchType()) {
-                    case CASE_URN -> subscriptionsSummaryDetails.addToCaseUrn(subscription.getSearchValue());
-                    case CASE_ID -> subscriptionsSummaryDetails.addToCaseNumber(subscription.getSearchValue());
-                    case LOCATION_ID -> subscriptionsSummaryDetails.addToLocationId(subscription.getSearchValue());
-                    default -> log.error(writeLog(
-                        String.format("Search type was not one of allowed options: %s", subscription.getSearchType())
-                    ));
-                }
-            });
-
-            SubscriptionsSummary subscriptionsSummary = new SubscriptionsSummary();
-            subscriptionsSummary.setEmail(email);
-            subscriptionsSummary.setSubscriptions(subscriptionsSummaryDetails);
-
-            bulkSubscriptionsSummary.addSubscriptionEmail(subscriptionsSummary);
-        });
-
-        return bulkSubscriptionsSummary;
-    }
-
-    /**
-     * Process data to form a subscriptions summary model which can be sent to publication services.
-     *
      * @param artefact The artefact associated with the list of subscriptions
      * @param subscriptions A map containing each email which matches the criteria, alongside the subscriptions.
      * @return A subscriptions summary model
      */
-    private BulkSubscriptionsSummaryV2 formatSubscriptionsSummaryV2(Artefact artefact,
-                                                                    Map<String, List<Subscription>> subscriptions) {
+    private BulkSubscriptionsSummaryV2 formatSubscriptionsSummary(Artefact artefact,
+                                                                  Map<String, List<Subscription>> subscriptions) {
 
         BulkSubscriptionsSummaryV2 bulkSubscriptionsSummary = new BulkSubscriptionsSummaryV2();
         bulkSubscriptionsSummary.setArtefact(artefact);

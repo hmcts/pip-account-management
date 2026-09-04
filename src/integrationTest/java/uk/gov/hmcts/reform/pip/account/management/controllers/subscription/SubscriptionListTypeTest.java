@@ -42,7 +42,7 @@ class SubscriptionListTypeTest extends IntegrationTestBase {
     private static final String REQUESTER_ID_HEADER = "x-requester-id";
     private static final String ACTIONING_USER_ID = "f54c9783-7f56-4a69-91bc-55b582c0206f";
     private static final UUID VALID_USER_ID = UUID.fromString("87f907d2-eb28-42cc-b6e1-ae2b03f7bba5");
-    private static final String CASE_ID = "T485913";
+    private static final String CASE_NUMBER = "T485913";
 
     private static final String SUBSCRIPTION_PATH = "/subscription";
     private static final String UPDATE_LIST_TYPE_PATH = "/subscription/configure-list-types/" + VALID_USER_ID;
@@ -125,9 +125,9 @@ class SubscriptionListTypeTest extends IntegrationTestBase {
         Subscription subscription = new Subscription();
         subscription.setChannel(Channel.API_COURTEL);
         subscription.setUserId(VALID_USER_ID);
-        subscription.setSearchType(SearchType.CASE_ID);
-        subscription.setSearchValue(CASE_ID);
-        subscription.setCaseNumber(CASE_ID);
+        subscription.setSearchType(SearchType.CASE_NUMBER);
+        subscription.setSearchValue(CASE_NUMBER);
+        subscription.setCaseNumber(CASE_NUMBER);
         subscription.setCreatedDate(LocalDateTime.now());
 
         MockHttpServletRequestBuilder createSubscriptionRequest = MockMvcRequestBuilders.post(SUBSCRIPTION_PATH)
