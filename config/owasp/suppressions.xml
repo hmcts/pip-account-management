@@ -44,4 +44,20 @@
     <cve>CVE-2026-66276</cve>
     <cve>CVE-2026-66277</cve>
   </suppress>
+  <suppress>
+    <notes>kotlin suppression</notes>
+    <cve>CVE-2026-53914</cve>
+  </suppress>
+  <suppress>
+    <notes>microsoft-kiota suppression</notes>
+    <cve>CVE-2026-41134</cve>
+  </suppress>
+  <suppress>
+    <notes>opentelemetry suppression</notes>
+    <cve>CVE-2026-54285</cve>
+  </suppress>
+  <suppress>
+    <notes>postgresql suppression</notes>
+    <cve>CVE-2026-54291</cve>
+  </suppress>
 </suppressions>
