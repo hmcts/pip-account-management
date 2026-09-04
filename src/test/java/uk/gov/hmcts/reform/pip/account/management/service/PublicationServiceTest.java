@@ -34,6 +34,7 @@ import uk.gov.hmcts.reform.pip.model.thirdparty.ThirdPartyOauthConfiguration;
 import uk.gov.hmcts.reform.pip.model.thirdparty.ThirdPartySubscription;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -59,6 +60,7 @@ class PublicationServiceTest {
     private static final String EMAIL = "test@email.com";
     private static final String FULL_NAME = "FULL_NAME";
     private static final String LAST_SIGNED_IN_DATE = "15 July 2022";
+    private static final LocalDateTime LAST_VERIFIED_DATE = LocalDateTime.of(2024, 4, 14, 10, 0, 0);
     private static final String CONTENT_TYPE = "Content-Type";
     private static final String TEST_ID = "123";
     private static final UUID ARTEFACT_ID = UUID.randomUUID();
@@ -190,7 +192,6 @@ class PublicationServiceTest {
     @Test
     void testSendAccountVerificationEmail() {
         mockPublicationServicesEndpoint.enqueue(new MockResponse().setBody(SENT_MESSAGE));
-
         publicationService.sendAccountVerificationEmail(EMAIL, FULL_NAME);
         assertTrue(logCaptor.getErrorLogs().isEmpty(), ERROR_LOG_EMPTY_MESSAGE);
     }
@@ -202,6 +203,24 @@ class PublicationServiceTest {
         publicationService.sendAccountVerificationEmail(EMAIL, FULL_NAME);
         assertTrue(logCaptor.getErrorLogs().get(0)
                        .contains("Media account verification email failed to send with error:"),
+                   ERROR_LOG_MATCH_MESSAGE);
+    }
+
+    @Test
+    void testMediaAccountDeletionEmail() {
+        mockPublicationServicesEndpoint.enqueue(new MockResponse().setBody(SENT_MESSAGE));
+
+        publicationService.sendMediaAccountDeletionEmail(EMAIL, FULL_NAME, LAST_VERIFIED_DATE);
+        assertTrue(logCaptor.getErrorLogs().isEmpty(), ERROR_LOG_EMPTY_MESSAGE);
+    }
+
+    @Test
+    void testFailedMediaAccountDeletionEmail() {
+        mockPublicationServicesEndpoint.enqueue(new MockResponse().setResponseCode(400));
+
+        publicationService.sendMediaAccountDeletionEmail(EMAIL, FULL_NAME, LAST_VERIFIED_DATE);
+        assertTrue(logCaptor.getErrorLogs().get(0)
+                       .contains("Media account deletion email failed to send with error:"),
                    ERROR_LOG_MATCH_MESSAGE);
     }
 

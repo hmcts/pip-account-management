@@ -88,32 +88,46 @@ public class InactiveAccountManagementService {
 
     /**
      * Method that gets all media users who have not verified their account (default to 365 days).
+     * Publication service alerts the user about the deletion.
      * Account service handles the deletion of their AAD, P&I user and subscriptions.
      */
-    public void findMediaAccountsForDeletion() {
+    public void findAndNotifyMediaAccountsForDeletion() {
         userRepository.findVerifiedUsersForDeletionByLastVerifiedDate(mediaAccountDeletionDays)
-            .forEach(user -> accountService.deleteAccount(user.getUserId()));
+            .forEach(user ->  {
+                try {
+                    publicationService.sendMediaAccountDeletionEmail(
+                        user.getEmail(),
+                        azureUserService.getUser(user.getEmail()).getGivenName(),
+                        user.getLastVerifiedDate()
+                    );
+                    accountService.deleteAccount(user.getUserId());
+
+                } catch (AzureCustomException ex) {
+                    log.error(writeLog("Error when getting user from azure: " + ex.getMessage()));
+                }
+
+            });
     }
 
     /**
-     * Method that gets all admin users who have not signed in to their account (default to 90 days).
+     * Method that archive all admin users who have not signed in to their account (default to 90 days).
      * Account service handles the deletion of their AAD, P&I user and subscriptions.
      */
     public void findAdminAccountsForDeletion() {
         userRepository.findAdminUsersForDeletionByLastSignedInDate(aadAdminAccountDeletionDays,
                                                                    ssoAdminAccountDeletionDays)
-            .forEach(user -> accountService.deleteAccount(user.getUserId()));
+            .forEach(user -> accountService.archiveAccount(user.getUserId()));
     }
 
     /**
-     * Method that gets all idam users who have not signed in their account (cft to 132
+     * Method that archive all idam users who have not signed in their account (cft to 132
      * and crime to 208 days)
      * Account service handles the deletion of their P&I user and subscriptions.
      */
     public void findIdamAccountsForDeletion() {
         userRepository.findIdamUsersForDeletionByLastSignedInDate(cftIdamAccountDeletionDays,
                                                                   crimeIdamAccountDeletionDays)
-            .forEach(user -> accountService.deleteAccount(user.getUserId()));
+            .forEach(user -> accountService.archiveAccount(user.getUserId()));
     }
 }
 

@@ -20,6 +20,7 @@ import uk.gov.hmcts.reform.pip.account.management.model.subscription.BulkSubscri
 import uk.gov.hmcts.reform.pip.account.management.model.subscription.Subscription;
 import uk.gov.hmcts.reform.pip.account.management.model.subscription.SubscriptionsSummary;
 import uk.gov.hmcts.reform.pip.account.management.model.subscription.SubscriptionsSummaryDetails;
+import uk.gov.hmcts.reform.pip.account.management.service.helpers.DateTimeHelper;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
 import uk.gov.hmcts.reform.pip.model.publication.Artefact;
 import uk.gov.hmcts.reform.pip.model.subscription.LegacyThirdPartySubscription;
@@ -29,7 +30,7 @@ import uk.gov.hmcts.reform.pip.model.system.admin.ActionResult;
 import uk.gov.hmcts.reform.pip.model.system.admin.DeleteLocationSubscriptionAction;
 import uk.gov.hmcts.reform.pip.model.system.admin.SystemAdminAction;
 import uk.gov.hmcts.reform.pip.model.thirdparty.ThirdPartySubscription;
-
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -54,6 +55,7 @@ public class PublicationService {
     private static final String EMAIL = "email";
     private static final String FULL_NAME = "fullName";
     private static final String USER_PROVENANCE = "userProvenance";
+    private static final String DATE = "reVerificationEmailDate";
     private static final String LAST_SIGNED_IN_DATE = "lastSignedInDate";
 
     private final WebClient webClient;
@@ -191,6 +193,24 @@ public class PublicationService {
             log.error(writeLog(
                 String.format("Inactive user sign-in notification email failed to send with error: %s",
                               ex.getMessage())
+            ));
+        }
+    }
+
+    public void sendMediaAccountDeletionEmail(String emailAddress, String fullName, LocalDateTime lastVerifiedDate) {
+        String reVerificationEmailDate = DateTimeHelper.localDateTimeToDateString(lastVerifiedDate.plusDays(350));
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put(FULL_NAME, fullName);
+        jsonObject.put(EMAIL, emailAddress);
+        jsonObject.put(DATE,  reVerificationEmailDate);
+        try {
+            webClient.post().uri(url + "/notify/media/inactive")
+                .body(BodyInserters.fromValue(jsonObject)).retrieve()
+                .bodyToMono(String.class)
+                .block();
+        } catch (WebClientException ex) {
+            log.error(writeLog(
+                String.format("Media account deletion email failed to send with error: %s", ex.getMessage())
             ));
         }
     }
