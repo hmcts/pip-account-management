@@ -36,9 +36,9 @@ spring:
   jackson2:
     parser:
       STRICT_DUPLICATE_DETECTION: true
-    http:
-      converters:
-        preferred-json-mapper: jackson2
+  http:
+    converters:
+      preferred-json-mapper: jackson2
   application:
     name: PIP Account Management
   datasource:
