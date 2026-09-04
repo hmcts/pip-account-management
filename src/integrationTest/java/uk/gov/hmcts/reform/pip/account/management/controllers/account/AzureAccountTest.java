@@ -146,6 +146,8 @@ class AzureAccountTest extends IntegrationTestBase {
         when(graphClient.users()).thenReturn(usersRequestBuilder);
         when(usersRequestBuilder.post(any())).thenReturn(userToReturn);
         when(accountAuthorisationService.userCanCreateAzureAccount(any())).thenReturn(true);
+        when(clientConfiguration.getB2cUrl()).thenReturn(B2C_URL);
+        when(clientConfiguration.getExtensionId()).thenReturn("test-extension-id");
     }
 
     @AfterEach
