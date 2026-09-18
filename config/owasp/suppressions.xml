@@ -60,4 +60,8 @@
     <notes>postgresql suppression</notes>
     <cve>CVE-2026-54291</cve>
   </suppress>
+  <suppress>
+    <notes>netty suppression</notes>
+    <cve>CVE-2026-89044</cve>
+  </suppress>
 </suppressions>
