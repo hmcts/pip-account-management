@@ -13,6 +13,7 @@ import org.springframework.security.oauth2.client.OAuth2AuthorizedClientProvider
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientProviderBuilder;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
+import org.springframework.security.oauth2.client.web.ClientAttributes;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -23,6 +24,8 @@ import org.springframework.web.reactive.function.client.WebClient;
 @Profile({"!test", "!non-async"})
 @EnableAsync
 public class WebClientConfig {
+    private static final String DEFAULT_CLIENT_REGISTRATION_ID = "publicationServicesApi";
+
     @Bean
     @Profile("!dev")
     public OAuth2AuthorizedClientManager authorizedClientManager(ClientRegistrationRepository clients) {
@@ -49,9 +52,14 @@ public class WebClientConfig {
     }
 
     static ClientRequest withBearerToken(ClientRequest request,
-                                                 OAuth2AuthorizedClientManager authorizedClientManager) {
+                                         OAuth2AuthorizedClientManager authorizedClientManager) {
+        String clientRegistrationId = ClientAttributes.resolveClientRegistrationId(request.attributes());
+        if (clientRegistrationId == null) {
+            clientRegistrationId = DEFAULT_CLIENT_REGISTRATION_ID;
+        }
+
         OAuth2AuthorizeRequest authorizeRequest = OAuth2AuthorizeRequest
-            .withClientRegistrationId("publicationServicesApi")
+            .withClientRegistrationId(clientRegistrationId)
             .principal("pip-account-management")
             .build();
         OAuth2AuthorizedClient authorizedClient = authorizedClientManager.authorize(authorizeRequest);
