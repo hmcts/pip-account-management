@@ -4,6 +4,8 @@
     <notes><![CDATA[file name: spring-cloud-azure-starter-active-directory-6.0.0.jar]]></notes>
     <packageUrl regex="true">^pkg:maven/com\.azure\.spring/spring\-cloud\-azure\-starter\-active\-directory@.*$</packageUrl>
     <cve>CVE-2021-42306</cve>
+    <cve>CVE-2026-47874</cve>
+    <cve>CVE-2026-47834</cve>
   </suppress>
   <suppress>
     <notes><![CDATA[file name: azure-identity-1.17.0.jar]]></notes>
@@ -14,6 +16,7 @@
     <notes>Brought in Azure dependencies. Currently on latest version</notes>
     <cve>CVE-2024-35255</cve>
     <cve>CVE-2026-33117</cve>
+    <cve>CVE-2026-54285</cve>
   </suppress>
   <suppress>
     <notes>Vulnerability in jackson-databind</notes>
@@ -50,9 +53,10 @@
     <cve>CVE-2026-56820</cve>
     <cve>CVE-2026-55851</cve>
     <cve>CVE-2026-59919</cve>
+    <cve>CVE-2026-62380</cve>
   </suppress>
   <suppress>
-    <notes>Tomcat false positives or accepted risk</notes>
+    <notes>Tomcat 10.1.52 false positives or accepted risk</notes>
     <cve>CVE-2026-29145</cve>
     <cve>CVE-2026-24880</cve>
     <cve>CVE-2026-29129</cve>
@@ -79,15 +83,16 @@
     <cve>CVE-2026-59084</cve>
     <cve>CVE-2026-66299</cve>
     <cve>CVE-2026-65637</cve>
-    <cve>CVE-2026-65182</cve>
-    <cve>CVE-2026-65183</cve>
     <cve>CVE-2026-65905</cve>
+    <cve>CVE-2026-65182</cve>
+    <cve>CVE-2026-68525</cve>
+    <cve>CVE-2026-65183</cve>
+    <cve>CVE-2026-66422</cve>
+    <cve>CVE-2026-68569</cve>
     <cve>CVE-2026-65927</cve>
     <cve>CVE-2026-68763</cve>
     <cve>CVE-2026-73180</cve>
-    <cve>CVE-2026-68525</cve>
-    <cve>CVE-2026-68569</cve>
-    <cve>CVE-2026-66422</cve>
+    <cve>CVE-2026-47874</cve>
   </suppress>
   <suppress>
     <notes>log4j-api-2.25.3.jar</notes>
@@ -121,6 +126,24 @@
     <cve>CVE-2026-22741</cve>
     <cve>CVE-2026-41855</cve>
     <cve>CVE-2026-41839</cve>
+    <cve>CVE-2026-47890</cve>
+    <cve>CVE-2026-47891</cve>
+    <cve>CVE-2026-47892</cve>
+    <cve>CVE-2026-59313</cve>
+    <cve>CVE-2026-59283</cve>
+    <cve>CVE-2026-47893</cve>
+    <cve>CVE-2026-59282</cve>
+    <cve>CVE-2026-59281</cve>
+    <cve>CVE-2026-59280</cve>
+    <cve>CVE-2026-59314</cve>
+    <cve>CVE-2026-47834</cve>
+    <cve>CVE-2026-47884</cve>
+    <cve>CVE-2026-47885</cve>
+    <cve>CVE-2026-47886</cve>
+    <cve>CVE-2026-47888</cve>
+    <cve>CVE-2026-47889</cve>
+    <cve>CVE-2026-47883</cve>
+    <cve>CVE-2026-47887</cve>
 
     <!-- Spring Boot -->
     <cve>CVE-2026-40972</cve>
@@ -132,6 +155,10 @@
     <cve>CVE-2026-22751</cve>
     <cve>CVE-2026-41706</cve>
     <cve>CVE-2026-47838</cve>
+    <cve>CVE-2026-59270</cve>
+    <cve>CVE-2026-47841</cve>
+    <cve>CVE-2026-47842</cve>
+    <cve>CVE-2026-59276</cve>
 
     <!-- Spring Cloud -->
     <cve>CVE-2026-50338</cve>
@@ -193,7 +220,6 @@
     <cve>CVE-2026-56820</cve>
     <cve>CVE-2026-59898</cve>
     <cve>CVE-2026-59920</cve>
-    <cve>CVE-2026-62380</cve>
   </suppress>
   <suppress>
     <notes>spring framework suppression</notes>
@@ -211,18 +237,6 @@
     <cve>CVE-2026-41843</cve>
     <cve>CVE-2026-41852</cve>
     <cve>CVE-2026-41853</cve>
-    <cve>CVE-2026-59313</cve>
-    <cve>CVE-2026-59314</cve>
-    <cve>CVE-2026-47893</cve>
-    <cve>CVE-2026-47892</cve>
-    <cve>CVE-2026-59283</cve>
-    <cve>CVE-2026-59280</cve>
-    <cve>CVE-2026-59270</cve>
-    <cve>CVE-2026-47891</cve>
-    <cve>CVE-2026-47890</cve>
-    <cve>CVE-2026-59276</cve>
-    <cve>CVE-2026-59282</cve>
-    <cve>CVE-2026-59281</cve>
   </suppress>
   <suppress>
     <notes>spring security suppression</notes>
@@ -243,13 +257,5 @@
     <cve>CVE-2026-66275</cve>
     <cve>CVE-2026-66277</cve>
     <cve>CVE-2026-66257</cve>
-  </suppress>
-  <suppress>
-    <notes>open telemetry</notes>
-    <cve>CVE-2026-54285</cve>
-  </suppress>
-  <suppress>
-    <notes>reactor-netty</notes>
-    <cve>CVE-2026-47874</cve>
   </suppress>
 </suppressions>
