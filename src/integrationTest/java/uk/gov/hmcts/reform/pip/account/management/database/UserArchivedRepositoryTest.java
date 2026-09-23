@@ -26,12 +26,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 class UserArchivedRepositoryTest {
     private static final UUID USER_ID1 = UUID.randomUUID();
     private static final UUID USER_ID2 = UUID.randomUUID();
+    private static final UUID USER_ID3 = UUID.randomUUID();
     private static final String PROVENANCE_USER_ID1 = UUID.randomUUID().toString();
     private static final String PROVENANCE_USER_ID2 = UUID.randomUUID().toString();
+    private static final String PROVENANCE_USER_ID3 = UUID.randomUUID().toString();
     private static final LocalDateTime LAST_SIGNED_IN_DATE1 = LocalDateTime.now().minus(1, ChronoUnit.MONTHS);
     private static final LocalDateTime LAST_SIGNED_IN_DATE2 = LocalDateTime.now().minus(5, ChronoUnit.WEEKS);
+    private static final LocalDateTime LAST_SIGNED_IN_DATE3 = LocalDateTime.now().minus(10, ChronoUnit.WEEKS);
+
     private static final LocalDateTime ARCHIVED_DATE1 = LocalDateTime.now().minus(1, ChronoUnit.DAYS);
-    private static final LocalDateTime ARCHIVED_DATE2 = LocalDateTime.now().minus(2, ChronoUnit.DAYS);
+    private static final LocalDateTime ARCHIVED_DATE2 = LocalDateTime.now().minus(5, ChronoUnit.DAYS);
+    private static final LocalDateTime ARCHIVED_DATE3 = LocalDateTime.now().minus(10, ChronoUnit.DAYS);
 
     @Autowired
     private UserArchivedRepository userArchivedRepository;
@@ -54,7 +59,42 @@ class UserArchivedRepositoryTest {
         user2.setLastSignedInDate(LAST_SIGNED_IN_DATE2);
         user2.setArchivedDate(ARCHIVED_DATE2);
 
-        userArchivedRepository.saveAll(List.of(user1, user2));
+        PiUserArchived user3 = new PiUserArchived();
+        user3.setUserId(USER_ID3);
+        user3.setProvenanceUserId(PROVENANCE_USER_ID3);
+        user3.setUserProvenance(UserProvenances.SSO);
+        user3.setRoles(Roles.SYSTEM_ADMIN);
+        user3.setLastSignedInDate(LAST_SIGNED_IN_DATE3);
+        user3.setArchivedDate(ARCHIVED_DATE3);
+
+        userArchivedRepository.saveAll(List.of(user1, user2, user3));
+    }
+
+    @Test
+    void shouldDeleteArchivedAccountByUserId() {
+        UUID userId = UUID.randomUUID();
+        PiUserArchived archivedUser = new PiUserArchived();
+        archivedUser.setUserId(userId);
+        archivedUser.setProvenanceUserId(PROVENANCE_USER_ID1);
+        archivedUser.setUserProvenance(UserProvenances.PI_AAD);
+        archivedUser.setRoles(Roles.VERIFIED);
+        archivedUser.setLastSignedInDate(LAST_SIGNED_IN_DATE1);
+        archivedUser.setArchivedDate(ARCHIVED_DATE1);
+        userArchivedRepository.save(archivedUser);
+
+        userArchivedRepository.deleteByUserId(userId);
+
+        assertThat(userArchivedRepository.findAll())
+            .noneMatch(account -> userId.equals(account.getUserId()));
+    }
+
+    @Test
+    void shouldFindOutdatedArchivedAccounts() {
+        List<PiUserArchived> archivedUsers = userArchivedRepository.findOutdatedArchivedAccounts(5);
+
+        assertThat(archivedUsers).hasSize(2);
+        assertThat(archivedUsers.get(0).getUserId()).isEqualTo(USER_ID2);
+        assertThat(archivedUsers.get(1).getUserId()).isEqualTo(USER_ID3);
     }
 
     @Test
@@ -63,7 +103,7 @@ class UserArchivedRepositoryTest {
 
         assertThat(accountMiData)
             .as("Returned count does not match")
-            .hasSize(2);
+            .hasSize(3);
 
         assertThat(accountMiData)
             .as("Returned deleted account MI data does not match")

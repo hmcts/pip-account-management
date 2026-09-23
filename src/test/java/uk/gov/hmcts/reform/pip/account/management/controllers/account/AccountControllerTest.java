@@ -135,4 +135,11 @@ class AccountControllerTest {
             .as(STATUS_CODE_MATCH)
             .isEqualTo(HttpStatus.OK);
     }
+
+    @Test
+    void testDeleteArchivedAccounts() {
+        assertThat(accountController.deleteArchivedAccounts().getStatusCode())
+            .as(STATUS_CODE_MATCH)
+            .isEqualTo(HttpStatus.NO_CONTENT);
+    }
 }

@@ -69,6 +69,7 @@ class AccountTest extends IntegrationTestBase {
     private static final String GET_PROVENANCE_USER_URL = ROOT_URL + "/provenance/";
     private static final String UPDATE_ACCOUNT_URL = ROOT_URL + "/provenance/";
     private static final String CREATE_SYSTEM_ADMIN_URL = ROOT_URL + "/system-admin";
+    private static final String DELETE_ARCHIVED_ACCOUNT_PATH = ROOT_URL + "/archived";
 
     private static final String EMAIL = "test_account_admin@hmcts.net";
     private static final String SYSTEM_ADMIN_ID = "87f907d2-eb28-42cc-b6e1-ae2b03f7bba4";
@@ -589,6 +590,26 @@ class AccountTest extends IntegrationTestBase {
             MockHttpServletRequestBuilder request = MockMvcRequestBuilders
                 .delete(ROOT_URL + DELETE_PATH_V2 + USER_ID)
                 .header(REQUESTER_ID_HEADER, SYSTEM_ADMIN_ID);
+
+            assertRequestResponseStatus(mockMvc, request, FORBIDDEN.value());
+        }
+    }
+
+    @Nested
+    class DeleteArchivedAccountsTests {
+        @Test
+        void testDeleteArchivedAccounts() throws Exception {
+            MockHttpServletRequestBuilder deleteRequest = MockMvcRequestBuilders
+                .delete(DELETE_ARCHIVED_ACCOUNT_PATH);
+
+            mockMvc.perform(deleteRequest).andExpect(status().isNoContent());
+        }
+
+        @Test
+        @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
+        void testUnauthorizedDeleteArchivedAccounts() throws Exception {
+            MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+                .delete(DELETE_ARCHIVED_ACCOUNT_PATH);
 
             assertRequestResponseStatus(mockMvc, request, FORBIDDEN.value());
         }
