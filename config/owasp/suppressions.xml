@@ -56,7 +56,7 @@
     <cve>CVE-2026-62380</cve>
   </suppress>
   <suppress>
-    <notes>Tomcat false positives or accepted risk</notes>
+    <notes>Tomcat 10.1.52 false positives or accepted risk</notes>
     <cve>CVE-2026-29145</cve>
     <cve>CVE-2026-24880</cve>
     <cve>CVE-2026-29129</cve>
@@ -173,6 +173,7 @@
   <suppress>
     <notes>netty</notes>
     <cve>CVE-2026-41417</cve>
+    <cve>CVE-2026-47874</cve>
   </suppress>
   <suppress>
     <notes>microsoft kiota suppression</notes>
@@ -246,18 +247,24 @@
     <cve>CVE-2026-41843</cve>
     <cve>CVE-2026-41852</cve>
     <cve>CVE-2026-41853</cve>
-    <cve>CVE-2026-59313</cve>
-    <cve>CVE-2026-59314</cve>
-    <cve>CVE-2026-47893</cve>
-    <cve>CVE-2026-47892</cve>
-    <cve>CVE-2026-59283</cve>
-    <cve>CVE-2026-59280</cve>
-    <cve>CVE-2026-59270</cve>
-    <cve>CVE-2026-47891</cve>
     <cve>CVE-2026-47890</cve>
-    <cve>CVE-2026-59276</cve>
+    <cve>CVE-2026-47891</cve>
+    <cve>CVE-2026-47892</cve>
+    <cve>CVE-2026-59313</cve>
+    <cve>CVE-2026-59283</cve>
+    <cve>CVE-2026-47893</cve>
     <cve>CVE-2026-59282</cve>
     <cve>CVE-2026-59281</cve>
+    <cve>CVE-2026-59280</cve>
+    <cve>CVE-2026-59314</cve>
+    <cve>CVE-2026-47834</cve>
+    <cve>CVE-2026-47884</cve>
+    <cve>CVE-2026-47885</cve>
+    <cve>CVE-2026-47886</cve>
+    <cve>CVE-2026-47888</cve>
+    <cve>CVE-2026-47889</cve>
+    <cve>CVE-2026-47883</cve>
+    <cve>CVE-2026-47887</cve>
   </suppress>
   <suppress>
     <notes>spring security suppression</notes>
@@ -265,6 +272,10 @@
     <cve>CVE-2026-41003</cve>
     <cve>CVE-2026-41694</cve>
     <cve>CVE-2026-55851</cve>
+    <cve>CVE-2026-59270</cve>
+    <cve>CVE-2026-47841</cve>
+    <cve>CVE-2026-47842</cve>
+    <cve>CVE-2026-59276</cve>
   </suppress>
   <suppress>
     <notes>kotlin suppression</notes>
@@ -280,11 +291,11 @@
     <cve>CVE-2026-66257</cve>
   </suppress>
   <suppress>
-    <notes>open telemetry</notes>
+    <notes>opentelemetry</notes>
     <cve>CVE-2026-54285</cve>
   </suppress>
   <suppress>
-    <notes>reactor-netty</notes>
-    <cve>CVE-2026-47874</cve>
+    <notes>spring-cloud-azure suppression</notes>
+    <cve>CVE-2026-69854</cve>
   </suppress>
 </suppressions>
