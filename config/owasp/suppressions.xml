@@ -6,6 +6,7 @@
     <cve>CVE-2021-42306</cve>
     <cve>CVE-2026-47874</cve>
     <cve>CVE-2026-47834</cve>
+    <cve>CVE-2026-69854</cve>
   </suppress>
   <suppress>
     <notes><![CDATA[file name: azure-identity-1.17.0.jar]]></notes>
