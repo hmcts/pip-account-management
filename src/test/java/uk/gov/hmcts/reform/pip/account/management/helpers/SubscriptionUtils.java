@@ -33,47 +33,6 @@ public final class SubscriptionUtils {
     }
 
     public static List<Subscription> createMockSubscriptionList(LocalDateTime createdDate) {
-        final int caseIdInterval = 3;
-        final int caseUrnInterval = 6;
-
-        List<Subscription> subs = new ArrayList<>();
-        Map<Integer, UUID> mockData = Map.of(
-            0, UUID.randomUUID(),
-            1, UUID.randomUUID(),
-            2, UUID.randomUUID(),
-            3, UUID.randomUUID(),
-            4, UUID.randomUUID(),
-            5, UUID.randomUUID(),
-            6, UUID.randomUUID(),
-            7, UUID.randomUUID(),
-            8, UUID.randomUUID()
-        );
-
-        for (int i = 0; i < 8; i++) {
-            Subscription subscription = createMockSubscription(mockData.get(i), String.format("%s", i),
-                                                               i < 3 ? Channel.API_COURTEL : Channel.EMAIL,
-                                                               createdDate);
-            subscription.setChannel(i < 3 ? Channel.API_COURTEL : Channel.EMAIL);
-            subscription.setCaseName("test name");
-            subscription.setUrn("321" + i);
-            subscription.setCaseNumber("123" + i);
-            if (i < caseIdInterval) {
-                subscription.setSearchType(SearchType.CASE_ID);
-            } else if (i < caseUrnInterval) {
-                subscription.setSearchType(SearchType.CASE_URN);
-            } else {
-                subscription.setSearchType(SearchType.LOCATION_ID);
-                subscription.setCaseName(null);
-                subscription.setUrn(null);
-                subscription.setCaseNumber(null);
-                subscription.setLocationName("test court name");
-            }
-            subs.add(subscription);
-        }
-        return subs;
-    }
-
-    public static List<Subscription> createMockSubscriptionListV2(LocalDateTime createdDate) {
         final int caseNumberInterval = 3;
         final int caseNameInterval = 6;
 
@@ -104,7 +63,6 @@ public final class SubscriptionUtils {
             } else {
                 subscription.setSearchType(SearchType.LOCATION_ID);
                 subscription.setCaseName(null);
-                subscription.setUrn(null);
                 subscription.setCaseNumber(null);
                 subscription.setLocationName("test court name");
             }
@@ -130,5 +88,4 @@ public final class SubscriptionUtils {
         }
         return subscriptionListTypes;
     }
-
 }

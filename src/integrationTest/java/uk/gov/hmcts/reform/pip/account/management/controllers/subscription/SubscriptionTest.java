@@ -81,12 +81,9 @@ class SubscriptionTest extends IntegrationTestBase {
     private static final String VALIDATION_USER_ID = "Returned user ID does not match expected user ID";
     private static final String VALIDATION_CASE_NAME = "Returned case name does not match expected case name";
     private static final String VALIDATION_CASE_NUMBER = "Returned case number does not match expected case number";
-    private static final String VALIDATION_CASE_URN = "Returned URN does not match expected URN";
-    private static final String VALIDATION_PARTY_NAMES = "Returned party names do not match expected parties";
     private static final String VALIDATION_LOCATION_NAME =
         "Returned location name does not match expected location name";
     private static final String VALIDATION_BAD_REQUEST = "Incorrect response - should be 400.";
-    private static final String VALIDATION_CASE_ID = "Case ID does not match expected case";
     private static final String VALIDATION_LOCATION_LIST = "Location subscription list contains unknown locations";
     private static final String VALIDATION_SUBSCRIPTION_LIST = "The expected subscription is not displayed";
     private static final String VALIDATION_NO_SUBSCRIPTIONS = "User has unknown subscriptions";
@@ -96,34 +93,28 @@ class SubscriptionTest extends IntegrationTestBase {
     private static final String FORBIDDEN_STATUS_CODE = "Status code does not match forbidden";
     private static final String NOT_FOUND_STATUS_CODE = "Status code does not match not found";
     private static final String RESPONSE_MATCH = "Response should match";
-    private static final String SUBSCRIBER_REQUEST_SUCCESS = "Subscriber request has been accepted";
     private static final String EMAIL_SUBSCRIBER_REQUEST_SUCCESS = "Email subscriber request has been accepted";
     private static final String API_SUBSCRIBER_REQUEST_SUCCESS = "API subscriber request has been accepted";
 
     private static final String RAW_JSON_MISSING_SEARCH_VALUE =
-        "{\"userId\": \"3\", \"searchType\": \"CASE_ID\",\"channel\": \"EMAIL\"}";
+        "{\"userId\": \"3\", \"searchType\": \"CASE_NUMBER\",\"channel\": \"EMAIL\"}";
     private static final String RAW_JSON_MISSING_SEARCH_TYPE =
         "{\"userId\": \"3\", \"searchType\": \"123\",\"channel\": \"EMAIL\"}";
     private static final String RAW_JSON_MISSING_CHANNEL =
-        "{\"userId\": \"3\", \"searchType\": \"CASE_ID\",\"searchValue\": \"321\"}";
+        "{\"userId\": \"3\", \"searchType\": \"CASE_NUMBER\",\"searchValue\": \"321\"}";
     private static final String RAW_JSON_EMPTY_BODY = "{}";
     private static final String RAW_JSON_INVALID_CHANNEL = "{'channel': 'INVALID_TYPE'}";
     private static final String RAW_JSON_INVALID_SEARCH_TYPE = "{'searchType': 'INVALID_TYPE'}";
 
     private static final String LOCATION_ID = "9";
-    private static final String CASE_ID = "T485913";
-    private static final String CASE_URN = "IBRANE1BVW";
+    private static final String CASE_NUMBER = "T485913";
     private static final String CASE_NAME = "Tom Clancy";
-    private static final String PARTY_NAMES = "Party A, Party B";
 
     private static final String SUBSCRIPTION_BASE_URL = "/subscription/";
     private static final String SUBSCRIPTION_PATH = "/subscription";
     private static final String MI_REPORTING_SUBSCRIPTION_DATA_ALL_URL = "/subscription/mi-data-all";
     private static final String MI_REPORTING_SUBSCRIPTION_DATA_LOCATION_URL = "/subscription/mi-data-location";
-    private static final String SUBSCRIPTION_USER_PATH = "/subscription/user/" + UUID_STRING;
     private static final String SUBSCRIPTION_USER_V2_PATH = "/subscription/user/v2/" + UUID_STRING;
-    private static final String ARTEFACT_RECIPIENT_PATH = "/subscription/artefact-recipients";
-    private static final String SUBSCRIPTION_EMAIL_RECIPIENT_PATH = "/subscription/email-recipients";
     private static final String SUBSCRIPTION_EMAIL_RECIPIENT_V2_PATH = "/subscription/email-recipients/V2";
     private static final String SUBSCRIPTION_API_RECIPIENT_PATH = "/subscription/api-recipients";
     private static final String DELETED_ARTEFACT_RECIPIENT_PATH = "/subscription/deleted-artefact";
@@ -186,8 +177,7 @@ class SubscriptionTest extends IntegrationTestBase {
         SUBSCRIPTION.setSearchValue(searchValue);
         SUBSCRIPTION.setLocationName(LOCATION_NAME);
         SUBSCRIPTION.setCaseName(CASE_NAME);
-        SUBSCRIPTION.setCaseNumber(CASE_ID);
-        SUBSCRIPTION.setUrn(CASE_URN);
+        SUBSCRIPTION.setCaseNumber(CASE_NUMBER);
         SUBSCRIPTION.setChannel(Channel.EMAIL);
         SUBSCRIPTION.setCreatedDate(DATE_ADDED);
 
@@ -221,7 +211,6 @@ class SubscriptionTest extends IntegrationTestBase {
 
         @Test
         void checkCreateSubscription() throws Exception {
-            SUBSCRIPTION.setPartyNames(PARTY_NAMES);
             MockHttpServletRequestBuilder mappedSubscription = setupMockSubscription(
                 LOCATION_ID, SearchType.LOCATION_ID, UUID.fromString(ACTIONING_USER_ID));
 
@@ -347,8 +336,9 @@ class SubscriptionTest extends IntegrationTestBase {
         @ParameterizedTest
         @ValueSource(strings = {SYSTEM_ADMIN_USER_ID, ACTIONING_USER_ID})
         void testBulkDeletedSubscribersReturnsOk(String userId) throws Exception {
-            MvcResult caseSubscription = mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID,
-                                                                           UUID.fromString(ACTIONING_USER_ID)))
+            MvcResult caseSubscription = mvc.perform(setupMockSubscription(
+                    CASE_NUMBER, SearchType.CASE_NUMBER,
+                    UUID.fromString(ACTIONING_USER_ID)))
                 .andReturn();
 
             MvcResult locationSubscription = mvc.perform(setupMockSubscription(LOCATION_ID, SearchType.LOCATION_ID,
@@ -382,11 +372,11 @@ class SubscriptionTest extends IntegrationTestBase {
 
         @Test
         void testBulkDeletedSubscribersReturnsForbiddenIfUserMismatched() throws Exception {
-            MvcResult caseSubscription = mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, VALID_USER_ID))
+            MvcResult caseSubscription = mvc.perform(setupMockSubscription(CASE_NUMBER, SearchType.CASE_NUMBER,
+                                                                           VALID_USER_ID))
                 .andReturn();
             MvcResult locationSubscription = mvc.perform(setupMockSubscription(LOCATION_ID, SearchType.LOCATION_ID,
-                                                                               UUID.fromString(ACTIONING_USER_ID)
-                ))
+                                                                               UUID.fromString(ACTIONING_USER_ID)))
                 .andReturn();
 
             String caseSubscriptionId = getSubscriptionId(caseSubscription.getResponse().getContentAsString());
@@ -441,7 +431,6 @@ class SubscriptionTest extends IntegrationTestBase {
 
         @Test
         void testFindSubscriptionByIdSuccessful() throws Exception {
-            SUBSCRIPTION.setPartyNames(PARTY_NAMES);
             Subscription returnedSubscription = createdAndExtractSubscription(UUID_STRING.toString());
 
             assertEquals(SUBSCRIPTION.getChannel(), returnedSubscription.getChannel(), VALIDATION_CHANNEL_NAME);
@@ -452,9 +441,7 @@ class SubscriptionTest extends IntegrationTestBase {
             assertNotNull(returnedSubscription.getId(), VALIDATION_UUID);
 
             assertEquals(CASE_NAME, returnedSubscription.getCaseName(), VALIDATION_CASE_NAME);
-            assertEquals(CASE_ID, returnedSubscription.getCaseNumber(), VALIDATION_CASE_NUMBER);
-            assertEquals(CASE_URN, returnedSubscription.getUrn(), VALIDATION_CASE_URN);
-            assertEquals(PARTY_NAMES, returnedSubscription.getPartyNames(), VALIDATION_PARTY_NAMES);
+            assertEquals(CASE_NUMBER, returnedSubscription.getCaseNumber(), VALIDATION_CASE_NUMBER);
             assertEquals(LOCATION_NAME, returnedSubscription.getLocationName(), VALIDATION_LOCATION_NAME);
         }
 
@@ -485,145 +472,13 @@ class SubscriptionTest extends IntegrationTestBase {
     }
 
     @Nested
-    class FindSubscriptionsByUserId {
-
-        @Test
-        void testGetUsersSubscriptionsByUserIdSuccessful() throws Exception {
-            mvc.perform(setupMockSubscription(LOCATION_ID, SearchType.LOCATION_ID, UUID_STRING));
-            mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, UUID_STRING));
-            mvc.perform(setupMockSubscription(CASE_URN, SearchType.CASE_URN, UUID_STRING));
-
-            UserSubscription userSubscriptions = getUserSubscriptions();
-
-            assertEquals(
-                3,
-                userSubscriptions.getLocationSubscriptions().size() + userSubscriptions
-                    .getCaseSubscriptions().size(),
-                VALIDATION_SUBSCRIPTION_LIST
-            );
-
-            LocationSubscription location = userSubscriptions.getLocationSubscriptions().getFirst();
-            assertEquals(LOCATION_NAME, location.getLocationName(), VALIDATION_LOCATION_NAME);
-            assertEquals(DATE_ADDED.withNano(0), location.getDateAdded().withNano(0),
-                         VALIDATION_DATE_ADDED);
-
-            CaseSubscription caseSubscription = userSubscriptions.getCaseSubscriptions().getFirst();
-            assertEquals(CASE_NAME, caseSubscription.getCaseName(), VALIDATION_CASE_NAME);
-            assertEquals(CASE_ID, caseSubscription.getCaseNumber(), VALIDATION_CASE_ID);
-            assertEquals(CASE_URN, caseSubscription.getUrn(), VALIDATION_CASE_URN);
-        }
-
-        @Test
-        void testGetUsersSubscriptionsByUserIdWithParties() throws Exception {
-            SUBSCRIPTION.setUserId(UUID_STRING);
-            SUBSCRIPTION.setSearchType(SearchType.CASE_ID);
-            SUBSCRIPTION.setPartyNames(PARTY_NAMES);
-            MockHttpServletRequestBuilder mappedSubscription = setupMockSubscription(CASE_ID);
-
-            mvc.perform(mappedSubscription).andExpect(status().isCreated()).andReturn();
-
-            UserSubscription userSubscriptions = getUserSubscriptions();
-
-            assertEquals(
-                1,
-                userSubscriptions.getLocationSubscriptions().size() + userSubscriptions
-                    .getCaseSubscriptions().size(),
-                VALIDATION_SUBSCRIPTION_LIST
-            );
-
-            CaseSubscription caseSubscription = userSubscriptions.getCaseSubscriptions().getFirst();
-            assertEquals(CASE_NAME, caseSubscription.getCaseName(), VALIDATION_CASE_NAME);
-            assertEquals(CASE_ID, caseSubscription.getCaseNumber(), VALIDATION_CASE_ID);
-            assertEquals(CASE_URN, caseSubscription.getUrn(), VALIDATION_CASE_URN);
-            assertEquals(PARTY_NAMES, caseSubscription.getPartyNames(), VALIDATION_PARTY_NAMES);
-        }
-
-        @Test
-        void testGetUsersSubscriptionsByUserIdSingleLocation() throws Exception {
-            mvc.perform(setupMockSubscription(LOCATION_ID, SearchType.LOCATION_ID, UUID_STRING));
-
-            UserSubscription userSubscriptions = getUserSubscriptions();
-
-            assertEquals(1, userSubscriptions.getLocationSubscriptions().size(),
-                         "Court subscription list does not contain 1 court");
-
-            assertEquals(0, userSubscriptions.getCaseSubscriptions().size(),
-                         "Court subscription list contains unknown cases");
-
-            LocationSubscription location = userSubscriptions.getLocationSubscriptions().getFirst();
-            assertEquals(LOCATION_NAME, location.getLocationName(), VALIDATION_LOCATION_NAME);
-            assertEquals(DATE_ADDED.withNano(0), location.getDateAdded().withNano(0),
-                         VALIDATION_DATE_ADDED);
-        }
-
-        @Test
-        void testGetUsersSubscriptionsByUserIdSingleCaseId() throws Exception {
-            mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, UUID_STRING));
-
-            UserSubscription userSubscriptions = getUserSubscriptions();
-
-            assertEquals(0, userSubscriptions.getLocationSubscriptions().size(), VALIDATION_LOCATION_LIST);
-            assertEquals(1, userSubscriptions.getCaseSubscriptions().size(), VALIDATION_ONE_CASE_LOCATION);
-
-            CaseSubscription caseSubscription = userSubscriptions.getCaseSubscriptions().getFirst();
-            assertEquals(CASE_NAME, caseSubscription.getCaseName(), VALIDATION_CASE_NAME);
-            assertEquals(SearchType.CASE_ID, caseSubscription.getSearchType(), VALIDATION_SEARCH_TYPE);
-            assertEquals(CASE_ID, caseSubscription.getCaseNumber(), VALIDATION_CASE_ID);
-            assertEquals(CASE_URN, caseSubscription.getUrn(), VALIDATION_CASE_URN);
-        }
-
-        @Test
-        void testGetUsersSubscriptionsByUserIdSingleCaseUrn() throws Exception {
-            mvc.perform(setupMockSubscription(CASE_URN, SearchType.CASE_URN, UUID_STRING));
-
-            UserSubscription userSubscriptions = getUserSubscriptions();
-
-            assertEquals(0, userSubscriptions.getLocationSubscriptions().size(), VALIDATION_LOCATION_LIST);
-            assertEquals(1, userSubscriptions.getCaseSubscriptions().size(), VALIDATION_ONE_CASE_LOCATION);
-
-            CaseSubscription caseSubscription = userSubscriptions.getCaseSubscriptions().getFirst();
-            assertEquals(CASE_NAME, caseSubscription.getCaseName(), VALIDATION_CASE_NAME);
-            assertEquals(SearchType.CASE_URN, caseSubscription.getSearchType(), VALIDATION_SEARCH_TYPE);
-            assertEquals(CASE_ID, caseSubscription.getCaseNumber(), VALIDATION_CASE_ID);
-            assertEquals(CASE_URN, caseSubscription.getUrn(), VALIDATION_CASE_URN);
-        }
-
-        @Test
-        void testGetUsersSubscriptionsByUserIdNoSubscriptions() throws Exception {
-            UserSubscription userSubscriptions = getUserSubscriptions();
-
-            assertEquals(new UserSubscription(), userSubscriptions, VALIDATION_NO_SUBSCRIPTIONS);
-        }
-
-        @Test
-        @WithMockUser(username = "unauthorized_find_by_user_id", authorities = {"APPROLE_unknown.find"})
-        void testUnauthorizedFindByUserId() throws Exception {
-            when(subscriptionAuthorisationService.userCanViewSubscriptions(any(), any())).thenReturn(false);
-            assertRequestResponseStatus(mvc, get(SUBSCRIPTION_USER_PATH)
-                .header(REQUESTER_ID_HEADER, ACTIONING_USER_ID), FORBIDDEN.value());
-        }
-
-        private UserSubscription getUserSubscriptions() throws Exception {
-            MvcResult response = mvc.perform(get(SUBSCRIPTION_USER_PATH)
-                                                 .header(REQUESTER_ID_HEADER, ACTIONING_USER_ID))
-                .andExpect(status().isOk())
-                .andReturn();
-
-            assertNotNull(response.getResponse(), VALIDATION_EMPTY_RESPONSE);
-
-            return OBJECT_MAPPER.readValue(response.getResponse().getContentAsString(), UserSubscription.class);
-        }
-
-    }
-
-    @Nested
     class FindSubscriptionsByUserIdV2 {
 
         @Test
         void testGetUsersSubscriptionsByUserIdSuccessful() throws Exception {
             mvc.perform(setupMockSubscription(LOCATION_ID, SearchType.LOCATION_ID, UUID_STRING));
-            mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_NUMBER, UUID_STRING));
-            mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_NAME, UUID_STRING));
+            mvc.perform(setupMockSubscription(CASE_NUMBER, SearchType.CASE_NUMBER, UUID_STRING));
+            mvc.perform(setupMockSubscription(CASE_NUMBER, SearchType.CASE_NAME, UUID_STRING));
 
             UserSubscription userSubscriptions = getUserSubscriptions();
 
@@ -641,7 +496,7 @@ class SubscriptionTest extends IntegrationTestBase {
 
             CaseSubscription caseSubscription = userSubscriptions.getCaseSubscriptions().getFirst();
             assertEquals(CASE_NAME, caseSubscription.getCaseName(), VALIDATION_CASE_NAME);
-            assertEquals(CASE_ID, caseSubscription.getCaseNumber(), VALIDATION_CASE_ID);
+            assertEquals(CASE_NUMBER, caseSubscription.getCaseNumber(), VALIDATION_CASE_NUMBER);
         }
 
         @Test
@@ -664,7 +519,7 @@ class SubscriptionTest extends IntegrationTestBase {
 
         @Test
         void testGetUsersSubscriptionsByUserIdSingleCaseNumber() throws Exception {
-            mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_NUMBER, UUID_STRING));
+            mvc.perform(setupMockSubscription(CASE_NUMBER, SearchType.CASE_NUMBER, UUID_STRING));
 
             UserSubscription userSubscriptions = getUserSubscriptions();
 
@@ -674,7 +529,7 @@ class SubscriptionTest extends IntegrationTestBase {
             CaseSubscription caseSubscription = userSubscriptions.getCaseSubscriptions().getFirst();
             assertEquals(CASE_NAME, caseSubscription.getCaseName(), VALIDATION_CASE_NAME);
             assertEquals(SearchType.CASE_NUMBER, caseSubscription.getSearchType(), VALIDATION_SEARCH_TYPE);
-            assertEquals(CASE_ID, caseSubscription.getCaseNumber(), VALIDATION_CASE_ID);
+            assertEquals(CASE_NUMBER, caseSubscription.getCaseNumber(), VALIDATION_CASE_NUMBER);
         }
 
         @Test
@@ -706,112 +561,10 @@ class SubscriptionTest extends IntegrationTestBase {
     }
 
     @Nested
-    @Deprecated
-    class ArtefactRecipients {
-
-        @Test
-        void testBuildSubscriberListReturnsAccepted() throws Exception {
-            mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, VALID_USER_ID));
-            assertAcceptedArtefactRecipientRequest();
-        }
-
-        @Test
-        void testBuildSubscriberListCaseUrnNull() throws Exception {
-            mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, VALID_USER_ID));
-            assertAcceptedArtefactRecipientRequest();
-        }
-
-        @Test
-        void testBuildSubscriberListCaseNumberNull() throws Exception {
-            mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, VALID_USER_ID));
-            assertAcceptedArtefactRecipientRequest();
-        }
-
-        @Test
-        void testBuildLocationSubscribersListReturnsAccepted() throws Exception {
-            mvc.perform(setupMockSubscription(LOCATION_ID, SearchType.LOCATION_ID, VALID_USER_ID));
-            assertAcceptedArtefactRecipientRequest();
-        }
-
-        private void assertAcceptedArtefactRecipientRequest() throws Exception {
-            MockHttpServletRequestBuilder request = MockMvcRequestBuilders
-                .post(ARTEFACT_RECIPIENT_PATH)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(rawArtefact);
-            MvcResult result = mvc.perform(request).andExpect(status().isAccepted()).andReturn();
-
-            assertEquals(SUBSCRIBER_REQUEST_SUCCESS, result.getResponse().getContentAsString(), RESPONSE_MATCH);
-        }
-
-        @Test
-        @WithMockUser(username = "unauthorized_find_by_id", authorities = {"APPROLE_unknown.find"})
-        void testUnauthorizedBuildSubscriberList() throws Exception {
-            MockHttpServletRequestBuilder request = MockMvcRequestBuilders
-                .post(ARTEFACT_RECIPIENT_PATH)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(rawArtefact);
-
-            assertRequestResponseStatus(mvc, request, FORBIDDEN.value());
-        }
-
-    }
-
-    @Nested
     class EmailRecipients {
         @Test
-        @Deprecated
-        void testBuildEmailSubscriberListReturnsAccepted() throws Exception {
-            mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, VALID_USER_ID));
-            assertAcceptedEmailRecipientRequest();
-        }
-
-        @Test
-        @Deprecated
-        void testBuildEmailSubscriberListCaseUrnNull() throws Exception {
-            mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, VALID_USER_ID));
-            assertAcceptedEmailRecipientRequest();
-        }
-
-        @Test
-        @Deprecated
-        void testBuildEmailSubscriberListCaseNumberNull() throws Exception {
-            mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, VALID_USER_ID));
-            assertAcceptedEmailRecipientRequest();
-        }
-
-        @Test
-        @Deprecated
-        void testBuildLocationEmailSubscribersListReturnsAccepted() throws Exception {
-            mvc.perform(setupMockSubscription(LOCATION_ID, SearchType.LOCATION_ID, VALID_USER_ID));
-            assertAcceptedEmailRecipientRequest();
-        }
-
-        @Deprecated
-        private void assertAcceptedEmailRecipientRequest() throws Exception {
-            MockHttpServletRequestBuilder request = MockMvcRequestBuilders
-                .post(SUBSCRIPTION_EMAIL_RECIPIENT_PATH)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(rawArtefact);
-            MvcResult result = mvc.perform(request).andExpect(status().isAccepted()).andReturn();
-
-            assertEquals(EMAIL_SUBSCRIBER_REQUEST_SUCCESS, result.getResponse().getContentAsString(), RESPONSE_MATCH);
-        }
-
-        @Test
-        @WithMockUser(username = "unauthorized_find_by_id", authorities = {"APPROLE_unknown.find"})
-        @Deprecated
-        void testUnauthorizedBuildEmailSubscriberList() throws Exception {
-            MockHttpServletRequestBuilder request = MockMvcRequestBuilders
-                .post(SUBSCRIPTION_EMAIL_RECIPIENT_PATH)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(rawArtefact);
-
-            assertRequestResponseStatus(mvc, request, FORBIDDEN.value());
-        }
-
-        @Test
         void testBuildEmailSubscriberListV2WithCaseNumberSearchTypeReturnsAccepted() throws Exception {
-            mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_NUMBER, VALID_USER_ID));
+            mvc.perform(setupMockSubscription(CASE_NUMBER, SearchType.CASE_NUMBER, VALID_USER_ID));
             assertAcceptedEmailRecipientRequestV2();
         }
 
@@ -853,19 +606,19 @@ class SubscriptionTest extends IntegrationTestBase {
     class ApiRecipients {
         @Test
         void testBuildApiSubscriberListReturnsAccepted() throws Exception {
-            mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, VALID_USER_ID));
+            mvc.perform(setupMockSubscription(CASE_NUMBER, SearchType.CASE_NUMBER, VALID_USER_ID));
             assertAcceptedApiRecipientRequest();
         }
 
         @Test
         void testBuildApiSubscriberListCaseUrnNull() throws Exception {
-            mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, VALID_USER_ID));
+            mvc.perform(setupMockSubscription(CASE_NUMBER, SearchType.CASE_NUMBER, VALID_USER_ID));
             assertAcceptedApiRecipientRequest();
         }
 
         @Test
         void testBuildApiSubscriberListCaseNumberNull() throws Exception {
-            mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, VALID_USER_ID));
+            mvc.perform(setupMockSubscription(CASE_NUMBER, SearchType.CASE_NUMBER, VALID_USER_ID));
             assertAcceptedApiRecipientRequest();
         }
 
@@ -902,7 +655,7 @@ class SubscriptionTest extends IntegrationTestBase {
 
         @Test
         void testBuildDeletedArtefactSubscribersReturnsAccepted() throws Exception {
-            mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, VALID_USER_ID));
+            mvc.perform(setupMockSubscription(CASE_NUMBER, SearchType.CASE_NUMBER, VALID_USER_ID));
             MockHttpServletRequestBuilder request = MockMvcRequestBuilders
                 .post(DELETED_ARTEFACT_RECIPIENT_PATH)
                 .contentType(MediaType.APPLICATION_JSON)
@@ -948,7 +701,7 @@ class SubscriptionTest extends IntegrationTestBase {
         void testGetSubscriptionDataForMiReportingAll() throws Exception {
             mvc.perform(setupMockSubscription(LOCATION_ID, SearchType.LOCATION_ID, VALID_USER_ID))
                 .andExpect(status().isCreated());
-            mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, VALID_USER_ID))
+            mvc.perform(setupMockSubscription(CASE_NUMBER, SearchType.CASE_NUMBER, VALID_USER_ID))
                 .andExpect(status().isCreated());
 
             MvcResult response = mvc.perform(get(MI_REPORTING_SUBSCRIPTION_DATA_ALL_URL))
@@ -960,7 +713,7 @@ class SubscriptionTest extends IntegrationTestBase {
 
             assertThat(allSubscriptionMiData)
                 .as("Must contain the expected case subscription")
-                .anyMatch(anySubscription -> anySubscription.getSearchType().equals(SearchType.CASE_ID)
+                .anyMatch(anySubscription -> anySubscription.getSearchType().equals(SearchType.CASE_NUMBER)
                     && anySubscription.getChannel().equals(Channel.EMAIL)
                     && VALID_USER_ID.equals(anySubscription.getUserId())
                 );
@@ -984,7 +737,7 @@ class SubscriptionTest extends IntegrationTestBase {
         void testGetSubscriptionDataForMiReportingLocation() throws Exception {
             mvc.perform(setupMockSubscription(LOCATION_ID, SearchType.LOCATION_ID, VALID_USER_ID))
                 .andExpect(status().isCreated());
-            mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, VALID_USER_ID))
+            mvc.perform(setupMockSubscription(CASE_NUMBER, SearchType.CASE_NUMBER, VALID_USER_ID))
                 .andExpect(status().isCreated());
 
             MvcResult response = mvc.perform(get(MI_REPORTING_SUBSCRIPTION_DATA_LOCATION_URL))
@@ -996,7 +749,7 @@ class SubscriptionTest extends IntegrationTestBase {
 
             assertThat(locationSubscriptions).extracting(LocationSubscriptionMiData::getSearchValue)
                 .as("Should not retrieve case subscriptions")
-                .noneMatch(CASE_ID::equals);
+                .noneMatch(CASE_NUMBER::equals);
 
             assertThat(locationSubscriptions)
                 .as("Must contain the expected location subscription")

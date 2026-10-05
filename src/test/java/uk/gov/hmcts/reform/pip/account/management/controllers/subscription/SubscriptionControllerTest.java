@@ -33,7 +33,6 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-@SuppressWarnings("removal")
 class SubscriptionControllerTest {
 
     private Subscription mockSubscription;
@@ -90,7 +89,7 @@ class SubscriptionControllerTest {
 
     @Test
     void testCreateCaseSubscription() {
-        mockSubscription.setSearchType(SearchType.CASE_ID);
+        mockSubscription.setSearchType(SearchType.CASE_NUMBER);
         when(subscriptionService.createSubscription(mockSubscription, ACTIONING_USER_ID))
             .thenReturn(mockSubscription);
 
@@ -161,24 +160,6 @@ class SubscriptionControllerTest {
     }
 
     @Test
-    @Deprecated
-    void testFindByUserId() {
-        when(userSubscriptionService.findByUserId(USER_ID)).thenReturn(userSubscription);
-        assertEquals(userSubscription, subscriptionController.findByUserId(USER_ID, USER_ID).getBody(),
-                     "Should return users subscriptions"
-        );
-    }
-
-    @Test
-    @Deprecated
-    void testFindByUserIdReturnsOk() {
-        when(userSubscriptionService.findByUserId(USER_ID)).thenReturn(userSubscription);
-        assertEquals(HttpStatus.OK, subscriptionController.findByUserId(USER_ID, USER_ID).getStatusCode(),
-                     STATUS_CODE_MATCH
-        );
-    }
-
-    @Test
     void testFindByUserIdV2() {
         when(userSubscriptionService.findByUserIdV2(USER_ID)).thenReturn(userSubscription);
         assertEquals(userSubscription, subscriptionController.findByUserIdV2(USER_ID, USER_ID).getBody(),
@@ -195,27 +176,8 @@ class SubscriptionControllerTest {
     }
 
     @Test
-    @Deprecated
-    void testArtefactRecipientsReturnsAccepted() {
-        doNothing().when(subscriptionNotificationService).collectSubscribers(any());
-        assertEquals(HttpStatus.ACCEPTED, subscriptionController.buildSubscriberList(new Artefact()).getStatusCode(),
-                     STATUS_CODE_MATCH
-        );
-    }
-
-    @Test
-    @Deprecated
-    void testEmailSubscriptionRecipientsReturnsAccepted() {
-        doNothing().when(subscriptionNotificationService).collectEmailSubscribers(any());
-        assertEquals(
-            HttpStatus.ACCEPTED, subscriptionController.buildEmailSubscriberList(new Artefact()).getStatusCode(),
-            STATUS_CODE_MATCH
-        );
-    }
-
-    @Test
     void testEmailSubscriptionRecipientsV2ReturnsAccepted() {
-        doNothing().when(subscriptionNotificationService).collectEmailSubscribersV2(any());
+        doNothing().when(subscriptionNotificationService).collectEmailSubscribers(any());
         assertEquals(
             HttpStatus.ACCEPTED, subscriptionController.buildEmailSubscriberListV2(new Artefact()).getStatusCode(),
             STATUS_CODE_MATCH
