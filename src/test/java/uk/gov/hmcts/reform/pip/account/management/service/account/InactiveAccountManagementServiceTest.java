@@ -131,7 +131,7 @@ class InactiveAccountManagementServiceTest {
         inactiveAccountManagementService.findAndNotifyMediaAccountsForDeletion();
         verify(publicationService).sendMediaAccountDeletionEmail(MEDIA_USER_EMAIL, AZURE_MEDIA_USER_NAME,
                                                                  LAST_VERIFIED_DATE);
-        verify(accountService).deleteAccount(MEDIA_USER_UUID);
+        verify(accountService).archiveAccount(MEDIA_USER_UUID);
 
     }
 

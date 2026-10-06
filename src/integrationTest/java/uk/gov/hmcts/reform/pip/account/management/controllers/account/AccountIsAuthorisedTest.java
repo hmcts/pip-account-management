@@ -191,15 +191,15 @@ class AccountIsAuthorisedTest extends IntegrationTestBase {
         user.setUserProvenance(UserProvenances.PI_AAD);
         user.setRoles(Roles.VERIFIED);
 
-        MvcResult response = callIsAuthorised(user, ListType.CROWN_WARNED_PDDA_LIST, Sensitivity.CLASSIFIED);
+        MvcResult response = callIsAuthorised(user, ListType.CROWN_ADVANCE_PDDA_LIST, Sensitivity.CLASSIFIED);
         assertTrue(Boolean.parseBoolean(response.getResponse().getContentAsString()), TRUE_MESSAGE);
 
         user.setUserProvenance(UserProvenances.CRIME_IDAM);
-        response = callIsAuthorised(user, ListType.CROWN_WARNED_PDDA_LIST, Sensitivity.CLASSIFIED);
+        response = callIsAuthorised(user, ListType.CROWN_ADVANCE_PDDA_LIST, Sensitivity.CLASSIFIED);
         assertTrue(Boolean.parseBoolean(response.getResponse().getContentAsString()), TRUE_MESSAGE);
 
         user.setUserProvenance(UserProvenances.CFT_IDAM);
-        response = callIsAuthorised(user, ListType.CROWN_WARNED_PDDA_LIST, Sensitivity.CLASSIFIED);
+        response = callIsAuthorised(user, ListType.CROWN_ADVANCE_PDDA_LIST, Sensitivity.CLASSIFIED);
         assertFalse(Boolean.parseBoolean(response.getResponse().getContentAsString()), FALSE_MESSAGE);
     }
 
