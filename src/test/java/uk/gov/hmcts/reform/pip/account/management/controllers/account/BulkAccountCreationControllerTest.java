@@ -1,5 +1,6 @@
 package uk.gov.hmcts.reform.pip.account.management.controllers.account;
 
+import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -8,7 +9,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
-import org.testcontainers.shaded.org.apache.commons.io.IOUtils;
 import uk.gov.hmcts.reform.pip.account.management.service.account.BulkAccountCreationService;
 
 import java.io.IOException;
