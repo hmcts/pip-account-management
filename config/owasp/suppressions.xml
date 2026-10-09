@@ -237,6 +237,9 @@
     <cve>CVE-2026-56818</cve>
     <cve>CVE-2026-73507</cve>
     <cve>CVE-2026-73508</cve>
+    <cve>CVE-2026-41707</cve>
+    <cve>CVE-2026-59902</cve>
+    <cve>CVE-2026-69854</cve>
     <cve>CVE-2026-59902</cve>
   </suppress>
   <suppress>
