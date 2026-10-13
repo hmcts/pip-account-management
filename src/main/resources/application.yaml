@@ -115,6 +115,10 @@ verification:
   crime-idam-account-sign-in-notification-days: 180
   crime-idam-account-deletion-days: 208
 
+account:
+  archived:
+    deletion-days: 90
+
 admin:
   max-system-admin: ${MAX_SYSTEM_ADMIN_ACCOUNTS:6}
 

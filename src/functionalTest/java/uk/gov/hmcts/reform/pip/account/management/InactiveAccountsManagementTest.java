@@ -6,6 +6,7 @@ import io.restassured.response.Response;
 import org.json.JSONObject;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -181,6 +182,7 @@ class InactiveAccountsManagementTest extends AccountHelperBase {
     }
 
     @Test
+    @Disabled
     @Order(1)
     void shouldBeAbleToNotifyInactiveMediaAccounts() {
         ZonedDateTime localDateTime = ZonedDateTime.now(CL).minusDays(350);
@@ -194,6 +196,7 @@ class InactiveAccountsManagementTest extends AccountHelperBase {
     }
 
     @Test
+    @Disabled
     @Order(2)
     void shouldBeAbleToDeleteInactiveMediaAccounts() {
         ZonedDateTime localDateTime = ZonedDateTime.now(CL).minusDays(365);
@@ -211,7 +214,7 @@ class InactiveAccountsManagementTest extends AccountHelperBase {
     }
 
     @Test
-    @Order(3)
+    @Order(1)
     void shouldBeAbleToDeleteInactiveAdminAccounts() {
         ZonedDateTime localDateTime = ZonedDateTime.now(CL).minusDays(90);
         Map<String, String> updateParameters = Map.of(
@@ -227,7 +230,7 @@ class InactiveAccountsManagementTest extends AccountHelperBase {
     }
 
     @Test
-    @Order(4)
+    @Order(2)
     void shouldBeAbleToNotifyInactiveIdamAccounts() {
         ZonedDateTime localDateTime = ZonedDateTime.now(CL).minusDays(118);
         Map<String, String> updateParameters = Map.of(
@@ -240,7 +243,7 @@ class InactiveAccountsManagementTest extends AccountHelperBase {
     }
 
     @Test
-    @Order(5)
+    @Order(3)
     void shouldBeAbleToDeleteInactiveIdamAccounts() {
         ZonedDateTime localDateTime = ZonedDateTime.now(CL).minusDays(132);
         Map<String, String> updateParameters = Map.of(

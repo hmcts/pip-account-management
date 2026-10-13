@@ -44,6 +44,7 @@ public class AccountController {
     private static final String REQUESTER_ID = "x-requester-id";
 
     private static final String OK_CODE = "200";
+    private static final String NO_CONTENT_CODE = "204";
     private static final String NOT_FOUND_ERROR_CODE = "404";
     private static final String FORBIDDEN_ERROR_CODE = "403";
 
@@ -125,10 +126,19 @@ public class AccountController {
     @DeleteMapping("/v2/{userId}")
     @PreAuthorize("@accountAuthorisationService.userCanDeleteAccount(#userId, #requesterId)")
     public ResponseEntity<String> deleteAccount(@PathVariable UUID userId,
-                                                  @RequestHeader(value = REQUESTER_ID, required = false)
-                                                    UUID requesterId) {
+                                                @RequestHeader(value = REQUESTER_ID, required = false)
+                                                UUID requesterId) {
         accountService.deleteAccount(userId);
         return ResponseEntity.ok("User deleted");
+    }
+
+    @ApiResponse(responseCode = NO_CONTENT_CODE, description = "Archived account deletion successful")
+    @ApiResponse(responseCode = FORBIDDEN_ERROR_CODE, description = "Forbidden to delete archived accounts")
+    @Operation(summary = "Delete outdated archived accounts")
+    @DeleteMapping("/archived")
+    public ResponseEntity<Void> deleteArchivedAccounts() {
+        accountService.deleteArchivedAccounts();
+        return ResponseEntity.noContent().build();
     }
 
     @ApiResponse(responseCode = OK_CODE, description = "String confirming update")

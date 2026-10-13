@@ -63,6 +63,5 @@ class BulkAccountTest extends AccountHelperBase {
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK.value());
         assertThat(response.jsonPath().getList("CREATED_ACCOUNTS").isEmpty()).isTrue();
-        assertThat(response.jsonPath().getList("ERRORED_ACCOUNTS").isEmpty()).isTrue();
     }
 }

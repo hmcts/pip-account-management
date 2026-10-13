@@ -6,6 +6,7 @@ import jakarta.validation.Validator;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -56,6 +57,9 @@ import static uk.gov.hmcts.reform.pip.model.account.UserProvenances.PI_AAD;
 public class AccountService {
 
     private static final int MAX_PAGE_SIZE = 25;
+
+    @Value("${account.archived.deletion-days}")
+    private int archivedAccountDeletionDays;
 
     private final Validator validator;
     private final AzureUserService azureUserService;
@@ -219,6 +223,13 @@ public class AccountService {
         userArchivedRepository.save(archivedUser);
         handleAccountDeletion(userToArchive);
         return String.format("User with ID %s has been archived", userToArchive.getUserId());
+    }
+
+    @Transactional
+    public void deleteArchivedAccounts() {
+        userArchivedRepository.findOutdatedArchivedAccounts(archivedAccountDeletionDays).forEach(
+            account -> userArchivedRepository.deleteByUserId(account.getUserId())
+        );
     }
 
     private void deleteAzureUser(PiUser userToDelete) {
