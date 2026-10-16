@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import io.restassured.common.mapper.TypeRef;
 import io.restassured.response.Response;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import uk.gov.hmcts.reform.pip.account.management.model.account.AzureAccount;
 import uk.gov.hmcts.reform.pip.account.management.model.account.CreationEnum;
@@ -43,7 +42,6 @@ class AzureAccountTest extends AccountHelperBase {
     }
 
     @Test
-    @Disabled
     void testCreateAzureAccount() throws JsonProcessingException {
         String email = generateEmail();
 

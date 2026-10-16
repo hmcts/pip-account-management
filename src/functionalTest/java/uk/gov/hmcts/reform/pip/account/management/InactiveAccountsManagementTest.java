@@ -6,7 +6,6 @@ import io.restassured.response.Response;
 import org.json.JSONObject;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -182,7 +181,6 @@ class InactiveAccountsManagementTest extends AccountHelperBase {
     }
 
     @Test
-    @Disabled
     @Order(1)
     void shouldBeAbleToNotifyInactiveMediaAccounts() {
         ZonedDateTime localDateTime = ZonedDateTime.now(CL).minusDays(350);
@@ -196,7 +194,6 @@ class InactiveAccountsManagementTest extends AccountHelperBase {
     }
 
     @Test
-    @Disabled
     @Order(2)
     void shouldBeAbleToDeleteInactiveMediaAccounts() {
         ZonedDateTime localDateTime = ZonedDateTime.now(CL).minusDays(365);
