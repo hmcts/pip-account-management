@@ -80,7 +80,6 @@ class AzureAccountTest extends AccountHelperBase {
             });
 
         AzureAccount returnedUser = getResponse.get().getBody().as(AzureAccount.class);
-
         assertThat(returnedUser.getEmail()).isEqualTo(email);
     }
 }
