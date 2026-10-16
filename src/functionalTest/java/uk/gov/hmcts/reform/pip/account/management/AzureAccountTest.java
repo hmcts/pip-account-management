@@ -3,6 +3,7 @@ package uk.gov.hmcts.reform.pip.account.management;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.restassured.common.mapper.TypeRef;
 import io.restassured.response.Response;
+import org.awaitility.Awaitility;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import uk.gov.hmcts.reform.pip.account.management.model.account.AzureAccount;
@@ -16,6 +17,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.springframework.http.HttpStatus.OK;
@@ -42,7 +45,7 @@ class AzureAccountTest extends AccountHelperBase {
     }
 
     @Test
-    void testCreateAzureAccount() throws JsonProcessingException {
+    void testCreateAzureAccount() throws JsonProcessingException, InterruptedException {
         String email = generateEmail();
 
         AzureAccount azureAccount = new AzureAccount();
@@ -65,12 +68,18 @@ class AzureAccountTest extends AccountHelperBase {
         assertThat(createdAccount.getEmail()).isEqualTo(email);
         createdVerifiedAccount(email, createdAccount.getAzureAccountId(), adminCtscUserId);
 
-        Response getResponse = doGetRequest(String.format(GET_AZURE_ACCOUNT_INFO, createdAccount.getAzureAccountId()),
-                     bearer);
+        AtomicReference<Response> getResponse = new AtomicReference<>();
+        Awaitility.with()
+            .pollInterval(1, TimeUnit.SECONDS)
+            .await()
+            .until(() -> {
+                getResponse.set(doGetRequest(
+                    String.format(GET_AZURE_ACCOUNT_INFO, createdAccount.getAzureAccountId()), bearer
+                ));
+                return getResponse.get().getStatusCode() == OK.value();
+            });
 
-        assertThat(response.getStatusCode()).isEqualTo(OK.value());
-
-        AzureAccount returnedUser = getResponse.getBody().as(AzureAccount.class);
+        AzureAccount returnedUser = getResponse.get().getBody().as(AzureAccount.class);
 
         assertThat(returnedUser.getEmail()).isEqualTo(email);
     }
