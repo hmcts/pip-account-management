@@ -1,5 +1,6 @@
 package uk.gov.hmcts.reform.pip.account.management.service.account;
 
+import com.microsoft.graph.models.User;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -60,9 +61,10 @@ public class InactiveAccountManagementService {
         userRepository.findVerifiedUsersForNotificationByLastVerifiedDate(mediaAccountVerificationDays)
             .forEach(user -> {
                 try {
+                    User azureUser = azureUserService.getUser(user.getEmail());
                     publicationService.sendAccountVerificationEmail(
                         user.getEmail(),
-                        azureUserService.getUser(user.getEmail()).getGivenName()
+                        azureUser == null ? "user" : azureUserService.getUser(user.getEmail()).getGivenName()
                     );
                 } catch (AzureCustomException ex) {
                     log.error(writeLog("Error when getting user from azure: " + ex.getMessage()));
@@ -95,9 +97,10 @@ public class InactiveAccountManagementService {
         userRepository.findVerifiedUsersForDeletionByLastVerifiedDate(mediaAccountDeletionDays)
             .forEach(user ->  {
                 try {
+                    User azureUser = azureUserService.getUser(user.getEmail());
                     publicationService.sendMediaAccountDeletionEmail(
                         user.getEmail(),
-                        azureUserService.getUser(user.getEmail()).getGivenName(),
+                        azureUser == null ? "user" : azureUserService.getUser(user.getEmail()).getGivenName(),
                         user.getLastVerifiedDate()
                     );
                     accountService.archiveAccount(user.getUserId());

@@ -3,10 +3,10 @@ package uk.gov.hmcts.reform.pip.account.management;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import io.restassured.response.Response;
+import org.awaitility.Awaitility;
 import org.json.JSONObject;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -24,6 +24,8 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
@@ -91,6 +93,20 @@ class InactiveAccountsManagementTest extends AccountHelperBase {
         mediaUserProvenanceId = mediaUserAzureAccount.getAzureAccountId();
         mediaUserId = createUser(TEST_MEDIA_EMAIL, mediaUserAzureAccount.getAzureAccountId(),
                                  Roles.VERIFIED, UserProvenances.PI_AAD);
+
+        AtomicReference<Response> getResponse = new AtomicReference<>();
+        Awaitility.with()
+            .pollInterval(1, TimeUnit.SECONDS)
+            .await()
+            .until(() -> {
+                getResponse.set(doGetRequest(
+                    String.format(GET_AZURE_ACCOUNT_INFO, mediaUserProvenanceId), bearer
+                ));
+                return getResponse.get().getStatusCode() == OK.value();
+            });
+
+        AzureAccount returnedUser = getResponse.get().getBody().as(AzureAccount.class);
+        System.out.println("Returned user: " + returnedUser);
 
         systemAdminAuthHeaders = new ConcurrentHashMap<>(bearer);
         systemAdminAuthHeaders.putAll(issuerId);
@@ -182,7 +198,6 @@ class InactiveAccountsManagementTest extends AccountHelperBase {
     }
 
     @Test
-    @Disabled
     @Order(1)
     void shouldBeAbleToNotifyInactiveMediaAccounts() {
         ZonedDateTime localDateTime = ZonedDateTime.now(CL).minusDays(350);
@@ -196,7 +211,6 @@ class InactiveAccountsManagementTest extends AccountHelperBase {
     }
 
     @Test
-    @Disabled
     @Order(2)
     void shouldBeAbleToDeleteInactiveMediaAccounts() {
         ZonedDateTime localDateTime = ZonedDateTime.now(CL).minusDays(365);
@@ -214,7 +228,7 @@ class InactiveAccountsManagementTest extends AccountHelperBase {
     }
 
     @Test
-    @Order(1)
+    @Order(3)
     void shouldBeAbleToDeleteInactiveAdminAccounts() {
         ZonedDateTime localDateTime = ZonedDateTime.now(CL).minusDays(90);
         Map<String, String> updateParameters = Map.of(
@@ -230,7 +244,7 @@ class InactiveAccountsManagementTest extends AccountHelperBase {
     }
 
     @Test
-    @Order(2)
+    @Order(4)
     void shouldBeAbleToNotifyInactiveIdamAccounts() {
         ZonedDateTime localDateTime = ZonedDateTime.now(CL).minusDays(118);
         Map<String, String> updateParameters = Map.of(
@@ -243,7 +257,7 @@ class InactiveAccountsManagementTest extends AccountHelperBase {
     }
 
     @Test
-    @Order(3)
+    @Order(5)
     void shouldBeAbleToDeleteInactiveIdamAccounts() {
         ZonedDateTime localDateTime = ZonedDateTime.now(CL).minusDays(132);
         Map<String, String> updateParameters = Map.of(
@@ -257,5 +271,4 @@ class InactiveAccountsManagementTest extends AccountHelperBase {
                                                         systemAdminAuthHeaders);
         assertThat(getPiUserResponse.getStatusCode()).isEqualTo(NOT_FOUND.value());
     }
-
 }

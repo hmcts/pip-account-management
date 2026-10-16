@@ -113,12 +113,17 @@ public class AzureAccountService {
             if (user.isPresent()) {
                 AzureAccount azureAccount = new AzureAccount();
                 User aadUser = azureUserService.getUser(user.get().getEmail());
-                azureAccount.setAzureAccountId(aadUser.getId());
-                azureAccount.setFirstName(aadUser.getGivenName());
-                azureAccount.setSurname(aadUser.getSurname());
-                azureAccount.setDisplayName(aadUser.getDisplayName());
-                azureAccount.setEmail(user.get().getEmail());
-                return azureAccount;
+                if (aadUser == null) {
+                    throw new NotFoundException(String.format(
+                        "User with supplied provenanceUserId: %s could not be found", provenanceUserId));
+                } else {
+                    azureAccount.setAzureAccountId(aadUser.getId());
+                    azureAccount.setFirstName(aadUser.getGivenName());
+                    azureAccount.setSurname(aadUser.getSurname());
+                    azureAccount.setDisplayName(aadUser.getDisplayName());
+                    azureAccount.setEmail(user.get().getEmail());
+                    return azureAccount;
+                }
             } else {
                 throw new NotFoundException(String.format(
                     "User with supplied provenanceUserId: %s could not be found", provenanceUserId));
@@ -135,7 +140,7 @@ public class AzureAccountService {
         throws AzureCustomException {
         User userAzure = azureUserService.getUser(azureAccount.getEmail());
 
-        if (userAzure != null && !userAzure.getGivenName().isEmpty()) {
+        if (userAzure != null && userAzure.getGivenName() != null && !userAzure.getGivenName().isEmpty()) {
             boolean emailSent = publicationService.sendNotificationEmailForDuplicateMediaAccount(
                 azureAccount.getEmail(), userAzure.getGivenName());
 
