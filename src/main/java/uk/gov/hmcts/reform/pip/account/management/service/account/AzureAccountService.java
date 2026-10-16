@@ -140,7 +140,7 @@ public class AzureAccountService {
         throws AzureCustomException {
         User userAzure = azureUserService.getUser(azureAccount.getEmail());
 
-        if (userAzure != null && !userAzure.getGivenName().isEmpty()) {
+        if (userAzure != null && userAzure.getGivenName() != null && !userAzure.getGivenName().isEmpty()) {
             boolean emailSent = publicationService.sendNotificationEmailForDuplicateMediaAccount(
                 azureAccount.getEmail(), userAzure.getGivenName());
 
