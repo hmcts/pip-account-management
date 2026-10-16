@@ -99,7 +99,6 @@ class InactiveAccountsManagementTest extends AccountHelperBase {
         Awaitility.with()
             .pollInterval(1, TimeUnit.SECONDS)
             .await()
-            .atMost(Duration.ofSeconds(10))
             .until(() -> {
                 getResponse.set(doGetRequest(
                     String.format(GET_AZURE_ACCOUNT_INFO, mediaUserProvenanceId), bearer
@@ -200,7 +199,7 @@ class InactiveAccountsManagementTest extends AccountHelperBase {
     }
 
     @Test
-    @Order(4)
+    @Order(1)
     void shouldBeAbleToNotifyInactiveMediaAccounts() {
         ZonedDateTime localDateTime = ZonedDateTime.now(CL).minusDays(350);
         Map<String, String> updateParameters = Map.of(
@@ -213,7 +212,7 @@ class InactiveAccountsManagementTest extends AccountHelperBase {
     }
 
     @Test
-    @Order(5)
+    @Order(2)
     void shouldBeAbleToDeleteInactiveMediaAccounts() {
         ZonedDateTime localDateTime = ZonedDateTime.now(CL).minusDays(365);
         Map<String, String> updateParameters = Map.of(
@@ -230,7 +229,7 @@ class InactiveAccountsManagementTest extends AccountHelperBase {
     }
 
     @Test
-    @Order(1)
+    @Order(3)
     void shouldBeAbleToDeleteInactiveAdminAccounts() {
         ZonedDateTime localDateTime = ZonedDateTime.now(CL).minusDays(90);
         Map<String, String> updateParameters = Map.of(
@@ -246,7 +245,7 @@ class InactiveAccountsManagementTest extends AccountHelperBase {
     }
 
     @Test
-    @Order(2)
+    @Order(4)
     void shouldBeAbleToNotifyInactiveIdamAccounts() {
         ZonedDateTime localDateTime = ZonedDateTime.now(CL).minusDays(118);
         Map<String, String> updateParameters = Map.of(
@@ -259,7 +258,7 @@ class InactiveAccountsManagementTest extends AccountHelperBase {
     }
 
     @Test
-    @Order(3)
+    @Order(5)
     void shouldBeAbleToDeleteInactiveIdamAccounts() {
         ZonedDateTime localDateTime = ZonedDateTime.now(CL).minusDays(132);
         Map<String, String> updateParameters = Map.of(
