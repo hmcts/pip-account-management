@@ -15,6 +15,7 @@ import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
 @Slf4j
 @Service
 public class InactiveAccountManagementService {
+    private static final String GENERIC_USER_NAME = "user";
     private final UserRepository userRepository;
     private final AzureUserService azureUserService;
     private final PublicationService publicationService;
@@ -59,17 +60,10 @@ public class InactiveAccountManagementService {
      */
     public void sendMediaUsersForVerification() {
         userRepository.findVerifiedUsersForNotificationByLastVerifiedDate(mediaAccountVerificationDays)
-            .forEach(user -> {
-                try {
-                    User azureUser = azureUserService.getUser(user.getEmail());
-                    publicationService.sendAccountVerificationEmail(
-                        user.getEmail(),
-                        azureUser == null ? "user" : azureUser.getGivenName()
-                    );
-                } catch (AzureCustomException ex) {
-                    log.error(writeLog("Error when getting user from azure: " + ex.getMessage()));
-                }
-            });
+            .forEach(user -> publicationService.sendAccountVerificationEmail(
+                user.getEmail(),
+                getAzureUserGivenName(user.getEmail())
+            ));
     }
 
     /**
@@ -96,19 +90,12 @@ public class InactiveAccountManagementService {
     public void findAndNotifyMediaAccountsForDeletion() {
         userRepository.findVerifiedUsersForDeletionByLastVerifiedDate(mediaAccountDeletionDays)
             .forEach(user ->  {
-                try {
-                    User azureUser = azureUserService.getUser(user.getEmail());
-                    publicationService.sendMediaAccountDeletionEmail(
-                        user.getEmail(),
-                        azureUser == null ? "user" : azureUser.getGivenName(),
-                        user.getLastVerifiedDate()
-                    );
-                    accountService.archiveAccount(user.getUserId());
-
-                } catch (AzureCustomException ex) {
-                    log.error(writeLog("Error when getting user from azure: " + ex.getMessage()));
-                }
-
+                publicationService.sendMediaAccountDeletionEmail(
+                    user.getEmail(),
+                    getAzureUserGivenName(user.getEmail()),
+                    user.getLastVerifiedDate()
+                );
+                accountService.archiveAccount(user.getUserId());
             });
     }
 
@@ -131,6 +118,17 @@ public class InactiveAccountManagementService {
         userRepository.findIdamUsersForDeletionByLastSignedInDate(cftIdamAccountDeletionDays,
                                                                   crimeIdamAccountDeletionDays)
             .forEach(user -> accountService.archiveAccount(user.getUserId()));
+    }
+
+    private String getAzureUserGivenName(String email) {
+        try {
+            User azureUser = azureUserService.getUser(email);
+            // If azureUser is null, return a generic user name instead of throwing an exception
+            return azureUser == null ? GENERIC_USER_NAME : azureUser.getGivenName();
+        } catch (AzureCustomException ex) {
+            log.error(writeLog("Error when getting user from azure: " + ex.getMessage()));
+            return GENERIC_USER_NAME;
+        }
     }
 }
 
