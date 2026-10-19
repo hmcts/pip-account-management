@@ -64,7 +64,7 @@ public class InactiveAccountManagementService {
                     User azureUser = azureUserService.getUser(user.getEmail());
                     publicationService.sendAccountVerificationEmail(
                         user.getEmail(),
-                        azureUser == null ? "user" : azureUserService.getUser(user.getEmail()).getGivenName()
+                        azureUser == null ? "user" : azureUser.getGivenName()
                     );
                 } catch (AzureCustomException ex) {
                     log.error(writeLog("Error when getting user from azure: " + ex.getMessage()));
@@ -100,7 +100,7 @@ public class InactiveAccountManagementService {
                     User azureUser = azureUserService.getUser(user.getEmail());
                     publicationService.sendMediaAccountDeletionEmail(
                         user.getEmail(),
-                        azureUser == null ? "user" : azureUserService.getUser(user.getEmail()).getGivenName(),
+                        azureUser == null ? "user" : azureUser.getGivenName(),
                         user.getLastVerifiedDate()
                     );
                     accountService.archiveAccount(user.getUserId());
