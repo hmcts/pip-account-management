@@ -37,6 +37,8 @@ public class UserComm {
 
     private String message;
 
+    private String welshMessage;
+
     @Type(ListArrayType.class)
     @Column(name = "user_provenances", columnDefinition = "text[]")
     private List<String> userProvenances;
