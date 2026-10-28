@@ -12,7 +12,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -99,7 +98,7 @@ class AzureAccountTest extends IntegrationTestBase {
     @Autowired
     ApiException apiException;
 
-    @Mock
+    @MockitoBean
     private ClientConfiguration clientConfiguration;
 
     @MockitoBean
@@ -147,6 +146,8 @@ class AzureAccountTest extends IntegrationTestBase {
         when(graphClient.users()).thenReturn(usersRequestBuilder);
         when(usersRequestBuilder.post(any())).thenReturn(userToReturn);
         when(accountAuthorisationService.userCanCreateAzureAccount(any())).thenReturn(true);
+        when(clientConfiguration.getB2cUrl()).thenReturn(B2C_URL);
+        when(clientConfiguration.getExtensionId()).thenReturn("test-extension-id");
     }
 
     @AfterEach
