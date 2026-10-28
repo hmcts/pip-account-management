@@ -104,10 +104,6 @@ class InactiveAccountsManagementTest extends AccountHelperBase {
                 ));
                 return getResponse.get().getStatusCode() == OK.value();
             });
-
-        AzureAccount returnedUser = getResponse.get().getBody().as(AzureAccount.class);
-        System.out.println("Returned user: " + returnedUser);
-
         systemAdminAuthHeaders = new ConcurrentHashMap<>(bearer);
         systemAdminAuthHeaders.putAll(issuerId);
 

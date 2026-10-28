@@ -4,6 +4,7 @@ import com.microsoft.graph.models.User;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.gov.hmcts.reform.pip.account.management.database.UserRepository;
@@ -140,7 +141,7 @@ public class AzureAccountService {
         throws AzureCustomException {
         User userAzure = azureUserService.getUser(azureAccount.getEmail());
 
-        if (userAzure != null && userAzure.getGivenName() != null && !userAzure.getGivenName().isEmpty()) {
+        if (userAzure != null && StringUtils.isNotEmpty(userAzure.getGivenName())) {
             boolean emailSent = publicationService.sendNotificationEmailForDuplicateMediaAccount(
                 azureAccount.getEmail(), userAzure.getGivenName());
 
