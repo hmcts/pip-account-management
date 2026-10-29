@@ -29,6 +29,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -367,7 +368,7 @@ class AzureAccountServiceTest {
     }
 
     @Test
-    void testRetrieveUser() throws AzureCustomException {
+    void testRetrieveUserSuccess() throws AzureCustomException {
         UUID userId = UUID.randomUUID();
 
         PiUser user = new PiUser();
@@ -389,7 +390,7 @@ class AzureAccountServiceTest {
     }
 
     @Test
-    void testRetrieveUserNotFound() {
+    void testRetrieveUserPiUserNotFound() {
         String userId = UUID.randomUUID().toString();
         when(userRepository.findByProvenanceUserIdAndUserProvenance(userId, UserProvenances.PI_AAD))
             .thenReturn(Optional.empty());
@@ -402,5 +403,16 @@ class AzureAccountServiceTest {
             exception.getMessage(),
             "Error message does not match"
         );
+    }
+
+    @Test
+    void testRetrieveUserAzureUserNotFound() throws AzureCustomException {
+        when(userRepository.findByProvenanceUserIdAndUserProvenance(VALID_USER_ID.toString(), UserProvenances.PI_AAD))
+            .thenReturn(Optional.of(piUser));
+        when(azureUserService.getUser(EMAIL)).thenReturn(null);
+
+        assertThatThrownBy(() -> azureAccountService.retrieveAzureAccount(VALID_USER_ID.toString()))
+            .isInstanceOf(NotFoundException.class)
+            .hasMessage("User with supplied provenanceUserId: " + VALID_USER_ID + " could not be found");
     }
 }
