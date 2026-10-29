@@ -32,9 +32,13 @@ spring:
               - ${PUBLICATION_SERVICES_AZ_API}/.default
   config:
     import: "optional:configtree:/mnt/secrets/pip-ss-kv/"
-  jackson:
+  # temporarily keeping jackson2, due to change in behaviour in duplicate keys with jackson3
+  jackson2:
     parser:
       STRICT_DUPLICATE_DETECTION: true
+  http:
+    converters:
+      preferred-json-mapper: jackson2
   application:
     name: PIP Account Management
   datasource:
@@ -114,6 +118,10 @@ verification:
   cft-idam-account-deletion-days: 132
   crime-idam-account-sign-in-notification-days: 180
   crime-idam-account-deletion-days: 208
+
+account:
+  archived:
+    deletion-days: 90
 
 admin:
   max-system-admin: ${MAX_SYSTEM_ADMIN_ACCOUNTS:6}

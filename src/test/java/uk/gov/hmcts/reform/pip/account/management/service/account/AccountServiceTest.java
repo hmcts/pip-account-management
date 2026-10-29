@@ -50,6 +50,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
@@ -439,6 +440,32 @@ class AccountServiceTest {
             assertEquals(1, logCaptor.getErrorLogs().size(),
                          "No logs were thrown");
         }
+    }
+
+    @Test
+    void testDeleteArchivedAccounts() {
+        PiUserArchived archivedUser1 = new PiUserArchived();
+        archivedUser1.setUserId(VALID_USER_ID);
+        PiUserArchived archivedUser2 = new PiUserArchived();
+        archivedUser2.setUserId(VALID_USER_ID_SSO);
+
+        when(userArchivedRepository.findOutdatedArchivedAccounts(anyInt()))
+            .thenReturn(List.of(archivedUser1, archivedUser2));
+
+        accountService.deleteArchivedAccounts();
+
+        verify(userArchivedRepository).deleteByUserId(VALID_USER_ID);
+        verify(userArchivedRepository).deleteByUserId(VALID_USER_ID_SSO);
+    }
+
+    @Test
+    void testDeleteArchivedAccountsNotFound() {
+        when(userArchivedRepository.findOutdatedArchivedAccounts(anyInt()))
+            .thenReturn(List.of());
+
+        accountService.deleteArchivedAccounts();
+
+        verify(userArchivedRepository, never()).deleteByUserId(any(UUID.class));
     }
 
     @Test

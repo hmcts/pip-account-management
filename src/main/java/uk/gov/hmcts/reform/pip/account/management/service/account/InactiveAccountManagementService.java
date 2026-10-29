@@ -100,7 +100,7 @@ public class InactiveAccountManagementService {
                         azureUserService.getUser(user.getEmail()).getGivenName(),
                         user.getLastVerifiedDate()
                     );
-                    accountService.deleteAccount(user.getUserId());
+                    accountService.archiveAccount(user.getUserId());
 
                 } catch (AzureCustomException ex) {
                     log.error(writeLog("Error when getting user from azure: " + ex.getMessage()));
