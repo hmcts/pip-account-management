@@ -11,9 +11,7 @@ public class CaseSubscription {
 
     private UUID subscriptionId;
     private String caseName;
-    private String partyNames;
     private String caseNumber;
     private SearchType searchType;
-    private String urn;
     private LocalDateTime dateAdded;
 }
