@@ -13,8 +13,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Type;
-import uk.gov.hmcts.reform.pip.model.account.Roles;
-import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
 
 import java.util.List;
 import java.util.UUID;
@@ -46,6 +44,10 @@ public class UserComm {
     @Type(ListArrayType.class)
     @Column(name = "user_roles", columnDefinition = "text[]")
     private List<String> userRoles;
+
+    @Type(ListArrayType.class)
+    @Column(name = "sub-jurisdictions", columnDefinition = "text[]")
+    private List<String> subJurisdictions;
 
     @Type(ListArrayType.class)
     @Column(name = "location_ids", columnDefinition = "integer[]")

@@ -4,5 +4,6 @@ public enum CommType {
     ALL_USERS,
     USER_PROVENANCE,
     USER_ROLE,
-    VENUE
+    VENUE,
+    JURISDICTION
 }
