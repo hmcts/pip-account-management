@@ -226,7 +226,7 @@ class SubscriptionTest extends AccountHelperBase {
             );
             assertThat(responseBuildSubscriberList.getStatusCode()).isEqualTo(ACCEPTED.value());
             assertThat(responseBuildSubscriberList.asString()).isEqualTo(
-                "Subscriber request has been accepted");
+                "Email subscriber request has been accepted");
 
             Response responseBuildDeletedArtefactSubscriberList = doPostRequest(
                 BUILD_DELETED_ARTEFACT_SUBSCRIBER_URL,
