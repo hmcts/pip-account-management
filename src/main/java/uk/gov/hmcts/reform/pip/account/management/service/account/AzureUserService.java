@@ -101,16 +101,19 @@ public class AzureUserService {
      */
     public User getUser(String email) throws AzureCustomException {
         try {
-            UserCollectionResponse users = graphClient.users()
-                .get((configuration) -> {
-                    configuration.queryParameters.filter = String.format(
-                        "identities/any(c:c/issuerAssignedId eq '%s' and c/issuer eq '%s')",
-                        email, clientConfiguration.getB2cUrl());
-                });
-
+            long startTime = System.currentTimeMillis();
+            long endTime = startTime + 5 * 1000; // Poll for max 5 seconds to get user info
             User returnUser = null;
-            if (users.getValue() != null && !users.getValue().isEmpty()) {
-                returnUser = users.getValue().get(0);
+            while (returnUser == null && System.currentTimeMillis() < endTime) {
+                UserCollectionResponse users = graphClient.users()
+                    .get((configuration) -> {
+                        configuration.queryParameters.filter = String.format(
+                            "identities/any(c:c/issuerAssignedId eq '%s' and c/issuer eq '%s')",
+                            email, clientConfiguration.getB2cUrl());
+                    });
+                if (users.getValue() != null && !users.getValue().isEmpty()) {
+                    returnUser = users.getValue().get(0);
+                }
             }
             return returnUser;
 
