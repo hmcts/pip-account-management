@@ -1,6 +1,7 @@
 package uk.gov.hmcts.reform.pip.account.management.controllers;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AllArgsConstructor;
@@ -16,13 +17,16 @@ import java.util.List;
 
 @RestController
 @Tag(name = "Account Management - API for managing user communications")
-@RequestMapping("/comm")
+@RequestMapping("/communication")
 @IsAdmin
 @AllArgsConstructor
 @SecurityRequirement(name = "bearerAuth")
 public class UserCommunicationController {
+    private static final String OK_STATUS_CODE = "200";
+
     private final UserCommunicationService userCommunicationService;
 
+    @ApiResponse(responseCode = OK_STATUS_CODE, description = "All user communications retrieved successfully")
     @Operation(summary = "Get all current user communications")
     @GetMapping()
     public ResponseEntity<List<UserCommunication>> getUserCommunications() {
