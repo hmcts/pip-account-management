@@ -1,6 +1,7 @@
 package uk.gov.hmcts.reform.pip.account.management.model;
 
 import io.hypersistence.utils.hibernate.type.array.ListArrayType;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -11,9 +12,14 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.Type;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -22,8 +28,8 @@ import java.util.UUID;
 @NoArgsConstructor
 @Entity
 @Table
-public class UserComm {
-    private static final String DEFINITION = "text[]";
+public class UserCommunication {
+    private static final String TEXT_ARRAY = "text[]";
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -31,25 +37,33 @@ public class UserComm {
     private UUID id;
 
     @Enumerated(EnumType.STRING)
-    private CommType commType;
+    private AudienceType audienceType;
 
     private String message;
 
     private String welshMessage;
 
     @Type(ListArrayType.class)
-    @Column(name = "user_provenances", columnDefinition = "text[]")
+    @Column(name = "user_provenances", columnDefinition = TEXT_ARRAY)
     private List<String> userProvenances;
 
     @Type(ListArrayType.class)
-    @Column(name = "user_roles", columnDefinition = "text[]")
+    @Column(name = "user_roles", columnDefinition = TEXT_ARRAY)
     private List<String> userRoles;
 
     @Type(ListArrayType.class)
-    @Column(name = "sub-jurisdictions", columnDefinition = "text[]")
+    @Column(name = "sub-jurisdictions", columnDefinition = TEXT_ARRAY)
     private List<String> subJurisdictions;
 
     @Type(ListArrayType.class)
-    @Column(name = "location_ids", columnDefinition = "integer[]")
-    private List<Integer> locationIds;
+    @Column(name = "venues", columnDefinition = "integer[]")
+    private List<Integer> venues;
+
+    @Schema(hidden = true)
+    @CreatedDate
+    private LocalDateTime createdDate;
+
+    @Schema(hidden = true)
+    @LastModifiedDate
+    private LocalDateTime lastUpdatedDate;
 }

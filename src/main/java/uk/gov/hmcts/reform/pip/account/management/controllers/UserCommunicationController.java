@@ -8,8 +8,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import uk.gov.hmcts.reform.pip.account.management.model.UserComm;
-import uk.gov.hmcts.reform.pip.account.management.service.UserCommService;
+import uk.gov.hmcts.reform.pip.account.management.model.UserCommunication;
+import uk.gov.hmcts.reform.pip.account.management.service.UserCommunicationService;
 import uk.gov.hmcts.reform.pip.model.authentication.roles.IsAdmin;
 
 import java.util.List;
@@ -20,12 +20,12 @@ import java.util.List;
 @IsAdmin
 @AllArgsConstructor
 @SecurityRequirement(name = "bearerAuth")
-public class UserCommController {
-    private final UserCommService userCommService;
+public class UserCommunicationController {
+    private final UserCommunicationService userCommunicationService;
 
     @Operation(summary = "Get all current user communications")
     @GetMapping()
-    public ResponseEntity<List<UserComm>> getAllUserComms() {
-        return ResponseEntity.ok(userCommService.getAll());
+    public ResponseEntity<List<UserCommunication>> getUserCommunications() {
+        return ResponseEntity.ok(userCommunicationService.getAll());
     }
 }
