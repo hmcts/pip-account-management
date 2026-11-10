@@ -10,6 +10,7 @@ import uk.gov.hmcts.reform.pip.account.management.database.MediaApplicationRepos
 import uk.gov.hmcts.reform.pip.account.management.database.SubscriptionListTypeRepository;
 import uk.gov.hmcts.reform.pip.account.management.database.SubscriptionRepository;
 import uk.gov.hmcts.reform.pip.account.management.database.UserArchivedRepository;
+import uk.gov.hmcts.reform.pip.account.management.database.UserCommunicationRepository;
 import uk.gov.hmcts.reform.pip.account.management.database.UserRepository;
 
 @ActiveProfiles(profiles = "integration-basic", inheritProfiles = false)
@@ -19,6 +20,9 @@ public class IntegrationBasicTestBase extends IntegrationTestBase {
 
     @MockitoBean
     protected UserArchivedRepository userArchivedRepository;
+
+    @MockitoBean
+    protected UserCommunicationRepository userCommunicationRepository;
 
     @MockitoBean
     protected MediaApplicationRepository mediaApplicationRepository;
