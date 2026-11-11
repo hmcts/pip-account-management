@@ -22,12 +22,14 @@ import java.util.UUID;
 import static org.mockito.Mockito.anyInt;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class InactiveAccountManagementServiceTest {
     private static final UUID MEDIA_USER_UUID = UUID.randomUUID();
     private static final String MEDIA_USER_EMAIL = "media@test.com";
+    private static final String GENERIC_MEDIA_USER_NAME = "user";
     private static final UUID SSO_ADMIN_UUID = UUID.randomUUID();
     private static final String SSO_ADMIN_USER_EMAIL = "sso_admin@test.com";
     private static final UUID CFT_IDAM_UUID = UUID.randomUUID();
@@ -90,6 +92,16 @@ class InactiveAccountManagementServiceTest {
     }
 
     @Test
+    void testSendMediaUsersForVerificationContinuesAfterUserNotFoundInAzure() throws AzureCustomException {
+        when(userRepository.findVerifiedUsersForNotificationByLastVerifiedDate(anyInt()))
+            .thenReturn(Collections.singletonList(MEDIA_USER));
+        when(azureUserService.getUser(MEDIA_USER_EMAIL)).thenReturn(null);
+
+        inactiveAccountManagementService.sendMediaUsersForVerification();
+        verify(publicationService).sendAccountVerificationEmail(MEDIA_USER_EMAIL, GENERIC_MEDIA_USER_NAME);
+    }
+
+    @Test
     void testNoMediaUsersForVerification() {
         when(userRepository.findVerifiedUsersForNotificationByLastVerifiedDate(anyInt()))
             .thenReturn(Collections.emptyList());
@@ -133,6 +145,19 @@ class InactiveAccountManagementServiceTest {
                                                                  LAST_VERIFIED_DATE);
         verify(accountService).archiveAccount(MEDIA_USER_UUID);
 
+    }
+
+    @Test
+    void testMediaAccountDeletionContinuesAfterUserNotFoundInAzure() throws AzureCustomException {
+        when(userRepository.findVerifiedUsersForDeletionByLastVerifiedDate(anyInt()))
+            .thenReturn(Collections.singletonList(MEDIA_USER));
+        when(azureUserService.getUser(MEDIA_USER_EMAIL)).thenReturn(null);
+
+        inactiveAccountManagementService.findAndNotifyMediaAccountsForDeletion();
+        verify(publicationService).sendMediaAccountDeletionEmail(MEDIA_USER_EMAIL, GENERIC_MEDIA_USER_NAME,
+                                                                 LAST_VERIFIED_DATE);
+        verify(accountService).archiveAccount(MEDIA_USER_UUID);
+        verifyNoMoreInteractions(accountService);
     }
 
     @Test

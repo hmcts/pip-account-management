@@ -5,8 +5,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
+import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.jdbc.Sql;
@@ -86,7 +86,7 @@ class SubscriptionRepositoryTest {
 
         Subscription subscription4 = new Subscription();
         subscription4.setUserId(userId1);
-        subscription4.setSearchType(SearchType.CASE_ID);
+        subscription4.setSearchType(SearchType.CASE_NUMBER);
         subscription4.setSearchValue(CASE_NUMBER);
         subscription4.setChannel(Channel.EMAIL);
         subscription4.setCaseNumber(CASE_NUMBER);
@@ -112,7 +112,7 @@ class SubscriptionRepositoryTest {
             .anyMatch(subscription -> subscriptionId4.equals(subscription.getId())
                 && userId1.equals(subscription.getUserId())
                 && subscription.getChannel().equals(Channel.EMAIL)
-                && subscription.getSearchType().equals(SearchType.CASE_ID)
+                && subscription.getSearchType().equals(SearchType.CASE_NUMBER)
                 && SUBSCRIPTION_CREATED_DATE.equals(subscription.getCreatedDate()))
             .anyMatch(subscription -> subscriptionId2.equals(subscription.getId())
                 && subscription.getChannel().equals(Channel.EMAIL)

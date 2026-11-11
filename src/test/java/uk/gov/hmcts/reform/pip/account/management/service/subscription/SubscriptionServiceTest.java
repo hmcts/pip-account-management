@@ -87,7 +87,7 @@ class SubscriptionServiceTest {
 
     @Test
     void testCreateSubscription() {
-        mockSubscription.setSearchType(SearchType.CASE_ID);
+        mockSubscription.setSearchType(SearchType.CASE_NUMBER);
         when(subscriptionRepository.save(mockSubscription)).thenReturn(mockSubscription);
         assertEquals(subscriptionService.createSubscription(mockSubscription, ACTIONING_USER_ID), mockSubscription,
                      SUBSCRIPTION_CREATED_ERROR
@@ -96,7 +96,7 @@ class SubscriptionServiceTest {
 
     @Test
     void testCreateSubscriptionWhenUnknownUser() {
-        mockSubscription.setSearchType(SearchType.CASE_ID);
+        mockSubscription.setSearchType(SearchType.CASE_NUMBER);
         mockSubscription.setUserId(UNKNOWN_USER_ID);
 
         assertThrows(UserNotFoundException.class, () ->
@@ -108,7 +108,7 @@ class SubscriptionServiceTest {
     void testLastUpdatedDateIsSet() {
         ArgumentCaptor<Subscription> argumentCaptor = ArgumentCaptor.forClass(Subscription.class);
 
-        mockSubscription.setSearchType(SearchType.CASE_ID);
+        mockSubscription.setSearchType(SearchType.CASE_NUMBER);
         when(subscriptionRepository.save(argumentCaptor.capture())).thenReturn(mockSubscription);
 
         subscriptionService.createSubscription(mockSubscription, ACTIONING_USER_ID);

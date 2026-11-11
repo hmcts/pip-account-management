@@ -11,7 +11,6 @@ import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
@@ -21,6 +20,7 @@ import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import uk.gov.hmcts.reform.pip.account.management.config.ClientConfiguration;
 import uk.gov.hmcts.reform.pip.account.management.model.MediaApplication;
@@ -115,12 +115,12 @@ class TestingSupportApiTest extends IntegrationTestBase {
     private static final String SCOPE_KEY = "scope";
 
     private static final String SUBSCRIPTION_PATH = "/subscription";
-    private static final String SUBSCRIPTION_BY_USER_PATH = "/subscription/user/%s";
+    private static final String SUBSCRIPTION_BY_USER_PATH = "/subscription/user/v2/%s";
     private static final String LOCATION_NAME_PREFIX = "TEST_123_";
     private static final String LOCATION_NAME = "Court1";
 
     private static final UUID USER_ID = UUID.fromString("87f907d2-eb28-42cc-b6e1-ae2b03f7bba5");
-    private static final String CASE_ID = "T485913";
+    private static final String CASE_NUMBER = "T485913";
 
     private static final String AUDIT_URL = "/audit";
     private static final AuditAction ACTION = PUBLICATION_UPLOAD;
@@ -135,13 +135,13 @@ class TestingSupportApiTest extends IntegrationTestBase {
     @MockitoBean
     GraphServiceClient graphClient;
 
-    @Mock
+    @MockitoBean
     private UsersRequestBuilder usersRequestBuilder;
 
-    @Mock
+    @MockitoBean
     private UserItemRequestBuilder userItemRequestBuilder;
 
-    @Mock
+    @MockitoBean
     private ClientConfiguration clientConfiguration;
 
     @MockitoBean
@@ -173,6 +173,8 @@ class TestingSupportApiTest extends IntegrationTestBase {
         when(subscriptionAuthorisationService.userCanAddSubscriptions(any(), any())).thenReturn(true);
         when(subscriptionAuthorisationService.userCanViewSubscriptions(any(), any())).thenReturn(true);
         when(thirdPartyAuthorisationService.userCanManageThirdParty(any())).thenReturn(true);
+        when(clientConfiguration.getB2cUrl()).thenReturn(B2C_URL);
+        when(clientConfiguration.getExtensionId()).thenReturn("b2cExtensionsAppId");
     }
 
     @Test
@@ -551,7 +553,7 @@ class TestingSupportApiTest extends IntegrationTestBase {
                                                                 "", imageInputStream
             );
 
-            MockHttpServletRequestBuilder postRequest = multipart(APPLICATION_URL)
+            MockMultipartHttpServletRequestBuilder postRequest = multipart(APPLICATION_URL)
                 .file(imageFile)
                 .flashAttr("application", application)
                 .contentType(MediaType.MULTIPART_FORM_DATA_VALUE);
@@ -569,9 +571,9 @@ class TestingSupportApiTest extends IntegrationTestBase {
 
         subscription.setLocationName(LOCATION_NAME_PREFIX + LOCATION_NAME);
         subscription.setChannel(Channel.API_COURTEL);
-        subscription.setSearchType(SearchType.CASE_ID);
-        subscription.setSearchValue(CASE_ID);
-        subscription.setCaseNumber(CASE_ID);
+        subscription.setSearchType(SearchType.CASE_NUMBER);
+        subscription.setSearchValue(CASE_NUMBER);
+        subscription.setCaseNumber(CASE_NUMBER);
         subscription.setCreatedDate(LocalDateTime.now());
         subscription.setUserId(USER_ID);
 
