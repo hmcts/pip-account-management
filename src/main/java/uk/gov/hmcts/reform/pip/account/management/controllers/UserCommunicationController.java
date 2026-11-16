@@ -58,7 +58,6 @@ public class UserCommunicationController {
     @ApiResponse(responseCode = FORBIDDEN_STATUS_CODE,
         description = "User with ID {requesterId} is not authorised to retrieve user communication")
     @PreAuthorize("@userCommunicationAuthorisationService.userCanManageUserCommunication(#requesterId)")
-    @Transactional
     public ResponseEntity<UserCommunication> getUserCommunicationById(
         @PathVariable UUID id,
         @RequestHeader(REQUESTER_ID_HEADER) UUID requesterId

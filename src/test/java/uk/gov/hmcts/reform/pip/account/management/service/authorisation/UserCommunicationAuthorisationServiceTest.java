@@ -25,9 +25,6 @@ class UserCommunicationAuthorisationServiceTest {
         + "communications";
     private static final String CANNOT_MANAGE_USER_COMMUNICATION_MESSAGE = "User should not be able to manage "
         + "user communications";
-    private static final String LOG_EMPTY_MESSAGE = "Error log should be empty";
-    private static final String LOG_NOT_EMPTY_MESSAGE = "Error log should not be empty";
-    private static final String LOG_MATCHED_MESSAGE = "Error log message does not match";
 
     private static PiUser requester = new PiUser();
 
@@ -59,7 +56,6 @@ class UserCommunicationAuthorisationServiceTest {
                 .isTrue();
 
             assertThat(logCaptor.getErrorLogs())
-                .as(LOG_EMPTY_MESSAGE)
                 .isEmpty();
         }
     }
@@ -76,11 +72,9 @@ class UserCommunicationAuthorisationServiceTest {
                 .isFalse();
 
             assertThat(logCaptor.getErrorLogs())
-                .as(LOG_NOT_EMPTY_MESSAGE)
                 .hasSize(1);
 
             assertThat(logCaptor.getErrorLogs().get(0))
-                .as(LOG_MATCHED_MESSAGE)
                 .contains(String.format(ERROR_LOG, REQUESTER_ID));
         }
     }
@@ -96,11 +90,9 @@ class UserCommunicationAuthorisationServiceTest {
                 .isFalse();
 
             assertThat(logCaptor.getErrorLogs())
-                .as(LOG_NOT_EMPTY_MESSAGE)
                 .hasSize(1);
 
             assertThat(logCaptor.getErrorLogs().get(0))
-                .as(LOG_MATCHED_MESSAGE)
                 .contains(String.format(ERROR_LOG, REQUESTER_ID));
         }
     }
