@@ -78,10 +78,11 @@ public class UserCommunicationController {
         @RequestBody UserCommunication userCommunication,
         @RequestHeader(REQUESTER_ID_HEADER) UUID requesterId
     ) {
-        userCommunicationService.createUserCommunication(userCommunication);
+        UserCommunication returnedUserCommunication = userCommunicationService.createUserCommunication(
+            userCommunication
+        );
         return ResponseEntity.status(HttpStatus.CREATED)
-            .body(String.format("User communication successfully created for %s audience type",
-                                userCommunication.getAudienceType()));
+            .body(returnedUserCommunication.getId().toString());
     }
 
     @PutMapping("/{id}")

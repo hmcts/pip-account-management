@@ -35,12 +35,14 @@ class UserCommunicationControllerTest {
     @BeforeAll
     public static void setup() {
         userCommunication = new UserCommunication();
+        userCommunication.setId(ID);
         userCommunication.setAudienceType(AudienceType.VENUE);
         userCommunication.setVenues(List.of(2, 3));
         userCommunication.setMessage("Test message");
         userCommunication.setWelshMessage("Test welsh message");
 
         userCommunication2 = new UserCommunication();
+        userCommunication.setId(ID);
         userCommunication2.setAudienceType(AudienceType.ALL_USERS);
         userCommunication2.setMessage("Test message 2");
         userCommunication2.setWelshMessage("Test welsh message 2");
@@ -84,7 +86,7 @@ class UserCommunicationControllerTest {
             .isEqualTo(HttpStatus.CREATED);
 
         assertThat(response.getBody())
-            .isEqualTo("User communication successfully created for VENUE audience type");
+            .isNotBlank();
     }
 
     @Test

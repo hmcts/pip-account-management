@@ -16,7 +16,6 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import tools.jackson.databind.ObjectMapper;
 import uk.gov.hmcts.reform.pip.account.management.model.AudienceType;
 import uk.gov.hmcts.reform.pip.account.management.model.UserCommunication;
-import uk.gov.hmcts.reform.pip.account.management.service.UserCommunicationService;
 import uk.gov.hmcts.reform.pip.account.management.service.authorisation.UserCommunicationAuthorisationService;
 import uk.gov.hmcts.reform.pip.account.management.utils.IntegrationTestBase;
 
@@ -25,6 +24,7 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
+import static org.springframework.http.HttpStatus.FORBIDDEN;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
@@ -35,15 +35,13 @@ public class UserCommunicationTest extends IntegrationTestBase {
     private static final String USER_COMMUNICATION_URL = "/communication";
     private static final String REQUESTER_ID_HEADER = "x-requester-id";
     private static final UUID REQUESTER_ID = UUID.randomUUID();
+    private static final String UNAUTHORIZED_ROLE = "APPROLE_unknown.authorized";
+    private static final String UNAUTHORIZED_USERNAME = "unauthorized_isAuthorized";
 
     private UserCommunication userCommunication;
-    private UserCommunication userCommunication2;
 
     @Autowired
     private MockMvc mockMvc;
-
-    @MockitoBean
-    private UserCommunicationService userCommunicationService;
 
     @MockitoBean
     private UserCommunicationAuthorisationService userCommunicationAuthorisationService;
@@ -55,11 +53,6 @@ public class UserCommunicationTest extends IntegrationTestBase {
         userCommunication.setVenues(List.of(2, 3));
         userCommunication.setMessage("Test message");
         userCommunication.setWelshMessage("Test Welsh message");
-
-        userCommunication2 = new UserCommunication();
-        userCommunication2.setAudienceType(AudienceType.ALL_USERS);
-        userCommunication2.setMessage("Test message 2");
-        userCommunication2.setWelshMessage("Test welsh message 2");
     }
 
     @BeforeEach
@@ -80,9 +73,10 @@ public class UserCommunicationTest extends IntegrationTestBase {
             .andReturn();
     }
 
-    private MvcResult retrieveAllUserCommunicationsRequest() throws Exception {
+    private MvcResult retrieveUserCommunicationByIdRequest(String userCommunicationId) throws Exception {
         MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders
-            .get(USER_COMMUNICATION_URL)
+            .get(USER_COMMUNICATION_URL + "/" + userCommunicationId)
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID)
             .contentType(MediaType.APPLICATION_JSON);
 
         return mockMvc.perform(requestBuilder)
@@ -94,26 +88,138 @@ public class UserCommunicationTest extends IntegrationTestBase {
     void testCreateUserCommunicationSuccess() throws Exception {
         MvcResult postResponse = createUserCommunicationRequest();
 
-        assertThat(postResponse.getResponse().getContentAsString())
-            .isEqualTo("User communication successfully created for VENUE audience type");
+        String userCommunicationId = postResponse.getResponse().getContentAsString();
+        assertThat(userCommunicationId)
+            .isNotBlank();
 
-        MvcResult results = retrieveAllUserCommunicationsRequest();
+        MvcResult result = retrieveUserCommunicationByIdRequest(userCommunicationId);
 
-        List<UserCommunication> returnedUserCommunication = OBJECT_MAPPER.readValue(
-            results.getResponse().getContentAsString(),
-            OBJECT_MAPPER.getTypeFactory().constructCollectionType(List.class, UserCommunication.class)
+        UserCommunication returnedUserCommunication = OBJECT_MAPPER.readValue(
+            result.getResponse().getContentAsString(),
+            UserCommunication.class
         );
 
-        UserCommunication userCommunication = returnedUserCommunication.get(0);
-        assertThat(userCommunication.getAudienceType()).isEqualTo(AudienceType.VENUE);
-        assertThat(userCommunication.getVenues()).isEqualTo(List.of(2, 3));
-        assertThat(userCommunication.getMessage()).isEqualTo("Test message");
-        assertThat(userCommunication.getWelshMessage()).isEqualTo("Test welsh message");
-
+        assertThat(returnedUserCommunication.getAudienceType()).isEqualTo(AudienceType.VENUE);
+        assertThat(returnedUserCommunication.getVenues()).isEqualTo(List.of(2, 3));
+        assertThat(returnedUserCommunication.getMessage()).isEqualTo("Test message");
+        assertThat(returnedUserCommunication.getWelshMessage()).isEqualTo("Test Welsh message");
     }
 
     @Test
-    void testCreateUserCommunication() {
+    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
+    void testCreateUserCommunicationForbidden() throws Exception {
+        when(userCommunicationAuthorisationService.userCanManageUserCommunication(REQUESTER_ID)).thenReturn(false);
 
+        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders
+            .post(USER_COMMUNICATION_URL)
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID)
+            .content(OBJECT_MAPPER.writeValueAsString(userCommunication))
+            .contentType(MediaType.APPLICATION_JSON);
+
+        assertRequestResponseStatus(mockMvc, requestBuilder, FORBIDDEN.value());
+    }
+
+    @Test
+    void testUpdateUserCommunicationSuccess() throws Exception {
+        MvcResult postResponse = createUserCommunicationRequest();
+
+        String userCommunicationId = postResponse.getResponse().getContentAsString();
+        assertThat(userCommunicationId)
+            .isNotBlank();
+
+        UserCommunication userCommunicationToUpdate = new UserCommunication();
+        userCommunicationToUpdate.setId(UUID.fromString(userCommunicationId));
+        userCommunicationToUpdate.setAudienceType(AudienceType.VENUE);
+        userCommunicationToUpdate.setVenues(List.of(2));
+        userCommunicationToUpdate.setMessage("Updated test message");
+
+        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders
+            .put(USER_COMMUNICATION_URL + "/" + userCommunicationId)
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID)
+            .content(OBJECT_MAPPER.writeValueAsString(userCommunicationToUpdate))
+            .contentType(MediaType.APPLICATION_JSON);
+
+        mockMvc.perform(requestBuilder).andExpect(status().isOk());
+
+        MvcResult result = retrieveUserCommunicationByIdRequest(userCommunicationId);
+
+        UserCommunication returnedUserCommunication = OBJECT_MAPPER.readValue(
+            result.getResponse().getContentAsString(),
+            UserCommunication.class
+        );
+
+        assertThat(returnedUserCommunication.getAudienceType()).isEqualTo(AudienceType.VENUE);
+        assertThat(returnedUserCommunication.getVenues()).isEqualTo(List.of(2));
+        assertThat(returnedUserCommunication.getMessage()).isEqualTo("Updated test message");
+    }
+
+    @Test
+    void testUpdateUserCommunicationNotFound() throws Exception {
+        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders
+            .put(USER_COMMUNICATION_URL + "/" + UUID.randomUUID())
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID)
+            .content(OBJECT_MAPPER.writeValueAsString(userCommunication))
+            .contentType(MediaType.APPLICATION_JSON);
+
+        mockMvc.perform(requestBuilder).andExpect(status().isNotFound());
+    }
+
+    @Test
+    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
+    void testUpdateUserCommunicationForbidden() throws Exception {
+        when(userCommunicationAuthorisationService.userCanManageUserCommunication(REQUESTER_ID)).thenReturn(false);
+
+        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders
+            .put(USER_COMMUNICATION_URL + "/" + UUID.randomUUID())
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID)
+            .content(OBJECT_MAPPER.writeValueAsString(userCommunication))
+            .contentType(MediaType.APPLICATION_JSON);
+
+        mockMvc.perform(requestBuilder).andExpect(status().isForbidden());
+    }
+
+    @Test
+    void testDeleteUserCommunicationSuccess() throws Exception {
+        MvcResult postResponse = createUserCommunicationRequest();
+
+        String userCommunicationId = postResponse.getResponse().getContentAsString();
+        assertThat(userCommunicationId)
+            .isNotBlank();
+
+        MockHttpServletRequestBuilder postRequestBuilder = MockMvcRequestBuilders
+            .delete(USER_COMMUNICATION_URL + "/" + userCommunicationId)
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID);
+
+        mockMvc.perform(postRequestBuilder)
+            .andExpect(status().isOk());
+
+        MockHttpServletRequestBuilder getRequestBuilder = MockMvcRequestBuilders
+            .get(USER_COMMUNICATION_URL + "/" + userCommunicationId)
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID)
+            .contentType(MediaType.APPLICATION_JSON);
+
+        mockMvc.perform(getRequestBuilder)
+            .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void testDeleteUserCommunicationNotFound() throws Exception {
+        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders
+            .delete(USER_COMMUNICATION_URL + "/" + UUID.randomUUID())
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID);
+
+        mockMvc.perform(requestBuilder).andExpect(status().isNotFound());
+    }
+
+    @Test
+    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
+    void testDeleteUserCommunicationForbidden() throws Exception {
+        when(userCommunicationAuthorisationService.userCanManageUserCommunication(REQUESTER_ID)).thenReturn(false);
+
+        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders
+            .delete(USER_COMMUNICATION_URL + "/" + UUID.randomUUID())
+            .header(REQUESTER_ID_HEADER, REQUESTER_ID);
+
+        mockMvc.perform(requestBuilder).andExpect(status().isForbidden());
     }
 }
