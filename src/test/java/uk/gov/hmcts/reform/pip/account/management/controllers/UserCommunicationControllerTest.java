@@ -103,7 +103,12 @@ class UserCommunicationControllerTest {
 
     @Test
     void testDeleteUserCommunication() {
-        assertThat(userCommunicationController.deleteUserCommunication(ID, REQUESTER_ID).getStatusCode())
-            .isEqualTo(HttpStatus.NO_CONTENT);
+        ResponseEntity<String> response = userCommunicationController.deleteUserCommunication(ID, REQUESTER_ID);
+
+        assertThat(response.getStatusCode())
+            .isEqualTo(HttpStatus.OK);
+
+        assertThat(response.getBody())
+            .isEqualTo("User communication with ID " + ID + " successfully deleted");
     }
 }

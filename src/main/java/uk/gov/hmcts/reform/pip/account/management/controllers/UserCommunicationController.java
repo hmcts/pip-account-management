@@ -37,7 +37,6 @@ public class UserCommunicationController {
 
     private static final String OK_STATUS_CODE = "200";
     private static final String CREATED_STATUS_CODE = "201";
-    private static final String NO_CONTENT_STATUS_CODE = "204";
     private static final String BAD_REQUEST_STATUS_CODE = "400";
     private static final String NOT_FOUND_STATUS_CODE = "404";
     private static final String FORBIDDEN_STATUS_CODE = "403";
@@ -107,7 +106,7 @@ public class UserCommunicationController {
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Endpoint to delete a user communication")
-    @ApiResponse(responseCode = NO_CONTENT_STATUS_CODE,
+    @ApiResponse(responseCode = OK_STATUS_CODE,
         description = "User communication with ID {id} successfully deleted")
     @ApiResponse(responseCode = NOT_FOUND_STATUS_CODE, description = "User communication with ID {id} not found")
     @ApiResponse(responseCode = FORBIDDEN_STATUS_CODE,
@@ -119,6 +118,7 @@ public class UserCommunicationController {
         @RequestHeader(REQUESTER_ID_HEADER) UUID requesterId
     ) {
         userCommunicationService.deleteUserCommunication(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.status(HttpStatus.OK)
+            .body(String.format("User communication with ID %s successfully deleted", id));
     }
 }
