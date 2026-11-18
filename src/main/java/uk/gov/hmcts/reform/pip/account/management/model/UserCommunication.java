@@ -10,12 +10,14 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.EntityListeners;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Type;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -26,6 +28,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @Entity
 @Table
+@EntityListeners(AuditingEntityListener.class)
 public class UserCommunication {
     private static final String TEXT_ARRAY = "text[]";
 
@@ -50,7 +53,7 @@ public class UserCommunication {
     private List<String> userRoles;
 
     @Type(ListArrayType.class)
-    @Column(name = "sub-jurisdictions", columnDefinition = TEXT_ARRAY)
+    @Column(name = "sub_jurisdictions", columnDefinition = TEXT_ARRAY)
     private List<String> subJurisdictions;
 
     @Type(ListArrayType.class)
