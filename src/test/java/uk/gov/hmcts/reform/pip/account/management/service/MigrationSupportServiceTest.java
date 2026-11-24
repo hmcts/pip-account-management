@@ -89,7 +89,7 @@ class MigrationSupportServiceTest {
     @Test
     void testBothFiltersUseInclusiveDayRange() {
         PiUser user = user();
-        when(userRepository.findAllByCreatedDateGreaterThanEqualAndCreatedDateBefore(
+        when(userRepository.findAllByLastSignedInDateBetween(
             eq(FROM_START), eq(DAY_AFTER_TO_START), any(Sort.class))).thenReturn(List.of(user));
 
         assertThat(migrationSupportService.getAllUsersWithSubscriptions(FROM, TO))
@@ -100,7 +100,7 @@ class MigrationSupportServiceTest {
     @Test
     void testFromFilterOnly() {
         PiUser user = user();
-        when(userRepository.findAllByCreatedDateGreaterThanEqual(eq(FROM_START), any(Sort.class)))
+        when(userRepository.findAllByLastSignedInDateOnOrAfter(eq(FROM_START), any(Sort.class)))
             .thenReturn(List.of(user));
 
         assertThat(migrationSupportService.getAllUsersWithSubscriptions(FROM, null))
@@ -111,7 +111,7 @@ class MigrationSupportServiceTest {
     @Test
     void testToFilterOnly() {
         PiUser user = user();
-        when(userRepository.findAllByCreatedDateBefore(eq(DAY_AFTER_TO_START), any(Sort.class)))
+        when(userRepository.findAllByLastSignedInDateBefore(eq(DAY_AFTER_TO_START), any(Sort.class)))
             .thenReturn(List.of(user));
 
         assertThat(migrationSupportService.getAllUsersWithSubscriptions(null, TO))
@@ -121,7 +121,7 @@ class MigrationSupportServiceTest {
 
     @Test
     void testSameFromAndToDateIsAllowed() {
-        when(userRepository.findAllByCreatedDateGreaterThanEqualAndCreatedDateBefore(
+        when(userRepository.findAllByLastSignedInDateBetween(
             eq(FROM_START), eq(FROM_START.plusDays(1)), any(Sort.class))).thenReturn(List.of());
 
         assertThat(migrationSupportService.getAllUsersWithSubscriptions(FROM, FROM)).isEmpty();
@@ -131,7 +131,7 @@ class MigrationSupportServiceTest {
     void testFromAfterToThrowsIllegalArgumentException() {
         assertThatThrownBy(() -> migrationSupportService.getAllUsersWithSubscriptions(TO, FROM))
             .isInstanceOf(IllegalArgumentException.class)
-            .hasMessage("createdDateFrom must not be after createdDateTo");
+            .hasMessage("lastSignedInDateFrom must not be after lastSignedInDateTo");
 
         verifyNoInteractions(userRepository, subscriptionRepository, subscriptionListTypeRepository);
     }

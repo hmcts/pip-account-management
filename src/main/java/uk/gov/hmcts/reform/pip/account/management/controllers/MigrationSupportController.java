@@ -39,14 +39,15 @@ public class MigrationSupportController {
 
     @ApiResponse(responseCode = OK_CODE, description = "List of users with their subscriptions")
     @ApiResponse(responseCode = BAD_REQUEST_CODE,
-        description = "Invalid date supplied, or createdDateFrom is after createdDateTo")
-    @Operation(summary = "Get all users with their subscriptions, optionally filtered by created date (inclusive)")
+        description = "Invalid date supplied, or lastSignedInDateFrom is after lastSignedInDateTo")
+    @Operation(summary = "Get all users with their subscriptions, optionally filtered by last signed in date "
+        + "(inclusive). Users without a last signed in date are filtered on their created date.")
     @GetMapping("/account")
     public ResponseEntity<List<UserWithSubscriptions>> getAllUsersWithSubscriptions(
-        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate createdDateFrom,
-        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate createdDateTo) {
+        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate lastSignedInDateFrom,
+        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate lastSignedInDateTo) {
         return ResponseEntity.ok(
-            migrationSupportService.getAllUsersWithSubscriptions(createdDateFrom, createdDateTo)
+            migrationSupportService.getAllUsersWithSubscriptions(lastSignedInDateFrom, lastSignedInDateTo)
         );
     }
 }

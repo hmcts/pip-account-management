@@ -24,7 +24,7 @@ import java.util.UUID;
 public class MigrationSupportService {
     // Keeps the number of bind parameters in each IN clause well below the Postgres limit
     private static final int USER_ID_BATCH_SIZE = 1000;
-    private static final Sort USER_SORT = Sort.by("createdDate", "userId");
+    private static final Sort USER_SORT = Sort.by("lastSignedInDate", "userId");
 
     private final UserRepository userRepository;
     private final SubscriptionRepository subscriptionRepository;
@@ -32,19 +32,22 @@ public class MigrationSupportService {
 
     /**
      * Retrieve all users, along with their subscriptions and subscription list type, optionally filtered by
-     * created date.
+     * last signed in date. Users without a last signed in date are filtered on their created date instead.
      *
-     * @param createdDateFrom Only include users created on or after this date (inclusive). Ignored if null.
-     * @param createdDateTo Only include users created on or before this date (inclusive). Ignored if null.
+     * @param lastSignedInDateFrom Only include users last signed in on or after this date (inclusive).
+     *                             Ignored if null.
+     * @param lastSignedInDateTo Only include users last signed in on or before this date (inclusive).
+     *                           Ignored if null.
      * @return The matching users with their subscriptions.
      */
-    public List<UserWithSubscriptions> getAllUsersWithSubscriptions(LocalDate createdDateFrom,
-                                                                    LocalDate createdDateTo) {
-        if (createdDateFrom != null && createdDateTo != null && createdDateFrom.isAfter(createdDateTo)) {
-            throw new IllegalArgumentException("createdDateFrom must not be after createdDateTo");
+    public List<UserWithSubscriptions> getAllUsersWithSubscriptions(LocalDate lastSignedInDateFrom,
+                                                                    LocalDate lastSignedInDateTo) {
+        if (lastSignedInDateFrom != null && lastSignedInDateTo != null
+            && lastSignedInDateFrom.isAfter(lastSignedInDateTo)) {
+            throw new IllegalArgumentException("lastSignedInDateFrom must not be after lastSignedInDateTo");
         }
 
-        List<PiUser> users = findUsers(createdDateFrom, createdDateTo);
+        List<PiUser> users = findUsers(lastSignedInDateFrom, lastSignedInDateTo);
         List<UUID> userIds = users.stream().map(PiUser::getUserId).toList();
 
         Map<UUID, List<Subscription>> subscriptionsByUser = new HashMap<>();
@@ -70,20 +73,19 @@ public class MigrationSupportService {
             .toList();
     }
 
-    private List<PiUser> findUsers(LocalDate createdDateFrom, LocalDate createdDateTo) {
-        LocalDateTime from = createdDateFrom == null ? null : createdDateFrom.atStartOfDay();
-        // Exclusive upper bound of the following day so the whole of createdDateTo is included
-        LocalDateTime toExclusive = createdDateTo == null ? null : createdDateTo.plusDays(1).atStartOfDay();
+    private List<PiUser> findUsers(LocalDate lastSignedInDateFrom, LocalDate lastSignedInDateTo) {
+        LocalDateTime from = lastSignedInDateFrom == null ? null : lastSignedInDateFrom.atStartOfDay();
+        // Exclusive upper bound of the following day so the whole of lastSignedInDateTo is included
+        LocalDateTime toExclusive = lastSignedInDateTo == null ? null : lastSignedInDateTo.plusDays(1).atStartOfDay();
 
         if (from != null && toExclusive != null) {
-            return userRepository.findAllByCreatedDateGreaterThanEqualAndCreatedDateBefore(from, toExclusive,
-                                                                                           USER_SORT);
+            return userRepository.findAllByLastSignedInDateBetween(from, toExclusive, USER_SORT);
         }
         if (from != null) {
-            return userRepository.findAllByCreatedDateGreaterThanEqual(from, USER_SORT);
+            return userRepository.findAllByLastSignedInDateOnOrAfter(from, USER_SORT);
         }
         if (toExclusive != null) {
-            return userRepository.findAllByCreatedDateBefore(toExclusive, USER_SORT);
+            return userRepository.findAllByLastSignedInDateBefore(toExclusive, USER_SORT);
         }
         return userRepository.findAll(USER_SORT);
     }
