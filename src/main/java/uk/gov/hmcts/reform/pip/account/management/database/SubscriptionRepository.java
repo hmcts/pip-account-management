@@ -10,6 +10,7 @@ import uk.gov.hmcts.reform.pip.account.management.model.subscription.Subscriptio
 import uk.gov.hmcts.reform.pip.model.report.AllSubscriptionMiData;
 import uk.gov.hmcts.reform.pip.model.report.LocationSubscriptionMiData;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -27,6 +28,8 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Long
     List<Subscription> findByIdIn(List<UUID> id);
 
     List<Subscription> findByUserId(UUID userId);
+
+    List<Subscription> findByUserIdIn(Collection<UUID> userIds);
 
     void deleteById(UUID id);
 

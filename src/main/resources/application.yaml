@@ -109,6 +109,10 @@ dbMigration:
 testingSupport:
   enableApi: ${ENABLE_TESTING_SUPPORT_API:true}
 
+# Used to conditionally enable migration support API
+migrationSupport:
+  enableApi: ${ENABLE_MIGRATION_SUPPORT_API:true}
+
 verification:
   media-account-verification-email-days: 350
   media-account-deletion-days: 365
