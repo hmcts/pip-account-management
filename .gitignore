@@ -21,6 +21,9 @@ bin/main/application.yaml
 
 .DS_Store
 
+# Local environment
+.env.local
+
 # Local .terraform directories
 **/.terraform/*
 

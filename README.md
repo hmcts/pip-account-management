@@ -245,6 +245,7 @@ Below is a table of currently used environment variables for starting the servic
 | MAX_SYSTEM_ADMIN_ACCOUNTS     | The max number of system admin accounts that can exist. Default is 4.                                                                                                                                                                                                  | No        |
 | COURTEL_API                   | API value for third party                                                                                                                                                                                                                                              | No        |
 | ENABLE_TESTING_SUPPORT_API    | Used to conditionally enable testing support API. Default to `false` for the production environment only.                                                                                                                                                              | No        |
+| ENABLE_MIGRATION_SUPPORT_API  | Used to conditionally enable migration support API. Default to `false` for the production environment only.                                                                                                                                                            | No        |
 
 ##### Additional Test secrets
 

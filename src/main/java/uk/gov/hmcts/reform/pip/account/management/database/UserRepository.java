@@ -3,6 +3,7 @@ package uk.gov.hmcts.reform.pip.account.management.database;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -12,6 +13,7 @@ import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
 import uk.gov.hmcts.reform.pip.model.report.AccountMiData;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -68,6 +70,17 @@ public interface UserRepository extends JpaRepository<PiUser, Long> {
     Optional<PiUser> findByProvenanceUserIdAndUserProvenance(String provenanceUserId, UserProvenances userProvenance);
 
     List<PiUser> findAllByUserProvenance(UserProvenances userProvenances);
+
+    @Query("SELECT u FROM PiUser u WHERE COALESCE(u.lastSignedInDate, u.createdDate) >= :from")
+    List<PiUser> findAllByLastSignedInDateOnOrAfter(@Param("from") LocalDateTime from, Sort sort);
+
+    @Query("SELECT u FROM PiUser u WHERE COALESCE(u.lastSignedInDate, u.createdDate) < :to")
+    List<PiUser> findAllByLastSignedInDateBefore(@Param("to") LocalDateTime to, Sort sort);
+
+    @Query("SELECT u FROM PiUser u WHERE COALESCE(u.lastSignedInDate, u.createdDate) >= :from "
+        + "AND COALESCE(u.lastSignedInDate, u.createdDate) < :to")
+    List<PiUser> findAllByLastSignedInDateBetween(@Param("from") LocalDateTime from,
+                                                  @Param("to") LocalDateTime to, Sort sort);
 
     Page<PiUser> findAllByEmailLikeIgnoreCaseAndUserProvenanceInAndRolesInAndProvenanceUserIdLike(
         String email,

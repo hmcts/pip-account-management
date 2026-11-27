@@ -10,6 +10,7 @@ import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.CsvParseException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.NotFoundException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.SubscriptionNotFoundException;
@@ -102,6 +103,16 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
             .body(generateExceptionResponse(ex.getMessage()));
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ExceptionResponse> handle(MethodArgumentTypeMismatchException ex) {
+        log.error(writeLog("400, Invalid request parameter " + ex.getName()));
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+            .body(generateExceptionResponse(
+                String.format("Invalid value '%s' for parameter '%s'", ex.getValue(), ex.getName())
+            ));
     }
 
     @ExceptionHandler(SystemAdminAccountException.class)

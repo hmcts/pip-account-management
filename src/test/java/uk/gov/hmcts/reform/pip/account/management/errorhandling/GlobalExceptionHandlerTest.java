@@ -14,6 +14,7 @@ import org.springframework.validation.BindException;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingRequestHeaderException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import uk.gov.hmcts.reform.pip.account.management.controllers.account.AccountController;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.CsvParseException;
 import uk.gov.hmcts.reform.pip.account.management.errorhandling.exceptions.NotFoundException;
@@ -27,6 +28,7 @@ import uk.gov.hmcts.reform.pip.account.management.model.errored.ErroredSystemAdm
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.account.UserProvenances;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -154,6 +156,18 @@ class GlobalExceptionHandlerTest {
         assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode(), SHOULD_BE_BAD_REQUEST_EXCEPTION);
         assertNotNull(responseEntity.getBody(), NOT_NULL_MESSAGE);
         assertTrue(responseEntity.getBody().getMessage().contains(ERROR_MESSAGE), EXCEPTION_BODY_NOT_MATCH);
+    }
+
+    @Test
+    void testMethodArgumentTypeMismatchException() {
+        MethodArgumentTypeMismatchException exception = new MethodArgumentTypeMismatchException(
+            "not-a-date", LocalDate.class, "createdDateFrom", null, null);
+        ResponseEntity<ExceptionResponse> responseEntity = globalExceptionHandler.handle(exception);
+
+        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode(), SHOULD_BE_BAD_REQUEST_EXCEPTION);
+        assertNotNull(responseEntity.getBody(), NOT_NULL_MESSAGE);
+        assertEquals("Invalid value 'not-a-date' for parameter 'createdDateFrom'",
+                     responseEntity.getBody().getMessage(), EXCEPTION_BODY_NOT_MATCH);
     }
 
     @Test
